@@ -9,9 +9,12 @@ packages = [{ include = "pharia_skill" }]
 [tool.poetry.dependencies]
 python = "^3.10"
 
-
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
+ruff = "^0.6.5"
+
+[tool.ruff]
+exclude = ["pharia_skill/wit"]
 
 [build-system]
 requires = ["poetry-core"]
