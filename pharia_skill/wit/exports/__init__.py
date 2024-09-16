@@ -12,7 +12,7 @@ class SkillHandler(Protocol):
     @abstractmethod
     def run(self, input: bytes) -> bytes:
         """
-        Raises: `skill.types.Err(skill.imports.skill_handler.Error)`
+        Raises: `wit.types.Err(wit.imports.skill_handler.Error)`
         """
         raise NotImplementedError
 
