@@ -2,7 +2,14 @@
 name = "pharia-kernel-sdk-py"
 version = "0.1.0"
 description = ""
-authors = ["Jia Ho Lee <jiaho.lee@aleph-alpha.com>"]
+authors = [
+    "Peter Barth <peter.barth@aleph-alpha.com>",
+    "Markus Klein <markus.klein@aleph-alpha.com>",
+    "Benjamin Brandt <benjamin.brandt@aleph-alpha.com>",
+    "Daniel Tscherwinka <daniel.tscherwinka@aleph-alpha.com>",
+    "Moritz Althaus <moritz.althaus@aleph-alpha.com>",
+    "Jia Ho Lee <jiaho.lee@aleph-alpha.com>",
+]
 readme = "README.md"
 packages = [{ include = "pharia_skill" }]
 
