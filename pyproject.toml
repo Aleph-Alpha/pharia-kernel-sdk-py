@@ -10,6 +10,9 @@ packages = [{ include = "pharia_skill" }]
 python = "^3.10"
 
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

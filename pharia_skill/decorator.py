@@ -14,5 +14,6 @@ def skill(func: Callable) -> Callable:
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))
 
+    assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
     func.__globals__["SkillHandler"] = SkillHandler
     return func
