@@ -13,14 +13,16 @@ componentize-py -w skill componentize haiku -o ./haiku.wasm
 
 ## Developing Skills in Python
 
+The `pharia_skill` package provides a decorator to support skill development.
+The decorator inserts the Cognitive System Interface (CSI), which always need to be specified as the first argument.
+
 ```python
 from pharia_skill import skill
-import pharia_skill.wit.imports.csi as csi
 import json
 
 
 @skill
-def haiku(input: bytes) -> bytes:
+def haiku(csi, input: bytes) -> bytes:
     input = json.loads(input)
     prompt = f"""Write a haiku about {input}"""
     params = csi.CompletionParams(10, None, None, None, [])

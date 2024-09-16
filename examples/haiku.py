@@ -1,10 +1,9 @@
 from pharia_skill import skill
-import pharia_skill.wit.imports.csi as csi
 import json
 
 
 @skill
-def haiku(input: bytes) -> bytes:
+def haiku(csi, input: bytes) -> bytes:
     input = json.loads(input)
     prompt = f"""Write a haiku about {input}"""
     params = csi.CompletionParams(10, None, None, None, [])
