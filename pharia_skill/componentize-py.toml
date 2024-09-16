@@ -1,2 +1,2 @@
-wit_directory = "wit"
+wit_directory = "."
 bindings = "wit"
