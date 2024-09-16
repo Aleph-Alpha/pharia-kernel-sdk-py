@@ -1,3 +1,3 @@
-from .decorator import skill
+from .decorator import skill, Csi
 
-__all__ = ["skill"]
+__all__ = ["skill", "Csi"]

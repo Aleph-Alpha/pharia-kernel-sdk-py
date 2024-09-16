@@ -17,15 +17,16 @@ The `pharia_skill` package provides a decorator to support skill development.
 The decorator inserts the Cognitive System Interface (CSI), which always need to be specified as the first argument.
 
 ```python
-from pharia_skill import skill
+from pharia_skill import skill, Csi
+from pharia_skill.wit.imports.csi import CompletionParams
 import json
 
 
 @skill
-def haiku(csi, input: bytes) -> bytes:
+def haiku(csi: Csi, input: bytes) -> bytes:
     input = json.loads(input)
     prompt = f"""Write a haiku about {input}"""
-    params = csi.CompletionParams(10, None, None, None, [])
+    params = CompletionParams(10, None, None, None, [])
     completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
     return json.dumps(completion.text).encode()
 ```
