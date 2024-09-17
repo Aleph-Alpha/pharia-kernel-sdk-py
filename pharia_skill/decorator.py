@@ -1,17 +1,30 @@
+import inspect
 import traceback
 from typing import Callable
 
+from pydantic import BaseModel
+
 from .csi import WasiCsi
 from .wit import exports
-from .wit.exports.skill_handler import Error_Internal
+from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput
 from .wit.types import Err
 
 
 def skill(func: Callable) -> Callable:
+    signature = list(inspect.signature(func).parameters.values())
+    assert len(signature) == 2, "Skills must have exactly two arguments."
+
+    model = signature[1].annotation
+    assert issubclass(model, BaseModel), "The second argument must be a Pydantic model"
+
     class SkillHandler(exports.SkillHandler):
         def run(self, input: bytes) -> bytes:
             try:
-                return func(WasiCsi, input)
+                validated = model.model_validate_json(input)
+            except Exception:
+                raise Err(Error_InvalidInput(traceback.format_exc()))
+            try:
+                return func(WasiCsi, validated)
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))
 
