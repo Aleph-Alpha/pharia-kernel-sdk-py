@@ -14,18 +14,25 @@ The `pharia_skill` package provides a decorator to support skill development.
 The decorator inserts the Cognitive System Interface (CSI), which always need to be specified as the first argument.
 
 ```python
-from pharia_skill import skill, Csi
-from pharia_skill.wit.imports.csi import CompletionParams
-import json
+from pydantic import BaseModel
+
+from pharia_skill import CompletionParams, Csi, skill
+
+
+class Input(BaseModel):
+    topic: str
 
 
 @skill
-def haiku(csi: Csi, input: bytes) -> bytes:
-    input = json.loads(input)
-    prompt = f"""Write a haiku about {input}"""
+def haiku(csi: Csi, input: Input) -> str:
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+    You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+    {input.topic}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
     params = CompletionParams(10, None, None, None, [])
     completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
-    return json.dumps(completion.text).encode()
+    return completion.text
 ```
 
 ## Building skill
@@ -35,6 +42,7 @@ For packages that requires native dependency, additional wheels that is targetin
 ### Download Pydantic WASI wheels
 
 Supported versions:
+
 ```toml
 pydantic-core = "2.14.5"
 pydantic = "2.5.2"
@@ -48,6 +56,7 @@ mkdir wasi_deps
 cd wasi_deps
 curl -OL https://github.com/dicej/wasi-wheels/releases/download/latest/pydantic_core-wasi.tar.gz
 tar xf pydantic_core-wasi.tar.gz
+cd ..
 ```
 
 ## Contributing
@@ -58,6 +67,7 @@ Generate bindings of the skill wit world:
 cd pharia_skill
 rm -rf wit
 componentize-py -d skill.wit -w skill bindings --world-module wit .
+cd ..
 ```
 
 When running the examples you use `pharia_skill` without installing the wheel. You can componentize as follows:

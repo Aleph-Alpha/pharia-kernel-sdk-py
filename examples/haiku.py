@@ -3,12 +3,12 @@ from pydantic import BaseModel
 from pharia_skill import CompletionParams, Csi, skill
 
 
-class MyModel(BaseModel):
+class Input(BaseModel):
     topic: str
 
 
 @skill
-def haiku(csi: Csi, input: MyModel) -> str:
+def haiku(csi: Csi, input: Input) -> str:
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
     You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
