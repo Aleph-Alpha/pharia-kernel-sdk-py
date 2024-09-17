@@ -3,7 +3,8 @@ This module exposes the interfaces for skills to interact with the Pharia Kernel
 via the Cognitive System Interface (CSI).
 """
 
-from typing import Protocol
+from dataclasses import dataclass, field
+from typing import Optional, Protocol
 
 from .wit.imports import csi
 from .wit.imports.csi import (
@@ -28,18 +29,13 @@ __all__ = [
 ]
 
 
+@dataclass
 class CompletionParams(WitCompletionParams):
-    def __init__(
-        self,
-        max_tokens: int | None = None,
-        temperature: float | None = None,
-        top_k: int | None = None,
-        top_p: float | None = None,
-        stop: list[str] | None = None,
-    ):
-        if stop is None:
-            stop = []
-        super().__init__(max_tokens, temperature, top_k, top_p, stop)
+    max_tokens: int | None = None
+    temperature: float | None = None
+    top_k: int | None = None
+    top_p: float | None = None
+    stop: list[str] = field(default_factory=lambda: list())
 
 
 class Csi(Protocol):
