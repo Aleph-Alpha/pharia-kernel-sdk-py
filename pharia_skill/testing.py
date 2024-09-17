@@ -2,6 +2,8 @@
 StubCsi can be used for testing without a backing Pharia Kernel instance.
 """
 
+from dataclasses import asdict
+
 from .csi import (
     ChunkParams,
     Completion,
@@ -31,4 +33,4 @@ class StubCsi(Csi):
 
     @staticmethod
     def complete_all(requests: list[CompletionRequest]) -> list[Completion]:
-        return [StubCsi.complete(*request) for request in requests]
+        return [StubCsi.complete(**asdict(request)) for request in requests]
