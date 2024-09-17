@@ -1,6 +1,6 @@
-from pharia_skill import skill, Csi
-from pharia_skill.wit.imports.csi import CompletionParams
 import json
+
+from pharia_skill import CompletionParams, Csi, skill
 
 
 @skill

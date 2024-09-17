@@ -22,6 +22,7 @@ ruff = "^0.6.5"
 
 [tool.ruff]
 exclude = ["pharia_skill/wit"]
+extend-select = ["I"]
 
 [build-system]
 requires = ["poetry-core"]
