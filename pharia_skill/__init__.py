@@ -1,4 +1,5 @@
-from .decorator import Csi, skill
+from .csi import Csi
+from .decorator import skill
 from .wit.imports.csi import (
     ChunkParams,
     Completion,
