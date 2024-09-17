@@ -63,6 +63,7 @@ componentize-py -d skill.wit -w skill bindings --world-module wit .
 When running the examples you use `pharia_skill` without installing the wheel. You can componentize as follows:
 
 ```shell
+mkdir skills
 componentize-py -w skill componentize examples.haiku -o ./skills/haiku.wasm -p . -p wasi_deps
 ```
 
