@@ -32,7 +32,7 @@ def haiku(csi: Csi, input: Input) -> str:
     {input.topic}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
     params = CompletionParams(10, None, None, None, [])
     completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
-    return completion.text
+    return completion.text.strip()
 ```
 
 ## Building skill
