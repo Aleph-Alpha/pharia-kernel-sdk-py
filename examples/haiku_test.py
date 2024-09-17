@@ -10,4 +10,4 @@ from .haiku import MyModel, haiku
 def test_haiku():
     input = MyModel(topic="oat milk")
     result = haiku(StubCsi, input)
-    assert "oat milk" in result.decode()
+    assert "oat milk" in result

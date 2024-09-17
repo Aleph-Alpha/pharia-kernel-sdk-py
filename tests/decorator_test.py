@@ -55,7 +55,7 @@ def test_skill_input_is_parsed_as_pydantic_model():
 
     SkillHandler = foo.__globals__["SkillHandler"]
     result = SkillHandler.run(StubCsi, b'{"topic": "llama"}')
-    assert result == "llama"
+    assert result == b'"llama"'
 
 
 def test_skill_raises_bad_input_error():
@@ -68,3 +68,13 @@ def test_skill_raises_bad_input_error():
         SkillHandler.run(StubCsi, b'{"bad-input": 42}')
 
     assert isinstance(excinfo.value.value, Error_InvalidInput)
+
+
+def test_skill_without_return_value():
+    @skill
+    def foo(csi: Csi, input: Input):
+        pass
+
+    SkillHandler = foo.__globals__["SkillHandler"]
+    result = SkillHandler.run(StubCsi, b'{"topic": "llama"}')
+    assert result == b"null"
