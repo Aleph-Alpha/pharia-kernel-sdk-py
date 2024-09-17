@@ -14,6 +14,6 @@ def haiku(csi: Csi, input: Input) -> str:
     You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
     {input.topic}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
-    params = CompletionParams(10, None, None, None, [])
+    params = CompletionParams(max_tokens=64)
     completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
     return completion.text.strip()

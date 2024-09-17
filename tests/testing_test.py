@@ -1,5 +1,5 @@
+from pharia_skill import CompletionParams, CompletionRequest
 from pharia_skill.testing import StubCsi
-from pharia_skill.wit.imports.csi import CompletionParams, CompletionRequest
 
 
 def test_complete_all():

@@ -9,10 +9,12 @@ from .wit.imports import csi
 from .wit.imports.csi import (
     ChunkParams,
     Completion,
-    CompletionParams,
     CompletionRequest,
     FinishReason,
     Language,
+)
+from .wit.imports.csi import (
+    CompletionParams as WitCompletionParams,
 )
 
 __all__ = [
@@ -24,6 +26,20 @@ __all__ = [
     "FinishReason",
     "Language",
 ]
+
+
+class CompletionParams(WitCompletionParams):
+    def __init__(
+        self,
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+        top_k: int | None = None,
+        top_p: float | None = None,
+        stop: list[str] | None = None,
+    ):
+        if stop is None:
+            stop = []
+        super().__init__(max_tokens, temperature, top_k, top_p, stop)
 
 
 class Csi(Protocol):

@@ -1,12 +1,12 @@
-from .csi import Csi
-from .decorator import skill
-from .wit.imports.csi import (
+from .csi import (
     ChunkParams,
     Completion,
     CompletionParams,
     CompletionRequest,
+    Csi,
     Language,
 )
+from .decorator import skill
 
 __all__ = [
     "skill",
