@@ -1,3 +1,8 @@
+"""
+This module exposes the interfaces for skills to interact with the Pharia Kernel
+via the Cognitive System Interface (CSI).
+"""
+
 from typing import Protocol
 
 from .wit.imports import csi
@@ -6,8 +11,19 @@ from .wit.imports.csi import (
     Completion,
     CompletionParams,
     CompletionRequest,
+    FinishReason,
     Language,
 )
+
+__all__ = [
+    "ChunkParams",
+    "Completion",
+    "CompletionParams",
+    "CompletionRequest",
+    "Csi",
+    "FinishReason",
+    "Language",
+]
 
 
 class Csi(Protocol):
