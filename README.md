@@ -1,22 +1,27 @@
 # Pharia Kernel Python SDK
 
+You build your skill in Python, which is then compiled into a Wasm module. Then, the skill is deployed to Pharia Kernel, where it can be invoked on demand. To this end, this SDK provides some tooling and APIs for skill development.
+
 ## Installing SDK
+
+The SDK is distributed via the Aleph Alpha Artifactory PyPI. You may need to request a JFrog account, or extend the permission of your JFrog account via the [Product Service Desk](https://aleph-alpha.atlassian.net/servicedesk/customer/portals).
 
 ```shell
 python -m venv .venv
 source .venv/bin/activate
-pip install pharia_kernel_sdk_py-0.1.0-py3-none-any.whl
+pip install --extra-index-url https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple pharia-kernel-sdk-py
 ```
 
 ## Developing Skills in Python
 
 The `pharia_skill` package provides a decorator to support skill development.
 The decorator inserts the Cognitive System Interface (CSI), which always need to be specified as the first argument.
+As an example, we write a new skill in `haiku.py`.
 
 ```python
-from pydantic import BaseModel
-
+# haiku.py
 from pharia_skill import CompletionParams, Csi, skill
+from pydantic import BaseModel
 
 
 class Input(BaseModel):
@@ -35,23 +40,22 @@ def haiku(csi: Csi, input: Input) -> str:
     return completion.text.strip()
 ```
 
-## Building skill
+## Building Skills
 
-For packages that requires native dependency, additional wheels that is targeting WASI need to be downloaded.
+When building the skills, the wheels that include native dependencies need to be provided additionally for Wasm. For example, the skill SDK has a dependency on `pydantic` v2.5.2.
 
 ### Download Pydantic WASI wheels
 
-Supported versions:
+Supported Pydantic versions:
 
 ```toml
 pydantic-core = "2.14.5"
 pydantic = "2.5.2"
 ```
 
-Download WASI wheels:
+Download and unpack WASI wheels (without installation):
 
 ```shell
-pip install componentize-py
 mkdir wasi_deps
 cd wasi_deps
 curl -OL https://github.com/dicej/wasi-wheels/releases/download/latest/pydantic_core-wasi.tar.gz
@@ -59,22 +63,38 @@ tar xf pydantic_core-wasi.tar.gz
 cd ..
 ```
 
-## Contributing
+### Compiling Skill to Wasm
 
-Generate bindings of the skill wit world:
-
-```shell
-cd pharia_skill
-rm -rf wit
-componentize-py -d skill.wit -w skill bindings --world-module wit .
-cd ..
-```
-
-When running the examples you use `pharia_skill` without installing the wheel. You can componentize as follows:
+You now create the file `haiku.wasm`, ready to be uploaded.
 
 ```shell
-mkdir skills
-componentize-py -w skill componentize examples.haiku -o ./skills/haiku.wasm -p . -p wasi_deps
+pip install componentize-py
+componentize-py -w skill componentize haiku -o ./haiku.wasm -p . -p wasi_deps
 ```
 
-Then you can run `pharia-kernel` in the development directory.
+
+## Deploying Skills
+
+Pharia Skill is provided as a tool for deploying Skills.
+
+```shell
+podman login alephalpha.jfrog.io/pharia-kernel-images -u $JFROG_USER -p $JFROG_PASSWORD
+podman pull alephalpha.jfrog.io/pharia-kernel-images/pharia-skill:latest
+podman tag alephalpha.jfrog.io/pharia-kernel-images/pharia-skill:latest pharia-skill
+```
+
+With the tooling available, you can now upload the Skill. e.g. for the `playgound` namespace, a skill registry is provided at <https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground>.
+
+```shell
+podman run -v ./haiku.wasm:/haiku.wasm pharia-skill publish -R registry.gitlab.aleph-alpha.de -r engineering/pharia-kernel-playground/skills -u DUMMY_USER_NAME -p $GITLAB_TOKEN -t latest ./haiku.wasm
+```
+
+## Configuring namespace
+
+We have to configure the `namespace.toml` for the deployed skills to be loaded in Pharia Kernel.
+We have to extend the existing `skills` entries by providing the `name` and the optional `tag` fields.
+
+```toml
+# namespace.toml
+skills = [{ name = "haiku", tag = "latest" }]
+```
