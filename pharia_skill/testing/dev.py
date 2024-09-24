@@ -20,6 +20,11 @@ from ..csi import (
 class _DevCsi(Csi):
     VERSION = "v0_2"
 
+    def __init__(self):
+        self.url = os.environ["PHARIA_KERNEL_ADDRESS"]
+        token = os.environ.get("AA_API_TOKEN")
+        self.headers = {"Authorization": f"Bearer {token}"}
+
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         data = {
             "version": self.VERSION,
@@ -28,10 +33,7 @@ class _DevCsi(Csi):
             "model": model,
             "params": asdict(params),
         }
-        url = os.environ["PHARIA_KERNEL_ADDRESS"]
-        token = os.environ["AA_API_TOKEN"]
-        headers = {"Authorization": f"Bearer {token}"}
-        response = requests.post(url, json=data, headers=headers)
+        response = requests.post(self.url, json=data, headers=self.headers)
         response.raise_for_status()
         return Completion(**response.json())
 
