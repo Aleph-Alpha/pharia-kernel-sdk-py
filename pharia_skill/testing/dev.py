@@ -25,7 +25,11 @@ class _DevCsi(Csi):
         load_dotenv()
         self.url = os.environ["PHARIA_KERNEL_CSI_ADDRESS"]
         token = os.environ["AA_API_TOKEN"]
-        self.headers = {"Authorization": f"Bearer {token}"}
+        self.session = requests.Session()
+        self.session.headers = {"Authorization": f"Bearer {token}"}
+
+    def __del__(self):
+        self.session.close()
 
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         data = {
@@ -35,7 +39,7 @@ class _DevCsi(Csi):
             "model": model,
             "params": asdict(params),
         }
-        response = requests.post(self.url, json=data, headers=self.headers)
+        response = self.session.post(self.url, json=data)
         response.raise_for_status()
         return Completion(**response.json())
 
