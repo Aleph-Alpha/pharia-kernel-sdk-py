@@ -6,6 +6,7 @@ import os
 from dataclasses import asdict
 
 import requests
+from dotenv import load_dotenv
 
 from ..csi import (
     ChunkParams,
@@ -21,8 +22,9 @@ class _DevCsi(Csi):
     VERSION = "v0_2"
 
     def __init__(self):
-        self.url = os.environ["PHARIA_KERNEL_ADDRESS"]
-        token = os.environ.get("AA_API_TOKEN")
+        load_dotenv()
+        self.url = os.environ["PHARIA_KERNEL_CSI_ADDRESS"]
+        token = os.environ["AA_API_TOKEN"]
         self.headers = {"Authorization": f"Bearer {token}"}
 
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:

@@ -72,7 +72,6 @@ pip install componentize-py
 componentize-py -w skill componentize haiku -o ./haiku.wasm -p . -p wasi_deps
 ```
 
-
 ## Deploying Skills
 
 Pharia Skill is provided as a tool for deploying Skills.
