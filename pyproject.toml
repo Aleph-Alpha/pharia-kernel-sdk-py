@@ -17,6 +17,7 @@ packages = [{ include = "pharia_skill" }]
 python = "^3.10"
 pydantic-core = "2.14.5"
 pydantic = "2.5.2"
+requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
