@@ -9,5 +9,5 @@ from .haiku import Input, haiku
 
 def test_haiku():
     input = Input(topic="oat milk")
-    result = haiku(StubCsi, input)
+    result = haiku(StubCsi(), input)
     assert "oat milk" in result
