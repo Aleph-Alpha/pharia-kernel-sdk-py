@@ -20,11 +20,10 @@ from ..csi import (
 class _DevCsi(Csi):
     VERSION = "v0_2"
 
-    @staticmethod
-    def complete(model: str, prompt: str, params: CompletionParams) -> Completion:
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         data = {
-            "version": _DevCsi.VERSION,
-            "function": _DevCsi.complete.__name__,
+            "version": self.VERSION,
+            "function": self.complete.__name__,
             "prompt": prompt,
             "model": model,
             "params": asdict(params),
@@ -36,14 +35,11 @@ class _DevCsi(Csi):
         response.raise_for_status()
         return Completion(**response.json())
 
-    @staticmethod
-    def chunk(text: str, params: ChunkParams) -> list[str]:
+    def chunk(self, text: str, params: ChunkParams) -> list[str]:
         raise NotImplementedError
 
-    @staticmethod
-    def select_language(text: str, languages: list[Language]) -> Language | None:
+    def select_language(self, text: str, languages: list[Language]) -> Language | None:
         raise NotImplementedError
 
-    @staticmethod
-    def complete_all(requests: list[CompletionRequest]) -> list[Completion]:
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         raise NotImplementedError

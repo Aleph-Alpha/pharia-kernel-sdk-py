@@ -4,7 +4,7 @@ via the Cognitive System Interface (CSI).
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Protocol
+from typing import Protocol
 
 from .wit.imports import csi
 from .wit.imports.csi import (
@@ -39,32 +39,28 @@ class CompletionParams(WitCompletionParams):
 
 
 class Csi(Protocol):
-    @staticmethod
-    def complete(model: str, prompt: str, params: CompletionParams) -> Completion: ...
+    def complete(
+        self, model: str, prompt: str, params: CompletionParams
+    ) -> Completion: ...
 
-    @staticmethod
-    def chunk(text: str, params: ChunkParams) -> list[str]: ...
+    def chunk(self, text: str, params: ChunkParams) -> list[str]: ...
 
-    @staticmethod
-    def select_language(text: str, languages: list[Language]) -> Language | None: ...
+    def select_language(
+        self, text: str, languages: list[Language]
+    ) -> Language | None: ...
 
-    @staticmethod
-    def complete_all(requests: list[CompletionRequest]) -> list[Completion]: ...
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]: ...
 
 
 class WasiCsi(Csi):
-    @staticmethod
-    def complete(model: str, prompt: str, params: CompletionParams) -> Completion:
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         return csi.complete(model, prompt, params)
 
-    @staticmethod
-    def chunk(text: str, params: ChunkParams) -> list[str]:
+    def chunk(self, text: str, params: ChunkParams) -> list[str]:
         return csi.chunk(text, params)
 
-    @staticmethod
-    def select_language(text: str, languages: list[Language]) -> Language | None:
+    def select_language(self, text: str, languages: list[Language]) -> Language | None:
         return csi.select_language(text, languages)
 
-    @staticmethod
-    def complete_all(requests: list[CompletionRequest]) -> list[Completion]:
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         return csi.complete_all(requests)

@@ -9,7 +9,8 @@ def test_complete_all():
     request_2 = CompletionRequest("model_2", "prompt_2", params)
 
     # when
-    completions = StubCsi.complete_all([request_1, request_2])
+    csi = StubCsi()
+    completions = csi.complete_all([request_1, request_2])
 
     # then
     assert completions[0].text == "prompt_1"
