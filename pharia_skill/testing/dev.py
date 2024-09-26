@@ -52,7 +52,8 @@ class DevCsi(Csi):
             "params": asdict(params),
         }
         response = self.session.post(self.url, json=data)
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise Exception(f"{response.status_code}: {response.json()}")
         return Completion(**response.json())
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
@@ -63,7 +64,8 @@ class DevCsi(Csi):
             "params": asdict(params),
         }
         response = self.session.post(self.url, json=data)
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise Exception(f"{response.status_code}: {response.json()}")
         return response.json()
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
@@ -74,7 +76,8 @@ class DevCsi(Csi):
             "languages": [language.name.lower() for language in languages],
         }
         response = self.session.post(self.url, json=data)
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise Exception(f"{response.status_code}: {response.json()}")
         match response.json():
             case "eng":
                 return Language.ENG
@@ -90,5 +93,6 @@ class DevCsi(Csi):
             "requests": [asdict(request) for request in requests],
         }
         response = self.session.post(self.url, json=data)
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise Exception(f"{response.status_code}: {response.json()}")
         return [Completion(**completion) for completion in response.json()]
