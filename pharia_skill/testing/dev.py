@@ -27,7 +27,7 @@ class DevCsi(Csi):
 
     The following environment variables are required:
 
-    * PHARIA_KERNEL_CSI_ADDRESS (Pharia Kernel CSI endpoint; example: "https://pharia-kernel-csi.aleph-alpha.stackit.run")
+    * PHARIA_KERNEL_ADDRESS (Pharia Kernel endpoint; example: "https://pharia-kernel.aleph-alpha.stackit.run")
     * AA_API_TOKEN (Aleph Alpha API token)
     """
 
@@ -35,7 +35,7 @@ class DevCsi(Csi):
 
     def __init__(self):
         load_dotenv()
-        self.url = os.environ["PHARIA_KERNEL_CSI_ADDRESS"] + "/csi"
+        self.url = os.environ["PHARIA_KERNEL_ADDRESS"] + "/csi"
         token = os.environ["AA_API_TOKEN"]
         self.session = requests.Session()
         self.session.headers = {"Authorization": f"Bearer {token}"}
@@ -43,9 +43,7 @@ class DevCsi(Csi):
     def __del__(self):
         self.session.close()
 
-    def complete(
-        self, model: str, prompt: str, params: CompletionParams
-    ) -> Completion:
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         data = {
             "version": self.VERSION,
             "function": self.complete.__name__,
@@ -68,9 +66,7 @@ class DevCsi(Csi):
         response.raise_for_status()
         return response.json()
 
-    def select_language(
-        self, text: str, languages: list[Language]
-    ) -> Language | None:
+    def select_language(self, text: str, languages: list[Language]) -> Language | None:
         data = {
             "version": self.VERSION,
             "function": self.select_language.__name__,
@@ -87,9 +83,7 @@ class DevCsi(Csi):
             case _:
                 return None
 
-    def complete_all(
-        self, requests: list[CompletionRequest]
-    ) -> list[Completion]:
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         data = {
             "version": self.VERSION,
             "function": self.complete_all.__name__,
