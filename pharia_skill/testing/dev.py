@@ -18,8 +18,20 @@ from ..csi import (
 )
 
 
-class _DevCsi(Csi):
-    VERSION = "v0_2"
+class DevCsi(Csi):
+    """
+    DevCsi can be used for testing Skill code locally against a running Pharia Kernel.
+
+    This implementation of Cognitive System Interface (CSI) is backed by a running instance of Pharia Kernel via HTTP.
+    This enables skill developer to run and test the skill against the same services that are used by the Pharia Kernel.
+
+    The following environment variables are required:
+
+    * PHARIA_KERNEL_CSI_ADDRESS (Pharia Kernel CSI endpoint; example: "https://pharia-kernel-csi.aleph-alpha.stackit.run")
+    * AA_API_TOKEN (Aleph Alpha API token)
+    """
+
+    VERSION = "0.2"
 
     def __init__(self):
         load_dotenv()
