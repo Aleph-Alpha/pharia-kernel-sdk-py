@@ -40,6 +40,14 @@ def haiku(csi: Csi, input: Input) -> str:
     return completion.text.strip()
 ```
 
+### Testing
+
+The `@skill` annotation does not modify the annotated function, which allows the test code to inject different variants of CSI.
+The `testing` module provides two implementations of CSI for testing:
+
+- The `DevCsi` can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up.
+- The `StubCsi` can be used as a base class for mock implementation.
+
 ## Building Skills
 
 When building the skills, the wheels that include native dependencies need to be provided additionally for Wasm. For example, the skill SDK has a dependency on `pydantic` v2.5.2.
