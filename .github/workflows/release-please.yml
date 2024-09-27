@@ -1,33 +1,36 @@
-name: CI
+name: Release Please
 
 on:
   push:
     branches:
       - main
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
 
 env:
   ARTIFACTORY_URL: https://alephalpha.jfrog.io
   ARTIFACTORY_PYPI_REPOSITORY: "pharia-kernel-pypi"
 
 jobs:
-  publish:
-    permissions:
-      contents: read
-      id-token: write
-    if: github.ref == 'refs/heads/main'
+  release-please:
     runs-on: ubuntu-latest
     steps:
-      - name: Get Identity Token From GitHub
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: python
+      - if: ${{ steps.release.outputs.release_created }}
+        name: Get Identity Token From GitHub
         run: |
           ID_TOKEN=$(curl -sLS -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
           "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$ARTIFACTORY_URL" | jq .value | tr -d '"')
           if [[ -z "$ID_TOKEN" ]]; then exit 1; fi
           echo "ID_TOKEN=$ID_TOKEN" >> $GITHUB_ENV
-      - name: Get JFrog Access Token with GitHub Identity Token
+      - if: ${{ steps.release.outputs.release_created }}
+        name: Get JFrog Access Token with GitHub Identity Token
         run: |
           JFROG_ACCESS_TOKEN=$(curl \
             -X POST \
@@ -39,14 +42,17 @@ jobs:
           if [[ -z "$JFROG_ACCESS_TOKEN" ]]; then exit 1; fi
           echo "::add-mask::$JFROG_ACCESS_TOKEN"
           echo "JFROG_ACCESS_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
-      - name: Get Subject from JFrog Access Token
+      - if: ${{ steps.release.outputs.release_created }}
+        name: Get Subject from JFrog Access Token
         run: |
           JFROG_ACCESS_TOKEN_SUBJECT=$(echo $JFROG_ACCESS_TOKEN | awk -F '.' '{print $2 "===="}' | fold -w 4 | sed '$ d' | tr -d '\n' | base64 -d | jq '.sub' -r)
           if [[ -z "$JFROG_ACCESS_TOKEN_SUBJECT" ]]; then exit 1; fi
           echo "JFROG_ACCESS_TOKEN_SUBJECT=$JFROG_ACCESS_TOKEN_SUBJECT" >> $GITHUB_ENV
-      - name: Checkout
+      - if: ${{ steps.release.outputs.release_created }}
+        name: Checkout
         uses: actions/checkout@v4
-      - name: Build and publish to Artifactory PyPI repository
+      - if: ${{ steps.release.outputs.release_created }}
+        name: Build and publish to Artifactory PyPI repository
         uses: JRubics/poetry-publish@v2.0
         with:
           repository_name: ${{ env.ARTIFACTORY_PYPI_REPOSITORY }}
