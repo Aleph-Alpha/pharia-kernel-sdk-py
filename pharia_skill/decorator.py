@@ -25,7 +25,7 @@ def skill(func: Callable) -> Callable:
             except Exception:
                 raise Err(Error_InvalidInput(traceback.format_exc()))
             try:
-                result = func(WasiCsi, validated)
+                result = func(WasiCsi(), validated)
                 return json.dumps(result).encode()
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))
