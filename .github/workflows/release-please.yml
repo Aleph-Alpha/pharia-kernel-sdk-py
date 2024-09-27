@@ -20,8 +20,6 @@ jobs:
     steps:
       - id: release
         uses: googleapis/release-please-action@v4
-        with:
-          release-type: python
       - if: ${{ steps.release.outputs.release_created }}
         name: Get Identity Token From GitHub
         run: |
