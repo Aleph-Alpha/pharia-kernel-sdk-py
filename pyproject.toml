@@ -25,6 +25,9 @@ pytest = "^8.3.3"
 ruff = "^0.6.5"
 mypy = "^1.11.2"
 
+[tool.pytest.ini_options]
+markers = ["kernel: marks tests that requires Pharia Kernel"]
+
 [tool.ruff]
 exclude = ["pharia_skill/wit"]
 lint.extend-select = ["I"]

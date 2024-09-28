@@ -14,12 +14,14 @@ def csi() -> DevCsi:
     return DevCsi()
 
 
+@pytest.mark.kernel
 def test_complete(csi: DevCsi):
     params = CompletionParams(max_tokens=64)
     result = csi.complete("llama-3.1-8b-instruct", "Say hello to Bob", params)
     assert "Bob" in result.text
 
 
+@pytest.mark.kernel
 def test_chunk(csi: DevCsi):
     text = "A very very very long text that can be chunked."
     params = ChunkParams(model="llama-3.1-8b-instruct", max_tokens=1)
@@ -27,6 +29,7 @@ def test_chunk(csi: DevCsi):
     assert len(result) == 13
 
 
+@pytest.mark.kernel
 def test_select_language(csi: DevCsi):
     text = "Ich spreche Deutsch nur ein bisschen."
     languages = [Language.ENG, Language.DEU]
@@ -34,6 +37,7 @@ def test_select_language(csi: DevCsi):
     assert result == Language.DEU
 
 
+@pytest.mark.kernel
 def test_complete_all(csi: DevCsi):
     params = CompletionParams(max_tokens=64)
     request_1 = CompletionRequest("llama-3.1-8b-instruct", "Say hello to Alice", params)
