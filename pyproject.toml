@@ -14,7 +14,7 @@ readme = "README.md"
 packages = [{ include = "pharia_skill" }]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 pydantic-core = "2.14.5"
 pydantic = "2.5.2"
 requests = "^2.32.3"
