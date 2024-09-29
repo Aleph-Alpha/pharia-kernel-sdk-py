@@ -2,11 +2,11 @@ import inspect
 import json
 import traceback
 from dataclasses import dataclass
-from typing import Callable, Generic
+from typing import Any, Callable, Generic, Type, TypeVar
 
 from pydantic import BaseModel
 
-from .csi import WasiCsi
+from .csi import Csi, WasiCsi
 from .wit import exports
 from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput
 from .wit.types import E
@@ -26,11 +26,16 @@ class Err(Generic[E], Exception):
     value: E
 
 
-def skill(func: Callable) -> Callable:
+UserInput = TypeVar("UserInput", bound=BaseModel)
+
+
+def skill(
+    func: Callable[[Csi, UserInput], Any],
+) -> Callable[[Csi, UserInput], Any]:
     signature = list(inspect.signature(func).parameters.values())
     assert len(signature) == 2, "Skills must have exactly two arguments."
 
-    model = signature[1].annotation
+    model: Type[UserInput] = signature[1].annotation
     assert issubclass(model, BaseModel), "The second argument must be a Pydantic model"
 
     class SkillHandler(exports.SkillHandler):
