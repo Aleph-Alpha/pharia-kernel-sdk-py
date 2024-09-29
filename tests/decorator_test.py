@@ -2,7 +2,6 @@ import pytest
 from pydantic import BaseModel
 
 from pharia_skill import Csi, skill
-from pharia_skill.testing import StubCsi
 from pharia_skill.wit.exports.skill_handler import Error_InvalidInput
 from pharia_skill.wit.types import Err
 
@@ -53,8 +52,8 @@ def test_skill_input_is_parsed_as_pydantic_model():
     def foo(csi: Csi, input: Input):
         return input.topic
 
-    SkillHandler = foo.__globals__["SkillHandler"]
-    result = SkillHandler.run(StubCsi, b'{"topic": "llama"}')
+    handler = foo.__globals__["SkillHandler"]()
+    result = handler.run(b'{"topic": "llama"}')
     assert result == b'"llama"'
 
 
@@ -63,9 +62,9 @@ def test_skill_raises_bad_input_error():
     def foo(csi: Csi, input: Input):
         return input.topic
 
-    SkillHandler = foo.__globals__["SkillHandler"]
+    handler = foo.__globals__["SkillHandler"]()
     with pytest.raises(Err) as excinfo:
-        SkillHandler.run(StubCsi, b'{"bad-input": 42}')
+        handler.run(b'{"bad-input": 42}')
 
     assert isinstance(excinfo.value.value, Error_InvalidInput)
 
@@ -75,6 +74,6 @@ def test_skill_without_return_value():
     def foo(csi: Csi, input: Input):
         pass
 
-    SkillHandler = foo.__globals__["SkillHandler"]
-    result = SkillHandler.run(StubCsi, b'{"topic": "llama"}')
+    handler = foo.__globals__["SkillHandler"]()
+    result = handler.run(b'{"topic": "llama"}')
     assert result == b"null"
