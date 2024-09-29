@@ -32,12 +32,8 @@ def test_select_language():
 
 def test_complete_all():
     params = CompletionParams(max_tokens=64)
-    request_1 = CompletionRequest(
-        "llama-3.1-8b-instruct", "Say hello to Alice", params
-    )
-    request_2 = CompletionRequest(
-        "llama-3.1-8b-instruct", "Say hello to Bob", params
-    )
+    request_1 = CompletionRequest("llama-3.1-8b-instruct", "Say hello to Alice", params)
+    request_2 = CompletionRequest("llama-3.1-8b-instruct", "Say hello to Bob", params)
     csi = DevCsi()
     result = csi.complete_all([request_1, request_2])
     assert len(result) == 2
