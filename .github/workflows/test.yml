@@ -1,9 +1,14 @@
 name: Test
+
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
@@ -12,16 +17,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       - uses: Gr1N/setup-poetry@v9
-      - run: poetry --version
       - name: Install dependencies
-        run: |
-          poetry install
+        run: poetry install
       - name: Lint
         run: poetry run ruff check .
       - name: Format
-        run: poetry run ruff format .
+        run: poetry run ruff format --diff .
       - name: Check types
         run: poetry run mypy --install-types --non-interactive .
 
@@ -31,14 +34,61 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       - uses: Gr1N/setup-poetry@v9
-      - run: poetry --version
       - name: Install dependencies
-        run: |
-          poetry install
+        run: poetry install
       - name: Test
-        run: poetry run pytest
+        run: poetry run pytest -m 'not kernel'
+
+  integration-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARTIFACTORY_URL: https://alephalpha.jfrog.io
+      AA_API_TOKEN: ${{ secrets.AA_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: Gr1N/setup-poetry@v9
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Get Identity Token From GitHub
+        run: |
+          ID_TOKEN=$(curl -sLS -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+          "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$ARTIFACTORY_URL" | jq .value | tr -d '"')
+          if [[ -z "$ID_TOKEN" ]]; then exit 1; fi
+          echo "ID_TOKEN=$ID_TOKEN" >> $GITHUB_ENV
+      - name: Get JFrog Access Token with GitHub Identity Token
+        run: |
+          JFROG_ACCESS_TOKEN=$(curl \
+            -X POST \
+            -H "Content-type: application/json" \
+            $ARTIFACTORY_URL/access/api/v1/oidc/token \
+            -d \
+            "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\", \"subject_token\": \"$ID_TOKEN\", \"provider_name\": \"github\"}" \
+          | jq .access_token -r)
+          if [[ -z "$JFROG_ACCESS_TOKEN" ]]; then exit 1; fi
+          echo "::add-mask::$JFROG_ACCESS_TOKEN"
+          echo "JFROG_ACCESS_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
+      - name: Get Subject from JFrog Access Token
+        run: |
+          JFROG_ACCESS_TOKEN_SUBJECT=$(echo $JFROG_ACCESS_TOKEN | awk -F '.' '{print $2 "===="}' | fold -w 4 | sed '$ d' | tr -d '\n' | base64 -d | jq '.sub' -r)
+          if [[ -z "$JFROG_ACCESS_TOKEN_SUBJECT" ]]; then exit 1; fi
+          echo "JFROG_ACCESS_TOKEN_SUBJECT=$JFROG_ACCESS_TOKEN_SUBJECT" >> $GITHUB_ENV
+
+      - name: Run Pharia Kernel
+        run: sh -x ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $AA_API_TOKEN
+
+      - name: Run tests
+        run: poetry run pytest -m 'kernel'
         env:
-          AA_API_TOKEN: ${{ secrets.AA_API_TOKEN }}
-          PHARIA_KERNEL_ADDRESS: ${{ secrets.PHARIA_KERNEL_ADDRESS }}
+          PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
+
+      - name: Check skill execution
+        run: poetry run sh -x ./scripts/build_and_run_skill.sh $AA_API_TOKEN
