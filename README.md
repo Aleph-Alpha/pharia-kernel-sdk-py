@@ -73,28 +73,27 @@ cd ..
 
 ### Compiling Skill to Wasm
 
-You now create the file `haiku.wasm`, ready to be uploaded.
+You now build your skill, which will produce a `haiku.wasm` file:
 
 ```shell
-pip install componentize-py
-componentize-py -w skill componentize haiku -o ./haiku.wasm -p . -p wasi_deps
+pharia-skill build examples.haiku
 ```
 
 ## Deploying Skills
 
-Pharia Skill is provided as a tool for deploying Skills.
+Pharia Skill is provided as a tool for deploying Skills. For deployment, you need to set the `JFROG_USER` and `JFROG_PASSWORD` environment variables in your environment. You also need to set `GITLAB_TOKEN` and `SKILL_REGISTRY` and `SKILL_REPOSITORY`. The gitlab token must have access to the registry where the skill is deployed to. We have setup a [playground](https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground) to deploy to, so you can set the variables to
 
 ```shell
-podman login alephalpha.jfrog.io/pharia-kernel-images -u $JFROG_USER -p $JFROG_PASSWORD
-podman pull alephalpha.jfrog.io/pharia-kernel-images/pharia-skill:latest
-podman tag alephalpha.jfrog.io/pharia-kernel-images/pharia-skill:latest pharia-skill
+SKILL_REGISTRY=registry.gitlab.aleph-alpha.de
+SKILL_REPOSITORY=engineering/pharia-kernel-playground/skills
 ```
 
-With the tooling available, you can now upload the Skill. e.g. for the `playgound` namespace, a skill registry is provided at <https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground>.
+To deploy your skill, run
 
 ```shell
-podman run -v ./haiku.wasm:/haiku.wasm pharia-skill publish -R registry.gitlab.aleph-alpha.de -r engineering/pharia-kernel-playground/skills -u DUMMY_USER_NAME -p $GITLAB_TOKEN -t latest ./haiku.wasm
+pharia-skill publish haiku.wasm
 ```
+
 
 ## Configuring namespace
 
