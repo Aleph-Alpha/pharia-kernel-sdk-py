@@ -1,6 +1,7 @@
 # WASM and wasi wheels directories
 wasi_deps/
 skills/
+*.wasm
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
