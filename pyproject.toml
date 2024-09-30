@@ -23,6 +23,7 @@ python-dotenv = "^1.0.1"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
 ruff = "^0.6.5"
+mypy = "^1.11.2"
 
 [tool.ruff]
 exclude = ["pharia_skill/wit"]

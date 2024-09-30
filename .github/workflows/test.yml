@@ -1,0 +1,44 @@
+name: Test
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: Gr1N/setup-poetry@v9
+      - run: poetry --version
+      - name: Install dependencies
+        run: |
+          poetry install
+      - name: Lint
+        run: poetry run ruff check .
+      - name: Format
+        run: poetry run ruff format .
+      - name: Check types
+        run: poetry run mypy --install-types --non-interactive .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: Gr1N/setup-poetry@v9
+      - run: poetry --version
+      - name: Install dependencies
+        run: |
+          poetry install
+      - name: Test
+        run: poetry run pytest
+        env:
+          AA_API_TOKEN: ${{ secrets.AA_API_TOKEN }}
+          PHARIA_KERNEL_ADDRESS: ${{ secrets.PHARIA_KERNEL_ADDRESS }}

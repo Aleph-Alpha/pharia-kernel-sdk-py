@@ -1,10 +1,9 @@
 import pytest
 from pydantic import BaseModel
 
-from pharia_skill import Csi, skill
-from pharia_skill.testing import StubCsi
+from pharia_skill import CompletionParams, Csi, skill
+from pharia_skill.decorator import Err
 from pharia_skill.wit.exports.skill_handler import Error_InvalidInput
-from pharia_skill.wit.types import Err
 
 
 class Input(BaseModel):
@@ -53,8 +52,8 @@ def test_skill_input_is_parsed_as_pydantic_model():
     def foo(csi: Csi, input: Input):
         return input.topic
 
-    SkillHandler = foo.__globals__["SkillHandler"]
-    result = SkillHandler.run(StubCsi, b'{"topic": "llama"}')
+    handler = foo.__globals__["SkillHandler"]()
+    result = handler.run(b'{"topic": "llama"}')
     assert result == b'"llama"'
 
 
@@ -63,9 +62,9 @@ def test_skill_raises_bad_input_error():
     def foo(csi: Csi, input: Input):
         return input.topic
 
-    SkillHandler = foo.__globals__["SkillHandler"]
+    handler = foo.__globals__["SkillHandler"]()
     with pytest.raises(Err) as excinfo:
-        SkillHandler.run(StubCsi, b'{"bad-input": 42}')
+        handler.run(b'{"bad-input": 42}')
 
     assert isinstance(excinfo.value.value, Error_InvalidInput)
 
@@ -75,6 +74,26 @@ def test_skill_without_return_value():
     def foo(csi: Csi, input: Input):
         pass
 
-    SkillHandler = foo.__globals__["SkillHandler"]
-    result = SkillHandler.run(StubCsi, b'{"topic": "llama"}')
+    handler = foo.__globals__["SkillHandler"]()
+    result = handler.run(b'{"topic": "llama"}')
     assert result == b"null"
+
+
+def test_skill_with_csi_call_raises_not_implemented():
+    """Test call to the csi.complete call from bindings.
+
+    Testing the csi injection in the `skill` decorator is tricky, as the WasiCsi
+    is only used when the compiled skill is run in a Wasm environment. By asserting
+    that a NonImplementedError is raised, we can be sure that the call to the bindings
+    is executed correctly.
+    """
+
+    @skill
+    def foo(csi: Csi, input: Input):
+        csi.complete("llama", "prompt", CompletionParams())
+
+    handler = foo.__globals__["SkillHandler"]()
+    with pytest.raises(Err) as excinfo:
+        handler.run(b'{"topic": "llama"}')
+
+    assert "NotImplementedError" in excinfo.value.value.value

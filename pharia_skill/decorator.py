@@ -1,21 +1,41 @@
 import inspect
 import json
 import traceback
-from typing import Callable
+from dataclasses import dataclass
+from typing import Any, Callable, Generic, Type, TypeVar
 
 from pydantic import BaseModel
 
-from .csi import WasiCsi
+from .csi import Csi, WasiCsi
 from .wit import exports
 from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput
-from .wit.types import Err
+from .wit.types import E
 
 
-def skill(func: Callable) -> Callable:
+@dataclass
+class Err(Generic[E], Exception):
+    """Represents an error that occurred during the execution of a skill.
+
+    For some exceptions like NotImplementedError, `traceback.format_exc()`
+    does not work as it tries assigning th `__traceback__` attribute to
+    `wit.types.Err`, which is a frozen dataclass and such raises
+    a `dataclasses.FrozenInstanceError`. Therefore we introduce our own
+    non-frozen `Err` class.
+    """
+
+    value: E
+
+
+UserInput = TypeVar("UserInput", bound=BaseModel)
+
+
+def skill(
+    func: Callable[[Csi, UserInput], Any],
+) -> Callable[[Csi, UserInput], Any]:
     signature = list(inspect.signature(func).parameters.values())
     assert len(signature) == 2, "Skills must have exactly two arguments."
 
-    model = signature[1].annotation
+    model: Type[UserInput] = signature[1].annotation
     assert issubclass(model, BaseModel), "The second argument must be a Pydantic model"
 
     class SkillHandler(exports.SkillHandler):
