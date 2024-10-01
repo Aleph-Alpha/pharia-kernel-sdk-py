@@ -144,13 +144,17 @@ def main():
 
     args = parser.parse_args()
 
-    if args.command == "build":
-        setup_wasi_deps()
-        run_componentize_py(args.skill)
-    elif args.command == "publish":
-        publish(args.file)
-    else:
-        parser.print_help()
+    try:
+        if args.command == "build":
+            setup_wasi_deps()
+            run_componentize_py(args.skill)
+        elif args.command == "publish":
+            publish(args.file)
+        else:
+            parser.print_help()
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
+        logger.error(f"Error message: {e.stderr}")
 
 
 if __name__ == "__main__":
