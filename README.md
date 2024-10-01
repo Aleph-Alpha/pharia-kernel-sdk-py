@@ -91,7 +91,7 @@ SKILL_REPOSITORY=engineering/pharia-kernel-playground/skills
 To deploy your skill, run
 
 ```shell
-pharia-skill publish haiku.wasm
+pharia-skill publish haiku
 ```
 
 

@@ -63,7 +63,7 @@ def image_exists(image_name: str) -> bool:
     return image_name in result.stdout
 
 
-def publish(path: str):
+def publish(skill: str):
     """Publish a skill to an OCI registry.
 
     Takes a path to a WASM component, wrap it in an OCI image and publish it to an OCI
@@ -101,12 +101,16 @@ def publish(path: str):
         subprocess.run(["podman", "pull", image], check=True)
         subprocess.run(["podman", "tag", image, "pharia-skill"], check=True)
 
-    # allow relative paths
-    if not path.startswith(("/", "./")):
-        path = f"./{path}"
+    # add file extension
+    if not skill.endswith(".wasm"):
+        skill += ".wasm"
 
-    container_path = "/" + path.split("/")[-1]
-    volume = f"{path}:{container_path}"
+    # allow relative paths
+    if not skill.startswith(("/", "./")):
+        skill = f"./{skill}"
+
+    container_path = "/" + skill.split("/")[-1]
+    volume = f"{skill}:{container_path}"
     command = [
         "podman",
         "run",
@@ -137,10 +141,12 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     build_parser = subparsers.add_parser("build", help="Build a skill")
-    build_parser.add_argument("skill", help="Module of the skill to build")
+    build_parser.add_argument("skill", help="Python module of the skill to build")
 
     publish_parser = subparsers.add_parser("publish", help="Publish a skill")
-    publish_parser.add_argument("file", help="Path to the component to publish")
+    publish_parser.add_argument(
+        "skill", help="Path to the component to publish without the .wasm extension"
+    )
 
     args = parser.parse_args()
 
@@ -149,7 +155,7 @@ def main():
             setup_wasi_deps()
             run_componentize_py(args.skill)
         elif args.command == "publish":
-            publish(args.file)
+            publish(args.skill)
         else:
             parser.print_help()
     except subprocess.CalledProcessError as e:
