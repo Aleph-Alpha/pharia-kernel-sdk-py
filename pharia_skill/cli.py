@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 
+import requests
 from dotenv import load_dotenv
 
 logging.basicConfig(
@@ -140,6 +141,24 @@ def publish(skill: str):
     logger.info("Skill published successfully.")
 
 
+def invalidate_cache(skill: str):
+    try:
+        kernel_address = os.environ["PHARIA_KERNEL_ADDRESS"]
+        token = os.environ["AA_API_TOKEN"]
+        namespace = os.environ["SKILL_NAMESPACE"]
+    except KeyError as e:
+        logger.error(f"Environment variable {e} is not set.")
+        return
+
+    url = f"{kernel_address}/cached_skills/{namespace}%2f{skill}"
+    headers = {"Authorization": f"Bearer {token}"}
+    logger.info("Invalidating cache...")
+    response = requests.delete(url, headers=headers)
+    if response.status_code not in (200, 204):
+        raise Exception(f"{response.status_code}: {response.text}")
+    logger.info(response.json())
+
+
 def main():
     load_dotenv()
 
@@ -162,6 +181,7 @@ def main():
             run_componentize_py(args.skill)
         elif args.command == "publish":
             publish(args.skill)
+            invalidate_cache(args.skill)
         else:
             parser.print_help()
     except subprocess.CalledProcessError as e:
