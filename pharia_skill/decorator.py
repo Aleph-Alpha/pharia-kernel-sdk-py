@@ -51,4 +51,6 @@ def skill(func: Skill) -> Skill:
 
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
     func.__globals__["SkillHandler"] = SkillHandler
+
+    func._is_skill = True  # type: ignore
     return func

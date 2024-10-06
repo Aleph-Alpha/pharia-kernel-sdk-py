@@ -20,7 +20,7 @@ def test_skill_with_one_argument_raises_error():
     expected = "Skills must have exactly two arguments."
     with pytest.raises(AssertionError, match=expected):
 
-        @skill
+        @skill  # type: ignore
         def foo(csi: Csi):
             pass
 
@@ -97,3 +97,11 @@ def test_skill_with_csi_call_raises_not_implemented():
         handler.run(b'{"topic": "llama"}')
 
     assert "NotImplementedError" in excinfo.value.value.value
+
+
+def test_skill_decorator_sets_is_skill_attribute():
+    @skill
+    def foo(csi: Csi, input: Input):
+        pass
+
+    assert foo._is_skill
