@@ -1,4 +1,6 @@
 import inspect
+import logging
+import traceback
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
@@ -36,6 +38,10 @@ def build_app(skill: Skill) -> FastAPI:
         if not skill_name == skill.__name__:
             return JSONResponse(status_code=404, content={"detail": "Skill not found."})
 
-        return JSONResponse(content=skill(csi, input.input))
+        try:
+            return JSONResponse(skill(csi, input.input))
+        except Exception:
+            logging.error(traceback.format_exc())
+            return JSONResponse(status_code=500, content=traceback.format_exc())
 
     return app

@@ -69,8 +69,30 @@ def test_invalid_input_is_rejected(client: TestClient):
 
 def test_unknown_skill_is_rejected(client: TestClient):
     # When executing an unknown skill
-    json = {"input": {"topic": "cats"}, "skill": "unknown"}
+    json = {"input": {"topic": "oat milk"}, "skill": "unknown"}
     response = client.post("/execute_skill", json=json)
 
     # Then the skill is not executed
     assert response.status_code == 404
+
+
+def test_skill_error_is_caught_and_exposed():
+    # Given a skill that raises an error which is exposed by the app
+    class Input(BaseModel):
+        topic: str
+
+    # delete SkillHandler from globals
+    del globals()["SkillHandler"]
+
+    @skill
+    def haiku(csi: Csi, input: Input):
+        raise ValueError("Something went wrong")
+
+    app = build_app(haiku)
+
+    # When the skill is executed
+    json = {"input": {"topic": "oat milk"}, "skill": "haiku"}
+    client = TestClient(app)
+    response = client.post("/execute_skill", json=json)
+    assert response.status_code == 500
+    assert "Something went wrong" in response.json()
