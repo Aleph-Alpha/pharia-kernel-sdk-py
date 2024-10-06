@@ -1,10 +1,16 @@
 import argparse
+import importlib
+import inspect
 import logging
 import os
 import subprocess
 
 import requests
+import uvicorn
 from dotenv import load_dotenv
+
+from .decorator import Skill
+from .testing.server import build_app
 
 logging.basicConfig(
     level=logging.INFO,
@@ -159,6 +165,26 @@ def invalidate_cache(skill: str):
     logger.info(response.json())
 
 
+def find_skill_in_module(module: str) -> Skill | None:
+    """Find a function decorated with @skill in a given module."""
+    imported_module = importlib.import_module(module)
+
+    for _name, func in inspect.getmembers(imported_module, inspect.isfunction):
+        if getattr(func, "_is_skill", False):
+            return func
+
+    return None
+
+
+def run_server(module: str, host: str, port: int):
+    """Run a skill server that makes a skill available via HTTP."""
+    if (skill := find_skill_in_module(module)) is None:
+        raise Exception("No function decorated with @skill found in the module")
+
+    app = build_app(skill)
+    uvicorn.run(app, host=host, port=port)
+
+
 def main():
     load_dotenv()
 
@@ -173,6 +199,18 @@ def main():
         "skill", help="Path to the component to publish without the .wasm extension"
     )
 
+    up_parser = subparsers.add_parser(
+        "up",
+        help="Make a skill available via HTTP. Ignores provided namespaces when executing the skill.",
+    )
+    up_parser.add_argument("skill", help="Python module of the skill to run")
+    up_parser.add_argument(
+        "--host", help="Host where to run the HTTP server", default="127.0.0.1"
+    )
+    up_parser.add_argument(
+        "--port", help="Port where to run the HTTP server", type=int, default=8000
+    )
+
     args = parser.parse_args()
 
     try:
@@ -182,6 +220,8 @@ def main():
         elif args.command == "publish":
             publish(args.skill)
             invalidate_cache(args.skill)
+        elif args.command == "up":
+            run_server(args.skill, args.host, args.port)
         else:
             parser.print_help()
     except subprocess.CalledProcessError as e:

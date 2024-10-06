@@ -35,6 +35,7 @@ def build_app(skill: Skill) -> FastAPI:
         skill_name = input.skill.split("/")[-1]
         if not skill_name == skill.__name__:
             return JSONResponse(status_code=404, content={"detail": "Skill not found."})
+
         return JSONResponse(content=skill(csi, input.input))
 
     return app

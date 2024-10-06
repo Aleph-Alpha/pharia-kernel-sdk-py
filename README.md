@@ -48,6 +48,17 @@ The `testing` module provides two implementations of CSI for testing:
 - The `DevCsi` can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up.
 - The `StubCsi` can be used as a base class for mock implementation.
 
+### Running via HTTP
+
+If you want to expose your skill via HTTP locally, you can run
+
+```shell
+pharia-skill up examples.haiku
+```
+
+This will expose your skill under the `execute_skill` path, similar to how it is exposed by the Kernel.
+You must provide the name of the skill function as skill name on invocation. Provided namespaces are ignored on invocation.
+
 ## Building Skills
 
 When building the skills, the wheels that include native dependencies need to be provided additionally for Wasm. For example, the skill SDK has a dependency on `pydantic` v2.5.2.
