@@ -38,45 +38,61 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-def test_skill_can_be_executed(client: TestClient):
-    # When executing a skill against the app
+@pytest.fixture
+def headers() -> dict[str, str]:
+    return {"Authorization": "Bearer 123"}
+
+
+def test_skill_can_not_be_executed_without_headers(client: TestClient):
+    # When executing a skill without auth headers
     json = {"input": {"topic": "oat milk"}, "skill": "haiku"}
     response = client.post("/execute_skill", json=json)
 
+    # Then an unauthorized error is returned
+    assert response.status_code == 401
+
+
+def test_skill_can_be_executed(client: TestClient, headers: dict[str, str]):
+    # When executing a skill against the app
+    json = {"input": {"topic": "oat milk"}, "skill": "haiku"}
+    response = client.post("/execute_skill", json=json, headers=headers)
+
     # Then the completion of the csi is returned
     assert response.status_code == 200
     assert response.json() == "Oat milk, no sugar"
 
 
-def test_skill_with_namespace_can_be_executed(client: TestClient):
+def test_skill_with_namespace_can_be_executed(
+    client: TestClient, headers: dict[str, str]
+):
     # When executing a skill within a namespace
     json = {"input": {"topic": "oat milk"}, "skill": "playground/haiku"}
-    response = client.post("/execute_skill", json=json)
+    response = client.post("/execute_skill", json=json, headers=headers)
 
     # Then the completion of the csi is returned
     assert response.status_code == 200
     assert response.json() == "Oat milk, no sugar"
 
 
-def test_invalid_input_is_rejected(client: TestClient):
+def test_invalid_input_is_rejected(client: TestClient, headers: dict[str, str]):
     # When executing a skill with invalid input
     json = {"input": {"invalid": "input"}, "skill": "haiku"}
-    response = client.post("/execute_skill", json=json)
+    response = client.post("/execute_skill", json=json, headers=headers)
 
     # Then the skill is not executed
     assert response.status_code == 422
 
 
-def test_unknown_skill_is_rejected(client: TestClient):
+def test_unknown_skill_is_rejected(client: TestClient, headers: dict[str, str]):
     # When executing an unknown skill
     json = {"input": {"topic": "oat milk"}, "skill": "unknown"}
-    response = client.post("/execute_skill", json=json)
+    response = client.post("/execute_skill", json=json, headers=headers)
 
     # Then the skill is not executed
     assert response.status_code == 404
 
 
-def test_skill_error_is_caught_and_exposed():
+def test_skill_error_is_caught_and_exposed(headers: dict[str, str]):
     # Given a skill that raises an error which is exposed by the app
     class Input(BaseModel):
         topic: str
@@ -93,6 +109,6 @@ def test_skill_error_is_caught_and_exposed():
     # When the skill is executed
     json = {"input": {"topic": "oat milk"}, "skill": "haiku"}
     client = TestClient(app)
-    response = client.post("/execute_skill", json=json)
+    response = client.post("/execute_skill", json=json, headers=headers)
     assert response.status_code == 500
     assert "Something went wrong" in response.json()

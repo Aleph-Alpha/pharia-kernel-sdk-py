@@ -3,7 +3,7 @@ import logging
 import traceback
 from typing import Annotated
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -33,11 +33,19 @@ def build_app(skill: Skill) -> FastAPI:
         skill: str
 
     @app.post("/execute_skill")
-    async def execute_skill(csi: Annotated[Csi, Depends(with_csi)], input: Input):
+    async def execute_skill(
+        csi: Annotated[Csi, Depends(with_csi)], input: Input, request: Request
+    ):
         skill_name = input.skill.split("/")[-1]
         if not skill_name == skill.__name__:
             return JSONResponse(status_code=404, content={"detail": "Skill not found."})
 
+        if not request.headers.get("Authorization"):
+            return JSONResponse(status_code=401, content={"detail": "Unauthorized."})
+
+        if isinstance(csi, DevCsi):
+            # Forwards the request headers to the DevCsi
+            csi.session.headers = dict(request.headers)
         try:
             return JSONResponse(skill(csi, input.input))
         except Exception:
