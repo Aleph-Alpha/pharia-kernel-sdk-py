@@ -2,7 +2,7 @@ import inspect
 import json
 import traceback
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, Type, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -27,15 +27,14 @@ class Err(Generic[E], Exception):
 
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
+Skill = Callable[[Csi, UserInput], Any]
 
 
-def skill(
-    func: Callable[[Csi, UserInput], Any],
-) -> Callable[[Csi, UserInput], Any]:
+def skill(func: Skill) -> Skill:
     signature = list(inspect.signature(func).parameters.values())
     assert len(signature) == 2, "Skills must have exactly two arguments."
 
-    model: Type[UserInput] = signature[1].annotation
+    model = signature[1].annotation
     assert issubclass(model, BaseModel), "The second argument must be a Pydantic model"
 
     class SkillHandler(exports.SkillHandler):
