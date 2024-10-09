@@ -45,9 +45,10 @@ def build_app(skill: Skill) -> FastAPI:
 
         if isinstance(csi, DevCsi):
             # Forwards the request headers to the DevCsi
-            csi.session.headers = dict(request.headers)
+            csi.session.headers = {"Authorization": request.headers["Authorization"]}
         try:
-            return JSONResponse(skill(csi, input.input))
+            result = skill(csi, input.input)
+            return JSONResponse(result)
         except Exception:
             logging.error(traceback.format_exc())
             return JSONResponse(status_code=500, content=traceback.format_exc())

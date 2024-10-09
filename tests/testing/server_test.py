@@ -1,4 +1,7 @@
+import os
+
 import pytest
+from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
@@ -41,6 +44,13 @@ def client() -> TestClient:
 @pytest.fixture
 def headers() -> dict[str, str]:
     return {"Authorization": "Bearer 123"}
+
+
+@pytest.fixture
+def real_headers() -> dict[str, str]:
+    load_dotenv()
+    token = os.environ["AA_API_TOKEN"]
+    return {"Authorization": f"Bearer {token}"}
 
 
 def test_skill_can_not_be_executed_without_headers(client: TestClient):
@@ -98,7 +108,8 @@ def test_skill_error_is_caught_and_exposed(headers: dict[str, str]):
         topic: str
 
     # delete SkillHandler from globals
-    del globals()["SkillHandler"]
+    if "SkillHandler" in globals():
+        del globals()["SkillHandler"]
 
     @skill
     def haiku(csi: Csi, input: Input):
@@ -112,3 +123,34 @@ def test_skill_error_is_caught_and_exposed(headers: dict[str, str]):
     response = client.post("/execute_skill", json=json, headers=headers)
     assert response.status_code == 500
     assert "Something went wrong" in response.json()
+
+
+@pytest.mark.kernel
+def test_execute_skill_with_dev_csi(real_headers: dict[str, str]):
+    # Given a skill that uses llama to sum two numbers
+    class SumInput(BaseModel):
+        first: str
+        second: str
+
+    # delete SkillHandler from globals
+    if "SkillHandler" in globals():
+        del globals()["SkillHandler"]
+
+    @skill
+    def sum(csi: Csi, input: SumInput) -> str:
+        return csi.complete(
+            "llama-3.1-8b-instruct",
+            f"What is {input.first} + {input.second}?",
+            CompletionParams(),
+        ).text
+
+    app = build_app(sum)
+
+    # When the skill is executed
+    json = {"input": {"first": "3", "second": "5"}, "skill": "sum"}
+    client = TestClient(app)
+    response = client.post("/execute_skill", json=json, headers=real_headers)
+
+    # Then the model calculates the sum
+    assert response.status_code == 200
+    assert "8" in response.json()
