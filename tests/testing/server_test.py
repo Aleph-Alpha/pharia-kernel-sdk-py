@@ -117,6 +117,13 @@ def test_skill_error_is_caught_and_exposed(headers: dict[str, str]):
 
     app = build_app(haiku)
 
+    class MockCsi(Csi):
+        pass
+
+    # even though the mock csi is not invoked, it will be instantiated
+    # as the DevCsi needs some env variables, we provide a mock here
+    app.dependency_overrides[with_csi] = lambda: MockCsi()  # type: ignore
+
     # When the skill is executed
     json = {"input": {"topic": "oat milk"}, "skill": "haiku"}
     client = TestClient(app)
@@ -141,7 +148,7 @@ def test_execute_skill_with_dev_csi(real_headers: dict[str, str]):
         return csi.complete(
             "llama-3.1-8b-instruct",
             f"What is {input.first} + {input.second}?",
-            CompletionParams(),
+            CompletionParams(max_tokens=10),
         ).text
 
     app = build_app(sum)
