@@ -41,7 +41,10 @@ class DevCsi(Csi):
         self.session.headers = {"Authorization": f"Bearer {token}"}
 
     def __del__(self):
-        self.session.close()
+        if hasattr(self, "session"):
+            # If the __init__ raises an exception (e.g. a KeyError),
+            # the session might not have been created
+            self.session.close()
 
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         data = {
