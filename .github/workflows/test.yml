@@ -18,15 +18,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - uses: Gr1N/setup-poetry@v9
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - name: Install dependencies
-        run: poetry install
+        run: uv sync --dev
       - name: Lint
-        run: poetry run ruff check .
+        run: uv run ruff check .
       - name: Format
-        run: poetry run ruff format --diff .
+        run: uv run ruff format --diff .
       - name: Check types
-        run: poetry run mypy --install-types --non-interactive .
+        run: |
+          uv add pip
+          uv run mypy --install-types --non-interactive .
 
   test:
     runs-on: ubuntu-latest
@@ -35,11 +38,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - uses: Gr1N/setup-poetry@v9
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - name: Install dependencies
-        run: poetry install
+        run: uv sync --dev
       - name: Test
-        run: poetry run pytest -m 'not kernel'
+        run: uv run pytest -m 'not kernel'
 
   integration-test:
     runs-on: ubuntu-latest
@@ -54,9 +58,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - uses: Gr1N/setup-poetry@v9
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - name: Install dependencies
-        run: poetry install
+        run: uv sync --dev
 
       - name: Get Identity Token From GitHub
         run: |
@@ -86,9 +91,9 @@ jobs:
         run: sh -x ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $AA_API_TOKEN
 
       - name: Run tests
-        run: poetry run pytest -m 'kernel'
+        run: uv run pytest -m 'kernel'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
 
       - name: Check skill execution
-        run: poetry run sh -x ./scripts/build_and_run_skill.sh $AA_API_TOKEN
+        run: uv run sh -x ./scripts/build_and_run_skill.sh $AA_API_TOKEN

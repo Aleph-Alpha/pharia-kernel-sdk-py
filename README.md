@@ -107,10 +107,16 @@ skills = [{ name = "haiku", tag = "latest" }]
 
 ## Contributing
 
-Install the dependencies with
+We use [uv](https://github.com/astral-sh/uv) for dependency management and packaging. Install it with:
 
 ```shell
-poetry install
+pip install uv
+```
+
+Then, install the dependencies with
+
+```shell
+uv sync
 ```
 
 We use [pre-commit](https://pre-commit.com/) to check that code is formatted, linted and type checked. You can initialize by simply typing

@@ -1,34 +1,39 @@
-[tool.poetry]
+[project]
 name = "pharia-kernel-sdk-py"
 version = "0.1.6"
-description = ""
+description = "A Python SDK to develop skills for the Pharia Kernel"
 authors = [
-    "Peter Barth <peter.barth@aleph-alpha.com>",
-    "Markus Klein <markus.klein@aleph-alpha.com>",
-    "Benjamin Brandt <benjamin.brandt@aleph-alpha.com>",
-    "Daniel Tscherwinka <daniel.tscherwinka@aleph-alpha.com>",
-    "Moritz Althaus <moritz.althaus@aleph-alpha.com>",
-    "Jia Ho Lee <jiaho.lee@aleph-alpha.com>",
+    {"name" = "Peter Barth", "email" = "peter.barth@aleph-alpha.com"},
+    {"name" = "Markus Klein", "email" = "markus.klein@aleph-alpha.com"},
+    {"name" = "Benjamin Brandt", "email" = "benjamin.brandt@aleph-alpha.com"},
+    {"name" = "Daniel Tscherwinka", "email" = "daniel.tscherwinka@aleph-alpha.com"},
+    {"name" = "Moritz Althaus", "email" = "moritz.althaus@aleph-alpha.com"},
+    {"name" = "Jia Ho Lee", "email" = "jiaho.lee@aleph-alpha.com"},
 ]
 readme = "README.md"
-packages = [{ include = "pharia_skill" }]
+requires-python = ">=3.11"
+dependencies = [
+    "componentize-py>=0.14.0",
+    "pip>=24.2",
+    "pydantic-core==2.14.5",
+    "pydantic==2.5.2",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-pydantic-core = "2.14.5"
-pydantic = "2.5.2"
-requests = "^2.32.3"
-python-dotenv = "^1.0.1"
-componentize-py = "^0.14.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
-ruff = "^0.6.9"
-mypy = "^1.12.0"
-pre-commit = "^4.0.1"
-
-[tool.poetry.scripts]
+[project.scripts]
 pharia-skill = "pharia_skill.cli:main"
+
+[tool.setuptools]
+packages = ["pharia_skill"]
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.12.0",
+    "pre-commit>=4.0.1",
+    "pytest>=8.3.3",
+    "ruff>=0.7.0",
+]
 
 [tool.pytest.ini_options]
 markers = ["kernel: marks tests that requires Pharia Kernel"]
@@ -38,5 +43,5 @@ exclude = ["pharia_skill/wit"]
 lint.extend-select = ["I"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
