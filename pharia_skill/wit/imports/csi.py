@@ -62,6 +62,27 @@ class CompletionRequest:
     prompt: str
     params: CompletionParams
 
+@dataclass
+class IndexPath:
+    """
+    Which documents you want to search in, and which type of index should be used
+    """
+    namespace: str
+    collection: str
+    index: str
+
+@dataclass
+class DocumentPath:
+    namespace: str
+    collection: str
+    name: str
+
+@dataclass
+class SearchResult:
+    document_path: DocumentPath
+    content: str
+    score: float
+
 
 def complete(model: str, prompt: str, params: CompletionParams) -> Completion:
     raise NotImplementedError
@@ -80,5 +101,8 @@ def select_language(text: str, languages: List[Language]) -> Optional[Language]:
     raise NotImplementedError
 
 def complete_all(requests: List[CompletionRequest]) -> List[Completion]:
+    raise NotImplementedError
+
+def search(index_path: IndexPath, query: str, max_results: int, min_score: Optional[float]) -> List[SearchResult]:
     raise NotImplementedError
 

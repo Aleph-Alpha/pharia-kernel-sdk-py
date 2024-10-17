@@ -11,8 +11,11 @@ from .wit.imports.csi import (
     ChunkParams,
     Completion,
     CompletionRequest,
+    DocumentPath,
     FinishReason,
+    IndexPath,
     Language,
+    SearchResult,
 )
 from .wit.imports.csi import (
     CompletionParams as WitCompletionParams,
@@ -26,6 +29,9 @@ __all__ = [
     "Csi",
     "FinishReason",
     "Language",
+    "SearchResult",
+    "DocumentPath",
+    "IndexPath",
 ]
 
 
@@ -51,6 +57,14 @@ class Csi(Protocol):
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]: ...
 
+    def search(
+        self,
+        index_path: IndexPath,
+        query: str,
+        max_results: int,
+        min_score: float | None,
+    ) -> list[SearchResult]: ...
+
 
 class WasiCsi(Csi):
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
@@ -64,3 +78,12 @@ class WasiCsi(Csi):
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         return csi.complete_all(requests)
+
+    def search(
+        self,
+        index_path: IndexPath,
+        query: str,
+        max_results: int,
+        min_score: float | None,
+    ) -> list[SearchResult]:
+        return csi.search(index_path, query, max_results, min_score)

@@ -4,6 +4,7 @@ from pharia_skill.csi import (
     ChunkParams,
     CompletionParams,
     CompletionRequest,
+    IndexPath,
     Language,
 )
 from pharia_skill.testing import DevCsi
@@ -46,3 +47,18 @@ def test_complete_all(csi: DevCsi):
     assert len(result) == 2
     assert "Alice" in result[0].text
     assert "Bob" in result[1].text
+
+
+@pytest.mark.kernel
+def testsearch(csi: DevCsi):
+    # Given an existing index
+    index_path = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
+    query = "What is the population of Heidelberg?"
+
+    # When searching
+    result = csi.search(index_path, query)
+
+    # Then we get a result
+    assert len(result) == 1
+    assert "Heidelberg" in result[0].content
+    assert "Heidelberg" in result[0].document_path.name

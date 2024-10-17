@@ -10,8 +10,11 @@ from ..csi import (
     CompletionParams,
     CompletionRequest,
     Csi,
+    DocumentPath,
     FinishReason,
+    IndexPath,
     Language,
+    SearchResult,
 )
 
 
@@ -37,3 +40,22 @@ class StubCsi(Csi):
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         return [self.complete(**asdict(request)) for request in requests]
+
+    def search(
+        self,
+        index_path: IndexPath,
+        query: str,
+        max_results: int = 1,
+        min_score: float | None = None,
+    ) -> list[SearchResult]:
+        return [
+            SearchResult(
+                document_path=DocumentPath(
+                    namespace="dummy-namespace",
+                    collection="dummy-collection",
+                    name="dummy-name",
+                ),
+                content="dummy-content",
+                score=1.0,
+            )
+        ]
