@@ -14,7 +14,10 @@ from ..csi import (
     CompletionParams,
     CompletionRequest,
     Csi,
+    DocumentPath,
+    IndexPath,
     Language,
+    SearchResult,
 )
 
 
@@ -53,7 +56,7 @@ class DevCsi(Csi):
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.json()}")
+            raise Exception(f"{response.status_code}: {response.text}")
         return Completion(**response.json())
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
@@ -65,7 +68,7 @@ class DevCsi(Csi):
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.json()}")
+            raise Exception(f"{response.status_code}: {response.text}")
         return response.json()
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
@@ -77,7 +80,7 @@ class DevCsi(Csi):
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.json()}")
+            raise Exception(f"{response.status_code}: {response.text}")
         match response.json():
             case "eng":
                 return Language.ENG
@@ -94,5 +97,32 @@ class DevCsi(Csi):
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.json()}")
+            raise Exception(f"{response.status_code}: {response.text}")
         return [Completion(**completion) for completion in response.json()]
+
+    def search(
+        self,
+        index_path: IndexPath,
+        query: str,
+        max_results: int = 1,
+        min_score: float | None = None,
+    ) -> list[SearchResult]:
+        data = {
+            "version": self.VERSION,
+            "function": self.search.__name__,
+            "index_path": asdict(index_path),
+            "query": query,
+            "max_results": max_results,
+            "min_score": min_score,
+        }
+        response = self.session.post(self.url, json=data)
+        if response.status_code != 200:
+            raise Exception(f"{response.status_code}: {response.text}")
+        return [
+            SearchResult(
+                document_path=DocumentPath(**result["document_path"]),
+                content=result["content"],
+                score=result["score"],
+            )
+            for result in response.json()
+        ]

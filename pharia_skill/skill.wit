@@ -1,4 +1,4 @@
-package pharia:skill@0.2.3;
+package pharia:skill@0.2.6;
 
 @since(version = 0.1.0)
 world skill {
@@ -54,11 +54,11 @@ interface csi {
         /// other stop reasons.
         max-tokens: option<u32>,
         /// The randomness with which the next token is selected.
-        temperature: option<float64>,
+        temperature: option<f64>,
         /// The number of possible next tokens the model will choose from.
         top-k: option<u32>,
         /// The probability total of next tokens the model will choose from.
-        top-p: option<float64>,
+        top-p: option<f64>,
         /// A list of sequences that, if encountered, the API will stop generating further tokens.
         stop: list<string>,
     }
@@ -106,4 +106,28 @@ interface csi {
 
     @since(version = 0.2.3)
     complete-all: func(requests: list<completion-request>) -> list<completion>;
+
+    /// Which documents you want to search in, and which type of index should be used
+    record index-path {
+        /// The namespace the collection belongs to
+         namespace: string,
+        /// The collection you want to search in
+         collection: string,
+        /// The search index you want to use for the collection
+         index: string,
+    }
+
+    record document-path {
+         namespace: string,
+         collection: string,
+         name: string,
+    }
+
+    record search-result {
+         document-path: document-path,
+         content: string,
+         score: f64,
+    }
+
+    search: func(index-path: index-path, query: string, max-results: u32, min-score: option<f64>) -> list<search-result>;
 }
