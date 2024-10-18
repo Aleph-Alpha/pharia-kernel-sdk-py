@@ -1,6 +1,6 @@
 import pytest
 
-from pharia_skill.csi import (
+from pharia_skill import (
     ChunkParams,
     CompletionParams,
     CompletionRequest,
@@ -50,7 +50,7 @@ def test_complete_all(csi: DevCsi):
 
 
 @pytest.mark.kernel
-def testsearch(csi: DevCsi):
+def test_search(csi: DevCsi):
     # Given an existing index
     index_path = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
     query = "What is the population of Heidelberg?"

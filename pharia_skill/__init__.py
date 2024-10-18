@@ -4,7 +4,11 @@ from .csi import (
     CompletionParams,
     CompletionRequest,
     Csi,
+    DocumentPath,
+    FinishReason,
+    IndexPath,
     Language,
+    SearchResult,
 )
 from .decorator import skill
 
@@ -16,4 +20,8 @@ __all__ = [
     "Completion",
     "ChunkParams",
     "Language",
+    "IndexPath",
+    "DocumentPath",
+    "SearchResult",
+    "FinishReason",
 ]

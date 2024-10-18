@@ -4,7 +4,7 @@ StubCsi can be used for testing without a backing Pharia Kernel instance.
 
 from dataclasses import asdict
 
-from ..csi import (
+from pharia_skill import (
     ChunkParams,
     Completion,
     CompletionParams,

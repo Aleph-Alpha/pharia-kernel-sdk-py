@@ -8,7 +8,7 @@ from dataclasses import asdict
 import requests
 from dotenv import load_dotenv
 
-from ..csi import (
+from pharia_skill import (
     ChunkParams,
     Completion,
     CompletionParams,
