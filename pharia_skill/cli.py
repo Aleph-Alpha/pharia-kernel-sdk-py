@@ -80,7 +80,8 @@ def publish(skill: str):
     try:
         jfrog_user = os.environ["JFROG_USER"]
         jfrog_password = os.environ["JFROG_PASSWORD"]
-        gitlab_token = os.environ["GITLAB_TOKEN"]
+        skill_registry_user = os.environ["SKILL_REGISTRY_USER"]
+        skill_registry_password = os.environ["SKILL_REGISTRY_PASSWORD"]
         skill_registry = os.environ["SKILL_REGISTRY"]
         skill_repository = os.environ["SKILL_REPOSITORY"]
     except KeyError as e:
@@ -130,9 +131,9 @@ def publish(skill: str):
         "-r",
         skill_repository,
         "-u",
-        "DUMMY_USER_NAME",
+        skill_registry_user,
         "-p",
-        gitlab_token,
+        skill_registry_password,
         "-t",
         "latest",
         container_path,
