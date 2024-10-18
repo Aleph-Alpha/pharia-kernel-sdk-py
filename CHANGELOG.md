@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.1.8...v0.2.0) (2024-10-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* allow providing skill registry user name to broaden registry support
+
+### Features
+
+* allow providing skill registry user name to broaden registry support ([018f057](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/018f0573530fe8d491b6f4d63572e580c8005e65))
+
 ## [0.1.8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.1.7...v0.1.8) (2024-10-18)
 
 
