@@ -1,11 +1,14 @@
 import pytest
 
 from pharia_skill import (
+    ChatParams,
     ChunkParams,
     CompletionParams,
     CompletionRequest,
     IndexPath,
     Language,
+    Message,
+    Role,
 )
 from pharia_skill.testing import DevCsi
 
@@ -20,6 +23,14 @@ def test_complete(csi: DevCsi):
     params = CompletionParams(max_tokens=64)
     result = csi.complete("llama-3.1-8b-instruct", "Say hello to Bob", params)
     assert "Bob" in result.text
+
+
+@pytest.mark.kernel
+def test_chat(csi: DevCsi):
+    params = ChatParams(max_tokens=64)
+    messages = [Message(role=Role.USER, content="Say hello to Bob")]
+    result = csi.chat("llama-3.1-8b-instruct", messages, params)
+    assert "Bob" in result.message.content
 
 
 @pytest.mark.kernel

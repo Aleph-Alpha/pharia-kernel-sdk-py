@@ -5,6 +5,8 @@ StubCsi can be used for testing without a backing Pharia Kernel instance.
 from dataclasses import asdict
 
 from pharia_skill import (
+    ChatParams,
+    ChatResponse,
     ChunkParams,
     Completion,
     CompletionParams,
@@ -14,6 +16,8 @@ from pharia_skill import (
     FinishReason,
     IndexPath,
     Language,
+    Message,
+    Role,
     SearchResult,
 )
 
@@ -34,6 +38,14 @@ class StubCsi(Csi):
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
         return [text]
+
+    def chat(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> ChatResponse:
+        return ChatResponse(
+            message=Message(role=Role.ASSISTANT, content=messages[-1].content),
+            finish_reason=FinishReason.STOP,
+        )
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         return languages[0] if languages else None

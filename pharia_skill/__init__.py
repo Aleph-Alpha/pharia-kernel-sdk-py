@@ -1,4 +1,6 @@
 from .csi import (
+    ChatParams,
+    ChatResponse,
     ChunkParams,
     Completion,
     CompletionParams,
@@ -8,12 +10,18 @@ from .csi import (
     FinishReason,
     IndexPath,
     Language,
+    Message,
+    Role,
     SearchResult,
 )
 from .decorator import skill
 
 __all__ = [
     "skill",
+    "ChatParams",
+    "ChatResponse",
+    "Message",
+    "Role",
     "Csi",
     "CompletionRequest",
     "CompletionParams",

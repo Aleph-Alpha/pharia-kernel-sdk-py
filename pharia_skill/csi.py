@@ -8,6 +8,10 @@ from typing import Protocol
 
 from .wit.imports import csi
 from .wit.imports.csi import (
+    ChatParams as WitChatParams,
+)
+from .wit.imports.csi import (
+    ChatResponse,
     ChunkParams,
     Completion,
     CompletionRequest,
@@ -15,6 +19,8 @@ from .wit.imports.csi import (
     FinishReason,
     IndexPath,
     Language,
+    Message,
+    Role,
     SearchResult,
 )
 from .wit.imports.csi import (
@@ -22,6 +28,10 @@ from .wit.imports.csi import (
 )
 
 __all__ = [
+    "ChatParams",
+    "ChatResponse",
+    "Message",
+    "Role",
     "ChunkParams",
     "Completion",
     "CompletionParams",
@@ -44,12 +54,23 @@ class CompletionParams(WitCompletionParams):
     stop: list[str] = field(default_factory=lambda: list())
 
 
+@dataclass
+class ChatParams(WitChatParams):
+    max_tokens: int | None = None
+    temperature: float | None = None
+    top_p: float | None = None
+
+
 class Csi(Protocol):
     def complete(
         self, model: str, prompt: str, params: CompletionParams
     ) -> Completion: ...
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]: ...
+
+    def chat(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> ChatResponse: ...
 
     def select_language(
         self, text: str, languages: list[Language]
@@ -72,6 +93,11 @@ class WasiCsi(Csi):
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
         return csi.chunk(text, params)
+
+    def chat(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> ChatResponse:
+        return csi.chat(model, messages, params)
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         return csi.select_language(text, languages)

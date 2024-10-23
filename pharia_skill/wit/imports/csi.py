@@ -38,6 +38,31 @@ class CompletionParams:
     top_p: Optional[float]
     stop: List[str]
 
+class Role(Enum):
+    USER = 0
+    ASSISTANT = 1
+    SYSTEM = 2
+
+@dataclass
+class Message:
+    role: Role
+    content: str
+
+@dataclass
+class ChatParams:
+    max_tokens: Optional[int]
+    temperature: Optional[float]
+    top_p: Optional[float]
+
+@dataclass
+class ChatResponse:
+    """
+    The result of a chat reponse, including the message generated as well as
+    why the model finished completing.
+    """
+    message: Message
+    finish_reason: FinishReason
+
 @dataclass
 class ChunkParams:
     """
@@ -85,6 +110,9 @@ class SearchResult:
 
 
 def complete(model: str, prompt: str, params: CompletionParams) -> Completion:
+    raise NotImplementedError
+
+def chat(model: str, messages: List[Message], params: ChatParams) -> ChatResponse:
     raise NotImplementedError
 
 def chunk(text: str, params: ChunkParams) -> List[str]:
