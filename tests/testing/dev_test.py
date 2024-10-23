@@ -8,7 +8,6 @@ from pharia_skill import (
     IndexPath,
     Language,
     Message,
-    Role,
 )
 from pharia_skill.testing import DevCsi
 
@@ -33,7 +32,7 @@ def test_complete(csi: DevCsi, model: str):
 @pytest.mark.kernel
 def test_chat(csi: DevCsi, model: str):
     params = ChatParams(max_tokens=64)
-    messages = [Message(role=Role.USER, content="Say hello to Bob")]
+    messages = [Message.user("Say hello to Bob")]
     result = csi.chat(model, messages, params)
     assert "Bob" in result.message.content
 

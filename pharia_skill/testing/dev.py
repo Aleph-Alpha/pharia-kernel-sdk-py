@@ -20,7 +20,6 @@ from pharia_skill import (
     IndexPath,
     Language,
     Message,
-    Role,
     SearchResult,
 )
 
@@ -78,35 +77,17 @@ class DevCsi(Csi):
     def chat(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatResponse:
-        role_to_str = {
-            Role.USER: "User",
-            Role.SYSTEM: "System",
-            Role.ASSISTANT: "Assistant",
-        }
-        role_from_str = {
-            "User": Role.USER,
-            "System": Role.SYSTEM,
-            "Assistant": Role.ASSISTANT,
-        }
         data = {
             "version": self.VERSION,
             "function": self.chat.__name__,
             "model": model,
-            "messages": [
-                {"role": role_to_str[m.role], "content": m.content} for m in messages
-            ],
+            "messages": [asdict(m) for m in messages],
             "params": asdict(params),
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
             raise Exception(f"{response.status_code}: {response.text}")
-        res_body = response.json()
-        msg = res_body["message"]
-        finish_reason = res_body["finish_reason"]
-        return ChatResponse(
-            message=Message(role=role_from_str[msg["role"]], content=msg["content"]),
-            finish_reason=finish_reason,
-        )
+        return ChatResponse.from_dict(response.json())
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         data = {
