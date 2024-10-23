@@ -17,7 +17,6 @@ from pharia_skill import (
     IndexPath,
     Language,
     Message,
-    Role,
     SearchResult,
 )
 
@@ -43,7 +42,7 @@ class StubCsi(Csi):
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatResponse:
         return ChatResponse(
-            message=Message(role=Role.ASSISTANT, content=messages[-1].content),
+            message=Message.assistant(messages[-1].content),
             finish_reason=FinishReason.STOP,
         )
 
