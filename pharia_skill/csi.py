@@ -138,7 +138,7 @@ class Message:
 
     @classmethod
     def from_wit(cls, msg: WitMessage) -> "Message":
-        return cls(role=Role(msg.role), content=msg.content)
+        return cls(role=Role.from_wit(msg.role), content=msg.content)
 
     @classmethod
     def user(cls, content: str) -> "Message":
