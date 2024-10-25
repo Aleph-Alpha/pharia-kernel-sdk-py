@@ -1,30 +1,14 @@
 import inspect
 import json
 import traceback
-from dataclasses import dataclass
-from typing import Any, Callable, Generic, Type, TypeVar
+from typing import Any, Callable, Type, TypeVar
 
 from pydantic import BaseModel
 
 from .csi import Csi, WasiCsi
 from .wit import exports
 from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput
-from .wit.types import E
-
-
-@dataclass
-class Err(Generic[E], Exception):
-    """Represents an error that occurred during the execution of a skill.
-
-    For some exceptions like NotImplementedError, `traceback.format_exc()`
-    does not work as it tries assigning th `__traceback__` attribute to
-    `wit.types.Err`, which is a frozen dataclass and such raises
-    a `dataclasses.FrozenInstanceError`. Therefore we introduce our own
-    non-frozen `Err` class.
-    """
-
-    value: E
-
+from .wit.types import Err
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 
