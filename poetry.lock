@@ -145,17 +145,17 @@ files = [
 
 [[package]]
 name = "componentize-py"
-version = "0.14.0"
+version = "0.15.1"
 description = "Tool to package Python applications as WebAssembly components"
 optional = false
 python-versions = "*"
 files = [
-    {file = "componentize_py-0.14.0-cp37-abi3-macosx_10_12_x86_64.whl", hash = "sha256:4d66f63915b0cdfd972f2794025d62e694dd375d413aa4d7a538d86ee2e70d15"},
-    {file = "componentize_py-0.14.0-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:a184bc414eca1cc51f5f265c50d69c41e16e8c989bcc72f80c79c3df8c2cf6e9"},
-    {file = "componentize_py-0.14.0-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:d3695c2ce1aba689e920fe4b3781496d6ed1f88cd35b497aba29f69534fe1d8f"},
-    {file = "componentize_py-0.14.0-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:5b41c8ed7cb577c607a24a619e53d7f37bd27a7da30ec3d3ac8f9cb988a0b938"},
-    {file = "componentize_py-0.14.0-cp37-abi3-win_amd64.whl", hash = "sha256:31204bad0aaee369acf5f35fa52290135fbdbb51053e9253e9a6b63f7adce180"},
-    {file = "componentize_py-0.14.0.tar.gz", hash = "sha256:1664d28ca81ccd94d48caba450ce32e6b16e03730e4ebe972786e09ac8d29d96"},
+    {file = "componentize_py-0.15.1-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:18ff8e07f30fa9e1fdfa5002c0b8c497b8df627805c01e35052dcbc6bbcc348a"},
+    {file = "componentize_py-0.15.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:cd8c3a53e9a13d2ceb9681a5b9d6492a072183e0d86eba5619acbd5f9b2b4397"},
+    {file = "componentize_py-0.15.1-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:04a627cca23e443d2656cca399863af533914891235f4ea64271036846f3ada4"},
+    {file = "componentize_py-0.15.1-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:151f374b2786917d0c1fefe99207049aa9a7f9ddb25b0700adf763901ec25c66"},
+    {file = "componentize_py-0.15.1-cp39-abi3-win_amd64.whl", hash = "sha256:98448ccf2013666734a7bc70111a5ecaf51dfcd92f533921bf3dcd5d88e1e943"},
+    {file = "componentize_py-0.15.1.tar.gz", hash = "sha256:fff1f543bcb24b27def3e3c7ebbb14f99d57713adb4239a2eccef97d8f3aa4bd"},
 ]
 
 [[package]]
@@ -689,4 +689,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "813a653877d852e152c09cf6fee2aaa8a5ac9b34af38e1c855c0883386813528"
+content-hash = "f1d769f914582ec08932e440daa54f3a0355d61000bd094d2aa0173c92adb3eb"
