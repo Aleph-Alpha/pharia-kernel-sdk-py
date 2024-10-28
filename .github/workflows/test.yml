@@ -92,3 +92,6 @@ jobs:
 
       - name: Check skill execution
         run: poetry run sh -x ./scripts/build_and_run_skill.sh $AA_API_TOKEN
+
+      - name: Check skill execution of failing skill
+        run: poetry run sh -x ./scripts/build_and_run_failing_skill.sh $AA_API_TOKEN
