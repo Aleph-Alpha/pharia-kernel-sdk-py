@@ -12,22 +12,22 @@ class Input(BaseModel):
 
 
 @skill
-def haiku(csi: Csi, input: Input) -> dict[str, str]:
+def haiku(
+    csi: Csi, input: Input, model: str = "llama-3.1-8b-instruct"
+) -> dict[str, str]:
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
     You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
     {input.topic}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
     params = CompletionParams(max_tokens=64)
-    completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
+    completion = csi.complete(model, prompt, params)
 
     # same prompt as above but for the chat completion
     msg = Message.user(
         f"You are a poet who strictly speaks in haikus.\n\n{input.topic}"
     )
-    chat_completion = csi.chat(
-        "llama-3.1-8b-instruct", [msg], ChatParams(max_tokens=64)
-    )
+    chat_completion = csi.chat(model, [msg], ChatParams(max_tokens=64))
     return {
         "completion": completion.text.strip(),
         "chat": chat_completion.message.content.strip(),

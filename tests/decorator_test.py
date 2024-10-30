@@ -20,7 +20,7 @@ def test_skill_with_one_argument_raises_error():
     expected = "Skills must have exactly two arguments."
     with pytest.raises(AssertionError, match=expected):
 
-        @skill
+        @skill  # type: ignore
         def foo(csi: Csi):
             pass
 
@@ -29,9 +29,24 @@ def test_skill_with_non_pydantic_model_raises_error():
     expected = "The second argument must be a Pydantic model"
     with pytest.raises(AssertionError, match=expected):
 
-        @skill
+        @skill  # type: ignore
         def foo(csi: Csi, input: str):
             pass
+
+
+def test_skill_with_too_many_arguments_raises_error():
+    expected = "All arguments after the second argument must have defaults."
+    with pytest.raises(AssertionError, match=expected):
+
+        @skill  # type: ignore
+        def foo(csi: Csi, input: Input, model: str):
+            pass
+
+
+def test_skill_with_default_arguments_does_not_raise():
+    @skill  # type: ignore
+    def foo(csi: Csi, input: Input, model: str = "llama"):
+        pass
 
 
 def test_raise_error_if_two_skills_defined():
@@ -97,3 +112,14 @@ def test_skill_with_csi_call_raises_not_implemented():
         handler.run(b'{"topic": "llama"}')
 
     assert "NotImplementedError" in excinfo.value.value.value
+
+
+def test_skill_handler_can_list_models():
+    @skill
+    def foo(
+        csi: Csi, input: Input, model: str = "llama-3.1", chat_gpt: str = "chat-gpt"
+    ):
+        pass
+
+    handler = foo.__globals__["SkillHandler"]()
+    assert handler.models() == ["llama-3.1", "chat-gpt"]
