@@ -19,7 +19,7 @@ pydantic-core = "2.14.5"
 pydantic = "2.5.2"
 requests = "^2.32.3"
 python-dotenv = "^1.0.1"
-componentize-py = "^0.14.0"
+componentize-py = "^0.15.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
