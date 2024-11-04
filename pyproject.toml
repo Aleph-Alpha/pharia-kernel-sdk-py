@@ -23,7 +23,7 @@ componentize-py = "^0.15.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
-ruff = "^0.7.1"
+ruff = "^0.7.2"
 mypy = "^1.13.0"
 pre-commit = "^4.0.1"
 
