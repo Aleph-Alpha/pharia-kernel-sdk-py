@@ -10,6 +10,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  id-token: write
+
+env:
+ ARTIFACTORY_URL: "https://alephalpha.jfrog.io"
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -38,6 +45,9 @@ jobs:
       - uses: Gr1N/setup-poetry@v9
       - name: Install dependencies
         run: poetry install
+      - uses: ./.github/actions/jfrog
+      - name: Set env variable to publish skill
+        run: echo "JFROG_PASSWORD=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Test
         run: poetry run pytest -m 'not kernel'
 
@@ -57,41 +67,14 @@ jobs:
       - uses: Gr1N/setup-poetry@v9
       - name: Install dependencies
         run: poetry install
-
-      - name: Get Identity Token From GitHub
-        run: |
-          ID_TOKEN=$(curl -sLS -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-          "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$ARTIFACTORY_URL" | jq .value | tr -d '"')
-          if [[ -z "$ID_TOKEN" ]]; then exit 1; fi
-          echo "ID_TOKEN=$ID_TOKEN" >> $GITHUB_ENV
-      - name: Get JFrog Access Token with GitHub Identity Token
-        run: |
-          JFROG_ACCESS_TOKEN=$(curl \
-            -X POST \
-            -H "Content-type: application/json" \
-            $ARTIFACTORY_URL/access/api/v1/oidc/token \
-            -d \
-            "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\", \"subject_token\": \"$ID_TOKEN\", \"provider_name\": \"github\"}" \
-          | jq .access_token -r)
-          if [[ -z "$JFROG_ACCESS_TOKEN" ]]; then exit 1; fi
-          echo "::add-mask::$JFROG_ACCESS_TOKEN"
-          echo "JFROG_ACCESS_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
-      - name: Get Subject from JFrog Access Token
-        run: |
-          JFROG_ACCESS_TOKEN_SUBJECT=$(echo $JFROG_ACCESS_TOKEN | awk -F '.' '{print $2 "===="}' | fold -w 4 | sed '$ d' | tr -d '\n' | base64 -d | jq '.sub' -r)
-          if [[ -z "$JFROG_ACCESS_TOKEN_SUBJECT" ]]; then exit 1; fi
-          echo "JFROG_ACCESS_TOKEN_SUBJECT=$JFROG_ACCESS_TOKEN_SUBJECT" >> $GITHUB_ENV
-
+      - uses: ./.github/actions/jfrog
       - name: Run Pharia Kernel
         run: sh -x ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $AA_API_TOKEN
-
       - name: Run tests
         run: poetry run pytest -m 'kernel'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
-
       - name: Check skill execution
         run: poetry run sh -x ./scripts/build_and_run_skill.sh $AA_API_TOKEN
-
       - name: Check skill execution of failing skill
         run: poetry run sh -x ./scripts/build_and_run_failing_skill.sh $AA_API_TOKEN
