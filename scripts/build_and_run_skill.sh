@@ -3,19 +3,10 @@
 AA_API_TOKEN=$1
 PHARIA_KERNEL_ADDRESS=${2-http://127.0.0.1:8081}
 
-if [ ! -d "wasi_deps" ]; then
-  echo "Pulling Pydantic WASI..."
-  mkdir -p wasi_deps
-  cd wasi_deps
-  curl -OL https://github.com/dicej/wasi-wheels/releases/download/latest/pydantic_core-wasi.tar.gz
-  tar xf pydantic_core-wasi.tar.gz
-  rm pydantic_core-wasi.tar.gz
-  cd ..
-fi
-
 echo "Building skill..."
 mkdir -p skills
-componentize-py -w skill componentize examples.haiku -o skills/haiku.wasm -p . -p wasi_deps
+pharia-skill build examples.haiku
+mv haiku.wasm skills/haiku.wasm
 
 echo "Waiting for skill to be available..."
 sleep 2
