@@ -2,6 +2,7 @@
 wasi_deps/
 skills/
 *.wasm
+bin/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
