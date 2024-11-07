@@ -32,10 +32,11 @@ class PhariaSkillCli:
 
     @classmethod
     def is_up_to_date(cls) -> bool:
-        return cls.check_pharia_skill_version() == cls.PHARIA_SKILL_CLI_VERSION
+        return cls.pharia_skill_version() == cls.PHARIA_SKILL_CLI_VERSION
 
     @classmethod
-    def check_pharia_skill_version(cls) -> str | None:
+    def pharia_skill_version(cls) -> str | None:
+        """Version of the currently installed `pharia-skill-cli` binary."""
         result = subprocess.run(
             ["bin/pharia-skill-cli", "--version"], stdout=subprocess.PIPE, text=True
         )
