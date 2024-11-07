@@ -99,6 +99,7 @@ def main():
     except subprocess.CalledProcessError as e:
         logger.error(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
         logger.error(f"Error message: {e.stderr}")
+        exit(e.returncode)
 
 
 if __name__ == "__main__":
