@@ -17,7 +17,7 @@ class PhariaSkillCli:
     """
 
     # Expected version of the `pharia-skill-cli` binary
-    PHARIA_SKILL_CLI_VERSION = "0.1.4"
+    PHARIA_SKILL_CLI_VERSION = "0.1.16"
 
     def __init__(self):
         """Make sure the `pharia-skill-cli` binary is up to date before allowing users to invoke commands."""
@@ -65,6 +65,9 @@ class PhariaSkillCli:
     @classmethod
     def download_pharia_skill(cls) -> bytes:
         """Download the pharia-skill binary from the JFrog repository."""
+        logger.info(
+            f"Downloading pharia-skill-cli version {cls.PHARIA_SKILL_CLI_VERSION} for {cls.architecture()}"
+        )
         url = f"https://alephalpha.jfrog.io/artifactory/pharia-kernel-files/pharia-skill-cli/{cls.PHARIA_SKILL_CLI_VERSION}/{cls.architecture()}"
         token = os.environ["JFROG_PASSWORD"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -81,6 +84,7 @@ class PhariaSkillCli:
             f.write(pharia_skill)
 
         subprocess.run(["chmod", "+x", "bin/pharia-skill-cli"], check=True)
+        logger.info("Pharia skill CLI installed successfully.")
 
     def publish(self, skill: str):
         """Publish a skill to an OCI registry.
