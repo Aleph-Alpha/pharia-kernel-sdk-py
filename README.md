@@ -48,29 +48,6 @@ The `testing` module provides two implementations of CSI for testing:
 - The `DevCsi` can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up.
 - The `StubCsi` can be used as a base class for mock implementation.
 
-## Building Skills
-
-When building the skills, the wheels that include native dependencies need to be provided additionally for Wasm. For example, the skill SDK has a dependency on `pydantic` v2.5.2.
-
-### Download Pydantic WASI wheels
-
-Supported Pydantic versions:
-
-```toml
-pydantic-core = "2.14.5"
-pydantic = "2.5.2"
-```
-
-Download and unpack WASI wheels (without installation):
-
-```shell
-mkdir wasi_deps
-cd wasi_deps
-curl -OL https://github.com/dicej/wasi-wheels/releases/download/latest/pydantic_core-wasi.tar.gz
-tar xf pydantic_core-wasi.tar.gz
-cd ..
-```
-
 ### Compiling Skill to Wasm
 
 You now build your skill, which will produce a `haiku.wasm` file:
