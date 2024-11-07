@@ -54,7 +54,10 @@ class PhariaSkillCli:
     def architecture(cls) -> str:
         match platform.system():
             case "Darwin":
-                return "aarch64-apple-darwin"
+                if platform.machine() == "arm64":
+                    return "aarch64-apple-darwin"
+                else:
+                    return "x86_64-apple-darwin"
             case "Linux":
                 return "x86_64-unknown-linux-gnu"
             case "Windows":
