@@ -11,8 +11,13 @@ class Input(BaseModel):
     topic: str
 
 
+class Output(BaseModel):
+    completion: str
+    chat: str
+
+
 @skill
-def haiku(csi: Csi, input: Input) -> dict[str, str]:
+def haiku(csi: Csi, input: Input) -> Output:
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
     You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
@@ -28,7 +33,7 @@ def haiku(csi: Csi, input: Input) -> dict[str, str]:
     chat_completion = csi.chat(
         "llama-3.1-8b-instruct", [msg], ChatParams(max_tokens=64)
     )
-    return {
-        "completion": completion.text.strip(),
-        "chat": chat_completion.message.content.strip(),
-    }
+    return Output(
+        completion=completion.text.strip(),
+        chat=chat_completion.message.content.strip(),
+    )
