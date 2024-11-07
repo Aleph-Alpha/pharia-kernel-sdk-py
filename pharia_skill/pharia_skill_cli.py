@@ -19,6 +19,8 @@ class PhariaSkillCli:
     # Expected version of the `pharia-skill-cli` binary
     PHARIA_SKILL_CLI_VERSION = "0.1.16"
 
+    PHARIA_SKILL_CLI_PATH = "bin/pharia-skill-cli" if "Windows" not in platform.system() else ".\\bin\\pharia-skill-cli"
+
     def __init__(self):
         """Make sure the `pharia-skill-cli` binary is up to date before allowing users to invoke commands."""
         load_dotenv()
@@ -26,7 +28,7 @@ class PhariaSkillCli:
 
     @classmethod
     def update_if_needed(cls):
-        if not os.path.exists("bin/pharia-skill-cli") or not cls.is_up_to_date():
+        if not os.path.exists(cls.PHARIA_SKILL_CLI_PATH) or not cls.is_up_to_date():
             cls.download_and_install()
             assert cls.is_up_to_date()
 
@@ -38,7 +40,7 @@ class PhariaSkillCli:
     def pharia_skill_version(cls) -> str | None:
         """Version of the currently installed `pharia-skill-cli` binary."""
         result = subprocess.run(
-            ["bin/pharia-skill-cli", "--version"], stdout=subprocess.PIPE, text=True
+            [cls.PHARIA_SKILL_CLI_PATH, "--version"], stdout=subprocess.PIPE, text=True
         )
         if result.returncode != 0:
             return None
@@ -86,8 +88,8 @@ class PhariaSkillCli:
 
         with open("bin/pharia-skill-cli", "wb") as f:
             f.write(pharia_skill)
-
-        subprocess.run(["chmod", "+x", "bin/pharia-skill-cli"], check=True)
+        if "Windows" not in platform.system():
+            subprocess.run(["chmod", "+x", "bin/pharia-skill-cli"], check=True)
         logger.info("Pharia skill CLI installed successfully.")
 
     def publish(self, skill: str):
@@ -115,7 +117,7 @@ class PhariaSkillCli:
             skill = f"./{skill}"
 
         command = [
-            "bin/pharia-skill-cli",
+            self.PHARIA_SKILL_CLI_PATH,
             "publish",
             "-R",
             skill_registry,
