@@ -19,7 +19,11 @@ class PhariaSkillCli:
     # Expected version of the `pharia-skill-cli` binary
     PHARIA_SKILL_CLI_VERSION = "0.1.16"
 
-    PHARIA_SKILL_CLI_PATH = "bin/pharia-skill-cli" if "Windows" not in platform.system() else ".\\bin\\pharia-skill-cli"
+    PHARIA_SKILL_CLI_PATH = (
+        "bin/pharia-skill-cli"
+        if "Windows" not in platform.system()
+        else ".\\bin\\pharia-skill-cli"
+    )
 
     def __init__(self):
         """Make sure the `pharia-skill-cli` binary is up to date before allowing users to invoke commands."""
