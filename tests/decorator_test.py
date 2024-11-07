@@ -2,7 +2,7 @@ import pytest
 from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, Csi, skill
-from pharia_skill.decorator import Err, as_json_str
+from pharia_skill.decorator import Err, as_json_str, as_schema
 from pharia_skill.wit.exports.skill_handler import Error_InvalidInput
 
 
@@ -25,7 +25,7 @@ def test_skill_with_one_argument_raises_error():
     with pytest.raises(AssertionError, match=expected):
 
         @skill  # type: ignore
-        def foo(csi: Csi):
+        def foo(csi: Csi) -> None:
             pass
 
 
@@ -34,20 +34,20 @@ def test_skill_with_non_pydantic_model_raises_error():
     with pytest.raises(AssertionError, match=expected):
 
         @skill  # type: ignore
-        def foo(csi: Csi, input: str):
+        def foo(csi: Csi, input: str) -> None:
             pass
 
 
 def test_raise_error_if_two_skills_defined():
     @skill
-    def foo(csi: Csi, input: Input):
+    def foo(csi: Csi, input: Input) -> None:
         pass
 
     expected = "`@skill` can only be used once."
     with pytest.raises(AssertionError, match=expected):
 
         @skill
-        def bar(csi: Csi, input: Input):
+        def bar(csi: Csi, input: Input) -> None:
             pass
 
 
@@ -59,6 +59,15 @@ def test_skill_input_is_parsed_as_pydantic_model():
     handler = foo.__globals__["SkillHandler"]()
     result = handler.run(b'{"topic": "llama"}')
     assert result == b'"llama"'
+
+
+def test_skill_without_output_type_raises_error():
+    expected = "The function must have a return type annotation"
+    with pytest.raises(AssertionError, match=expected):
+
+        @skill
+        def foo(csi: Csi, input: Input):
+            pass
 
 
 def test_skill_output_is_serialized_as_json():
@@ -85,12 +94,35 @@ def test_skill_raises_bad_input_error():
 
 def test_skill_without_return_value():
     @skill
-    def foo(csi: Csi, input: Input):
+    def foo(csi: Csi, input: Input) -> None:
         pass
 
     handler = foo.__globals__["SkillHandler"]()
     result = handler.run(b'{"topic": "llama"}')
     assert result == b"null"
+
+
+def test_skill_pydantic_output_schema():
+    @skill
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message=input.topic)
+
+    handler = foo.__globals__["SkillHandler"]()
+    assert handler.output_schema() == {
+        "properties": {"message": {"title": "Message", "type": "string"}},
+        "required": ["message"],
+        "title": "Output",
+        "type": "object",
+    }
+
+
+def test_skill_str_output_schema():
+    @skill
+    def foo(csi: Csi, input: Input) -> str:
+        return input.topic
+
+    handler = foo.__globals__["SkillHandler"]()
+    assert handler.output_schema() == {"type": "string"}
 
 
 def test_skill_with_csi_call_raises_not_implemented():
@@ -103,8 +135,9 @@ def test_skill_with_csi_call_raises_not_implemented():
     """
 
     @skill
-    def foo(csi: Csi, input: Input):
+    def foo(csi: Csi, input: Input) -> str:
         csi.complete("llama", "prompt", CompletionParams())
+        return "llama"
 
     handler = foo.__globals__["SkillHandler"]()
     with pytest.raises(Err) as excinfo:
@@ -117,3 +150,13 @@ def test_as_json_str():
     assert as_json_str(None) == "null"
     assert as_json_str("llama") == '"llama"'
     assert as_json_str(Output(message="llama")) == '{"message":"llama"}'
+
+
+def test_as_schema():
+    assert as_schema(Output) == {
+        "properties": {"message": {"title": "Message", "type": "string"}},
+        "required": ["message"],
+        "title": "Output",
+        "type": "object",
+    }
+    assert as_schema(str) == {"type": "string"}
