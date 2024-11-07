@@ -2,12 +2,16 @@ import pytest
 from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, Csi, skill
-from pharia_skill.decorator import Err
+from pharia_skill.decorator import Err, as_json_str
 from pharia_skill.wit.exports.skill_handler import Error_InvalidInput
 
 
 class Input(BaseModel):
     topic: str
+
+
+class Output(BaseModel):
+    message: str
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +24,7 @@ def test_skill_with_one_argument_raises_error():
     expected = "Skills must have exactly two arguments."
     with pytest.raises(AssertionError, match=expected):
 
-        @skill
+        @skill  # type: ignore
         def foo(csi: Csi):
             pass
 
@@ -29,7 +33,7 @@ def test_skill_with_non_pydantic_model_raises_error():
     expected = "The second argument must be a Pydantic model"
     with pytest.raises(AssertionError, match=expected):
 
-        @skill
+        @skill  # type: ignore
         def foo(csi: Csi, input: str):
             pass
 
@@ -49,7 +53,7 @@ def test_raise_error_if_two_skills_defined():
 
 def test_skill_input_is_parsed_as_pydantic_model():
     @skill
-    def foo(csi: Csi, input: Input):
+    def foo(csi: Csi, input: Input) -> str:
         return input.topic
 
     handler = foo.__globals__["SkillHandler"]()
@@ -57,9 +61,19 @@ def test_skill_input_is_parsed_as_pydantic_model():
     assert result == b'"llama"'
 
 
+def test_skill_output_is_serialized_as_json():
+    @skill
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message=input.topic)
+
+    handler = foo.__globals__["SkillHandler"]()
+    result = handler.run(b'{"topic": "llama"}')
+    assert result == b'{"message":"llama"}'
+
+
 def test_skill_raises_bad_input_error():
     @skill
-    def foo(csi: Csi, input: Input):
+    def foo(csi: Csi, input: Input) -> str:
         return input.topic
 
     handler = foo.__globals__["SkillHandler"]()
@@ -97,3 +111,9 @@ def test_skill_with_csi_call_raises_not_implemented():
         handler.run(b'{"topic": "llama"}')
 
     assert "NotImplementedError" in excinfo.value.value.value
+
+
+def test_as_json_str():
+    assert as_json_str(None) == "null"
+    assert as_json_str("llama") == '"llama"'
+    assert as_json_str(Output(message="llama")) == '{"message":"llama"}'
