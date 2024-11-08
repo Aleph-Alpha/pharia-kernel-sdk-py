@@ -116,6 +116,20 @@ def test_skill_pydantic_output_schema():
     }
 
 
+def test_skill_pydantic_input_schema():
+    @skill
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message=input.topic)
+
+    handler = foo.__globals__["SkillHandler"]()
+    assert handler.input_schema() == {
+        "properties": {"topic": {"title": "Topic", "type": "string"}},
+        "required": ["topic"],
+        "title": "Input",
+        "type": "object",
+    }
+
+
 def test_skill_str_output_schema():
     @skill
     def foo(csi: Csi, input: Input) -> str:
