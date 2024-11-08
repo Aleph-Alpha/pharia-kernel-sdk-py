@@ -42,6 +42,9 @@ def skill(
         def output_schema(self) -> dict[str, Any] | None:
             return as_schema(func.__annotations__["return"])
 
+        def input_schema(self) -> dict[str, Any] | None:
+            return model.model_json_schema()
+
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
     func.__globals__["SkillHandler"] = SkillHandler
     return func
