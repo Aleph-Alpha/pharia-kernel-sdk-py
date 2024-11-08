@@ -1,8 +1,8 @@
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from pharia_skill import CompletionParams, Csi, skill
-from pharia_skill.decorator import Err, as_json_str, as_schema
+from pharia_skill.decorator import Err
 from pharia_skill.wit.exports.skill_handler import Error_InvalidInput
 
 
@@ -12,6 +12,10 @@ class Input(BaseModel):
 
 class Output(BaseModel):
     message: str
+
+
+ListReturn = RootModel[list[str]]
+StringReturn = RootModel[str]
 
 
 @pytest.fixture(autouse=True)
@@ -40,32 +44,32 @@ def test_skill_with_non_pydantic_model_raises_error():
 
 def test_raise_error_if_two_skills_defined():
     @skill
-    def foo(csi: Csi, input: Input) -> None:
-        pass
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message=input.topic)
 
     expected = "`@skill` can only be used once."
     with pytest.raises(AssertionError, match=expected):
 
         @skill
-        def bar(csi: Csi, input: Input) -> None:
-            pass
+        def bar(csi: Csi, input: Input) -> Output:
+            return Output(message=input.topic)
 
 
 def test_skill_input_is_parsed_as_pydantic_model():
     @skill
-    def foo(csi: Csi, input: Input) -> str:
-        return input.topic
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message=input.topic)
 
     handler = foo.__globals__["SkillHandler"]()
     result = handler.run(b'{"topic": "llama"}')
-    assert result == b'"llama"'
+    assert result == b'{"message":"llama"}'
 
 
 def test_skill_without_output_type_raises_error():
     expected = "The function must have a return type annotation"
     with pytest.raises(AssertionError, match=expected):
 
-        @skill
+        @skill  # type: ignore
         def foo(csi: Csi, input: Input):
             pass
 
@@ -82,8 +86,8 @@ def test_skill_output_is_serialized_as_json():
 
 def test_skill_raises_bad_input_error():
     @skill
-    def foo(csi: Csi, input: Input) -> str:
-        return input.topic
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message=input.topic)
 
     handler = foo.__globals__["SkillHandler"]()
     with pytest.raises(Err) as excinfo:
@@ -92,14 +96,13 @@ def test_skill_raises_bad_input_error():
     assert isinstance(excinfo.value.value, Error_InvalidInput)
 
 
-def test_skill_without_return_value():
-    @skill
-    def foo(csi: Csi, input: Input) -> None:
-        pass
+def test_skill_without_return_value_raises_error():
+    expected = "The function must have a return type annotation"
+    with pytest.raises(AssertionError, match=expected):
 
-    handler = foo.__globals__["SkillHandler"]()
-    result = handler.run(b'{"topic": "llama"}')
-    assert result == b"null"
+        @skill  # type: ignore
+        def foo(csi: Csi, input: Input) -> None:
+            pass
 
 
 def test_skill_pydantic_output_schema():
@@ -116,6 +119,36 @@ def test_skill_pydantic_output_schema():
     }
 
 
+def test_skill_root_model_output_schema():
+    """Pydantic supports returning `flat` types from skills."""
+
+    @skill
+    def foo(csi: Csi, input: Input) -> ListReturn:
+        return ListReturn(["llama"])
+
+    handler = foo.__globals__["SkillHandler"]()
+    assert handler.output_schema() == {
+        "title": "RootModel[list[str]]",
+        "type": "array",
+        "items": {"type": "string"},
+    }
+
+    result = handler.run(b'{"topic": "llama"}')
+    assert result == b'["llama"]'
+
+
+def test_skill_root_model_string_output_schema():
+    @skill
+    def foo(csi: Csi, input: Input) -> StringReturn:
+        return StringReturn("llama")
+
+    handler = foo.__globals__["SkillHandler"]()
+    assert handler.output_schema() == {"title": "RootModel[str]", "type": "string"}
+
+    result = handler.run(b'{"topic": "llama"}')
+    assert result == b'"llama"'
+
+
 def test_skill_pydantic_input_schema():
     @skill
     def foo(csi: Csi, input: Input) -> Output:
@@ -130,15 +163,6 @@ def test_skill_pydantic_input_schema():
     }
 
 
-def test_skill_str_output_schema():
-    @skill
-    def foo(csi: Csi, input: Input) -> str:
-        return input.topic
-
-    handler = foo.__globals__["SkillHandler"]()
-    assert handler.output_schema() == {"type": "string"}
-
-
 def test_skill_with_csi_call_raises_not_implemented():
     """Test call to the csi.complete call from bindings.
 
@@ -149,28 +173,12 @@ def test_skill_with_csi_call_raises_not_implemented():
     """
 
     @skill
-    def foo(csi: Csi, input: Input) -> str:
+    def foo(csi: Csi, input: Input) -> Output:
         csi.complete("llama", "prompt", CompletionParams())
-        return "llama"
+        return Output(message="llama")
 
     handler = foo.__globals__["SkillHandler"]()
     with pytest.raises(Err) as excinfo:
         handler.run(b'{"topic": "llama"}')
 
     assert "NotImplementedError" in excinfo.value.value.value
-
-
-def test_as_json_str():
-    assert as_json_str(None) == "null"
-    assert as_json_str("llama") == '"llama"'
-    assert as_json_str(Output(message="llama")) == '{"message":"llama"}'
-
-
-def test_as_schema():
-    assert as_schema(Output) == {
-        "properties": {"message": {"title": "Message", "type": "string"}},
-        "required": ["message"],
-        "title": "Output",
-        "type": "object",
-    }
-    assert as_schema(str) == {"type": "string"}
