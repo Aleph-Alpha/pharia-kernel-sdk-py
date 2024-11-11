@@ -111,7 +111,7 @@ def test_skill_pydantic_output_schema():
         return Output(message=input.topic)
 
     handler = foo.__globals__["SkillHandler"]()
-    assert handler.output_schema() == {
+    assert handler._output_schema() == {
         "properties": {"message": {"title": "Message", "type": "string"}},
         "required": ["message"],
         "title": "Output",
@@ -127,7 +127,7 @@ def test_skill_root_model_output_schema():
         return ListReturn(["llama"])
 
     handler = foo.__globals__["SkillHandler"]()
-    assert handler.output_schema() == {
+    assert handler._output_schema() == {
         "title": "RootModel[list[str]]",
         "type": "array",
         "items": {"type": "string"},
@@ -143,7 +143,7 @@ def test_skill_root_model_string_output_schema():
         return StringReturn("llama")
 
     handler = foo.__globals__["SkillHandler"]()
-    assert handler.output_schema() == {"title": "RootModel[str]", "type": "string"}
+    assert handler._output_schema() == {"title": "RootModel[str]", "type": "string"}
 
     result = handler.run(b'{"topic": "llama"}')
     assert result == b'"llama"'
@@ -155,7 +155,7 @@ def test_skill_pydantic_input_schema():
         return Output(message=input.topic)
 
     handler = foo.__globals__["SkillHandler"]()
-    assert handler.input_schema() == {
+    assert handler._input_schema() == {
         "properties": {"topic": {"title": "Topic", "type": "string"}},
         "required": ["topic"],
         "title": "Input",
