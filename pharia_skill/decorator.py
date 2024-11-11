@@ -44,10 +44,10 @@ def skill(
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))
 
-        def output_schema(self) -> dict[str, Any]:
+        def _output_schema(self) -> dict[str, Any]:
             return output_model.model_json_schema()
 
-        def input_schema(self) -> dict[str, Any]:
+        def _input_schema(self) -> dict[str, Any]:
             return input_model.model_json_schema()
 
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
