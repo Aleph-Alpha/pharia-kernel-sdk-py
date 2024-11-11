@@ -20,24 +20,23 @@ As an example, we write a new skill in `haiku.py`.
 
 ```python
 # haiku.py
-from pharia_skill import CompletionParams, Csi, skill
-from pydantic import BaseModel
+from pharia_skill import ChatParams, Csi, Message, skill
+from pydantic import RootModel
 
-
-class Input(BaseModel):
-    topic: str
+# The SDK requires skills to accept and return a Pydantic model.
+# RootModel allows to receive and return flat data structures, such as strings or lists.
+Input = RootModel[str]
+Output = RootModel[str]
 
 
 @skill
-def haiku(csi: Csi, input: Input) -> str:
-    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+def run(csi: Csi, input: Input) -> Output:
+    system = Message.system("You are a poet who strictly speaks in haikus.")
+    user = Message.user(input.root)
 
-    You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-    {input.topic}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
-    params = CompletionParams(max_tokens=64)
-    completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
-    return completion.text.strip()
+    params = ChatParams(max_tokens=64)
+    output = csi.chat("llama-3.1-8b-instruct", [system, user], params)
+    return Output(output.message.content.strip())
 ```
 
 ### Testing
@@ -70,7 +69,6 @@ To deploy your skill, run
 ```shell
 pharia-skill publish haiku
 ```
-
 
 ## Configuring namespace
 

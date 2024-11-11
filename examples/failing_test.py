@@ -6,7 +6,7 @@ from .failing import Input, failing
 
 
 def test_skill_raises():
-    input = Input(topic="Oat milk")
+    input = Input("Oat milk")
     csi = StubCsi()
     with pytest.raises(ValueError):
         failing(csi, input)
