@@ -16,7 +16,7 @@ RESPONSE_CODE=$(curl -w '%{http_code}' -s -o /dev/null \
                 $PHARIA_KERNEL_ADDRESS/execute_skill \
                 -H "Authorization: Bearer $AA_API_TOKEN" \
                 -H 'Content-Type: application/json' \
-                -d '{ "skill" : "dev/haiku", "input" : { "topic" : "Homer" } }')
+                -d '{ "skill" : "dev/haiku", "input" : "Homer" }')
 
 if [ "$RESPONSE_CODE" = "200" ]; then
     exit 0

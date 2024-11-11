@@ -15,7 +15,7 @@ echo "Executing skill..."
 RESPONSE_BODY=$(curl -s $PHARIA_KERNEL_ADDRESS/execute_skill \
                 -H "Authorization: Bearer $AA_API_TOKEN" \
                 -H 'Content-Type: application/json' \
-                -d '{ "skill" : "dev/failing", "input" : { "topic" : "Homer" } }')
+                -d '{ "skill" : "dev/failing", "input" : "Homer" }')
 
 if echo "$RESPONSE_BODY" | grep -q "ValueError: I never expect to finish"; then
     exit 0
