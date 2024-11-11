@@ -119,7 +119,7 @@ def test_skill_pydantic_output_schema():
     }
 
 
-def test_skill_root_model_output_schema():
+def test_skill_with_list_output():
     """Pydantic supports returning `flat` types from skills."""
 
     @skill
@@ -137,7 +137,7 @@ def test_skill_root_model_output_schema():
     assert result == b'["llama"]'
 
 
-def test_skill_root_model_string_output_schema():
+def test_skill_with_plain_string_output():
     @skill
     def foo(csi: Csi, input: Input) -> StringReturn:
         return StringReturn("llama")
