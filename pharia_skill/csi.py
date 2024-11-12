@@ -230,6 +230,6 @@ class WasiCsi(Csi):
         index_path: IndexPath,
         query: str,
         max_results: int,
-        min_score: float | None,
+        min_score: float | None = None,
     ) -> list[SearchResult]:
         return csi.search(index_path, query, max_results, min_score)
