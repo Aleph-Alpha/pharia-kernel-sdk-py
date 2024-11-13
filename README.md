@@ -21,22 +21,24 @@ As an example, we write a new skill in `haiku.py`.
 ```python
 # haiku.py
 from pharia_skill import ChatParams, Csi, Message, skill
-from pydantic import RootModel
+from pydantic import BaseModel
 
-# The SDK requires skills to accept and return a Pydantic model.
-# RootModel allows to receive and return flat data structures, such as strings or lists.
-Input = RootModel[str]
-Output = RootModel[str]
+
+class Input(BaseModel):
+    topic: str
+
+
+class Output(BaseModel):
+    haiku: str
 
 
 @skill
 def run(csi: Csi, input: Input) -> Output:
     system = Message.system("You are a poet who strictly speaks in haikus.")
-    user = Message.user(input.root)
-
+    user = Message.user(input.topic)
     params = ChatParams(max_tokens=64)
-    output = csi.chat("llama-3.1-8b-instruct", [system, user], params)
-    return Output(output.message.content.strip())
+    response = csi.chat("llama-3.1-8b-instruct", [system, user], params)
+    return Output(haiku=response.message.content.strip())
 ```
 
 ### Testing
