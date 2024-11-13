@@ -7,6 +7,8 @@ from dataclasses import asdict
 
 import requests
 from dotenv import load_dotenv
+from opentelemetry import trace
+from opentelemetry.trace import StatusCode
 
 from pharia_skill import (
     ChatParams,
@@ -61,10 +63,18 @@ class DevCsi(Csi):
     def run(self, function: str, data: dict):
         data["version"] = self.VERSION
         data["function"] = function
-        response = self.session.post(self.url, json=data)
-        if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.text}")
-        return response.json()
+
+        with trace.get_tracer(__name__).start_as_current_span(function) as span:
+            span.set_attribute("input", str(data))
+            response = self.session.post(self.url, json=data)
+            if response.status_code != 200:
+                span.set_status(StatusCode.ERROR, response.text)
+                raise Exception(f"{response.status_code}: {response.text}")
+            output = response.json()
+            span.set_status(StatusCode.OK)
+            span.set_attribute("output", str(output))
+
+        return output
 
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         data = {
@@ -80,7 +90,7 @@ class DevCsi(Csi):
             "text": text,
             "params": asdict(params),
         }
-        return self.run(self.chunk.__name__, data)
+        return self.run(self.chunk.__name__, data)  # type: ignore
 
     def chat(
         self, model: str, messages: list[Message], params: ChatParams

@@ -1,4 +1,12 @@
 import pytest
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    SimpleSpanProcessor,
+    SpanExporter,
+    SpanExportResult,
+)
+from opentelemetry.trace import StatusCode
 
 from pharia_skill import (
     ChatParams,
@@ -78,3 +86,44 @@ def test_search(csi: Csi):
     assert len(result) == 1
     assert "Heidelberg" in result[0].content
     assert "Heidelberg" in result[0].document_path.name
+
+
+class InMemorySpanExporter(SpanExporter):
+    def __init__(self):
+        self.finished_spans = []
+
+    def export(self, spans):
+        self.finished_spans.extend(spans)
+        return SpanExportResult.SUCCESS
+
+    def shutdown(self):
+        self.finished_spans.clear()
+
+
+@pytest.fixture
+def exporter() -> InMemorySpanExporter:
+    trace_provider = TracerProvider()
+    trace.set_tracer_provider(trace_provider)
+
+    exporter = InMemorySpanExporter()
+    span_processor = SimpleSpanProcessor(exporter)
+    trace_provider.add_span_processor(span_processor)
+    return exporter
+
+
+def test_tracing(exporter: InMemorySpanExporter):
+    # Given a csi setup with an in-memory exporter
+    csi = DevCsi()
+
+    # When running a completion request
+    csi.complete(
+        "llama-3.1-8b-instruct", "Say hello to Bob", CompletionParams(max_tokens=64)
+    )
+
+    # Then the exporter has received a successful span
+    assert len(exporter.finished_spans) == 1
+    assert exporter.finished_spans[0].status.status_code == StatusCode.OK
+
+    # And the input and output are set as attributes
+    assert "Say hello to Bob" in exporter.finished_spans[0].attributes["input"]
+    assert "Bob" in exporter.finished_spans[0].attributes["output"]
