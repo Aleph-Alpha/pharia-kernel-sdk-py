@@ -58,57 +58,48 @@ class DevCsi(Csi):
         if hasattr(self, "session"):
             self.session.close()
 
-    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
-        data = {
-            "version": self.VERSION,
-            "function": self.complete.__name__,
-            "prompt": prompt,
-            "model": model,
-            "params": asdict(params),
-        }
-        response = self.session.post(self.url, json=data)
-        if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.text}")
-        return Completion(**response.json())
-
-    def chunk(self, text: str, params: ChunkParams) -> list[str]:
-        data = {
-            "version": self.VERSION,
-            "function": self.chunk.__name__,
-            "text": text,
-            "params": asdict(params),
-        }
+    def run(self, function: str, data: dict):
+        data["version"] = self.VERSION
+        data["function"] = function
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
             raise Exception(f"{response.status_code}: {response.text}")
         return response.json()
 
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
+        data = {
+            "prompt": prompt,
+            "model": model,
+            "params": asdict(params),
+        }
+        output = self.run(self.complete.__name__, data)
+        return Completion(**output)
+
+    def chunk(self, text: str, params: ChunkParams) -> list[str]:
+        data = {
+            "text": text,
+            "params": asdict(params),
+        }
+        return self.run(self.chunk.__name__, data)
+
     def chat(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatResponse:
         data = {
-            "version": self.VERSION,
-            "function": self.chat.__name__,
             "model": model,
             "messages": [asdict(m) for m in messages],
             "params": asdict(params),
         }
-        response = self.session.post(self.url, json=data)
-        if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.text}")
-        return chat_response_from_dict(response.json())
+        output = self.run(self.chat.__name__, data)
+        return chat_response_from_dict(output)
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         data = {
-            "version": self.VERSION,
-            "function": self.select_language.__name__,
             "text": text,
             "languages": [language.name.lower() for language in languages],
         }
-        response = self.session.post(self.url, json=data)
-        if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.text}")
-        match response.json():
+        output = self.run(self.select_language.__name__, data)
+        match output:
             case "eng":
                 return Language.ENG
             case "deu":
@@ -118,14 +109,10 @@ class DevCsi(Csi):
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         data = {
-            "version": self.VERSION,
-            "function": self.complete_all.__name__,
             "requests": [asdict(request) for request in requests],
         }
-        response = self.session.post(self.url, json=data)
-        if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.text}")
-        return [Completion(**completion) for completion in response.json()]
+        output = self.run(self.complete_all.__name__, data)
+        return [Completion(**completion) for completion in output]
 
     def search(
         self,
@@ -135,21 +122,17 @@ class DevCsi(Csi):
         min_score: float | None = None,
     ) -> list[SearchResult]:
         data = {
-            "version": self.VERSION,
-            "function": self.search.__name__,
             "index_path": asdict(index_path),
             "query": query,
             "max_results": max_results,
             "min_score": min_score,
         }
-        response = self.session.post(self.url, json=data)
-        if response.status_code != 200:
-            raise Exception(f"{response.status_code}: {response.text}")
+        output = self.run(self.search.__name__, data)
         return [
             SearchResult(
                 document_path=DocumentPath(**result["document_path"]),
                 content=result["content"],
                 score=result["score"],
             )
-            for result in response.json()
+            for result in output
         ]
