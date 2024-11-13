@@ -78,6 +78,7 @@ jobs:
         run: poetry run pytest -m 'kernel'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
+          STUDIO_URL: https://pharia-studio.aleph-alpha.stackit.run
       - name: Check skill execution
         run: poetry run sh -x ./scripts/build_and_run_skill.sh $AA_API_TOKEN
       - name: Check skill execution of failing skill

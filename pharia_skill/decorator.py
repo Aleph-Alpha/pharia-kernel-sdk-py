@@ -1,7 +1,10 @@
 import inspect
+import json
 import traceback
 from typing import Any, Callable, Type, TypeVar
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel
 
 from .csi import Csi
@@ -78,5 +81,16 @@ def skill(
             return input_model.model_json_schema()
 
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
+
+    def trace_skill(csi: Csi, input: UserInput) -> UserOutput:
+        with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
+            span.set_attribute("type", "TASK_SPAN")
+            span.set_attribute("input", json.dumps(input.model_dump()))
+            result = func(csi, input)
+            span.set_attribute("output", json.dumps(result.model_dump()))
+            span.set_status(Status(StatusCode.OK))
+            return result
+
     func.__globals__["SkillHandler"] = SkillHandler
-    return func
+    trace_skill.__globals__["SkillHandler"] = SkillHandler
+    return trace_skill
