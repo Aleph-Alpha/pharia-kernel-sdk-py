@@ -5,6 +5,7 @@ from pharia_skill import (
     ChunkParams,
     CompletionParams,
     CompletionRequest,
+    Csi,
     IndexPath,
     Language,
     Message,
@@ -13,7 +14,7 @@ from pharia_skill.testing import DevCsi
 
 
 @pytest.fixture(scope="module")
-def csi() -> DevCsi:
+def csi() -> Csi:
     return DevCsi()
 
 
@@ -23,14 +24,14 @@ def model() -> str:
 
 
 @pytest.mark.kernel
-def test_complete(csi: DevCsi, model: str):
+def test_complete(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
     result = csi.complete(model, "Say hello to Bob", params)
     assert "Bob" in result.text
 
 
 @pytest.mark.kernel
-def test_chat(csi: DevCsi, model: str):
+def test_chat(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
     result = csi.chat(model, messages, params)
@@ -38,7 +39,7 @@ def test_chat(csi: DevCsi, model: str):
 
 
 @pytest.mark.kernel
-def test_chunk(csi: DevCsi, model: str):
+def test_chunk(csi: Csi, model: str):
     text = "A very very very long text that can be chunked."
     params = ChunkParams(model, max_tokens=1)
     result = csi.chunk(text, params)
@@ -46,7 +47,7 @@ def test_chunk(csi: DevCsi, model: str):
 
 
 @pytest.mark.kernel
-def test_select_language(csi: DevCsi):
+def test_select_language(csi: Csi):
     text = "Ich spreche Deutsch nur ein bisschen."
     languages = [Language.ENG, Language.DEU]
     result = csi.select_language(text, languages)
@@ -54,7 +55,7 @@ def test_select_language(csi: DevCsi):
 
 
 @pytest.mark.kernel
-def test_complete_all(csi: DevCsi, model: str):
+def test_complete_all(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
     request_1 = CompletionRequest(model, "Say hello to Alice", params)
     request_2 = CompletionRequest(model, "Say hello to Bob", params)
@@ -65,7 +66,7 @@ def test_complete_all(csi: DevCsi, model: str):
 
 
 @pytest.mark.kernel
-def test_search(csi: DevCsi):
+def test_search(csi: Csi):
     # Given an existing index
     index_path = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
     query = "What is the population of Heidelberg?"
