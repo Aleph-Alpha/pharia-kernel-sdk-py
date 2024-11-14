@@ -14,6 +14,8 @@ class PhariaSkillCli:
 
     This class manages the installation of the `pharia-skill-cli` binary and provides
     an interface to its commands.
+
+    We make sure the `pharia-skill-cli` binary is up to date before allowing users to invoke commands.
     """
 
     # Expected version of the `pharia-skill-cli` binary
@@ -26,7 +28,6 @@ class PhariaSkillCli:
     )
 
     def __init__(self):
-        """Make sure the `pharia-skill-cli` binary is up to date before allowing users to invoke commands."""
         load_dotenv()
         self.update_if_needed()
 
