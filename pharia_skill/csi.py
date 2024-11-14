@@ -7,40 +7,20 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Protocol
 
-from .wit.imports import csi
-from .wit.imports.csi import (
-    ChatParams as WitChatParams,
-)
-from .wit.imports.csi import (
-    ChatResponse as WitChatResponse,
-)
-from .wit.imports.csi import (
-    ChunkParams as WitChunkParams,
-)
-from .wit.imports.csi import (
-    Completion as WitCompletion,
-)
-from .wit.imports.csi import (
-    CompletionParams as WitCompletionParams,
-)
-from .wit.imports.csi import (
-    CompletionRequest as WitCompletionRequest,
-)
-from .wit.imports.csi import (
-    DocumentPath,
-    IndexPath,
-    Language,
-    SearchResult,
-)
-from .wit.imports.csi import (
-    FinishReason as WitFinishReason,
-)
-from .wit.imports.csi import (
-    Message as WitMessage,
-)
-from .wit.imports.csi import (
-    Role as WitRole,
-)
+from .wit.imports import csi as wit_csi
+from .wit.imports.csi import ChatParams as WitChatParams
+from .wit.imports.csi import ChatResponse as WitChatResponse
+from .wit.imports.csi import ChunkParams as WitChunkParams
+from .wit.imports.csi import Completion as WitCompletion
+from .wit.imports.csi import CompletionParams as WitCompletionParams
+from .wit.imports.csi import CompletionRequest as WitCompletionRequest
+from .wit.imports.csi import DocumentPath as WitDocumentPath
+from .wit.imports.csi import FinishReason as WitFinishReason
+from .wit.imports.csi import IndexPath as WitIndexPath
+from .wit.imports.csi import Language as WitLanguage
+from .wit.imports.csi import Message as WitMessage
+from .wit.imports.csi import Role as WitRole
+from .wit.imports.csi import SearchResult as WitSearchResult
 
 __all__ = [
     "ChatParams",
@@ -245,16 +225,103 @@ class ChatResponse:
 
 @dataclass
 class ChunkParams:
-    """
-    Chunking parameters
+    """Chunking parameters
 
     Attributes:
-        model (str, required):
-        max_tokens (str, required)
+        model (str, required): The name of the model the chunk is intended to be used for. This must be a known model.
+        max_tokens (int, required): The maximum number of tokens that should be returned per chunk.
     """
 
     model: str
     max_tokens: int
+
+
+@dataclass
+class DocumentPath:
+    """Path identifying a document.
+
+    A DocumentPath consists of a namespace, within the namespace a collection and within the collection a document has a name.
+
+    Attributes:
+        namespace (str): The namespace.
+        collection (str): The collection within the namespace.
+        name (str): The name identifying the document in the collection.
+    """
+
+    namespace: str
+    collection: str
+    name: str
+
+    @classmethod
+    def from_wit(cls, res: WitDocumentPath) -> "DocumentPath":
+        return cls(namespace=res.namespace, collection=res.collection, name=res.name)
+
+
+@dataclass
+class IndexPath:
+    """Which documents you want to search in, and which type of index should be used.
+
+    Attributes:
+        namespace (string): The namespace the collection belongs to.
+        collection (string): The collection you want to search in.
+        index (str): The search index you want to use for the collection.
+    """
+
+    namespace: str
+    collection: str
+    index: str
+
+
+@dataclass
+class SearchResult:
+    """The relevant documents as result of a search request.
+
+    Attributes:
+        document_path (DocumentPath): The document_path that identifies the document
+        content (str): The contents of the retrieved document
+        score (float): the score representing the match regarding the search request
+    """
+
+    document_path: DocumentPath
+    content: str
+    score: float
+
+    @classmethod
+    def from_wit(cls, res: WitSearchResult) -> "SearchResult":
+        return cls(
+            document_path=DocumentPath.from_wit(res.document_path),
+            content=res.content,
+            score=res.score,
+        )
+
+
+@dataclass
+class Language(int, Enum):
+    """ISO 639-3 language
+
+    Attributes:
+        ENG (0): English
+        DEU (1): German
+    """
+
+    ENG = 0
+    DEU = 1
+
+    @property
+    def wit(self) -> WitLanguage:
+        match self:
+            case Language.ENG:
+                return WitLanguage.ENG
+            case Language.DEU:
+                return WitLanguage.DEU
+
+    @classmethod
+    def from_wit(cls, language: WitLanguage) -> "Language":
+        match language:
+            case WitLanguage.ENG:
+                return Language.ENG
+            case WitLanguage.DEU:
+                return Language.DEU
 
 
 class Csi(Protocol):
@@ -370,25 +437,30 @@ class WasiCsi(Csi):
             top_p=params.top_p,
             stop=params.stop,
         )
-        completion = csi.complete(model, prompt, params)
+        completion = wit_csi.complete(model, prompt, params)
         return Completion.from_wit(completion)
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
-        return csi.chunk(
+        return wit_csi.chunk(
             text, WitChunkParams(model=params.model, max_tokens=params.max_tokens)
         )
 
     def chat(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatResponse:
-        response = csi.chat(model, [m.wit for m in messages], params)
+        response = wit_csi.chat(model, [m.wit for m in messages], params)
         return ChatResponse.from_wit(response)
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
-        return csi.select_language(text, languages)
+        return [
+            Language.from_wit(lang)
+            for lang in wit_csi.select_language(
+                text, [lang.wit() for lang in languages]
+            )
+        ]
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        completions = csi.complete_all(
+        completions = wit_csi.complete_all(
             [
                 WitCompletionRequest(
                     request.model,
@@ -413,4 +485,14 @@ class WasiCsi(Csi):
         max_results: int,
         min_score: float | None = None,
     ) -> list[SearchResult]:
-        return csi.search(index_path, query, max_results, min_score)
+        wit_index_path = WitIndexPath(
+            namespace=index_path.namespace,
+            collection=index_path.collection,
+            index=index_path.index,
+        )
+        return [
+            SearchResult.from_wit(search_result)
+            for search_result in wit_csi.search(
+                wit_index_path, query, max_results, min_score
+            )
+        ]
