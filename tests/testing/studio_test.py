@@ -18,3 +18,6 @@ def test_studio_collector_uploads_spans():
     assert isinstance(csi.exporter, StudioExporter)
     assert len(csi.exporter.spans) == 2
     assert csi.exporter.client.project_id == 786
+
+    # And shutting down the exporter does not raise an error
+    csi.exporter.shutdown()
