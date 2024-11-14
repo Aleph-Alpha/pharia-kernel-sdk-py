@@ -16,7 +16,7 @@ def test_studio_collector_uploads_spans():
 
     # Then the spans are collected by the studio collector
     assert isinstance(csi.exporter, StudioExporter)
-    assert len(csi.exporter.spans) == 2
+    assert len(csi.exporter.spans) == 3
     assert csi.exporter.client.project_id == 786
 
     # And shutting down the exporter does not raise an error
