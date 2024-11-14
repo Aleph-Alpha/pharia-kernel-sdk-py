@@ -57,29 +57,29 @@ def test_tracing(exporter: InMemorySpanExporter):
 
 # Given a skill
 class Input(BaseModel):
-    input: str
+    topic: str
 
 
 class Output(BaseModel):
-    output: str
+    haiku: str
 
 
 @skill
 def haiku(csi: Csi, input: Input) -> Output:
     request = CompletionRequest(
         model="llama-3.1-8b-instruct",
-        prompt=input.input,
+        prompt=input.topic,
         params=CompletionParams(max_tokens=64),
     )
     result = csi.complete_all([request, request])
-    return Output(output=result[0].text)
+    return Output(haiku=result[0].text)
 
 
 @pytest.mark.kernel
 def test_skill_is_traced(exporter: InMemorySpanExporter):
     # When running the skill with the dev csi
     csi = DevCsi()
-    haiku(csi, Input(input="oat milk"))
+    haiku(csi, Input(topic="oat milk"))
 
     # Then the skill and the completion are traced
     assert len(exporter.finished_spans) == 2
