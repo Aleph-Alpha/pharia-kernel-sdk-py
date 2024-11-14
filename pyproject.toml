@@ -26,6 +26,7 @@ pytest = "^8.3.3"
 ruff = "^0.7.3"
 mypy = "^1.13.0"
 pre-commit = "^4.0.1"
+pydoclint = "^0.5.9"
 
 [tool.poetry.scripts]
 pharia-skill = "pharia_skill.cli:main"
