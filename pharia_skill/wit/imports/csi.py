@@ -57,7 +57,7 @@ class ChatParams:
 @dataclass
 class ChatResponse:
     """
-    The result of a chat reponse, including the message generated as well as
+    The result of a chat response, including the message generated as well as
     why the model finished completing.
     """
     message: Message
