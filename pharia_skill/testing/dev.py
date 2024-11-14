@@ -90,12 +90,12 @@ class DevCsi(Csi):
         return trace.get_tracer_provider()  # type: ignore
 
     def request(self, function: str, data: dict):
-        data["version"] = self.VERSION
-        data["function"] = function
-
         with trace.get_tracer(__name__).start_as_current_span(function) as span:
             span.set_attribute("type", "TASK_SPAN")
             span.set_attribute("input", json.dumps(data))
+
+            data["version"] = self.VERSION
+            data["function"] = function
             response = self.session.post(self.url, json=data)
             if response.status_code != 200:
                 span.set_status(StatusCode.ERROR, response.text)
