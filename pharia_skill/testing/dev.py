@@ -9,6 +9,10 @@ from dataclasses import asdict
 import requests
 from dotenv import load_dotenv
 from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    SimpleSpanProcessor,
+)
 from opentelemetry.trace import StatusCode
 
 from pharia_skill import (
@@ -26,6 +30,7 @@ from pharia_skill import (
     Message,
     SearchResult,
 )
+from pharia_skill.testing.studio import StudioExporter
 
 
 def chat_response_from_dict(body: dict) -> ChatResponse:
@@ -56,10 +61,33 @@ class DevCsi(Csi):
         token = os.environ["AA_API_TOKEN"]
         self.session = requests.Session()
         self.session.headers = {"Authorization": f"Bearer {token}"}
+        self.exporter = None
 
     def __del__(self):
         if hasattr(self, "session"):
             self.session.close()
+
+    @classmethod
+    def with_studio(cls, project: str) -> "DevCsi":
+        csi = cls()
+        exporter = StudioExporter(project)
+        span_processor = SimpleSpanProcessor(exporter)
+
+        provider = csi.provider()
+        provider.add_span_processor(span_processor)
+        csi.exporter = exporter
+        return csi
+
+    def provider(self) -> TracerProvider:
+        """Tracer provider for the current thread.
+
+        Check if the tracer provider is already set and if not, set it.
+        """
+        if trace.get_tracer_provider() is None:
+            trace_provider = TracerProvider()
+            trace.set_tracer_provider(trace_provider)
+
+        return trace.get_tracer_provider()  # type: ignore
 
     def request(self, function: str, data: dict):
         data["version"] = self.VERSION
