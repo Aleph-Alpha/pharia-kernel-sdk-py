@@ -16,7 +16,6 @@ from .wit.imports.csi import (
 )
 from .wit.imports.csi import (
     ChunkParams,
-    CompletionRequest,
     DocumentPath,
     IndexPath,
     Language,
@@ -27,6 +26,9 @@ from .wit.imports.csi import (
 )
 from .wit.imports.csi import (
     CompletionParams as WitCompletionParams,
+)
+from .wit.imports.csi import (
+    CompletionRequest as WitCompletionRequest,
 )
 from .wit.imports.csi import (
     FinishReason as WitFinishReason,
@@ -118,6 +120,21 @@ class Completion:
             text=completion.text,
             finish_reason=FinishReason.from_wit(completion.finish_reason),
         )
+
+
+@dataclass
+class CompletionRequest:
+    """Completion request request parameters for complete_all
+
+    Attributes:
+        model (str, required): Name of model to use.
+        prompt (str, required): The text to be completed.
+        params (CompletionParams, required): Parameters for the requested completion.
+    """
+
+    model: str
+    prompt: str
+    params: CompletionParams
 
 
 @dataclass
@@ -305,7 +322,21 @@ class Csi(Protocol):
         max_results: int,
         min_score: float | None,
     ) -> list[SearchResult]:
-        """ """
+        """search in a document index
+
+        Parameters:
+            index_path (IndexPath, required): index path in the document index to access,
+            query (str, required): text to be search for
+            max_results (int, required): maximal number of results
+            min_score (float, optional, Default NoneNone): minimal score for result to be included
+
+        Examples:
+            >>> index_path = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
+            >>> query = "What is the population of Heidelberg?"
+            >>> result = csi.search(index_path, query)
+            >>> r0 = result[0]
+            >>> "Heidelberg" in r0.content, "Heidelberg" in r0.document_path.name # True, True
+        """
 
 
 class WasiCsi(Csi):
@@ -326,7 +357,12 @@ class WasiCsi(Csi):
         return csi.select_language(text, languages)
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        completions = csi.complete_all(requests)
+        completions = csi.complete_all(
+            [
+                WitCompletionRequest(request.model, request.prompt, request.params)
+                for request in requests
+            ]
+        )
         return [Completion.from_wit(completion) for completion in completions]
 
     def search(
