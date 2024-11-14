@@ -27,9 +27,11 @@ class InMemorySpanExporter(SpanExporter):
 
 @pytest.fixture(scope="module")
 def provider() -> TracerProvider:
-    trace_provider = TracerProvider()
-    trace.set_tracer_provider(trace_provider)
-    return trace_provider
+    if not isinstance(trace.get_tracer_provider(), TracerProvider):
+        trace_provider = TracerProvider()
+        trace.set_tracer_provider(trace_provider)
+
+    return trace.get_tracer_provider()  # type: ignore
 
 
 @pytest.fixture
