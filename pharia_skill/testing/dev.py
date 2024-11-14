@@ -83,7 +83,7 @@ class DevCsi(Csi):
 
         Check if the tracer provider is already set and if not, set it.
         """
-        if trace.get_tracer_provider() is None:
+        if not isinstance(trace.get_tracer_provider(), TracerProvider):
             trace_provider = TracerProvider()
             trace.set_tracer_provider(trace_provider)
 

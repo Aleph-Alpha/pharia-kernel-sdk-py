@@ -1,3 +1,14 @@
+"""
+Convert OpenTelemetry spans to the studio format.
+
+The `ExportedSpan` model provides the translation from an OpenTelemetry span
+to the studio format. It can be set up from an OpenTelemetry span object and
+can be (in serialized form) uploaded to the studio collector.
+
+The `ExportedSpan` model was copied over from the intelligence layer. Each
+occurrence of a field validator marks one translation step.
+"""
+
 import datetime as dt
 import json
 from collections.abc import Sequence
@@ -5,7 +16,7 @@ from enum import Enum
 from typing import Literal, Union
 from uuid import UUID
 
-from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace import ReadableSpan
 from pydantic import BaseModel, Field, RootModel, SerializeAsAny, field_validator
 
 
@@ -17,20 +28,15 @@ def utc_now() -> dt.datetime:
     return dt.datetime.now(dt.timezone.utc)
 
 
-def double_to_128bit(original_64bit_str: str) -> UUID:
+def double_to_128bit(double_str: str) -> UUID:
     """Convert a 64-bit integer to a 128-bit UUID.
 
     OpenTelemetry uses 64-bit integers to represent trace IDs and span IDs.
     Studio expects 128-bit UUIDs. The mapping is injective, as the 64-bit integer
     binary representation is doubled to create the 128-bit number.
     """
-    # Ensure the input is a 64-bit integer
-    original_64bit = int(original_64bit_str, 16)
-
-    # Double it to 128 bits by repeating it
-    doubled_128bit = (original_64bit << 64) | original_64bit
-
-    return UUID(int=doubled_128bit)
+    double = int(double_str, 16)
+    return UUID(int=((double << 64) | double))
 
 
 class Event(BaseModel):
@@ -110,7 +116,7 @@ class ExportedSpan(BaseModel):
         return SpanStatus.ERROR
 
     @classmethod
-    def from_otel(cls, span: Span) -> "ExportedSpan":
+    def from_otel(cls, span: ReadableSpan) -> "ExportedSpan":
         """Convert an OpenTelemetry span to the studio format."""
         return cls.model_validate(json.loads(span.to_json()))
 

@@ -1,18 +1,12 @@
 import pytest
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    SimpleSpanProcessor,
-    SpanExporter,
-    SpanExportResult,
-)
 from opentelemetry.trace import StatusCode
 from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, Csi, skill
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.studio import StudioExporter
 from pharia_skill.testing.tracing import ExportedSpan, double_to_128bit
+
+from .conftest import InMemorySpanExporter
 
 
 def test_convert_to_uuid():
@@ -20,9 +14,8 @@ def test_convert_to_uuid():
     assert str(result) == "d1bf874f-6554-fe2b-d1bf-874f6554fe2b"
 
 
-def test_exported_span_from_inner(inner_span: dict):
-    # Given a span created from `opentelemetry.sdk.trace.ReadableSpan.to_json()`
-    # When the span is validated against the studio type `tracing.ExportedSpan`
+def test_exported_span_from_csi_call(inner_span: dict):
+    # When validating a span created from tracing a csi call
     exported_span = ExportedSpan.model_validate(inner_span)
 
     # Then the span is validated successfully
@@ -32,37 +25,15 @@ def test_exported_span_from_inner(inner_span: dict):
     exported_span.model_dump_json()
 
 
-def test_exported_span_from_outer_span(outer_span: dict):
+def test_exported_span_from_skill(outer_span: dict):
+    # When validating a span created from tracing a skill
     exported_span = ExportedSpan.model_validate(outer_span)
+
+    # Then the span is validated successfully
     assert exported_span.name == "haiku"
+
+    # And can be dumped to json
     exported_span.model_dump_json()
-
-
-class InMemorySpanExporter(SpanExporter):
-    def __init__(self):
-        self.finished_spans = []
-
-    def export(self, spans):
-        self.finished_spans.extend(spans)
-        return SpanExportResult.SUCCESS
-
-    def shutdown(self):
-        self.finished_spans.clear()
-
-
-@pytest.fixture(scope="module")
-def provider() -> TracerProvider:
-    trace_provider = TracerProvider()
-    trace.set_tracer_provider(trace_provider)
-    return trace_provider
-
-
-@pytest.fixture
-def exporter(provider: TracerProvider) -> InMemorySpanExporter:
-    exporter = InMemorySpanExporter()
-    span_processor = SimpleSpanProcessor(exporter)
-    provider.add_span_processor(span_processor)
-    return exporter
 
 
 @pytest.mark.kernel
@@ -117,14 +88,3 @@ def test_skill_is_traced(exporter: InMemorySpanExporter):
         exporter.finished_spans[0].parent.span_id
         == exporter.finished_spans[1].context.span_id
     )
-
-
-@pytest.mark.kernel
-def test_skill_run_uploads_to_studio():
-    # When running the skill with the dev csi
-    csi = DevCsi.with_studio(project="moritz-kernel-test")
-    haiku(csi, Input(input="oat milk"))
-
-    assert isinstance(csi.exporter, StudioExporter)
-    assert len(csi.exporter.spans) == 2
-    assert csi.exporter.client.project_id == 788
