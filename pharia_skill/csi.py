@@ -59,7 +59,7 @@ __all__ = [
 
 
 @dataclass
-class CompletionParams(WitCompletionParams):
+class CompletionParams:
     """Completion request parameters.
 
     Attributes:
@@ -341,6 +341,13 @@ class Csi(Protocol):
 
 class WasiCsi(Csi):
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
+        params = WitCompletionParams(
+            max_tokens=params.max_tokens,
+            temperature=params.temperature,
+            top_k=params.top_k,
+            top_p=params.top_p,
+            stop=params.stop,
+        )
         completion = csi.complete(model, prompt, params)
         return Completion.from_wit(completion)
 
@@ -359,7 +366,17 @@ class WasiCsi(Csi):
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         completions = csi.complete_all(
             [
-                WitCompletionRequest(request.model, request.prompt, request.params)
+                WitCompletionRequest(
+                    request.model,
+                    request.prompt,
+                    params=WitCompletionParams(
+                        max_tokens=request.params.max_tokens,
+                        temperature=request.params.temperature,
+                        top_k=request.params.top_k,
+                        top_p=request.params.top_p,
+                        stop=request.params.stop,
+                    ),
+                )
                 for request in requests
             ]
         )
