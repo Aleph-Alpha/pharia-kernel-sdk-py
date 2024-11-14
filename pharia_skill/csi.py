@@ -15,11 +15,7 @@ from .wit.imports.csi import (
     ChatResponse as WitChatResponse,
 )
 from .wit.imports.csi import (
-    ChunkParams,
-    DocumentPath,
-    IndexPath,
-    Language,
-    SearchResult,
+    ChunkParams as WitChunkParams,
 )
 from .wit.imports.csi import (
     Completion as WitCompletion,
@@ -29,6 +25,12 @@ from .wit.imports.csi import (
 )
 from .wit.imports.csi import (
     CompletionRequest as WitCompletionRequest,
+)
+from .wit.imports.csi import (
+    DocumentPath,
+    IndexPath,
+    Language,
+    SearchResult,
 )
 from .wit.imports.csi import (
     FinishReason as WitFinishReason,
@@ -241,6 +243,20 @@ class ChatResponse:
         )
 
 
+@dataclass
+class ChunkParams:
+    """
+    Chunking parameters
+
+    Attributes:
+        model (str, required):
+        max_tokens (str, required)
+    """
+
+    model: str
+    max_tokens: int
+
+
 class Csi(Protocol):
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         """Generates completions given a prompt.
@@ -265,7 +281,13 @@ class Csi(Protocol):
 
         Parameters:
             text (str, required): text to be chunked
-            params (ChunkParams, required): parameter used for chunking, e.g. maximal number of tokens
+            params (ChunkParams, required): parameter used for chunking, model and maximal number of tokens
+
+        Examples:
+            >>> text = "A very very very long text that can be chunked."
+            >>> params = ChunkParams("llama-3.1-8b-instruct", max_tokens=5)
+            >>> result = csi.chunk(text, params)
+            >>> assert len(result) == 3
         """
 
     def chat(
@@ -352,7 +374,9 @@ class WasiCsi(Csi):
         return Completion.from_wit(completion)
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
-        return csi.chunk(text, params)
+        return csi.chunk(
+            text, WitChunkParams(model=params.model, max_tokens=params.max_tokens)
+        )
 
     def chat(
         self, model: str, messages: list[Message], params: ChatParams
