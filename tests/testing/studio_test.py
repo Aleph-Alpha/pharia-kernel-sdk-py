@@ -12,7 +12,7 @@ def test_studio_collector_uploads_spans():
     csi = DevCsi.with_studio(project="kernel-test")
 
     # When running the skill
-    haiku(csi, Input(input="oat milk"))
+    haiku(csi, Input(topic="oat milk"))
 
     # Then the spans are collected by the studio collector
     assert isinstance(csi.exporter, StudioExporter)
