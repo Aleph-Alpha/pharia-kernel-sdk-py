@@ -5,6 +5,8 @@ from urllib.parse import urljoin
 
 import requests
 from dotenv import load_dotenv
+from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, MissingSchema
 
@@ -52,6 +54,20 @@ class StudioClient:
 
         self._project_name = project
         self._project_id: int | None = None
+
+    @classmethod
+    def with_project(cls, project: str) -> "StudioClient":
+        """Set up a client for a project.
+
+        Will create the project if it does not exist.
+        """
+        studio_client = StudioClient(project=project)
+        if (project_id := studio_client._get_project(project)) is None:
+            project_id = studio_client.create_project(project)
+
+        assert project_id is not None
+        studio_client._project_id = project_id
+        return studio_client
 
     def _check_connection(self) -> None:
         try:
@@ -162,3 +178,19 @@ class StudioClient:
             case _:
                 response.raise_for_status()
         return str(response.json())
+
+
+class StudioExporter(SpanExporter):
+    def __init__(self, project: str):
+        self.spans: list[ExportedSpan] = []
+        self.client = StudioClient.with_project(project)
+
+    def export(self, spans: list[Span]) -> SpanExportResult:
+        studio_spans = [ExportedSpan.from_otel(span) for span in spans]
+        self.spans.extend(studio_spans)
+        return SpanExportResult.SUCCESS
+
+    def shutdown(self):
+        if len(self.spans) > 0:
+            self.client.submit_trace(self.spans)
+        self.spans.clear()

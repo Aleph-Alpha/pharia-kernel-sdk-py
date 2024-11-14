@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Literal, Union
 from uuid import UUID
 
+from opentelemetry.sdk.trace import Span
 from pydantic import BaseModel, Field, RootModel, SerializeAsAny, field_validator
 
 
@@ -107,6 +108,11 @@ class ExportedSpan(BaseModel):
         if data["status_code"] == "OK":
             return SpanStatus.OK
         return SpanStatus.ERROR
+
+    @classmethod
+    def from_otel(cls, span: Span) -> "ExportedSpan":
+        """Convert an OpenTelemetry span to the studio format."""
+        return cls.model_validate(json.loads(span.to_json()))
 
 
 ExportedSpanList = RootModel[Sequence[ExportedSpan]]
