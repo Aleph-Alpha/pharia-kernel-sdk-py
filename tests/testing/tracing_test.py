@@ -2,7 +2,7 @@ import pytest
 from opentelemetry.trace import StatusCode
 from pydantic import BaseModel
 
-from pharia_skill import CompletionParams, Csi, skill
+from pharia_skill import CompletionParams, CompletionRequest, Csi, skill
 from pharia_skill.testing import DevCsi
 from pharia_skill.testing.tracing import ExportedSpan, double_to_128bit
 
@@ -66,10 +66,13 @@ class Output(BaseModel):
 
 @skill
 def haiku(csi: Csi, input: Input) -> Output:
-    result = csi.complete(
-        "llama-3.1-8b-instruct", input.input, CompletionParams(max_tokens=64)
+    request = CompletionRequest(
+        model="llama-3.1-8b-instruct",
+        prompt=input.input,
+        params=CompletionParams(max_tokens=64),
     )
-    return Output(output=result.text)
+    result = csi.complete_all([request, request])
+    return Output(output=result[0].text)
 
 
 @pytest.mark.kernel
@@ -80,7 +83,7 @@ def test_skill_is_traced(exporter: InMemorySpanExporter):
 
     # Then the skill and the completion are traced
     assert len(exporter.finished_spans) == 2
-    assert exporter.finished_spans[0].name == "complete"
+    assert exporter.finished_spans[0].name == "complete_all"
     assert exporter.finished_spans[1].name == "haiku"
 
     # And the traces are nested

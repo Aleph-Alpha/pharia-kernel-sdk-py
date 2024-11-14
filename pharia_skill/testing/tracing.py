@@ -13,7 +13,7 @@ import datetime as dt
 import json
 from collections.abc import Sequence
 from enum import Enum
-from typing import Literal, Union
+from typing import Any, Literal, Union
 from uuid import UUID
 
 from opentelemetry.sdk.trace import ReadableSpan
@@ -57,8 +57,8 @@ class SpanAttributes(BaseModel):
 
 class TaskSpanAttributes(BaseModel):
     type: Literal[SpanType.TASK_SPAN] = SpanType.TASK_SPAN
-    input: dict
-    output: dict
+    input: Any
+    output: Any
 
     @field_validator("input", mode="before")
     def validate_input(cls, data: str):
