@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 import requests
 from dotenv import load_dotenv
-from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, MissingSchema
@@ -181,11 +181,22 @@ class StudioClient:
 
 
 class StudioExporter(SpanExporter):
+    """An OpenTelemetry exporter that uploads spans to Studio.
+
+    The exporter will create a project on setup if it does not exist yet.
+    """
+
     def __init__(self, project: str):
         self.spans: list[ExportedSpan] = []
         self.client = StudioClient.with_project(project)
 
-    def export(self, spans: list[Span]) -> SpanExportResult:
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        """Store spans in the exporter and upload them to Studio when the exporter shuts down.
+
+        Studio is complaining about duplicate IDs when uploading traces with the same `span_id`
+        in separate requests. Therefore, we store the spans in a list and only upload them
+        when the exporter shuts down.
+        """
         studio_spans = [ExportedSpan.from_otel(span) for span in spans]
         self.spans.extend(studio_spans)
         return SpanExportResult.SUCCESS
