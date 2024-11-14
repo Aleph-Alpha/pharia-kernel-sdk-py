@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 from collections.abc import Sequence
 from typing import Optional
 from urllib.parse import urljoin
@@ -202,6 +203,15 @@ class StudioExporter(SpanExporter):
         return SpanExportResult.SUCCESS
 
     def shutdown(self):
-        if len(self.spans) > 0:
-            self.client.submit_trace(self.spans)
+        """Upload the collected spans to Studio.
+
+        Upload spans belonging to the same trace together
+        """
+        # split spans by trace_id
+        traces = defaultdict(list)
+        for span in self.spans:
+            traces[span.context.trace_id].append(span)
+
+        for trace in traces.values():
+            self.client.submit_trace(trace)
         self.spans.clear()
