@@ -17,13 +17,19 @@ from pharia_skill import (
     CompletionRequest,
     Csi,
     DocumentPath,
+    FinishReason,
     IndexPath,
     Language,
     Message,
     SearchResult,
 )
 
-from ..wasi_csi import chat_response_from_dict
+
+def chat_response_from_dict(body: dict) -> "ChatResponse":
+    return ChatResponse(
+        message=Message(**body["message"]),
+        finish_reason=FinishReason(body["finish_reason"]),
+    )
 
 
 class DevCsi(Csi):
