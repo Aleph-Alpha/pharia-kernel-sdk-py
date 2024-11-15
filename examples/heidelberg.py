@@ -23,7 +23,7 @@ def heidelberg(csi: Csi, input: Input) -> Output:
     "Answer questions about Heidelberg from Wikipedia"
     documents = csi.search(index, "Heidelberg", 3, 0.5)
     if not documents:
-        return Output("no relevant documents found", 0)
+        return Output(answer="no relevant documents found", number_of_documents=0)
     context = "\n".join([doc.content for doc in documents])
     content = f"""Using the provided context documents below, answer the following question accurately and comprehensively. If the information is directly available in the context documents, cite it clearly. If not, use your knowledge to fill in the gaps while ensuring that the response is consistent with the given information. Do not fabricate facts or make assumptions beyond what the context or your knowledge base provides. Ensure that the response is structured, concise, and tailored to the specific question being asked.
 
