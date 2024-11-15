@@ -408,8 +408,8 @@ class Csi(Protocol):
         self,
         index_path: IndexPath,
         query: str,
-        max_results: int,
-        min_score: float | None,
+        max_results: int = 1,
+        min_score: float | None = None,
     ) -> list[SearchResult]:
         """search in a document index
 
