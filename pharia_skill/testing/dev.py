@@ -23,6 +23,8 @@ from pharia_skill import (
     SearchResult,
 )
 
+from ..wasi_csi import chat_response_from_dict
+
 
 class DevCsi(Csi):
     """
@@ -88,7 +90,7 @@ class DevCsi(Csi):
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
             raise Exception(f"{response.status_code}: {response.text}")
-        return ChatResponse.from_dict(response.json())
+        return chat_response_from_dict(response.json())
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         data = {

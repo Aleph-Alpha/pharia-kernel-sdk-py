@@ -4,7 +4,8 @@ from typing import Any, Callable, Type, TypeVar
 
 from pydantic import BaseModel
 
-from .csi import Csi, WasiCsi
+from .csi import Csi
+from .wasi_csi import WasiCsi
 from .wit import exports
 from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput
 from .wit.types import Err
