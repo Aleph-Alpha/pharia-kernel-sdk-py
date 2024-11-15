@@ -38,7 +38,7 @@ def chat_params_wit(chat_params: ChatParams) -> WitChatParams:
     )
 
 
-def completion_from_wit(completion: WitCompletion) -> "Completion":
+def completion_from_wit(completion: WitCompletion) -> Completion:
     return Completion(
         text=completion.text,
         finish_reason=finish_reason_from_wit(completion.finish_reason),
@@ -65,7 +65,7 @@ def completion_request_wit(
     )
 
 
-def finish_reason_from_wit(reason: WitFinishReason) -> "FinishReason":
+def finish_reason_from_wit(reason: WitFinishReason) -> FinishReason:
     match reason:
         case WitFinishReason.STOP:
             return FinishReason.STOP
@@ -85,7 +85,7 @@ def role_wit(role: Role) -> WitRole:
             return WitRole.SYSTEM
 
 
-def role_from_wit(role: WitRole) -> "Role":
+def role_from_wit(role: WitRole) -> Role:
     match role:
         case WitRole.USER:
             return Role.User
@@ -99,18 +99,18 @@ def message_wit(message: Message) -> WitMessage:
     return WitMessage(role=role_wit(message.role), content=message.content)
 
 
-def message_from_wit(msg: WitMessage) -> "Message":
+def message_from_wit(msg: WitMessage) -> Message:
     return Message(role=role_from_wit(msg.role), content=msg.content)
 
 
-def chat_response_from_wit(response: WitChatResponse) -> "ChatResponse":
+def chat_response_from_wit(response: WitChatResponse) -> ChatResponse:
     return ChatResponse(
         message=message_from_wit(response.message),
         finish_reason=finish_reason_from_wit(response.finish_reason),
     )
 
 
-def document_path_from_wit(document_path: WitDocumentPath) -> "DocumentPath":
+def document_path_from_wit(document_path: WitDocumentPath) -> DocumentPath:
     return DocumentPath(
         namespace=document_path.namespace,
         collection=document_path.collection,
@@ -118,7 +118,7 @@ def document_path_from_wit(document_path: WitDocumentPath) -> "DocumentPath":
     )
 
 
-def search_result_from_wit(result: WitSearchResult) -> "SearchResult":
+def search_result_from_wit(result: WitSearchResult) -> SearchResult:
     return SearchResult(
         document_path=document_path_from_wit(result.document_path),
         content=result.content,
@@ -146,7 +146,7 @@ def language_wit(language: Language) -> WitLanguage:
             return WitLanguage.DEU
 
 
-def language_from_wit(language: WitLanguage) -> "Language":
+def language_from_wit(language: WitLanguage) -> Language:
     match language:
         case WitLanguage.ENG:
             return Language.ENG
