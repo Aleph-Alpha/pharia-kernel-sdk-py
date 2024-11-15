@@ -25,7 +25,7 @@ from pharia_skill import (
 )
 
 
-def chat_response_from_dict(body: dict) -> "ChatResponse":
+def chat_response_from_dict(body: dict) -> ChatResponse:
     return ChatResponse(
         message=Message(**body["message"]),
         finish_reason=FinishReason(body["finish_reason"]),
