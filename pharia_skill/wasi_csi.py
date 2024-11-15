@@ -41,7 +41,7 @@ def chat_params_wit(chat_params: ChatParams) -> WitChatParams:
 def completion_from_wit(completion: WitCompletion) -> "Completion":
     return Completion(
         text=completion.text,
-        finish_reason=FinishReason.from_wit(completion.finish_reason),
+        finish_reason=finish_reason_from_wit(completion.finish_reason),
     )
 
 
@@ -57,7 +57,7 @@ def completion_params_wit(completion_params: CompletionParams) -> WitCompletionP
 
 def completion_request_wit(
     completion_request: CompletionRequest,
-) -> CompletionRequest:
+) -> WitCompletionRequest:
     return WitCompletionRequest(
         model=completion_request.model,
         prompt=completion_request.prompt,
@@ -96,38 +96,33 @@ def role_from_wit(role: WitRole) -> "Role":
 
 
 def message_wit(message: Message) -> WitMessage:
-    return WitMessage(role=message.role.wit, content=message.content)
+    return WitMessage(role=role_wit(message.role), content=message.content)
 
 
 def message_from_wit(msg: WitMessage) -> "Message":
     return Message(role=role_from_wit(msg.role), content=msg.content)
 
 
-def chat_response_from_wit(res: WitChatResponse) -> "ChatResponse":
+def chat_response_from_wit(response: WitChatResponse) -> "ChatResponse":
     return ChatResponse(
-        message=Message.from_wit(res.message),
-        finish_reason=FinishReason.from_wit(res.finish_reason),
+        message=message_from_wit(response.message),
+        finish_reason=finish_reason_from_wit(response.finish_reason),
     )
 
 
-def chat_response_from_dict(body: dict) -> "ChatResponse":
-    return ChatResponse(
-        message=Message(**body["message"]),
-        finish_reason=FinishReason(body["finish_reason"]),
-    )
-
-
-def document_path_from_wit(cls, res: WitDocumentPath) -> "DocumentPath":
+def document_path_from_wit(document_path: WitDocumentPath) -> "DocumentPath":
     return DocumentPath(
-        namespace=res.namespace, collection=res.collection, name=res.name
+        namespace=document_path.namespace,
+        collection=document_path.collection,
+        name=document_path.name,
     )
 
 
-def search_result_from_wit(res: WitSearchResult) -> "SearchResult":
+def search_result_from_wit(result: WitSearchResult) -> "SearchResult":
     return SearchResult(
-        document_path=document_path_from_wit(res.document_path),
-        content=res.content,
-        score=res.score,
+        document_path=document_path_from_wit(result.document_path),
+        content=result.content,
+        score=result.score,
     )
 
 
@@ -143,7 +138,7 @@ def chunk_params_wit(chunk_params: ChunkParams) -> WitChunkParams:
     return WitChunkParams(model=chunk_params.model, max_tokens=chunk_params.max_tokens)
 
 
-def language_wit(language) -> WitLanguage:
+def language_wit(language: Language) -> WitLanguage:
     match language:
         case Language.ENG:
             return WitLanguage.ENG
@@ -181,7 +176,7 @@ class WasiCsi(Csi):
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         wit_languages = [language_wit(language) for language in languages]
-        wit_language = wit_csi.select_language(wit_languages, text)
+        wit_language = wit_csi.select_language(text, wit_languages)
         if wit_language is None:
             return None
         return language_from_wit(wit_language)
