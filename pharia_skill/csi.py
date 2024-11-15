@@ -480,7 +480,7 @@ class WasiCsi(Csi):
         self,
         index_path: IndexPath,
         query: str,
-        max_results: int,
+        max_results: int = 1,
         min_score: float | None = None,
     ) -> list[SearchResult]:
         wit_index_path = WitIndexPath(
