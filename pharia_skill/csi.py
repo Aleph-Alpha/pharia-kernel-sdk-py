@@ -209,7 +209,6 @@ class SearchResult:
     score: float
 
 
-@dataclass
 class Language(int, Enum):
     """ISO 639-3 language.
 
