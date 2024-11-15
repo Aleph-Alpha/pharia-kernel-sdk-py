@@ -12,10 +12,13 @@ from .heidelberg import Input, Output, heidelberg
 
 @pytest.fixture
 def csi() -> Csi:
+    # you have to make sure that a Pharia Kernel instance is available
     return DevCsi()
 
 
-def test_haiku(csi: Csi):
+# you can remove that mark in your code, it is to prevent the test to run on github ci
+@pytest.mark.kernel
+def test_heidelberg(csi: Csi):
     input = Input(question="What is the population?")
     result = heidelberg(csi, input)
     assert isinstance(result, Output)
