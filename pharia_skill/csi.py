@@ -430,14 +430,14 @@ class Csi(Protocol):
 
 class WasiCsi(Csi):
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
-        params = WitCompletionParams(
+        wit_params = WitCompletionParams(
             max_tokens=params.max_tokens,
             temperature=params.temperature,
             top_k=params.top_k,
             top_p=params.top_p,
             stop=params.stop,
         )
-        completion = wit_csi.complete(model, prompt, params)
+        completion = wit_csi.complete(model, prompt, wit_params)
         return Completion.from_wit(completion)
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
@@ -452,12 +452,10 @@ class WasiCsi(Csi):
         return ChatResponse.from_wit(response)
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
-        return [
-            Language.from_wit(lang)
-            for lang in wit_csi.select_language(
-                text, [lang.wit() for lang in languages]
-            )
-        ]
+        wit_lang = wit_csi.select_language(text, [lang.wit for lang in languages])
+        if wit_lang is None:
+            return None
+        return Language.from_wit(wit_lang)
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         completions = wit_csi.complete_all(
