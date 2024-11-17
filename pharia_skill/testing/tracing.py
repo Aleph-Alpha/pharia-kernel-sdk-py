@@ -17,7 +17,7 @@ from typing import Any, Literal, Union
 from uuid import UUID
 
 from opentelemetry.sdk.trace import ReadableSpan
-from pydantic import BaseModel, Field, RootModel, SerializeAsAny, field_validator
+from pydantic import BaseModel, Field, RootModel, field_validator
 
 
 def utc_now() -> dt.datetime:
@@ -41,9 +41,13 @@ def double_to_128bit(double_str: str) -> UUID:
 
 class Event(BaseModel):
     name: str
-    message: str
-    body: SerializeAsAny[BaseModel]
     timestamp: dt.datetime = Field(default_factory=utc_now)
+
+    # Use the attributes field for this as there is no concept of body in OTel events
+    body: Any = Field(default_factory=dict, alias="attributes")
+
+    # Provide an empty default as there is no concept of messages in OTel events
+    message: str = ""
 
 
 class SpanType(str, Enum):
@@ -58,7 +62,9 @@ class SpanAttributes(BaseModel):
 class TaskSpanAttributes(BaseModel):
     type: Literal[SpanType.TASK_SPAN] = SpanType.TASK_SPAN
     input: Any
-    output: Any
+
+    # make output optional
+    output: Any | None = None
 
     @field_validator("input", mode="before")
     def validate_input(cls, data: str):

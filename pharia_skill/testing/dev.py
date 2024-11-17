@@ -61,7 +61,7 @@ class DevCsi(Csi):
         token = os.environ["AA_API_TOKEN"]
         self.session = requests.Session()
         self.session.headers = {"Authorization": f"Bearer {token}"}
-        self.exporter = None
+        self.exporter: StudioExporter | None = None
 
     def __del__(self):
         if hasattr(self, "session"):
@@ -70,13 +70,32 @@ class DevCsi(Csi):
     @classmethod
     def with_studio(cls, project: str) -> "DevCsi":
         csi = cls()
+        processor = csi.span_processor(project)
+        csi.exporter = processor.span_exporter  # type: ignore
+        return csi
+
+    def span_processor(self, project: str) -> SimpleSpanProcessor | None:
+        """Return a span processor for Studio if it exists, otherwise create one.
+
+        Make sure there are never two exporters to Studio attached at the same time.
+        If an exporter for this project already exists, return it.
+        If an exporter for a different project exists, raise an error, as the user
+        probably did not intend to export to two different projects at the same time.
+        """
+        provider = self.provider()
+        for processor in provider._active_span_processor._span_processors:
+            if isinstance(processor, SimpleSpanProcessor):
+                if isinstance(processor.span_exporter, StudioExporter):
+                    if processor.span_exporter.client._project_name == project:
+                        return processor
+                    raise RuntimeError(
+                        "There is already a studio exporter to a different project attached."
+                    )
+
         exporter = StudioExporter(project)
         span_processor = SimpleSpanProcessor(exporter)
-
-        provider = csi.provider()
         provider.add_span_processor(span_processor)
-        csi.exporter = exporter
-        return csi
+        return span_processor
 
     def provider(self) -> TracerProvider:
         """Tracer provider for the current thread.
