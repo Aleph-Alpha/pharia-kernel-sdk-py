@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, CompletionRequest, Csi, IndexPath, skill
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.tracing import ExportedSpan, double_to_128bit
+from pharia_skill.testing.tracing import ExportedSpan, SpanStatus, double_to_128bit
 
 from .conftest import InMemorySpanExporter
 
@@ -31,6 +31,17 @@ def test_exported_span_from_skill(outer_span: dict):
 
     # Then the span is validated successfully
     assert exported_span.name == "haiku"
+
+    # And can be dumped to json
+    exported_span.model_dump_json()
+
+
+def test_exported_span_from_error(error_span: dict):
+    # When validating a span created from tracing an error
+    exported_span = ExportedSpan.model_validate(error_span)
+
+    # Then the status is set to error
+    assert exported_span.status == SpanStatus.ERROR
 
     # And can be dumped to json
     exported_span.model_dump_json()
