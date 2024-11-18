@@ -8,6 +8,7 @@ from pharia_skill.testing.tracing import SpanStatus
 from .tracing_test import Input, haiku
 
 
+@pytest.mark.kernel
 def test_multiple_csi_instances_do_not_duplicate_exporters():
     """A user might use different `DevCsi` instances in the same process.
 
@@ -22,6 +23,7 @@ def test_multiple_csi_instances_do_not_duplicate_exporters():
     assert len(csi2.provider()._active_span_processor._span_processors) == 1
 
 
+@pytest.mark.kernel
 def test_multiple_csi_instances_with_different_projects():
     # Given two csi instances with different projects
     DevCsi.with_studio(project="kernel-test")
