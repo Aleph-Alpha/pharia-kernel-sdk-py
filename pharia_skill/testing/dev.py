@@ -74,6 +74,15 @@ class DevCsi(Csi):
         csi.exporter = processor.span_exporter  # type: ignore
         return csi
 
+    def flush_exporter(self):
+        """Upload the collected spans to Studio.
+
+        This will happen automatically when the `DevCsi` goes out of scope.
+        A user might want to call this method to upload intermediate results.
+        """
+        if self.exporter:
+            self.exporter.shutdown()
+
     def span_processor(self, project: str) -> SimpleSpanProcessor | None:
         """Return a span processor for Studio if it exists, otherwise create one.
 

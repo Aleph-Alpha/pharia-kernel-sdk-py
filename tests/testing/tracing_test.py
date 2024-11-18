@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from opentelemetry.trace import StatusCode
 from pydantic import BaseModel
@@ -81,6 +83,8 @@ def haiku(csi: Csi, input: Input) -> Output:
     index = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
     csi.search(index, input.topic, 1, 0.5)
 
+    # log something to the collector
+    logging.info("Hello from the skill")
     request = CompletionRequest(
         model="llama-3.1-8b-instruct",
         prompt=input.topic,
