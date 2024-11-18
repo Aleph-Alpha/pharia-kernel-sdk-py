@@ -6,7 +6,9 @@ from pydantic import BaseModel
 
 from pharia_skill import ChatParams, ChatResponse, Csi, IndexPath, Message, skill
 
-index = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
+index = IndexPath(
+    namespace="f13", collection="wikipedia-de", index="luminous-base-asymmetric-64"
+)
 
 
 class Input(BaseModel):

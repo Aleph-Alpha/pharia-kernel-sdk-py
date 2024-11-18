@@ -3,9 +3,11 @@ This module exposes the interfaces for skills to interact with the Pharia Kernel
 via the Cognitive System Interface (CSI).
 """
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from enum import Enum
 from typing import Protocol
+
+from pydantic import BaseModel
 
 __all__ = [
     "ChatParams",
@@ -25,8 +27,7 @@ __all__ = [
 ]
 
 
-@dataclass
-class CompletionParams:
+class CompletionParams(BaseModel):
     """Completion request parameters.
 
     Attributes:
@@ -61,8 +62,7 @@ class FinishReason(str, Enum):
     CONTENT_FILTER = "content_filter"
 
 
-@dataclass
-class Completion:
+class Completion(BaseModel):
     """The result of a completion, including the text generated as well as
     why the model finished completing.
 
@@ -75,8 +75,7 @@ class Completion:
     finish_reason: FinishReason
 
 
-@dataclass
-class CompletionRequest:
+class CompletionRequest(BaseModel):
     """Completion request request parameters for complete_all.
 
     Attributes:
@@ -90,8 +89,7 @@ class CompletionRequest:
     params: CompletionParams
 
 
-@dataclass
-class ChatParams:
+class ChatParams(BaseModel):
     """Chat request parameters.
 
     Attributes:
@@ -113,8 +111,7 @@ class Role(str, Enum):
     System = "System"
 
 
-@dataclass
-class Message:
+class Message(BaseModel):
     """Describes a message in a chat.
 
     Parameters:
@@ -138,8 +135,7 @@ class Message:
         return cls(role=Role.System, content=content)
 
 
-@dataclass
-class ChatResponse:
+class ChatResponse(BaseModel):
     """The result of a chat response.
 
     Attributes:
@@ -151,8 +147,7 @@ class ChatResponse:
     finish_reason: FinishReason
 
 
-@dataclass
-class ChunkParams:
+class ChunkParams(BaseModel):
     """Chunking parameters.
 
     Attributes:
@@ -164,8 +159,7 @@ class ChunkParams:
     max_tokens: int
 
 
-@dataclass
-class DocumentPath:
+class DocumentPath(BaseModel):
     """Path identifying a document.
 
     A DocumentPath consists of a namespace, within the namespace a collection and within the collection a document has a name.
@@ -181,8 +175,7 @@ class DocumentPath:
     name: str
 
 
-@dataclass
-class IndexPath:
+class IndexPath(BaseModel):
     """Which documents you want to search in, and which type of index should be used.
 
     Attributes:
@@ -196,8 +189,7 @@ class IndexPath:
     index: str
 
 
-@dataclass
-class SearchResult:
+class SearchResult(BaseModel):
     """The relevant documents as result of a search request.
 
     Attributes:

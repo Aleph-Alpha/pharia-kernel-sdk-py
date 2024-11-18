@@ -2,8 +2,6 @@
 StubCsi can be used for testing without a backing Pharia Kernel instance.
 """
 
-from dataclasses import asdict
-
 from pharia_skill import (
     ChatParams,
     ChatResponse,
@@ -50,7 +48,7 @@ class StubCsi(Csi):
         return languages[0] if languages else None
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        return [self.complete(**asdict(request)) for request in requests]
+        return [self.complete(**request.model_dump()) for request in requests]
 
     def search(
         self,

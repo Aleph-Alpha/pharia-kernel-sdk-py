@@ -4,9 +4,9 @@ from pharia_skill.testing import StubCsi
 
 def test_complete_all():
     # given
-    params = CompletionParams(None, None, None, None, [])
-    request_1 = CompletionRequest("model_1", "prompt_1", params)
-    request_2 = CompletionRequest("model_2", "prompt_2", params)
+    params = CompletionParams()
+    request_1 = CompletionRequest(model="model_1", prompt="prompt_1", params=params)
+    request_2 = CompletionRequest(model="model_2", prompt="prompt_2", params=params)
 
     # when
     csi = StubCsi()

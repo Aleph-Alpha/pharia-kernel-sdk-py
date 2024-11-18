@@ -41,7 +41,7 @@ def test_chat(csi: Csi, model: str):
 @pytest.mark.kernel
 def test_chunk(csi: Csi, model: str):
     text = "A very very very long text that can be chunked."
-    params = ChunkParams(model, max_tokens=1)
+    params = ChunkParams(model=model, max_tokens=1)
     result = csi.chunk(text, params)
     assert len(result) == 13
 
@@ -57,8 +57,10 @@ def test_select_language(csi: Csi):
 @pytest.mark.kernel
 def test_complete_all(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
-    request_1 = CompletionRequest(model, "Say hello to Alice", params)
-    request_2 = CompletionRequest(model, "Say hello to Bob", params)
+    request_1 = CompletionRequest(
+        model=model, prompt="Say hello to Alice", params=params
+    )
+    request_2 = CompletionRequest(model=model, prompt="Say hello to Bob", params=params)
     result = csi.complete_all([request_1, request_2])
     assert len(result) == 2
     assert "Alice" in result[0].text
@@ -68,7 +70,9 @@ def test_complete_all(csi: Csi, model: str):
 @pytest.mark.kernel
 def test_search(csi: Csi):
     # Given an existing index
-    index_path = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
+    index_path = IndexPath(
+        namespace="f13", collection="wikipedia-de", index="luminous-base-asymmetric-64"
+    )
     query = "What is the population of Heidelberg?"
 
     # When searching

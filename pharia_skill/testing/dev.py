@@ -3,7 +3,6 @@ DevCsi can be used for testing Skill code locally against a running Pharia Kerne
 """
 
 import os
-from dataclasses import asdict
 
 import requests
 from dotenv import load_dotenv
@@ -64,7 +63,7 @@ class DevCsi(Csi):
             "function": self.complete.__name__,
             "prompt": prompt,
             "model": model,
-            "params": asdict(params),
+            "params": params.model_dump(),
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
@@ -76,7 +75,7 @@ class DevCsi(Csi):
             "version": self.VERSION,
             "function": self.chunk.__name__,
             "text": text,
-            "params": asdict(params),
+            "params": params.model_dump(),
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
@@ -90,8 +89,8 @@ class DevCsi(Csi):
             "version": self.VERSION,
             "function": self.chat.__name__,
             "model": model,
-            "messages": [asdict(m) for m in messages],
-            "params": asdict(params),
+            "messages": [m.model_dump() for m in messages],
+            "params": params.model_dump(),
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
@@ -120,7 +119,7 @@ class DevCsi(Csi):
         data = {
             "version": self.VERSION,
             "function": self.complete_all.__name__,
-            "requests": [asdict(request) for request in requests],
+            "requests": [request.model_dump() for request in requests],
         }
         response = self.session.post(self.url, json=data)
         if response.status_code != 200:
@@ -137,7 +136,7 @@ class DevCsi(Csi):
         data = {
             "version": self.VERSION,
             "function": self.search.__name__,
-            "index_path": asdict(index_path),
+            "index_path": index_path.model_dump(),
             "query": query,
             "max_results": max_results,
             "min_score": min_score,
