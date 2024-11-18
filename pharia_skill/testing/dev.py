@@ -45,12 +45,16 @@ class DevCsi(Csi):
     DevCsi can be used for testing Skill code locally against a running Pharia Kernel.
 
     This implementation of Cognitive System Interface (CSI) is backed by a running instance of Pharia Kernel via HTTP.
-    This enables skill developer to run and test the skill against the same services that are used by the Pharia Kernel.
+    This enables skill developers to run and test skills against the same services that are used by the Pharia Kernel.
 
     The following environment variables are required:
 
-    * PHARIA_KERNEL_ADDRESS (Pharia Kernel endpoint; example: "https://pharia-kernel.aleph-alpha.stackit.run")
-    * AA_API_TOKEN (Aleph Alpha API token)
+    * `AA_API_TOKEN` (Aleph Alpha API token)
+    * `PHARIA_KERNEL_ADDRESS` (Pharia Kernel endpoint; example: "https://pharia-kernel.aleph-alpha.stackit.run")
+
+    If you want to export traces to Pharia Studio, also set:
+
+    * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.aleph-alpha.stackit.run")
     """
 
     VERSION = "0.2"
