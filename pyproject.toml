@@ -34,6 +34,10 @@ types-requests = "^2.32.0.20241016"
 [tool.poetry.scripts]
 pharia-skill = "pharia_skill.cli:main"
 
+[tool.poetry.extras]
+docs = ["sphinx", "sphinx_rtd_theme"]
+
+
 [tool.pytest.ini_options]
 markers = ["kernel: marks tests that requires Pharia Kernel"]
 
