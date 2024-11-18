@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: echo "JFROG_PASSWORD=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Test
-        run: poetry run pytest -m 'not kernel'
+        run: poetry run pytest -m 'not kernel' tests
 
   integration-test:
     runs-on: ubuntu-latest
