@@ -232,14 +232,15 @@ class Csi(Protocol):
             prompt (str, required): The text to be completed.
             params (CompletionParams, required): Parameters for the requested completion.
 
-        Examples:
-            >>> prompt = f'''<\|begin_of_text\|><\|start_header_id\|>system<\|end_header_id\|>
+        Examples::
 
-            You are a poet who strictly speaks in haikus.<\|eot_id\|><\|start_header_id\|>user<\|end_header_id\|>
+            prompt = f'''<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-            {input.root}<\|eot_id\|><\|start_header_id\|>assistant<\|end_header_id\|>'''
-            >>> params = CompletionParams(max_tokens=64)
-            >>> completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
+            You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+            {input.root}<|eot_id|><|start_header_id|>assistant<|end_header_id|>'''
+            params = CompletionParams(max_tokens=64)
+            completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
         """
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
@@ -249,11 +250,12 @@ class Csi(Protocol):
             text (str, required): Text to be chunked.
             params (ChunkParams, required): Parameter used for chunking, model and maximal number of tokens.
 
-        Examples:
-            >>> text = "A very very very long text that can be chunked."
-            >>> params = ChunkParams("llama-3.1-8b-instruct", max_tokens=5)
-            >>> result = csi.chunk(text, params)
-            >>> assert len(result) == 3
+        Examples::
+
+            text = "A very very very long text that can be chunked."
+            params = ChunkParams("llama-3.1-8b-instruct", max_tokens=5)
+            result = csi.chunk(text, params)
+            assert len(result) == 3
         """
 
     def chat(
@@ -262,15 +264,23 @@ class Csi(Protocol):
         """Chat with a model.
 
         Parameters:
-            model (str, required): Name of model to use.
-            messages (list[Message], required): List of messages, alternating between messages from user and system.
-            params (ChatParams, required): Parameters used for the chat.
+            model (str, required):
+                Name of model to use.
 
-        Examples:
-            >>> input = "oat milk"
-            >>> msg = Message.user(f"You are a poet who strictly speaks in haikus.\n\n\{input\}")
-            >>> model = "llama-3.1-8b-instruct"
-            >>> chat_response = csi.chat(model, [msg], ChatParams(max_tokens=64))
+            messages (list[Message], required):
+                List of messages, alternating between messages from user and system.
+
+            params (ChatParams, required):
+                Parameters used for the chat.
+
+        Examples::
+
+            input = "oat milk"
+            msg = Message.user(f\"\"\"You are a poet who strictly speaks in haikus.
+
+            {input}\"\"\")
+            model = "llama-3.1-8b-instruct"
+            chat_response = csi.chat(model, [msg], ChatParams(max_tokens=64))
         """
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
@@ -281,10 +291,11 @@ class Csi(Protocol):
             text (str, required): Text input.
             languages (list[Language], required): All languages that should be considered during detection.
 
-        Examples:
-            >>> text = "Ich spreche Deutsch nur ein bisschen."
-            >>> languages = [Language.ENG, Language.DEU]
-            >>> result = csi.select_language(text, languages)
+        Examples::
+
+            text = "Ich spreche Deutsch nur ein bisschen."
+            languages = [Language.ENG, Language.DEU]
+            result = csi.select_language(text, languages)
         """
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
@@ -293,14 +304,15 @@ class Csi(Protocol):
         Parameters:
             requests (list[CompletionRequest], required): List of completion requests.
 
-        Examples:
-            >>> params = CompletionParams(max_tokens=64)
-            >>> request_1 = CompletionRequest(model, "Say hello to Alice", params)
-            >>> request_2 = CompletionRequest(model, "Say hello to Bob", params)
-            >>> result = csi.complete_all([request_1, request_2])
-            >>> len(result) # 2
-            >>> "Alice" in result[0].text # True
-            >>> "Bob" in result[1].text # True
+        Examples::
+
+            params = CompletionParams(max_tokens=64)
+            request_1 = CompletionRequest(model, "Say hello to Alice", params)
+            request_2 = CompletionRequest(model, "Say hello to Bob", params)
+            result = csi.complete_all([request_1, request_2])
+            len(result) # 2
+            "Alice" in result[0].text # True
+            "Bob" in result[1].text # True
         """
 
     def search(
@@ -318,10 +330,11 @@ class Csi(Protocol):
             max_results (int, required): Maximal number of results.
             min_score (float, optional, Default NoneNone): Minimal score for result to be included.
 
-        Examples:
-            >>> index_path = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
-            >>> query = "What is the population of Heidelberg?"
-            >>> result = csi.search(index_path, query)
-            >>> r0 = result[0]
-            >>> "Heidelberg" in r0.content, "Heidelberg" in r0.document_path.name # True, True
+        Examples::
+
+            index_path = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
+            query = "What is the population of Heidelberg?"
+            result = csi.search(index_path, query)
+            r0 = result[0]
+            "Heidelberg" in r0.content, "Heidelberg" in r0.document_path.name # True, True
         """
