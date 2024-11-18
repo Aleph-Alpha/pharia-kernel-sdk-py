@@ -49,8 +49,8 @@ def test_studio_collector_uploads_spans():
     assert len(csi.exporter.spans) == 3
     assert csi.exporter.client.project_id == 786
 
-    # And shutting down the exporter does not raise an error
-    csi.exporter.shutdown()
+    # And flushing the exporter does not raise an error
+    csi.flush_exporter()
 
 
 class FailingCsi(DevCsi):
@@ -76,4 +76,4 @@ def test_csi_exception_is_traced():
     assert second.status == SpanStatus.ERROR
 
     # And shutting down the exporter does not raise an error
-    csi.exporter.shutdown()
+    csi.flush_exporter()
