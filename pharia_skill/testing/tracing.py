@@ -13,11 +13,11 @@ import datetime as dt
 import json
 from collections.abc import Sequence
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, Self
 from uuid import UUID
 
 from opentelemetry.sdk.trace import ReadableSpan
-from pydantic import BaseModel, Field, RootModel, field_validator
+from pydantic import BaseModel, Field, RootModel, field_validator, model_validator
 
 
 def utc_now() -> dt.datetime:
@@ -45,9 +45,18 @@ class Event(BaseModel):
 
     # Use the attributes field for this as there is no concept of body in OTel events
     body: Any = Field(default_factory=dict, alias="attributes")
-
-    # Provide an empty default as there is no concept of messages in OTel events
     message: str = ""
+
+    @model_validator(mode="after")
+    def compute_message(self) -> Self:
+        """
+        OpenTelemetry does not have the concept of a message for events.
+
+        For errors, set the error message as message field. Otherwise, use an empty string.
+        """
+        if not self.message:
+            self.message = self.body.get("exception.message", "")
+        return self
 
 
 class SpanType(str, Enum):
