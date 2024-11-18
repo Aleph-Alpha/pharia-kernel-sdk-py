@@ -6,8 +6,13 @@ from pydantic import RootModel
 
 from pharia_skill import Csi, skill
 
-Input = RootModel[str]
-Output = RootModel[str]
+
+class Input(RootModel):
+    root: str
+
+
+class Output(RootModel):
+    root: str
 
 
 @skill
