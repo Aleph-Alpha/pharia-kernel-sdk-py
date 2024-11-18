@@ -44,6 +44,7 @@ def test_exported_span_from_error(error_span: dict):
 
     # Then the status is set to error
     assert exported_span.status == SpanStatus.ERROR
+    assert exported_span.events[0].message == "out of cheese"
 
     # And can be dumped to json
     exported_span.model_dump_json()
