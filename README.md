@@ -49,7 +49,7 @@ def run(csi: Csi, input: Input) -> Output:
 The `@skill` annotation does not modify the annotated function, which allows the test code to inject different variants of CSI.
 The `testing` module provides two implementations of CSI for testing:
 
-- The `DevCsi` can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up.
+- The `DevCsi` can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up. It also supports exporting traces to Pharia Studio.
 - The `StubCsi` can be used as a base class for mock implementation.
 
 ### Compiling Skill to Wasm
