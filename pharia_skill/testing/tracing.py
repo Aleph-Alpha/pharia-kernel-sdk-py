@@ -13,7 +13,7 @@ import datetime as dt
 import json
 from collections.abc import Sequence
 from enum import Enum
-from typing import Any, Literal, Union
+from typing import Any, Literal
 from uuid import UUID
 
 from opentelemetry.sdk.trace import ReadableSpan
@@ -63,7 +63,7 @@ class TaskSpanAttributes(BaseModel):
     type: Literal[SpanType.TASK_SPAN] = SpanType.TASK_SPAN
     input: Any
 
-    # make output optional
+    # Output is optional as it is not available on exceptions
     output: Any | None = None
 
     @field_validator("input", mode="before")
@@ -105,7 +105,7 @@ class ExportedSpan(BaseModel):
     parent_id: UUID | None
     start_time: dt.datetime
     end_time: dt.datetime
-    attributes: Union[SpanAttributes, TaskSpanAttributes] = Field(discriminator="type")
+    attributes: SpanAttributes | TaskSpanAttributes = Field(discriminator="type")
     events: Sequence[Event]
     status: SpanStatus
 
