@@ -58,7 +58,7 @@ def inner_span() -> dict:
         "status": {"status_code": "OK"},
         "attributes": {
             "type": "TASK_SPAN",
-            "input": '{"prompt": "oat milk", "model": "llama-3.1-8b-instruct", "params": {"max_tokens": 64, "temperature": None, "top_k": None, "top_p": None, "stop": []}, "version": "0.2", "function": "complete"}',
+            "input": '{"prompt": "oat milk", "model": "llama-3.1-8b-instruct", "params": {"max_tokens": 64, "temperature": null, "top_k": null, "top_p": null, "stop": []}, "version": "0.2", "function": "complete"}',
             "output": '{"finish_reason": "length", "text": ", and other plant-based milks. The company also offers a range of dairy-free yogurt alternatives made from coconut milk, almond milk, and other plant-based milks.\\nIn addition to its dairy-free products, So Delicious also offers a range of other products, including:\\n* Frozen desserts: So Delicious offers a range of"}',
         },
         "events": [],
