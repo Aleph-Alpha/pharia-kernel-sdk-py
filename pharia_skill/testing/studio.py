@@ -49,7 +49,7 @@ class StudioClient:
             "Authorization": f"Bearer {self._token}",
         }
 
-        self.url = os.environ["STUDIO_URL"]
+        self.url = os.environ["PHARIA_STUDIO_ADDRESS"]
 
         self._check_connection()
 
