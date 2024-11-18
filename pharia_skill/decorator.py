@@ -17,6 +17,32 @@ UserOutput = TypeVar("UserOutput", bound=BaseModel)
 def skill(
     func: Callable[[Csi, UserInput], UserOutput],
 ) -> Callable[[Csi, UserInput], UserOutput]:
+    """Turn a function with a specific signature into a skill that can be deployed on Pharia Kernel.
+
+    The decorated function must be typed. It must have exactly two input arguments. The first argument
+    must be of type `Csi`. The second argument must be a Pydantic model. The type of the return value
+    must also be a Pydantic model. Each module is expected to have only one function that is decorated
+    with `skill`.
+
+    Example::
+
+        from pharia_skill import ChatParams, Csi, Message, skill
+        from pydantic import BaseModel
+
+        class Input(BaseModel):
+            topic: str
+
+        class Output(BaseModel):
+            haiku: str
+
+        @skill
+        def run(csi: Csi, input: Input) -> Output:
+            system = Message.system("You are a poet who strictly speaks in haikus.")
+            user = Message.user(input.topic)
+            params = ChatParams(max_tokens=64)
+            response = csi.chat("llama-3.1-8b-instruct", [system, user], params)
+            return Output(haiku=response.message.content.strip())
+    """
     signature = list(inspect.signature(func).parameters.values())
     assert len(signature) == 2, "Skills must have exactly two arguments."
 
