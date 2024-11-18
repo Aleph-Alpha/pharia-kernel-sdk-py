@@ -242,6 +242,7 @@ class Csi(Protocol):
             params = CompletionParams(max_tokens=64)
             completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
         """
+        ...
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
         """Chunks a text into chunks according to params.
@@ -257,6 +258,7 @@ class Csi(Protocol):
             result = csi.chunk(text, params)
             assert len(result) == 3
         """
+        ...
 
     def chat(
         self, model: str, messages: list[Message], params: ChatParams
@@ -282,6 +284,7 @@ class Csi(Protocol):
             model = "llama-3.1-8b-instruct"
             chat_response = csi.chat(model, [msg], ChatParams(max_tokens=64))
         """
+        ...
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         """Select the detected language for the provided input based on the list of possible languages.
@@ -297,6 +300,7 @@ class Csi(Protocol):
             languages = [Language.ENG, Language.DEU]
             result = csi.select_language(text, languages)
         """
+        ...
 
     def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         """Generates several completions potentially in parallel. Returns as soon as all completions are ready.
@@ -314,6 +318,7 @@ class Csi(Protocol):
             "Alice" in result[0].text # True
             "Bob" in result[1].text # True
         """
+        ...
 
     def search(
         self,
@@ -338,3 +343,4 @@ class Csi(Protocol):
             r0 = result[0]
             "Heidelberg" in r0.content, "Heidelberg" in r0.document_path.name # True, True
         """
+        ...
