@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pharia-kernel-sdk-py"
-version = "0.3.1"
+version = "0.3.2"
 description = ""
 authors = [
     "Peter Barth <peter.barth@aleph-alpha.com>",
