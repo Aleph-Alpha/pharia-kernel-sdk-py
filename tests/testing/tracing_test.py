@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, CompletionRequest, Csi, IndexPath, skill
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.tracing import ExportedSpan, SpanStatus, double_to_128bit
+from pharia_skill.testing.tracing import SpanStatus, StudioSpan, double_to_128bit
 
 from .conftest import InMemorySpanExporter
 
@@ -16,7 +16,7 @@ def test_convert_to_uuid():
 
 def test_exported_span_from_csi_call(inner_span: dict):
     # When validating a span created from tracing a csi call
-    exported_span = ExportedSpan.model_validate(inner_span)
+    exported_span = StudioSpan.model_validate(inner_span)
 
     # Then the span is validated successfully
     assert exported_span.name == "complete"
@@ -27,7 +27,7 @@ def test_exported_span_from_csi_call(inner_span: dict):
 
 def test_exported_span_from_skill(outer_span: dict):
     # When validating a span created from tracing a skill
-    exported_span = ExportedSpan.model_validate(outer_span)
+    exported_span = StudioSpan.model_validate(outer_span)
 
     # Then the span is validated successfully
     assert exported_span.name == "haiku"
@@ -38,7 +38,7 @@ def test_exported_span_from_skill(outer_span: dict):
 
 def test_exported_span_from_error(error_span: dict):
     # When validating a span created from tracing an error
-    exported_span = ExportedSpan.model_validate(error_span)
+    exported_span = StudioSpan.model_validate(error_span)
 
     # Then the status is set to error
     assert exported_span.status == SpanStatus.ERROR

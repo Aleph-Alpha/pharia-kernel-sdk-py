@@ -12,8 +12,8 @@ from pydantic import BaseModel
 from requests.exceptions import ConnectionError, MissingSchema
 
 from pharia_skill.testing.tracing import (
-    ExportedSpan,
-    ExportedSpanList,
+    StudioSpan,
+    StudioSpanList,
 )
 
 
@@ -144,7 +144,7 @@ class StudioClient:
                 response.raise_for_status()
         return int(response.text)
 
-    def submit_trace(self, data: Sequence[ExportedSpan]) -> str:
+    def submit_trace(self, data: Sequence[StudioSpan]) -> str:
         """Sends the provided spans to Studio as a singular trace.
 
         The method fails if the span list is empty, has already been created or if
@@ -158,9 +158,9 @@ class StudioClient:
         """
         if len(data) == 0:
             raise ValueError("Tried to upload an empty trace")
-        return self._upload_trace(ExportedSpanList(data))
+        return self._upload_trace(StudioSpanList(data))
 
-    def _upload_trace(self, trace: ExportedSpanList) -> str:
+    def _upload_trace(self, trace: StudioSpanList) -> str:
         url = urljoin(self.url, f"/api/projects/{self.project_id}/traces")
         response = requests.post(
             url,
@@ -188,7 +188,7 @@ class StudioExporter(SpanExporter):
     """
 
     def __init__(self, project: str):
-        self.spans: list[ExportedSpan] = []
+        self.spans: list[StudioSpan] = []
         self.client = StudioClient.with_project(project)
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
@@ -198,7 +198,7 @@ class StudioExporter(SpanExporter):
         in separate requests. Therefore, we store the spans in a list and only upload them
         when the exporter shuts down.
         """
-        studio_spans = [ExportedSpan.from_otel(span) for span in spans]
+        studio_spans = [StudioSpan.from_otel(span) for span in spans]
         self.spans.extend(studio_spans)
         return SpanExportResult.SUCCESS
 

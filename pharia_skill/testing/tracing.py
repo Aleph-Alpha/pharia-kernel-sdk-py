@@ -99,7 +99,12 @@ class Context(BaseModel):
         return double_to_128bit(data)
 
 
-class ExportedSpan(BaseModel):
+class StudioSpan(BaseModel):
+    """Specifies the span/trace data model than can be exported to studio.
+
+    Can be created from an OpenTelemetry span.
+    """
+
     context: Context
     name: str | None
     parent_id: UUID | None
@@ -122,9 +127,9 @@ class ExportedSpan(BaseModel):
         return SpanStatus.ERROR
 
     @classmethod
-    def from_otel(cls, span: ReadableSpan) -> "ExportedSpan":
+    def from_otel(cls, span: ReadableSpan) -> "StudioSpan":
         """Convert an OpenTelemetry span to the studio format."""
         return cls.model_validate(json.loads(span.to_json()))
 
 
-ExportedSpanList = RootModel[Sequence[ExportedSpan]]
+StudioSpanList = RootModel[Sequence[StudioSpan]]
