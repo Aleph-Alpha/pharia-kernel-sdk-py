@@ -73,6 +73,15 @@ class DevCsi(Csi):
 
     @classmethod
     def with_studio(cls, project: str) -> "DevCsi":
+        """Create a `DevCsi` that exports traces to Pharia Studio.
+
+        This function creates a `StudioExporter` and registers it with the tracer provider.
+        The exporter uploads traces once it goes out of scope. To force an upload immediately,
+        use `flush_exporter`.
+
+        Args:
+            project: The name of the studio project to export traces to. Will be created if it does not exist.
+        """
         csi = cls()
         processor = csi.span_processor(project)
         csi.exporter = processor.span_exporter  # type: ignore
