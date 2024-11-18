@@ -28,7 +28,9 @@ class Input(BaseModel):
     language: Language | None = None
 
 
-Output = RootModel[str]
+class Output(RootModel):
+    root: str
+
 
 # English and German prompts for different intended summary lengths.
 SUMMARIZATION_PROMPTS = {
@@ -104,4 +106,4 @@ def summarize(csi: Csi, input: Input) -> Output:
         if last_no_summaries and len(summaries) == last_no_summaries:
             break
         last_no_summaries = len(summaries)
-    return Output(text)
+    return Output(root=text)
