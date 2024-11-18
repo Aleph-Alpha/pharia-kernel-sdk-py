@@ -48,14 +48,14 @@ class Event(BaseModel):
     message: str = ""
 
     @model_validator(mode="after")
-    def compute_message(self) -> Self:
+    def message_and_name_for_errors(self) -> Self:
         """
         OpenTelemetry does not have the concept of a message for events.
 
-        For errors, set the error message as message field. Otherwise, use an empty string.
+        For errors, set the error message as message and the type as name.
         """
-        if not self.message:
-            self.message = self.body.get("exception.message", "")
+        self.message = self.body.get("exception.message", self.message)
+        self.name = self.body.get("exception.type", self.name)
         return self
 
 
