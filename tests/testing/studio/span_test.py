@@ -6,9 +6,9 @@ from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, CompletionRequest, Csi, IndexPath, skill
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.tracing import SpanStatus, StudioSpan, double_to_128bit
+from pharia_skill.testing.studio.span import SpanStatus, StudioSpan, double_to_128bit
 
-from .conftest import InMemorySpanExporter
+from ..conftest import InMemorySpanExporter
 
 
 def test_convert_to_uuid():
