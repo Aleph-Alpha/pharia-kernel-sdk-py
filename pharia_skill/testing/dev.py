@@ -21,20 +21,12 @@ from pharia_skill import (
     CompletionRequest,
     Csi,
     DocumentPath,
-    FinishReason,
     IndexPath,
     Language,
     Message,
     SearchResult,
 )
 from pharia_skill.studio import StudioClient, StudioExporter, StudioSpanProcessor
-
-
-def chat_response_from_dict(body: dict) -> ChatResponse:
-    return ChatResponse(
-        message=Message(**body["message"]),
-        finish_reason=FinishReason(body["finish_reason"]),
-    )
 
 
 class DevCsi(Csi):
@@ -162,7 +154,7 @@ class DevCsi(Csi):
             "params": asdict(params),
         }
         output = self.request(self.chat.__name__, data)
-        return chat_response_from_dict(output)
+        return ChatResponse.from_dict(output)
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         data = {
