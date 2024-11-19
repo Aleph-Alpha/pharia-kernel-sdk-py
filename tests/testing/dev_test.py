@@ -13,7 +13,7 @@ from pharia_skill import (
     Message,
 )
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.studio import ExporterClient, StudioClient, StudioExporter
+from pharia_skill.testing.studio import SpanClient, StudioClient, StudioExporter
 from pharia_skill.testing.tracing import StudioSpan
 
 
@@ -84,11 +84,6 @@ def test_search(csi: Csi):
     assert "Heidelberg" in result[0].document_path.name
 
 
-def test_no_existing_exporter_on_fresh_csi():
-    csi = DevCsi()
-    assert csi.existing_exporter() is None
-
-
 def test_set_trace_exporter():
     # Given a fresh CSI
     csi = DevCsi()
@@ -101,12 +96,12 @@ def test_set_trace_exporter():
     assert csi.existing_exporter() == exporter
 
 
-class StubStudioClient(ExporterClient):
+class StubStudioClient(SpanClient):
     def __init__(self, project: str):
         self._project = project
 
-    def submit_trace(self, data: Sequence[StudioSpan]) -> str:
-        return "submitted"
+    def submit_spans(self, spans: Sequence[StudioSpan]):
+        pass
 
 
 def test_set_same_trace_exporter_twice_does_not_raise():

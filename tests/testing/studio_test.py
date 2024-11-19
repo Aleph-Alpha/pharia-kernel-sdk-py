@@ -4,7 +4,7 @@ import pytest
 
 from pharia_skill import Completion, CompletionRequest
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.studio import ExporterClient, StudioExporter, StudioSpan
+from pharia_skill.testing.studio import SpanClient, StudioExporter, StudioSpan
 from pharia_skill.testing.tracing import SpanStatus
 
 from .conftest import from_json
@@ -47,13 +47,12 @@ class FailingCsi(DevCsi):
         raise RuntimeError("Out of cheese")
 
 
-class SpyClient(ExporterClient):
+class SpyClient(SpanClient):
     def __init__(self):
         self.spans: list[Sequence[StudioSpan]] = []
 
-    def submit_trace(self, data: Sequence[StudioSpan]) -> str:
-        self.spans.append(data)
-        return "submitted"
+    def submit_spans(self, spans: Sequence[StudioSpan]):
+        self.spans.append(spans)
 
 
 @pytest.mark.kernel
