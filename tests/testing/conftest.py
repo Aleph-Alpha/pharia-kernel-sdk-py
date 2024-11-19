@@ -49,7 +49,7 @@ def exporter(provider: TracerProvider) -> InMemorySpanExporter:
 @pytest.fixture
 def inner_span() -> ReadableSpan:
     """A children span to `outer_span`."""
-    return from_json(
+    return span_from_json(
         {
             "name": "complete",
             "context": {
@@ -85,7 +85,7 @@ def inner_span() -> ReadableSpan:
 @pytest.fixture
 def outer_span() -> ReadableSpan:
     """A parent span to `inner_span`."""
-    return from_json(
+    return span_from_json(
         {
             "name": "haiku",
             "context": {
@@ -121,7 +121,7 @@ def outer_span() -> ReadableSpan:
 @pytest.fixture
 def error_span() -> ReadableSpan:
     """A root level span with an error status. Not related to any other span."""
-    return from_json(
+    return span_from_json(
         {
             "name": "haiku",
             "context": {
@@ -164,6 +164,51 @@ def error_span() -> ReadableSpan:
     )
 
 
+def span_from_json(inner_span: dict) -> ReadableSpan:
+    """Load an OpenTelemetry span from it's JSON representation.
+
+    When tracing, spans can easily be exported to json with `span.to_json()`.
+    This function allows to load them for testing purposes.
+    """
+    context = SpanContext(
+        trace_id=int(inner_span["context"]["trace_id"], 16),
+        span_id=int(inner_span["context"]["span_id"], 16),
+        is_remote=False,
+    )
+    parent = (
+        SpanContext(
+            trace_id=int(inner_span["context"]["trace_id"], 16),
+            span_id=int(inner_span["parent_id"], 16),
+            is_remote=False,
+        )
+        if inner_span["parent_id"]
+        else None
+    )
+    status = Status(
+        status_code=status_str_to_status(inner_span["status"]["status_code"]),
+        description=inner_span["status"].get("description"),
+    )
+    events = [
+        Event(
+            name=event["name"],
+            timestamp=timestamp_from_iso(event["timestamp"]),
+            attributes=event["attributes"],
+        )
+        for event in inner_span["events"]
+    ]
+    return ReadableSpan(
+        name=inner_span["name"],
+        attributes=inner_span["attributes"],
+        links=inner_span["links"],
+        parent=parent,
+        context=context,
+        status=status,
+        events=events,
+        start_time=timestamp_from_iso(inner_span["start_time"]),
+        end_time=timestamp_from_iso(inner_span["end_time"]),
+    )
+
+
 def status_str_to_status(status_str: str) -> StatusCode:
     match status_str:
         case "OK":
@@ -174,37 +219,5 @@ def status_str_to_status(status_str: str) -> StatusCode:
             raise ValueError(f"Unknown status code: {status_str}")
 
 
-def from_json(inner_span: dict) -> ReadableSpan:
-    return ReadableSpan(
-        name=inner_span["name"],
-        parent=SpanContext(
-            trace_id=int(inner_span["context"]["trace_id"], 16),
-            span_id=int(inner_span["parent_id"], 16),
-            is_remote=False,
-        )
-        if inner_span["parent_id"]
-        else None,
-        context=SpanContext(
-            trace_id=int(inner_span["context"]["trace_id"], 16),
-            span_id=int(inner_span["context"]["span_id"], 16),
-            is_remote=False,
-        ),
-        start_time=int(dt.datetime.fromisoformat(inner_span["start_time"]).timestamp()),
-        end_time=int(dt.datetime.fromisoformat(inner_span["end_time"]).timestamp()),
-        attributes=inner_span["attributes"],
-        status=Status(
-            status_code=status_str_to_status(inner_span["status"]["status_code"]),
-            description=inner_span["status"].get("description"),
-        ),
-        events=[
-            Event(
-                name=event["name"],
-                timestamp=int(
-                    dt.datetime.fromisoformat(event["timestamp"]).timestamp()
-                ),
-                attributes=event["attributes"],
-            )
-            for event in inner_span["events"]
-        ],
-        links=inner_span["links"],
-    )
+def timestamp_from_iso(iso_str: str) -> int:
+    return int(dt.datetime.fromisoformat(iso_str).timestamp())
