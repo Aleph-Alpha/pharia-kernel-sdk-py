@@ -5,6 +5,7 @@ DevCsi can be used for testing Skill code locally against a running Pharia Kerne
 import json
 import os
 from dataclasses import asdict
+from typing import Protocol
 
 import requests
 from dotenv import load_dotenv
@@ -29,6 +30,34 @@ from pharia_skill import (
 from pharia_skill.studio import StudioClient, StudioExporter, StudioSpanProcessor
 
 
+class CsiClient(Protocol):
+    def run(self, function: str, data: dict) -> dict: ...
+
+
+class HttpClient(CsiClient):
+    """Make requests with a given payload against a running Pharia Kernel."""
+
+    VERSION = "0.2"
+
+    def __init__(self):
+        load_dotenv()
+        self.url = os.environ["PHARIA_KERNEL_ADDRESS"] + "/csi"
+        token = os.environ["AA_API_TOKEN"]
+        self.session = requests.Session()
+        self.session.headers = {"Authorization": f"Bearer {token}"}
+
+    def __del__(self):
+        if hasattr(self, "session"):
+            self.session.close()
+
+    def run(self, function: str, data: dict) -> dict:
+        response = self.session.post(
+            self.url, json={"version": self.VERSION, "function": function, **data}
+        )
+        response.raise_for_status()
+        return response.json()
+
+
 class DevCsi(Csi):
     """
     DevCsi can be used for testing Skill code locally against a running Pharia Kernel.
@@ -46,19 +75,8 @@ class DevCsi(Csi):
     * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.aleph-alpha.stackit.run")
     """
 
-    VERSION = "0.2"
-
     def __init__(self):
-        load_dotenv()
-        self.url = os.environ["PHARIA_KERNEL_ADDRESS"] + "/csi"
-        token = os.environ["AA_API_TOKEN"]
-        self.session = requests.Session()
-        self.session.headers = {"Authorization": f"Bearer {token}"}
-        self.exporter: StudioExporter | None = None
-
-    def __del__(self):
-        if hasattr(self, "session"):
-            self.session.close()
+        self.client = HttpClient()
 
     @classmethod
     def with_studio(cls, project: str) -> "DevCsi":
@@ -116,14 +134,11 @@ class DevCsi(Csi):
     def request(self, function: str, data: dict):
         with trace.get_tracer(__name__).start_as_current_span(function) as span:
             span.set_attribute("input", json.dumps(data))
-
-            data["version"] = self.VERSION
-            data["function"] = function
-            response = self.session.post(self.url, json=data)
-            if response.status_code != 200:
-                span.set_status(StatusCode.ERROR, response.text)
-                raise Exception(f"{response.status_code}: {response.text}")
-            output = response.json()
+            try:
+                output = self.client.run(function, data)
+            except Exception as e:
+                span.set_status(StatusCode.ERROR, str(e))
+                raise e
             span.set_status(StatusCode.OK)
             span.set_attribute("output", json.dumps(output))
 
