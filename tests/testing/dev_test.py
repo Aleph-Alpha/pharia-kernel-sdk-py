@@ -88,6 +88,7 @@ def test_search(csi: Csi):
     assert "Heidelberg" in result[0].document_path.name
 
 
+@pytest.mark.kernel
 def test_set_trace_exporter():
     # Given a fresh CSI
     csi = DevCsi()
@@ -108,6 +109,7 @@ class StubStudioClient(SpanClient):
         pass
 
 
+@pytest.mark.kernel
 def test_set_same_trace_exporter_twice_does_not_raise():
     # Given a csi with one exporter set
     csi = DevCsi()
@@ -121,6 +123,7 @@ def test_set_same_trace_exporter_twice_does_not_raise():
     assert len(csi.provider()._active_span_processor._span_processors) == 1
 
 
+@pytest.mark.kernel
 def test_set_different_trace_exporter_raises():
     # Given a csi with one exporter set
     csi = DevCsi()
