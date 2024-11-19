@@ -4,9 +4,9 @@ import pytest
 from opentelemetry.sdk.trace import ReadableSpan
 
 from pharia_skill import Completion, CompletionRequest
+from pharia_skill.studio import SpanClient, StudioExporter, StudioSpan
+from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.studio import SpanClient, StudioExporter, StudioSpan
-from pharia_skill.testing.studio.span import SpanStatus
 
 from .span_test import Input, haiku
 

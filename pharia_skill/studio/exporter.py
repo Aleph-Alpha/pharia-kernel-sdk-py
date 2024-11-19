@@ -4,7 +4,7 @@ from typing import Protocol
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
-from pharia_skill.testing.studio.span import StudioSpan
+from pharia_skill.studio.span import StudioSpan
 
 
 class SpanClient(Protocol):
