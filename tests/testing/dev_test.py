@@ -13,8 +13,12 @@ from pharia_skill import (
     Message,
 )
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.studio import SpanClient, StudioClient, StudioExporter
-from pharia_skill.testing.tracing import StudioSpan
+from pharia_skill.testing.studio import (
+    SpanClient,
+    StudioClient,
+    StudioExporter,
+    StudioSpan,
+)
 
 
 @pytest.fixture(scope="module")
@@ -130,3 +134,18 @@ def test_set_different_trace_exporter_raises():
     # And the new exporter is the one that is set
     assert csi.existing_exporter() == exporter_2
     assert len(csi.provider()._active_span_processor._span_processors) == 1
+
+
+@pytest.mark.kernel
+def test_multiple_csi_instances_do_not_duplicate_exporters():
+    """A user might use different `DevCsi` instances in the same process.
+
+    Assert that the processors are not duplicated.
+    """
+    # Given two csi instances
+    csi1 = DevCsi.with_studio(project="kernel-test")
+    csi2 = DevCsi.with_studio(project="kernel-test")
+
+    # Then only one exporter is attached
+    assert len(csi1.provider()._active_span_processor._span_processors) == 1
+    assert len(csi2.provider()._active_span_processor._span_processors) == 1

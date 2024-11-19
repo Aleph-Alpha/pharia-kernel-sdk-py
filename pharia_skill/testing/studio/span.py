@@ -1,12 +1,13 @@
 """
 Convert OpenTelemetry spans to the studio format.
 
-The `ExportedSpan` model provides the translation from an OpenTelemetry span
+The `StudioSpan` model provides the translation from an OpenTelemetry span
 to the studio format. It can be set up from an OpenTelemetry span object and
 can be (in serialized form) uploaded to the studio collector.
 
-The `ExportedSpan` model was copied over from the intelligence layer. Each
-occurrence of a field validator marks one translation step.
+The `StudioSpan` model was copied over from the `ExportedSpan` model in the
+intelligence layer. Each occurrence of a field validator marks one translation
+step.
 """
 
 import datetime as dt

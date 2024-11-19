@@ -5,25 +5,25 @@ import pytest
 from pharia_skill import Completion, CompletionRequest
 from pharia_skill.testing import DevCsi
 from pharia_skill.testing.studio import SpanClient, StudioExporter, StudioSpan
-from pharia_skill.testing.tracing import SpanStatus
+from pharia_skill.testing.studio.span import SpanStatus
 
-from .conftest import from_json
-from .tracing_test import Input, haiku
+from ..conftest import from_json
+from .span_test import Input, haiku
 
 
-@pytest.mark.kernel
-def test_multiple_csi_instances_do_not_duplicate_exporters():
-    """A user might use different `DevCsi` instances in the same process.
+class FailingCsi(DevCsi):
+    """A csi that fails on the complete_all method."""
 
-    Assert that the processors are not duplicated.
-    """
-    # Given two csi instances
-    csi1 = DevCsi.with_studio(project="kernel-test")
-    csi2 = DevCsi.with_studio(project="kernel-test")
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
+        raise RuntimeError("Out of cheese")
 
-    # Then only one exporter is attached
-    assert len(csi1.provider()._active_span_processor._span_processors) == 1
-    assert len(csi2.provider()._active_span_processor._span_processors) == 1
+
+class SpyClient(SpanClient):
+    def __init__(self):
+        self.spans: list[Sequence[StudioSpan]] = []
+
+    def submit_spans(self, spans: Sequence[StudioSpan]):
+        self.spans.append(spans)
 
 
 @pytest.mark.kernel
@@ -40,19 +40,6 @@ def test_studio_collector_uploads_spans():
     # Then the spans are exported to the client
     assert len(client.spans) == 1
     assert len(client.spans[0]) == 3
-
-
-class FailingCsi(DevCsi):
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        raise RuntimeError("Out of cheese")
-
-
-class SpyClient(SpanClient):
-    def __init__(self):
-        self.spans: list[Sequence[StudioSpan]] = []
-
-    def submit_spans(self, spans: Sequence[StudioSpan]):
-        self.spans.append(spans)
 
 
 @pytest.mark.kernel
