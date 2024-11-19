@@ -5,7 +5,7 @@ DevCsi can be used for testing Skill code locally against a running Pharia Kerne
 import json
 import os
 from dataclasses import asdict
-from typing import Protocol
+from typing import Any, Protocol
 
 import requests
 from dotenv import load_dotenv
@@ -31,7 +31,7 @@ from pharia_skill.studio import StudioClient, StudioExporter, StudioSpanProcesso
 
 
 class CsiClient(Protocol):
-    def run(self, function: str, data: dict) -> dict: ...
+    def run(self, function: str, data: dict) -> Any: ...
 
 
 class HttpClient(CsiClient):
@@ -76,7 +76,7 @@ class DevCsi(Csi):
     """
 
     def __init__(self):
-        self.client = HttpClient()
+        self.client: CsiClient = HttpClient()
 
     @classmethod
     def with_studio(cls, project: str) -> "DevCsi":
@@ -131,7 +131,7 @@ class DevCsi(Csi):
 
         return trace.get_tracer_provider()  # type: ignore
 
-    def request(self, function: str, data: dict):
+    def run(self, function: str, data: dict):
         with trace.get_tracer(__name__).start_as_current_span(function) as span:
             span.set_attribute("input", json.dumps(data))
             try:
@@ -150,7 +150,7 @@ class DevCsi(Csi):
             "model": model,
             "params": asdict(params),
         }
-        output = self.request(self.complete.__name__, data)
+        output = self.run(self.complete.__name__, data)
         return Completion(**output)
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
@@ -158,7 +158,7 @@ class DevCsi(Csi):
             "text": text,
             "params": asdict(params),
         }
-        return self.request(self.chunk.__name__, data)  # type: ignore
+        return self.run(self.chunk.__name__, data)  # type: ignore
 
     def chat(
         self, model: str, messages: list[Message], params: ChatParams
@@ -168,7 +168,7 @@ class DevCsi(Csi):
             "messages": [asdict(m) for m in messages],
             "params": asdict(params),
         }
-        output = self.request(self.chat.__name__, data)
+        output = self.run(self.chat.__name__, data)
         return ChatResponse.from_dict(output)
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
@@ -176,7 +176,7 @@ class DevCsi(Csi):
             "text": text,
             "languages": [language.name.lower() for language in languages],
         }
-        output = self.request(self.select_language.__name__, data)
+        output = self.run(self.select_language.__name__, data)
         match output:
             case "eng":
                 return Language.ENG
@@ -189,7 +189,7 @@ class DevCsi(Csi):
         data = {
             "requests": [asdict(request) for request in requests],
         }
-        output = self.request(self.complete_all.__name__, data)
+        output = self.run(self.complete_all.__name__, data)
         return [Completion(**completion) for completion in output]
 
     def search(
@@ -205,7 +205,7 @@ class DevCsi(Csi):
             "max_results": max_results,
             "min_score": min_score,
         }
-        output = self.request(self.search.__name__, data)
+        output = self.run(self.search.__name__, data)
         return [
             SearchResult(
                 document_path=DocumentPath(**result["document_path"]),
