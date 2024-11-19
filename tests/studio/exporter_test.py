@@ -2,13 +2,19 @@ from typing import Sequence
 
 import pytest
 from opentelemetry.sdk.trace import ReadableSpan
+from pydantic import BaseModel
 
-from pharia_skill import Completion, CompletionRequest
+from pharia_skill import (
+    Completion,
+    CompletionParams,
+    CompletionRequest,
+    Csi,
+    IndexPath,
+    skill,
+)
 from pharia_skill.studio import SpanClient, StudioExporter, StudioSpan
 from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi
-
-from .span_test import Input, haiku
 
 
 class FailingCsi(DevCsi):
@@ -26,6 +32,30 @@ class SpyClient(SpanClient):
         self.spans.append(spans)
 
 
+# Given a skill
+class Input(BaseModel):
+    topic: str
+
+
+class Output(BaseModel):
+    haiku: str
+
+
+@skill
+def haiku(csi: Csi, input: Input) -> Output:
+    """Skill with two csi calls for tracing."""
+    index = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
+    csi.search(index, input.topic, 1, 0.5)
+
+    request = CompletionRequest(
+        model="llama-3.1-8b-instruct",
+        prompt=input.topic,
+        params=CompletionParams(max_tokens=64),
+    )
+    result = csi.complete_all([request, request])
+    return Output(haiku=result[0].text)
+
+
 @pytest.mark.kernel
 def test_studio_collector_uploads_spans():
     # Given a csi setup with the studio exporter
@@ -40,6 +70,49 @@ def test_studio_collector_uploads_spans():
     # Then the spans are exported to the client
     assert len(client.spans) == 1
     assert len(client.spans[0]) == 3
+
+
+@pytest.mark.kernel
+def test_csi_call_is_traced():
+    # Given a csi setup with an in-memory exporter
+    csi = DevCsi()
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    csi.set_span_exporter(exporter)
+
+    # When running a completion request
+    csi.complete(
+        "llama-3.1-8b-instruct", "Say hello to Bob", CompletionParams(max_tokens=64)
+    )
+
+    # Then the exporter has received a successful span
+    assert len(client.spans) == 1
+    assert client.spans[0][0].status == SpanStatus.OK
+
+    # And the input and output are set as attributes
+    assert "Say hello to Bob" in client.spans[0][0].attributes.input["prompt"]
+    output = client.spans[0][0].attributes.output
+    assert output is not None
+    assert "Bob" in output["text"]
+
+
+@pytest.mark.kernel
+def test_skill_is_traced():
+    # When running the skill with the dev csi
+    csi = DevCsi()
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    csi.set_span_exporter(exporter)
+    haiku(csi, Input(topic="oat milk"))
+
+    # Then the skill and the completion are traced
+    assert len(client.spans) == 1
+    assert client.spans[0][0].name == "search"
+    assert client.spans[0][1].name == "complete_all"
+    assert client.spans[0][2].name == "haiku"
+
+    # And the traces are nested
+    assert client.spans[0][0].parent_id == client.spans[0][2].context.span_id
 
 
 @pytest.mark.kernel
