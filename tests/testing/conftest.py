@@ -1,11 +1,15 @@
+import datetime as dt
+
 import pytest
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import Event, ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanExporter,
     SpanExportResult,
 )
+from opentelemetry.trace.span import SpanContext
+from opentelemetry.trace.status import Status, StatusCode
 
 
 class InMemorySpanExporter(SpanExporter):
@@ -146,3 +150,49 @@ def error_span() -> dict:
             "schema_url": "",
         },
     }
+
+
+def status_str_to_status(status_str: str) -> StatusCode:
+    match status_str:
+        case "OK":
+            return StatusCode.OK
+        case "ERROR":
+            return StatusCode.ERROR
+        case _:
+            raise ValueError(f"Unknown status code: {status_str}")
+
+
+def from_json(inner_span: dict) -> ReadableSpan:
+    return ReadableSpan(
+        name=inner_span["name"],
+        parent=SpanContext(
+            trace_id=int(inner_span["context"]["trace_id"], 16),
+            span_id=int(inner_span["parent_id"], 16),
+            is_remote=False,
+        )
+        if inner_span["parent_id"]
+        else None,
+        context=SpanContext(
+            trace_id=int(inner_span["context"]["trace_id"], 16),
+            span_id=int(inner_span["context"]["span_id"], 16),
+            is_remote=False,
+        ),
+        start_time=int(dt.datetime.fromisoformat(inner_span["start_time"]).timestamp()),
+        end_time=int(dt.datetime.fromisoformat(inner_span["end_time"]).timestamp()),
+        attributes=inner_span["attributes"],
+        status=Status(
+            status_code=status_str_to_status(inner_span["status"]["status_code"]),
+            description=inner_span["status"].get("description"),
+        ),
+        events=[
+            Event(
+                name=event["name"],
+                timestamp=int(
+                    dt.datetime.fromisoformat(event["timestamp"]).timestamp()
+                ),
+                attributes=event["attributes"],
+            )
+            for event in inner_span["events"]
+        ],
+        links=inner_span["links"],
+    )

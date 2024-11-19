@@ -1,10 +1,13 @@
+from typing import Sequence
+
 import pytest
 
 from pharia_skill import Completion, CompletionRequest
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.studio import StudioExporter
+from pharia_skill.testing.studio import ExporterClient, StudioExporter, StudioSpan
 from pharia_skill.testing.tracing import SpanStatus
 
+from .conftest import from_json
 from .tracing_test import Input, haiku
 
 
@@ -40,17 +43,17 @@ def test_multiple_csi_instances_with_different_projects():
 def test_studio_collector_uploads_spans():
     # Given a csi setup with the studio exporter
     csi = DevCsi.with_studio(project="kernel-test")
+    assert isinstance(csi.exporter, StudioExporter)
+    client = SpyClient()
+    csi.exporter.client = client
 
     # When running the skill
     haiku(csi, Input(topic="oat milk"))
 
-    # Then the spans are collected by the studio collector
+    # Then the spans are exported to the client
     assert isinstance(csi.exporter, StudioExporter)
-    assert len(csi.exporter.spans) == 3
-    assert csi.exporter.client.project_id == 786
-
-    # And flushing the exporter does not raise an error
-    csi.flush_exporter()
+    assert len(client.spans) == 1
+    assert len(client.spans[0]) == 3
 
 
 class FailingCsi(DevCsi):
@@ -58,22 +61,85 @@ class FailingCsi(DevCsi):
         raise RuntimeError("Out of cheese")
 
 
+class SpyClient(ExporterClient):
+    def __init__(self):
+        self.spans: list[Sequence[StudioSpan]] = []
+
+    def submit_trace(self, data: Sequence[StudioSpan]) -> str:
+        self.spans.append(data)
+        return "submitted"
+
+    def project(self) -> str:
+        return "kernel-test"
+
+
 @pytest.mark.kernel
 def test_csi_exception_is_traced():
     # Given a csi with a failing complete_all
     csi = FailingCsi.with_studio(project="kernel-test")
+    assert isinstance(csi.exporter, StudioExporter)
+    client = SpyClient()
+    csi.exporter.client = client
 
     # When the skill is invoked
     with pytest.raises(RuntimeError, match="Out of cheese"):
         haiku(csi, Input(topic="oat milk"))
 
     # Then the spans are collected by the studio collector
-    assert isinstance(csi.exporter, StudioExporter)
-    first, second = csi.exporter.spans  # type: ignore
+    assert len(client.spans) == 1
+    first, second = client.spans[0]
     assert first.name == "search"
     assert first.status == SpanStatus.OK
     assert second.name == "haiku"
     assert second.status == SpanStatus.ERROR
 
-    # And shutting down the exporter does not raise an error
-    csi.flush_exporter()
+
+def test_traces_are_exported_together(inner_span: dict, outer_span: dict):
+    # Given a csi with the studio exporter
+    client = SpyClient()
+    exporter = StudioExporter(client)
+
+    # And given a parent and child span
+    inner = from_json(inner_span)
+    outer = from_json(outer_span)
+
+    # When we export the inner span
+    exporter.export([inner])
+
+    # And then the outer span
+    exporter.export([outer])
+
+    # Then the spans are submitted to the client
+    assert len(client.spans) == 1
+    assert len(client.spans[0]) == 2
+
+
+def test_no_traces_exported_without_root_span(inner_span: dict):
+    # Given a csi with the studio exporter
+    client = SpyClient()
+    exporter = StudioExporter(client)
+
+    # When we export a span without a root span
+    exporter.export([from_json(inner_span)])
+    exporter.export([from_json(inner_span)])
+
+    # Then no traces are submitted
+    assert len(client.spans) == 0
+
+
+def test_inner_trace_is_matched_with_correct_parent(inner_span: dict, error_span: dict):
+    # Given a csi with the studio exporter
+    client = SpyClient()
+    exporter = StudioExporter(client)
+
+    inner = from_json(inner_span)
+    outer = from_json(error_span)
+    assert outer.context.trace_id != inner.context.trace_id  # type: ignore
+
+    # When we export two spans with different trace ids
+    exporter.export([inner])
+    exporter.export([outer])
+
+    # Then only the outer span is submitted
+    assert len(client.spans) == 1
+    assert len(client.spans[0]) == 1

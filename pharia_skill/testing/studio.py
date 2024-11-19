@@ -1,7 +1,6 @@
 import os
-from collections import defaultdict
 from collections.abc import Sequence
-from typing import Optional
+from typing import Optional, Protocol
 from urllib.parse import urljoin
 
 import requests
@@ -22,7 +21,15 @@ class StudioProject(BaseModel):
     description: Optional[str]
 
 
-class StudioClient:
+class ExporterClient(Protocol):
+    """Client that can submit traces."""
+
+    def submit_trace(self, data: Sequence[StudioSpan]) -> str: ...
+
+    def project(self) -> str: ...
+
+
+class StudioClient(ExporterClient):
     """Client for communicating with Studio.
 
     Attributes:
@@ -55,6 +62,9 @@ class StudioClient:
 
         self._project_name = project
         self._project_id: int | None = None
+
+    def project(self) -> str:
+        return self._project_name
 
     @classmethod
     def with_project(cls, project: str) -> "StudioClient":
@@ -187,31 +197,39 @@ class StudioExporter(SpanExporter):
     The exporter will create a project on setup if it does not exist yet.
     """
 
-    def __init__(self, project: str):
-        self.spans: list[StudioSpan] = []
-        self.client = StudioClient.with_project(project)
+    def __init__(self, client: ExporterClient):
+        self.spans: dict[int, list[ReadableSpan]] = {}
+        self.client = client
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         """Store spans in the exporter and upload them to Studio when the exporter shuts down.
 
         Studio is complaining about duplicate IDs when uploading traces with the same `span_id`
-        in separate requests. Therefore, we store the spans in a list and only upload them
-        when the exporter shuts down.
+        in separate requests. Therefore, we store the spans and only flush when the root span ends.
         """
-        studio_spans = [StudioSpan.from_otel(span) for span in spans]
-        self.spans.extend(studio_spans)
+        for span in spans:
+            if span.context is None:
+                raise ValueError("Span has no context")
+            self._store_span(span)
+            if span.parent is None:
+                self._flush_trace(span.context.trace_id)
+
         return SpanExportResult.SUCCESS
 
+    def _store_span(self, span: ReadableSpan):
+        """Spans are grouped by trace_id for storage."""
+        if span.context is None:
+            raise ValueError("Span has no context")
+
+        if (trace_id := span.context.trace_id) not in self.spans:
+            self.spans[trace_id] = []
+        self.spans[trace_id].append(span)
+
+    def _flush_trace(self, trace_id: int):
+        spans = self.spans.pop(trace_id)
+        studio_spans = [StudioSpan.from_otel(span) for span in spans]
+        self.client.submit_trace(studio_spans)
+
     def shutdown(self):
-        """Upload the collected spans to Studio.
-
-        Upload spans belonging to the same trace together
-        """
-        # split spans by trace_id
-        traces = defaultdict(list)
-        for span in self.spans:
-            traces[span.context.trace_id].append(span)
-
-        for trace in traces.values():
-            self.client.submit_trace(trace)
+        assert len(self.spans) == 0, "No spans should be left in the exporter"
         self.spans.clear()
