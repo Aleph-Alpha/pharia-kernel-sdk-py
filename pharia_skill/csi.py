@@ -150,6 +150,13 @@ class ChatResponse:
     message: Message
     finish_reason: FinishReason
 
+    @staticmethod
+    def from_dict(body: dict) -> "ChatResponse":
+        return ChatResponse(
+            message=Message(**body["message"]),
+            finish_reason=FinishReason(body["finish_reason"]),
+        )
+
 
 @dataclass
 class ChunkParams:
