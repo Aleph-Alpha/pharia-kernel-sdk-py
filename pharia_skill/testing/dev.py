@@ -30,7 +30,7 @@ from pharia_skill import (
     Message,
     SearchResult,
 )
-from pharia_skill.testing.studio import StudioExporter
+from pharia_skill.testing.studio import StudioClient, StudioExporter
 
 
 def chat_response_from_dict(body: dict) -> ChatResponse:
@@ -76,8 +76,7 @@ class DevCsi(Csi):
         """Create a `DevCsi` that exports traces to Pharia Studio.
 
         This function creates a `StudioExporter` and registers it with the tracer provider.
-        The exporter uploads traces once it goes out of scope. To force an upload immediately,
-        use `flush_exporter`.
+        The exporter uploads spans once the root span ends.
 
         Args:
             project: The name of the studio project to export traces to. Will be created if it does not exist.
@@ -86,15 +85,6 @@ class DevCsi(Csi):
         processor = csi.span_processor(project)
         csi.exporter = processor.span_exporter  # type: ignore
         return csi
-
-    def flush_exporter(self):
-        """Upload the collected spans to Studio.
-
-        This will happen automatically when the `DevCsi` goes out of scope.
-        A user might want to call this method to upload intermediate results.
-        """
-        if self.exporter:
-            self.exporter.shutdown()
 
     def span_processor(self, project: str) -> SimpleSpanProcessor | None:
         """Return a span processor for Studio if it exists, otherwise create one.
@@ -108,13 +98,13 @@ class DevCsi(Csi):
         for processor in provider._active_span_processor._span_processors:
             if isinstance(processor, SimpleSpanProcessor):
                 if isinstance(processor.span_exporter, StudioExporter):
-                    if processor.span_exporter.client._project_name == project:
+                    if processor.span_exporter.client.project() == project:
                         return processor
                     raise RuntimeError(
                         "There is already a studio exporter to a different project attached."
                     )
 
-        exporter = StudioExporter(project)
+        exporter = StudioExporter(StudioClient(project))
         span_processor = SimpleSpanProcessor(exporter)
         provider.add_span_processor(span_processor)
         return span_processor

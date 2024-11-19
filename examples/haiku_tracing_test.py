@@ -16,9 +16,6 @@ def test_haiku_with_studio_tracing():
     input = Input(root="oat milk")
     result = haiku(csi, input)
 
-    # You can flush the exporter manually, or it will be flushed when the `DevCsi` is garbage collected.
-    csi.flush_exporter()
-
     # Assert the result is as expected
     assert isinstance(result, Output)
     assert "oat milk" in result.completion or "white" in result.completion
