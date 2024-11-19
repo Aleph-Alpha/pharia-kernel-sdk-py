@@ -14,7 +14,6 @@ from pharia_skill import (
 )
 from pharia_skill.studio import (
     SpanClient,
-    StudioClient,
     StudioExporter,
     StudioSpan,
 )
@@ -88,32 +87,29 @@ def test_search(csi: Csi):
     assert "Heidelberg" in result[0].document_path.name
 
 
+class StubStudioClient(SpanClient):
+    def submit_spans(self, spans: Sequence[StudioSpan]):
+        pass
+
+
 @pytest.mark.kernel
 def test_set_trace_exporter():
     # Given a fresh CSI
     csi = DevCsi()
 
     # When setting an exporter
-    exporter = StudioExporter(StudioClient("test"))
+    exporter = StudioExporter(StubStudioClient())
     csi.set_span_exporter(exporter)
 
     # Then the exporter is set
     assert csi.existing_exporter() == exporter
 
 
-class StubStudioClient(SpanClient):
-    def __init__(self, project: str):
-        self._project = project
-
-    def submit_spans(self, spans: Sequence[StudioSpan]):
-        pass
-
-
 @pytest.mark.kernel
 def test_set_same_trace_exporter_twice_does_not_raise():
     # Given a csi with one exporter set
     csi = DevCsi()
-    exporter = StudioExporter(StubStudioClient("test"))
+    exporter = StudioExporter(StubStudioClient())
     csi.set_span_exporter(exporter)
 
     # When setting the same exporter again
@@ -127,11 +123,11 @@ def test_set_same_trace_exporter_twice_does_not_raise():
 def test_set_different_trace_exporter_raises():
     # Given a csi with one exporter set
     csi = DevCsi()
-    exporter_1 = StudioExporter(StubStudioClient("test"))
+    exporter_1 = StudioExporter(StubStudioClient())
     csi.set_span_exporter(exporter_1)
 
     # Then setting a different exporter overwrites the existing one
-    exporter_2 = StudioExporter(StubStudioClient("other"))
+    exporter_2 = StudioExporter(StubStudioClient())
     csi.set_span_exporter(exporter_2)
 
     # And the new exporter is the one that is set
