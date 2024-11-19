@@ -10,9 +10,6 @@ import requests
 from dotenv import load_dotenv
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    SimpleSpanProcessor,
-)
 from opentelemetry.trace import StatusCode
 
 from pharia_skill import (
@@ -30,7 +27,7 @@ from pharia_skill import (
     Message,
     SearchResult,
 )
-from pharia_skill.studio import StudioClient, StudioExporter
+from pharia_skill.studio import StudioClient, StudioExporter, StudioSpanProcessor
 
 
 def chat_response_from_dict(body: dict) -> ChatResponse:
@@ -95,11 +92,11 @@ class DevCsi(Csi):
         """
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, SimpleSpanProcessor):
+            if isinstance(processor, StudioSpanProcessor):
                 processor.span_exporter = exporter
                 return
 
-        span_processor = SimpleSpanProcessor(exporter)
+        span_processor = StudioSpanProcessor(exporter)
         provider.add_span_processor(span_processor)
 
     @classmethod
@@ -107,7 +104,7 @@ class DevCsi(Csi):
         """Return the first studio exporter attached to the provider, if any."""
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, SimpleSpanProcessor):
+            if isinstance(processor, StudioSpanProcessor):
                 if isinstance(processor.span_exporter, StudioExporter):
                     return processor.span_exporter
         return None

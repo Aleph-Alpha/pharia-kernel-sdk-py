@@ -2,7 +2,11 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from opentelemetry.sdk.trace import ReadableSpan
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.trace.export import (
+    SimpleSpanProcessor,
+    SpanExporter,
+    SpanExportResult,
+)
 
 from pharia_skill.studio.span import StudioSpan
 
@@ -69,3 +73,9 @@ class StudioExporter(SpanExporter):
         """
         assert len(self.spans) == 0, "No spans should be left in the exporter"
         self.spans.clear()
+
+
+class StudioSpanProcessor(SimpleSpanProcessor):
+    """Signal that a processor has been registered by the SDK."""
+
+    pass
