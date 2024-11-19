@@ -84,7 +84,6 @@ def skill(
 
     def trace_skill(csi: Csi, input: UserInput) -> UserOutput:
         with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
-            span.set_attribute("type", "TASK_SPAN")
             span.set_attribute("input", json.dumps(input.model_dump()))
             result = func(csi, input)
             span.set_attribute("output", json.dumps(result.model_dump()))

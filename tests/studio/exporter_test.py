@@ -12,7 +12,7 @@ from pharia_skill import (
     IndexPath,
     skill,
 )
-from pharia_skill.studio import SpanClient, StudioExporter, StudioSpan
+from pharia_skill.studio import SpanClient, StudioClient, StudioExporter, StudioSpan
 from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi
 
@@ -57,19 +57,23 @@ def haiku(csi: Csi, input: Input) -> Output:
 
 
 @pytest.mark.kernel
-def test_studio_collector_uploads_spans():
+def test_trace_upload_studio_does_not_raise():
+    """Errors from uploading traces are handled by ErrorHandles.
+    The default handling is silently ignoring the exceptions.
+
+    Therefore, we explicitly collect the spans and upload them manually.
+    """
     # Given a csi setup with the studio exporter
     csi = DevCsi()
     client = SpyClient()
     exporter = StudioExporter(client)
     csi.set_span_exporter(exporter)
 
-    # When running the skill
+    # When running a skill and collecting spans
     haiku(csi, Input(topic="oat milk"))
 
-    # Then the spans are exported to the client
-    assert len(client.spans) == 1
-    assert len(client.spans[0]) == 3
+    # Then no error is raised when running the skill
+    StudioClient("kernel-test").submit_spans(client.spans[0])
 
 
 @pytest.mark.kernel
