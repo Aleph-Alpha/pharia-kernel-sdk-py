@@ -1,7 +1,8 @@
 import logging
 
 import pytest
-from opentelemetry.trace import StatusCode
+from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.trace.status import StatusCode
 from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, CompletionRequest, Csi, IndexPath, skill
@@ -16,9 +17,9 @@ def test_convert_to_uuid():
     assert str(result) == "d1bf874f-6554-fe2b-d1bf-874f6554fe2b"
 
 
-def test_exported_span_from_csi_call(inner_span: dict):
+def test_exported_span_from_csi_call(inner_span: ReadableSpan):
     # When validating a span created from tracing a csi call
-    exported_span = StudioSpan.model_validate(inner_span)
+    exported_span = StudioSpan.from_otel(inner_span)
 
     # Then the span is validated successfully
     assert exported_span.name == "complete"
@@ -27,9 +28,9 @@ def test_exported_span_from_csi_call(inner_span: dict):
     exported_span.model_dump_json()
 
 
-def test_exported_span_from_skill(outer_span: dict):
+def test_exported_span_from_skill(outer_span: ReadableSpan):
     # When validating a span created from tracing a skill
-    exported_span = StudioSpan.model_validate(outer_span)
+    exported_span = StudioSpan.from_otel(outer_span)
 
     # Then the span is validated successfully
     assert exported_span.name == "haiku"
@@ -38,9 +39,9 @@ def test_exported_span_from_skill(outer_span: dict):
     exported_span.model_dump_json()
 
 
-def test_exported_span_from_error(error_span: dict):
+def test_exported_span_from_error(error_span: ReadableSpan):
     # When validating a span created from tracing an error
-    exported_span = StudioSpan.model_validate(error_span)
+    exported_span = StudioSpan.from_otel(error_span)
 
     # Then the status is set to error
     assert exported_span.status == SpanStatus.ERROR

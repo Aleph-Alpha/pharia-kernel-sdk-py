@@ -1,13 +1,13 @@
 from typing import Sequence
 
 import pytest
+from opentelemetry.sdk.trace import ReadableSpan
 
 from pharia_skill import Completion, CompletionRequest
 from pharia_skill.testing import DevCsi
 from pharia_skill.testing.studio import SpanClient, StudioExporter, StudioSpan
 from pharia_skill.testing.studio.span import SpanStatus
 
-from ..conftest import from_json
 from .span_test import Input, haiku
 
 
@@ -63,51 +63,49 @@ def test_csi_exception_is_traced():
     assert second.status == SpanStatus.ERROR
 
 
-def test_traces_are_exported_together(inner_span: dict, outer_span: dict):
+def test_traces_are_exported_together(
+    inner_span: ReadableSpan, outer_span: ReadableSpan
+):
     # Given a csi with the studio exporter
     client = SpyClient()
     exporter = StudioExporter(client)
 
-    # And given a parent and child span
-    inner = from_json(inner_span)
-    outer = from_json(outer_span)
-
     # When we export the inner span
-    exporter.export([inner])
+    exporter.export([inner_span])
 
     # And then the outer span
-    exporter.export([outer])
+    exporter.export([outer_span])
 
     # Then the spans are submitted to the client
     assert len(client.spans) == 1
     assert len(client.spans[0]) == 2
 
 
-def test_no_traces_exported_without_root_span(inner_span: dict):
+def test_no_traces_exported_without_root_span(inner_span: ReadableSpan):
     # Given a csi with the studio exporter
     client = SpyClient()
     exporter = StudioExporter(client)
 
     # When we export a span without a root span
-    exporter.export([from_json(inner_span)])
-    exporter.export([from_json(inner_span)])
+    exporter.export([inner_span])
+    exporter.export([inner_span])
 
     # Then no traces are submitted
     assert len(client.spans) == 0
 
 
-def test_inner_trace_is_matched_with_correct_parent(inner_span: dict, error_span: dict):
+def test_inner_trace_is_matched_with_correct_parent(
+    inner_span: ReadableSpan, error_span: ReadableSpan
+):
     # Given a csi with the studio exporter
     client = SpyClient()
     exporter = StudioExporter(client)
 
-    inner = from_json(inner_span)
-    outer = from_json(error_span)
-    assert outer.context.trace_id != inner.context.trace_id  # type: ignore
+    assert error_span.context.trace_id != inner_span.context.trace_id  # type: ignore
 
     # When we export two spans with different trace ids
-    exporter.export([inner])
-    exporter.export([outer])
+    exporter.export([inner_span])
+    exporter.export([error_span])
 
     # Then only the outer span is submitted
     assert len(client.spans) == 1
