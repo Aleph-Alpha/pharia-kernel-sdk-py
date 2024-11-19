@@ -18,16 +18,17 @@ class StudioProject(BaseModel):
 
 
 class StudioClient(SpanClient):
-    """Client for communicating with Studio.
+    """Client for communicating with Pharia Studio.
+
+    The Studio instance is determined by the environment variable `PHARIA_STUDIO_ADDRESS`.
 
     Attributes:
-      project_id: The unique identifier of the project currently in use.
-      url: The url of your current Studio instance.
+      project_id (int, required): The unique identifier of the project currently in use.
     """
 
     def __init__(
         self,
-        project: str,
+        project_name: str,
     ) -> None:
         """Initializes the client.
 
@@ -35,7 +36,7 @@ class StudioClient(SpanClient):
         It does not check for a valid authentication token, which happens later.
 
         Args:
-            project: The human readable identifier provided by the user.
+            project_name (str, required): The human readable identifier provided by the user.
         """
         load_dotenv()
         self._token = os.environ["AA_API_TOKEN"]
@@ -48,18 +49,18 @@ class StudioClient(SpanClient):
 
         self._check_connection()
 
-        self._project_name = project
+        self._project_name = project_name
         self._project_id: int | None = None
 
     @classmethod
-    def with_project(cls, project: str) -> "StudioClient":
+    def with_project(cls, project_name: str) -> "StudioClient":
         """Set up a client for a project.
 
         Will create the project if it does not exist.
         """
-        studio_client = StudioClient(project=project)
-        if (project_id := studio_client._get_project(project)) is None:
-            project_id = studio_client.create_project(project)
+        studio_client = StudioClient(project_name=project_name)
+        if (project_id := studio_client._get_project(project_name)) is None:
+            project_id = studio_client.create_project(project_name)
 
         assert project_id is not None
         studio_client._project_id = project_id
@@ -83,14 +84,14 @@ class StudioClient(SpanClient):
             ) from None
         except requests.HTTPError:
             raise ValueError(
-                f"The given url of the studio client does not point to a healthy studio: {response.status_code}: {response.json()}"
+                f"The given url of the studio client does not point to a healthy studio: {response.status_code}: {response.json()}"  # type: ignore
             ) from None
 
     @property
     def project_id(self) -> int:
+        "the unique project_id for the project_name as assigned by Pharia Studio"
         if self._project_id is None:
-            project_id = self._get_project(self._project_name)
-            if project_id is None:
+            if (project_id := self._get_project(self._project_name)) is None:
                 raise ValueError(
                     f"Project {self._project_name} was not available. Consider creating it with `StudioClient.create_project`."
                 )
@@ -119,8 +120,8 @@ class StudioClient(SpanClient):
         Projects are uniquely identified by the user provided name.
 
         Args:
-            project: User provided name of the project.
-            description: Description explaining the usage of the project. Defaults to None.
+            project (str, required): User provided name of the project.
+            description (str, optional, default None): Description explaining the usage of the project.
 
         Returns:
             The ID of the newly created project.
@@ -146,14 +147,11 @@ class StudioClient(SpanClient):
         spans belong to multiple traces.
 
         Args:
-            data: :class:`Spans` to create the trace from. Created by exporting from a :class:`Tracer`.
-
-        Returns:
-            The ID of the created trace.
+            spans (Sequence[StudioSpan], required): Spans to create the trace from. Created by exporting from a :class:`Tracer`.
         """
         if len(spans) == 0:
             raise ValueError("Tried to upload an empty trace")
-        return self._upload_trace(StudioSpanList(spans))
+        self._upload_trace(StudioSpanList(spans))
 
     def _upload_trace(self, trace: StudioSpanList):
         url = urljoin(self.url, f"/api/projects/{self.project_id}/traces")
