@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.3.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.3.2...v0.3.3) (2024-11-19)
+
+
+### Features
+
+* always overwrite existing trace exporter ([4d27a86](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4d27a86a5427ed18b53c725744d8a4381e642f02))
+* dev csi eports optl spans ([49ca5bf](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/49ca5bf746ff6c945be00216fce5acd742eded18))
+* DevCsi offers flush collector method ([b63aca7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/b63aca735c3b2f9e36c1c021b33c5c9a4be99baf))
+* DevCsi offers helper to set up studio exporter ([8387ff2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8387ff214005d6c0f911b02b2de768b5eb9cd320))
+* make sure only one studio exporter is registered per thread ([f50aee7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f50aee797d9f3f591b5907e8ddabba9bfd1e1a20))
+* more explicit event name for exceptions ([8dd902a](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8dd902a48c44c80e165e6bbce3f11c78148646f7))
+* provide translation between otel traces and studio format ([88d137e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/88d137ebc621a4232f33814181fbf22cae53c745))
+* set error message for studio event message field ([3543133](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3543133e2dd6f264f7b00ce68fa968243b393270))
+* upload traces as soon as root span ends ([cbc7149](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/cbc71498ccb5498e790f5d9a185e961cf8de90f8))
+
+
+### Bug Fixes
+
+* allow arbitrary input/output for tracing ([80fbe76](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/80fbe767174eddd22fd5d06d833399c190464612))
+* do not include function and version in trace ([118c154](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/118c1546e2b3e7b807d8bf0d41f060fde32e48e7))
+* submit spans in trace batches ([f39abc8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f39abc8acbfe414c263d12572506e3fe763e74c3))
+
+
+### Documentation
+
+* add doc string to with_studio method ([38c20b7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/38c20b76b2d3f529cf2c457477439ee2ebcb7136))
+* add example of how to do tracing with studio ([6598d85](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/6598d85d79e6ee1351949ff2fb11008025d7e676))
+* use double quotes in code example multi line string ([44ff2d8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/44ff2d8d4373c5ec1709e8cfb609f2fa8f16eeaf))
+
 ## [0.3.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.3.1...v0.3.2) (2024-11-18)
 
 
