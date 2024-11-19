@@ -34,6 +34,9 @@ class StudioExporter(SpanExporter):
 
         Studio is complaining about duplicate IDs when uploading traces with the same `span_id`
         in separate requests. Therefore, we store the spans and only flush when the root span ends.
+
+        Args:
+            spans (Sequence[ReadableSpan], required): stores a sequence of readable spans for upload
         """
         for span in spans:
             if span.context is None:
@@ -59,5 +62,10 @@ class StudioExporter(SpanExporter):
         self.client.submit_spans(studio_spans)
 
     def shutdown(self):
+        """Will be called at the end of a session.
+
+        There must not be any open spans left, all open spans should have been called with a parent,
+        which has triggered the upload already.
+        """
         assert len(self.spans) == 0, "No spans should be left in the exporter"
         self.spans.clear()
