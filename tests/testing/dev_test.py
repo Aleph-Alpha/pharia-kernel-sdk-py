@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from typing import Sequence
 
 import pytest
@@ -17,7 +18,7 @@ from pharia_skill.studio import (
     StudioExporter,
     StudioSpan,
 )
-from pharia_skill.testing import DevCsi
+from pharia_skill.testing.dev import DevCsi, HttpClient
 
 
 @pytest.fixture(scope="module")
@@ -28,6 +29,22 @@ def csi() -> Csi:
 @pytest.fixture(scope="module")
 def model() -> str:
     return "llama-3.1-8b-instruct"
+
+
+@pytest.mark.kernel
+def test_http_client_run(model: str):
+    client = HttpClient()
+    params = CompletionParams(max_tokens=1)
+
+    result = client.run(
+        "complete",
+        {
+            "model": model,
+            "prompt": "Say hello to Bob",
+            "params": asdict(params),
+        },
+    )
+    assert result.get("text") is not None
 
 
 @pytest.mark.kernel
