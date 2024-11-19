@@ -26,8 +26,6 @@ class ExporterClient(Protocol):
 
     def submit_trace(self, data: Sequence[StudioSpan]) -> str: ...
 
-    def project(self) -> str: ...
-
 
 class StudioClient(ExporterClient):
     """Client for communicating with Studio.
@@ -62,9 +60,6 @@ class StudioClient(ExporterClient):
 
         self._project_name = project
         self._project_id: int | None = None
-
-    def project(self) -> str:
-        return self._project_name
 
     @classmethod
     def with_project(cls, project: str) -> "StudioClient":

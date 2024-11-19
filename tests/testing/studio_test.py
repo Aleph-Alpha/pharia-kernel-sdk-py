@@ -27,31 +27,17 @@ def test_multiple_csi_instances_do_not_duplicate_exporters():
 
 
 @pytest.mark.kernel
-def test_multiple_csi_instances_with_different_projects():
-    # Given two csi instances with different projects
-    DevCsi.with_studio(project="kernel-test")
-
-    # Then an error is raised when the second exporter is attached
-    with pytest.raises(
-        RuntimeError,
-        match="There is already a studio exporter to a different project attached.",
-    ):
-        DevCsi.with_studio(project="kernel-test-2")
-
-
-@pytest.mark.kernel
 def test_studio_collector_uploads_spans():
     # Given a csi setup with the studio exporter
-    csi = DevCsi.with_studio(project="kernel-test")
-    assert isinstance(csi.exporter, StudioExporter)
+    csi = DevCsi()
     client = SpyClient()
-    csi.exporter.client = client
+    exporter = StudioExporter(client)
+    csi.set_span_exporter(exporter)
 
     # When running the skill
     haiku(csi, Input(topic="oat milk"))
 
     # Then the spans are exported to the client
-    assert isinstance(csi.exporter, StudioExporter)
     assert len(client.spans) == 1
     assert len(client.spans[0]) == 3
 
@@ -69,17 +55,14 @@ class SpyClient(ExporterClient):
         self.spans.append(data)
         return "submitted"
 
-    def project(self) -> str:
-        return "kernel-test"
-
 
 @pytest.mark.kernel
 def test_csi_exception_is_traced():
     # Given a csi with a failing complete_all
-    csi = FailingCsi.with_studio(project="kernel-test")
-    assert isinstance(csi.exporter, StudioExporter)
+    csi = FailingCsi()
     client = SpyClient()
-    csi.exporter.client = client
+    exporter = StudioExporter(client)
+    csi.set_span_exporter(exporter)
 
     # When the skill is invoked
     with pytest.raises(RuntimeError, match="Out of cheese"):

@@ -82,34 +82,38 @@ class DevCsi(Csi):
             project: The name of the studio project to export traces to. Will be created if it does not exist.
         """
         csi = cls()
-        processor = csi.span_processor(project)
-        csi.exporter = processor.span_exporter  # type: ignore
+        exporter = StudioExporter(StudioClient(project))
+        csi.set_span_exporter(exporter)
         return csi
 
-    def span_processor(self, project: str) -> SimpleSpanProcessor | None:
-        """Return a span processor for Studio if it exists, otherwise create one.
+    @classmethod
+    def set_span_exporter(cls, exporter: StudioExporter):
+        """Set a span exporter for Studio if it has not been set yet.
 
-        Make sure there are never two exporters to Studio attached at the same time.
-        If an exporter for this project already exists, return it.
-        If an exporter for a different project exists, raise an error, as the user
-        probably did not intend to export to two different projects at the same time.
+        This method overwrites any existing exporters, thereby ensuring that there
+        are never two exporters to Studio attached at the same time.
         """
-        provider = self.provider()
+        provider = cls.provider()
+        for processor in provider._active_span_processor._span_processors:
+            if isinstance(processor, SimpleSpanProcessor):
+                processor.span_exporter = exporter
+                return
+
+        span_processor = SimpleSpanProcessor(exporter)
+        provider.add_span_processor(span_processor)
+
+    @classmethod
+    def existing_exporter(cls) -> StudioExporter | None:
+        """Return the first studio exporter attached to the provider, if any."""
+        provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
             if isinstance(processor, SimpleSpanProcessor):
                 if isinstance(processor.span_exporter, StudioExporter):
-                    if processor.span_exporter.client.project() == project:
-                        return processor
-                    raise RuntimeError(
-                        "There is already a studio exporter to a different project attached."
-                    )
+                    return processor.span_exporter
+        return None
 
-        exporter = StudioExporter(StudioClient(project))
-        span_processor = SimpleSpanProcessor(exporter)
-        provider.add_span_processor(span_processor)
-        return span_processor
-
-    def provider(self) -> TracerProvider:
+    @staticmethod
+    def provider() -> TracerProvider:
         """Tracer provider for the current thread.
 
         Check if the tracer provider is already set and if not, set it.

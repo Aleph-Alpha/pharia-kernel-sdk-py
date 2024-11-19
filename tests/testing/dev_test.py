@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import pytest
 
 from pharia_skill import (
@@ -11,6 +13,8 @@ from pharia_skill import (
     Message,
 )
 from pharia_skill.testing import DevCsi
+from pharia_skill.testing.studio import ExporterClient, StudioClient, StudioExporter
+from pharia_skill.testing.tracing import StudioSpan
 
 
 @pytest.fixture(scope="module")
@@ -78,3 +82,56 @@ def test_search(csi: Csi):
     assert len(result) == 1
     assert "Heidelberg" in result[0].content
     assert "Heidelberg" in result[0].document_path.name
+
+
+def test_no_existing_exporter_on_fresh_csi():
+    csi = DevCsi()
+    assert csi.existing_exporter() is None
+
+
+def test_set_trace_exporter():
+    # Given a fresh CSI
+    csi = DevCsi()
+
+    # When setting an exporter
+    exporter = StudioExporter(StudioClient("test"))
+    csi.set_span_exporter(exporter)
+
+    # Then the exporter is set
+    assert csi.existing_exporter() == exporter
+
+
+class StubStudioClient(ExporterClient):
+    def __init__(self, project: str):
+        self._project = project
+
+    def submit_trace(self, data: Sequence[StudioSpan]) -> str:
+        return "submitted"
+
+
+def test_set_same_trace_exporter_twice_does_not_raise():
+    # Given a csi with one exporter set
+    csi = DevCsi()
+    exporter = StudioExporter(StubStudioClient("test"))
+    csi.set_span_exporter(exporter)
+
+    # When setting the same exporter again
+    csi.set_span_exporter(exporter)
+
+    # Then the number of processors is still one
+    assert len(csi.provider()._active_span_processor._span_processors) == 1
+
+
+def test_set_different_trace_exporter_raises():
+    # Given a csi with one exporter set
+    csi = DevCsi()
+    exporter_1 = StudioExporter(StubStudioClient("test"))
+    csi.set_span_exporter(exporter_1)
+
+    # Then setting a different exporter overwrites the existing one
+    exporter_2 = StudioExporter(StubStudioClient("other"))
+    csi.set_span_exporter(exporter_2)
+
+    # And the new exporter is the one that is set
+    assert csi.existing_exporter() == exporter_2
+    assert len(csi.provider()._active_span_processor._span_processors) == 1
