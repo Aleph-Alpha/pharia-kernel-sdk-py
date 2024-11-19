@@ -21,13 +21,17 @@ class StudioProject(BaseModel):
     description: Optional[str]
 
 
-class ExporterClient(Protocol):
-    """Client that can submit traces."""
+class SpanClient(Protocol):
+    """Client that can submit spans.
 
-    def submit_trace(self, data: Sequence[StudioSpan]) -> str: ...
+    Separating the collection of spans from the uploading allows
+    for better modularity and testability.
+    """
+
+    def submit_spans(self, spans: Sequence[StudioSpan]): ...
 
 
-class StudioClient(ExporterClient):
+class StudioClient(SpanClient):
     """Client for communicating with Studio.
 
     Attributes:
@@ -149,7 +153,7 @@ class StudioClient(ExporterClient):
                 response.raise_for_status()
         return int(response.text)
 
-    def submit_trace(self, data: Sequence[StudioSpan]) -> str:
+    def submit_spans(self, spans: Sequence[StudioSpan]):
         """Sends the provided spans to Studio as a singular trace.
 
         The method fails if the span list is empty, has already been created or if
@@ -161,11 +165,11 @@ class StudioClient(ExporterClient):
         Returns:
             The ID of the created trace.
         """
-        if len(data) == 0:
+        if len(spans) == 0:
             raise ValueError("Tried to upload an empty trace")
-        return self._upload_trace(StudioSpanList(data))
+        return self._upload_trace(StudioSpanList(spans))
 
-    def _upload_trace(self, trace: StudioSpanList) -> str:
+    def _upload_trace(self, trace: StudioSpanList):
         url = urljoin(self.url, f"/api/projects/{self.project_id}/traces")
         response = requests.post(
             url,
@@ -183,7 +187,6 @@ class StudioClient(ExporterClient):
                 )
             case _:
                 response.raise_for_status()
-        return str(response.json())
 
 
 class StudioExporter(SpanExporter):
@@ -192,7 +195,7 @@ class StudioExporter(SpanExporter):
     The exporter will create a project on setup if it does not exist yet.
     """
 
-    def __init__(self, client: ExporterClient):
+    def __init__(self, client: SpanClient):
         self.spans: dict[int, list[ReadableSpan]] = {}
         self.client = client
 
@@ -223,7 +226,7 @@ class StudioExporter(SpanExporter):
     def _flush_trace(self, trace_id: int):
         spans = self.spans.pop(trace_id)
         studio_spans = [StudioSpan.from_otel(span) for span in spans]
-        self.client.submit_trace(studio_spans)
+        self.client.submit_spans(studio_spans)
 
     def shutdown(self):
         assert len(self.spans) == 0, "No spans should be left in the exporter"
