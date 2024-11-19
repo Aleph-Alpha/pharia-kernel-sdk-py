@@ -126,7 +126,6 @@ class DevCsi(Csi):
 
     def request(self, function: str, data: dict):
         with trace.get_tracer(__name__).start_as_current_span(function) as span:
-            span.set_attribute("type", "TASK_SPAN")
             span.set_attribute("input", json.dumps(data))
 
             data["version"] = self.VERSION

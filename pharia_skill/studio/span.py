@@ -61,6 +61,7 @@ class Event(BaseModel):
 
 
 class TaskSpanAttributes(BaseModel):
+    # Needed by the studio to identify task spans
     type: str = "TASK_SPAN"
     input: Any
 
