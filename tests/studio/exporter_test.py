@@ -5,7 +5,6 @@ from opentelemetry.sdk.trace import ReadableSpan
 from pydantic import BaseModel
 
 from pharia_skill import (
-    Completion,
     CompletionParams,
     CompletionRequest,
     Csi,
@@ -15,13 +14,7 @@ from pharia_skill import (
 from pharia_skill.studio import SpanClient, StudioClient, StudioExporter, StudioSpan
 from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi
-
-
-class FailingCsi(DevCsi):
-    """A csi that fails on the complete_all method."""
-
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        raise RuntimeError("Out of cheese")
+from pharia_skill.testing.dev import CsiClient
 
 
 class SpyClient(SpanClient):
@@ -56,36 +49,76 @@ def haiku(csi: Csi, input: Input) -> Output:
     return Output(haiku=result[0].text)
 
 
+class StubCsiClient(CsiClient):
+    """Use the `DevCsi` without doing any http calls to the Kernel."""
+
+    def run(self, function: str, data: dict) -> dict | list[dict]:
+        completion = {"text": "Hello, world!", "finish_reason": "stop"}
+        match function:
+            case "complete":
+                return completion
+            case "complete_all":
+                return [completion]
+            case "search":
+                return []
+            case _:
+                return {}
+
+
+class SaboteurCsiClient(CsiClient):
+    def run(self, function: str, data: dict) -> dict | list[dict]:
+        match function:
+            case "complete_all":
+                raise RuntimeError("Out of cheese")
+            case "search":
+                return []
+            case _:
+                return {}
+
+
+@pytest.fixture
+def stub_dev_csi() -> DevCsi:
+    """Create a `DevCsi` without requiring any env variables or setting up a session."""
+    csi = DevCsi.__new__(DevCsi)
+    csi.client = StubCsiClient()
+    return csi
+
+
+@pytest.fixture
+def saboteur_dev_csi() -> DevCsi:
+    """Create a `DevCsi` that raises an exception on every call."""
+    csi = DevCsi.__new__(DevCsi)
+    csi.client = SaboteurCsiClient()
+    return csi
+
+
 @pytest.mark.kernel
-def test_trace_upload_studio_does_not_raise():
+def test_trace_upload_studio_does_not_raise(stub_dev_csi: DevCsi):
     """Errors from uploading traces are handled by ErrorHandles.
     The default handling is silently ignoring the exceptions.
 
     Therefore, we explicitly collect the spans and upload them manually.
     """
     # Given a csi setup with the studio exporter
-    csi = DevCsi()
     client = SpyClient()
     exporter = StudioExporter(client)
-    csi.set_span_exporter(exporter)
+    stub_dev_csi.set_span_exporter(exporter)
 
     # When running a skill and collecting spans
-    haiku(csi, Input(topic="oat milk"))
+    haiku(stub_dev_csi, Input(topic="oat milk"))
 
     # Then no error is raised when running the skill
     StudioClient("kernel-test").submit_spans(client.spans[0])
 
 
-@pytest.mark.kernel
-def test_csi_call_is_traced():
+def test_csi_call_is_traced(stub_dev_csi: DevCsi):
     # Given a csi setup with an in-memory exporter
-    csi = DevCsi()
     client = SpyClient()
     exporter = StudioExporter(client)
-    csi.set_span_exporter(exporter)
+    stub_dev_csi.set_span_exporter(exporter)
 
     # When running a completion request
-    csi.complete(
+    stub_dev_csi.complete(
         "llama-3.1-8b-instruct", "Say hello to Bob", CompletionParams(max_tokens=64)
     )
 
@@ -97,17 +130,15 @@ def test_csi_call_is_traced():
     assert "Say hello to Bob" in client.spans[0][0].attributes.input["prompt"]
     output = client.spans[0][0].attributes.output
     assert output is not None
-    assert "Bob" in output["text"]
+    assert output["text"] == "Hello, world!"
 
 
-@pytest.mark.kernel
-def test_skill_is_traced():
+def test_skill_is_traced(stub_dev_csi: DevCsi):
     # When running the skill with the dev csi
-    csi = DevCsi()
     client = SpyClient()
     exporter = StudioExporter(client)
-    csi.set_span_exporter(exporter)
-    haiku(csi, Input(topic="oat milk"))
+    stub_dev_csi.set_span_exporter(exporter)
+    haiku(stub_dev_csi, Input(topic="oat milk"))
 
     # Then the skill and the completion are traced
     assert len(client.spans) == 1
@@ -119,25 +150,25 @@ def test_skill_is_traced():
     assert client.spans[0][0].parent_id == client.spans[0][2].context.span_id
 
 
-@pytest.mark.kernel
-def test_csi_exception_is_traced():
+def test_csi_exception_is_traced(saboteur_dev_csi: DevCsi):
     # Given a csi with a failing complete_all
-    csi = FailingCsi()
     client = SpyClient()
     exporter = StudioExporter(client)
-    csi.set_span_exporter(exporter)
+    saboteur_dev_csi.set_span_exporter(exporter)
 
     # When the skill is invoked
     with pytest.raises(RuntimeError, match="Out of cheese"):
-        haiku(csi, Input(topic="oat milk"))
+        haiku(saboteur_dev_csi, Input(topic="oat milk"))
 
     # Then the spans are collected by the studio collector
     assert len(client.spans) == 1
-    first, second = client.spans[0]
+    first, second, third = client.spans[0]
     assert first.name == "search"
     assert first.status == SpanStatus.OK
-    assert second.name == "haiku"
+    assert second.name == "complete_all"
     assert second.status == SpanStatus.ERROR
+    assert third.name == "haiku"
+    assert third.status == SpanStatus.ERROR
 
 
 def test_traces_are_exported_together(
