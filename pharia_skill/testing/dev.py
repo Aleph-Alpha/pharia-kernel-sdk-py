@@ -30,7 +30,7 @@ from pharia_skill import (
     Message,
     SearchResult,
 )
-from pharia_skill.testing.studio import StudioClient, StudioExporter
+from pharia_skill.studio import StudioClient, StudioExporter
 
 
 def chat_response_from_dict(body: dict) -> ChatResponse:

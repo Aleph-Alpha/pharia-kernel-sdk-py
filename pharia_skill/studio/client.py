@@ -8,11 +8,8 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, MissingSchema
 
-from pharia_skill.testing.studio.exporter import SpanClient
-from pharia_skill.testing.studio.span import (
-    StudioSpan,
-    StudioSpanList,
-)
+from pharia_skill.studio.exporter import SpanClient
+from pharia_skill.studio.span import StudioSpan, StudioSpanList
 
 
 class StudioProject(BaseModel):

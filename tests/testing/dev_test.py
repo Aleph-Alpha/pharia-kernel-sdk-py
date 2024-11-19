@@ -12,13 +12,13 @@ from pharia_skill import (
     Language,
     Message,
 )
-from pharia_skill.testing import DevCsi
-from pharia_skill.testing.studio import (
+from pharia_skill.studio import (
     SpanClient,
     StudioClient,
     StudioExporter,
     StudioSpan,
 )
+from pharia_skill.testing import DevCsi
 
 
 @pytest.fixture(scope="module")
