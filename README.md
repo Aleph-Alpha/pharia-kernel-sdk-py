@@ -1,6 +1,8 @@
 # Pharia Kernel Python SDK
 
-You build your skill in Python, which is then compiled into a Wasm module. Then, the skill is deployed to Pharia Kernel, where it can be invoked on demand. To this end, this SDK provides some tooling and APIs for skill development.
+You build your skill in Python, which is then compiled into a Wasm module.
+Then, the skill is deployed to [Pharia Kernel](https://pharia-kernel.aleph-alpha.stackit.run), where it can be invoked on demand.
+To this end, this SDK provides some tooling and APIs for skill development.
 
 You can access the [Documentation](https://aleph-alpha-pharia-kernel-sdk-py.readthedocs-hosted.com/en/latest/index.html)
 with your GitHub account.
