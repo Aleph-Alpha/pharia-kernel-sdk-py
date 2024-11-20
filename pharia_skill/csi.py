@@ -117,6 +117,12 @@ class Role(str, Enum):
 class Message:
     """Describes a message in a chat.
 
+    Provides an entry point to construct the start of a message histories.
+    By not letting the user construct a vector of messages directly, we can
+    ensure that the history is always well-formed.
+
+    Valid prompt chains based on <https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/text_prompt_format.md>
+
     Parameters:
         role (Role, required): The role of the message.
         content (str, required): The content of the message.
@@ -126,16 +132,59 @@ class Message:
     content: str
 
     @classmethod
-    def user(cls, content: str) -> "Message":
-        return cls(role=Role.User, content=content)
+    def user(cls, content: str) -> "UserMessage":
+        """Construct a message history starting with a user message.
+
+        Examples::
+
+            msg = Message.user("Say hello to Bob")
+        """
+        return UserMessage([Message(role=Role.User, content=content)])
 
     @classmethod
-    def assistant(cls, content: str) -> "Message":
-        return cls(role=Role.Assistant, content=content)
+    def system(cls, content: str) -> "SystemMessage":
+        """Construct a message history starting with a system message.
 
-    @classmethod
-    def system(cls, content: str) -> "Message":
-        return cls(role=Role.System, content=content)
+        Examples::
+
+            msg = Message.system("You are a poet who strictly speaks in haikus.").with_user("Oat milk")
+        """
+        return SystemMessage([Message(role=Role.System, content=content)])
+
+
+@dataclass
+class UserMessage:
+    """A message history ending with a user message."""
+
+    _messages: list[Message]
+
+    def with_assistant(self, content: str) -> "AssistantMessage":
+        """Add an assistant message to the history."""
+        return AssistantMessage(
+            self._messages + [Message(role=Role.Assistant, content=content)]
+        )
+
+
+@dataclass
+class SystemMessage:
+    """A message history ending with a system message."""
+
+    _messages: list[Message]
+
+    def with_user(self, content: str) -> "UserMessage":
+        """Add a user message to the history."""
+        return UserMessage(self._messages + [Message(role=Role.User, content=content)])
+
+
+@dataclass
+class AssistantMessage:
+    """A message history ending with an assistant message."""
+
+    _messages: list[Message]
+
+    def with_user(self, content: str) -> "UserMessage":
+        """Add a user message to the history."""
+        return UserMessage(self._messages + [Message(role=Role.User, content=content)])
 
 
 @dataclass
@@ -268,7 +317,7 @@ class Csi(Protocol):
         ...
 
     def chat(
-        self, model: str, messages: list[Message], params: ChatParams
+        self, model: str, messages: UserMessage, params: ChatParams
     ) -> ChatResponse:
         """Chat with a model.
 

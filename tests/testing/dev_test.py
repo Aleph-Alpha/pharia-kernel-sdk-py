@@ -57,7 +57,7 @@ def test_complete(csi: Csi, model: str):
 @pytest.mark.kernel
 def test_chat(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
-    messages = [Message.user("Say hello to Bob")]
+    messages = Message.user("Say hello to Bob")
     result = csi.chat(model, messages, params)
     assert "Bob" in result.message.content
 

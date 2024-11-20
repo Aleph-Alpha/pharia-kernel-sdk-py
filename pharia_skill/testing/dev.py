@@ -24,8 +24,8 @@ from pharia_skill import (
     DocumentPath,
     IndexPath,
     Language,
-    Message,
     SearchResult,
+    UserMessage,
 )
 from pharia_skill.studio import StudioClient, StudioExporter, StudioSpanProcessor
 
@@ -161,11 +161,11 @@ class DevCsi(Csi):
         return self.run(self.chunk.__name__, data)  # type: ignore
 
     def chat(
-        self, model: str, messages: list[Message], params: ChatParams
+        self, model: str, messages: UserMessage, params: ChatParams
     ) -> ChatResponse:
         data = {
             "model": model,
-            "messages": [asdict(m) for m in messages],
+            "messages": [asdict(m) for m in messages._messages],
             "params": asdict(params),
         }
         output = self.run(self.chat.__name__, data)

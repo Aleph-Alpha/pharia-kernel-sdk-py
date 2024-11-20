@@ -13,6 +13,7 @@ from .csi import (
     Message,
     Role,
     SearchResult,
+    UserMessage,
 )
 from .wit.imports import csi as wit_csi
 from .wit.imports.csi import ChatParams as WitChatParams
@@ -167,9 +168,9 @@ class WasiCsi(Csi):
         return wit_csi.chunk(text, wit_chunk_params)
 
     def chat(
-        self, model: str, messages: list[Message], chat_params: ChatParams
+        self, model: str, messages: UserMessage, chat_params: ChatParams
     ) -> ChatResponse:
-        wit_messages = [message_wit(message) for message in messages]
+        wit_messages = [message_wit(message) for message in messages._messages]
         wit_chat_params = chat_params_wit(chat_params)
         response = wit_csi.chat(model, wit_messages, wit_chat_params)
         return chat_response_from_wit(response)

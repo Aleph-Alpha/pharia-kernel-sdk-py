@@ -1,4 +1,5 @@
 from .csi import (
+    AssistantMessage,
     ChatParams,
     ChatResponse,
     ChunkParams,
@@ -13,6 +14,8 @@ from .csi import (
     Message,
     Role,
     SearchResult,
+    SystemMessage,
+    UserMessage,
 )
 from .decorator import skill
 
@@ -21,6 +24,9 @@ __all__ = [
     "ChatParams",
     "ChatResponse",
     "ChunkParams",
+    "AssistantMessage",
+    "SystemMessage",
+    "UserMessage",
     "Completion",
     "CompletionParams",
     "CompletionRequest",
