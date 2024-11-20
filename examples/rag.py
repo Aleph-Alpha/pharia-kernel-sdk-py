@@ -19,8 +19,8 @@ class Output(BaseModel):
 
 
 @skill
-def heidelberg(csi: Csi, input: Input) -> Output:
-    "Answer questions about Heidelberg from Wikipedia"
+def answer_about_heidelberg(csi: Csi, input: Input) -> Output:
+    """Answer questions about Heidelberg from Wikipedia"""
     documents = csi.search(index, "Heidelberg", 3, 0.5)
     if not documents:
         return Output(answer="no relevant documents found", number_of_documents=0)
