@@ -3,10 +3,9 @@
 AA_API_TOKEN=$1
 PHARIA_KERNEL_ADDRESS=${2-http://127.0.0.1:8081}
 
-echo "Building skill..."
+echo "Copy built skill"
 mkdir -p skills
-pharia-skill build examples.failing
-mv failing.wasm skills/failing.wasm
+cp failing.wasm skills/failing.wasm
 
 echo "Waiting for skill to be available..."
 sleep 2

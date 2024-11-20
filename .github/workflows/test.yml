@@ -85,7 +85,13 @@ jobs:
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
           PHARIA_STUDIO_ADDRESS: https://pharia-studio.aleph-alpha.stackit.run
-      - name: Check skill execution
-        run: poetry run sh -x ./scripts/build_and_run_skill.sh $AA_API_TOKEN
-      - name: Check skill execution of failing skill
-        run: poetry run sh -x ./scripts/build_and_run_failing_skill.sh $AA_API_TOKEN
+      - name: Test skill building
+        run: |
+          poetry run pharia-skill build examples.haiku
+          poetry run pharia-skill build examples.failing
+      - name: Test skill execution
+        run: |
+          poetry run sh -x ./scripts/run_skill.sh $AA_API_TOKEN
+          poetry run sh -x ./scripts/run_failing_skill.sh $AA_API_TOKEN
+      - name: Test skill publishing
+        run: poetry run pharia-skill publish haiku
