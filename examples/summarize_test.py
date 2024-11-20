@@ -38,8 +38,6 @@ def test_summary_contains_expected_words_stub(attention_text: str):
     assert all(x in result.lower() for x in ("attention", "transformer"))
 
 
-# you can remove that mark in your code, it is to prevent the test to run on github ci
-@pytest.mark.kernel
 def test_summary_contains_expected_words(csi: Csi, attention_text: str):
     input = Input(text=attention_text, length=SummaryLength.SHORT)
     result = summarize(csi, input).root
@@ -47,8 +45,6 @@ def test_summary_contains_expected_words(csi: Csi, attention_text: str):
     assert all(x in result.lower() for x in ("attention", "transformer"))
 
 
-# you can remove that mark in your code, it is to prevent the test to run on github ci
-@pytest.mark.kernel
 def test_summary_length(csi: Csi, attention_text: str):
     # When summarizing with different lengths
     input = Input(text=attention_text, length=SummaryLength.SHORT)
