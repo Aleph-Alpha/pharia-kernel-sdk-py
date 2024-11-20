@@ -38,10 +38,7 @@ jobs:
         run: poetry run mypy --install-types --non-interactive .
 
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install Poetry
@@ -58,8 +55,8 @@ jobs:
         run: echo "JFROG_PASSWORD=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Test
         run: poetry run pytest -m 'not kernel' tests
-
-  integration-test:
+  
+  kernel-test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -80,11 +77,30 @@ jobs:
       - uses: ./.github/actions/jfrog
       - name: Run Pharia Kernel
         run: sh -x ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $AA_API_TOKEN
-      - name: Run tests
+      - name: Run kernel tests
         run: poetry run pytest -m 'kernel'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
           PHARIA_STUDIO_ADDRESS: https://pharia-studio.aleph-alpha.stackit.run
+
+  integration-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "poetry"
+      - name: Install dependencies
+        run: poetry install
+      - uses: ./.github/actions/jfrog
+      - name: Run Pharia Kernel
+        run: sh -x ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $AA_API_TOKEN
       - name: Test skill building
         run: |
           poetry run pharia-skill build examples.haiku
@@ -94,4 +110,4 @@ jobs:
           poetry run sh -x ./scripts/run_skill.sh $AA_API_TOKEN
           poetry run sh -x ./scripts/run_failing_skill.sh $AA_API_TOKEN
       - name: Test skill publishing
-        run: poetry run pharia-skill publish haiku
+        run: poetry run pharia-skill publish haiku      
