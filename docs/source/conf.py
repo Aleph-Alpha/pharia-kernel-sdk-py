@@ -3,7 +3,7 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 import importlib.metadata
-from types import FunctionType
+from types import FunctionType, MethodType
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -47,7 +47,11 @@ def skip_autodoc_attributes(app, what, name, obj, skip, options):
         False: autodoc includes this attribute (even show private and magic attributes, e.g. __eq__)
         None: default behavior (private and magic attributes are excluded)
     """
-    if what == "class" and not isinstance(obj, FunctionType):
+    if (
+        what == "class"
+        and not isinstance(obj, FunctionType)
+        and not isinstance(obj, MethodType)
+    ):
         return True
     return None
 

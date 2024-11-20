@@ -10,7 +10,9 @@ Python SDK for the `Pharia Kernel`_ .
 Usage
 -----
 
-Simple Example
+You can find examples and installation instructions in the `Pharia Kernel SDK Python Repo`_.
+A template repository with a Haiku Example is accessible under `Haiku Skill Python`_.
+
 
 .. code:: python
 
@@ -35,7 +37,6 @@ Simple Example
          return Output(haiku=response.message.content.strip())
 
 
-
 .. toctree::
    :maxdepth: 4
    :caption: Contents:
@@ -50,3 +51,7 @@ Indices and tables
 * :ref:`search`
 
 .. _Pharia Kernel: https://pharia-kernel.aleph-alpha.stackit.run
+
+.. _Pharia Kernel SDK Python Repo: https://github.com/Aleph-Alpha/pharia-kernel-sdk-py
+
+.. _Haiku Skill Python: https://github.com/Aleph-Alpha/haiku-skill-python
