@@ -109,8 +109,8 @@ jobs:
         run: echo "JFROG_PASSWORD=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Test skill building
         run: |
-          poetry run pharia-skill build examples.haiku
-          poetry run pharia-skill build examples.failing
+          poetry run pharia-skill build tests.skills.haiku
+          poetry run pharia-skill build tests.skills.failing
       - name: Test skill publishing
         run: poetry run pharia-skill publish haiku
       - name: Test skill execution on ubuntu only

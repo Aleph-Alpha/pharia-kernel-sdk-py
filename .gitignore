@@ -1,6 +1,7 @@
 # WASM and wasi wheels directories
 wasi_deps/
 skills/
+!tests/skills/
 *.wasm
 bin/
 
