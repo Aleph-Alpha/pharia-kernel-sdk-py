@@ -121,6 +121,12 @@ class PhariaSkillCli:
         if not skill.startswith(("/", "./")):
             skill = f"./{skill}"
 
+        if not os.path.exists(skill):
+            logger.error(f"No such file: {skill}")
+            return
+        logger.info(
+            f"Publishing skill file {skill} to\n{skill_registry}/{skill_repository} ..."
+        )
         command = [
             self.PHARIA_SKILL_CLI_PATH,
             "publish",

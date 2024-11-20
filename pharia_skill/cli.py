@@ -43,6 +43,11 @@ def run_componentize_py(skill_module: str):
     The call to componentize-py targets the `skill` wit world and adds the downloaded
     Pydantic WASI wheels to the Python path.
     """
+    if "/" in skill_module or skill_module.endswith(".py"):
+        logger.error(
+            f"argument must be fully qualified python module name, not {skill_module}"
+        )
+        return
     output_file = f"./{skill_module.split('.')[-1]}.wasm"
     command = [
         "componentize-py",
@@ -57,18 +62,8 @@ def run_componentize_py(skill_module: str):
         "-p",
         "wasi_deps",
     ]
+    logger.info(f"Building WASM component {output_file} from {skill_module} ...")
     subprocess.run(command, check=True)
-
-
-def image_exists(image_name: str) -> bool:
-    """Check if a given podman image exists locally."""
-    result = subprocess.run(
-        ["podman", "images", "--format", "{{.Repository}}:{{.Tag}}"],
-        stdout=subprocess.PIPE,
-        text=True,
-    )
-
-    return image_name in result.stdout
 
 
 def main():
