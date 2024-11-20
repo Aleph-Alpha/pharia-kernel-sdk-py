@@ -13,7 +13,7 @@ mkdir -p skills
 (podman run \
   -v ./skills:/app/skills \
   -e AA_API_TOKEN=$AA_API_TOKEN \
-  -e NAMESPACE_UPDATE_INTERVAL=1s \
+  -e NAMESPACE_UPDATE_INTERVAL=300ms \
   -e LOG_LEVEL="pharia_kernel=debug" \
   -p 8081:8081\
   pharia-kernel | cat) &

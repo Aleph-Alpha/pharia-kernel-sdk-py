@@ -8,10 +8,10 @@ mkdir -p skills
 cp haiku.wasm skills/haiku.wasm
 
 echo "Waiting for skill to be available..."
-sleep 2
+sleep 1
 
 echo "Executing skill..."
-RESPONSE_CODE=$(curl -w '%{http_code}' -s -o /dev/null \
+RESPONSE_CODE=$(curl -w '%{http_code}' -s -o output.result \
                 $PHARIA_KERNEL_ADDRESS/execute_skill \
                 -H "Authorization: Bearer $AA_API_TOKEN" \
                 -H 'Content-Type: application/json' \
@@ -19,7 +19,8 @@ RESPONSE_CODE=$(curl -w '%{http_code}' -s -o /dev/null \
 
 if [ "$RESPONSE_CODE" = "200" ]; then
     exit 0
-else
+else    
     echo "unexpected response code: RESPONSE_CODE='$RESPONSE_CODE'"
+    cat output.result
     exit 1
 fi
