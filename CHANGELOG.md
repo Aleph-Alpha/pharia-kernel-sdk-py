@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.3.3...v0.3.4) (2024-11-20)
+
+
+### Documentation
+
+* Add testing and studio modules to documentation ([dc0738e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/dc0738e73945ce324d48231cdef02c20993cd2eb))
+* remove duplicate requests from haiku example ([9d652a8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9d652a810dd67184db86c22316dc56eb23367606))
+* update documentation and module structure ([79ded72](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/79ded72fb0c6c263335059d5b85414af926b0b6d))
+* update README with link to Pharia Kernel ([0e28a74](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0e28a741ec0efba7c789fc155840cb268f185ce1))
+
 ## [0.3.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.3.2...v0.3.3) (2024-11-19)
 
 
