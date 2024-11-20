@@ -8,8 +8,7 @@ from .haiku import Input, Output, haiku
 
 
 def test_haiku():
-    input = Input(root="oat milk")
+    input = Input(topic="oat milk")
     result = haiku(StubCsi(), input)
     assert isinstance(result, Output)
-    assert "oat milk" in result.completion
-    assert "oat milk" in result.chat
+    assert "oat milk" in result.haiku
