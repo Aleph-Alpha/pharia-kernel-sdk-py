@@ -8,3 +8,13 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. automodule:: pharia_skill.testing
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: pharia_skill.studio
+   :members:
+   :undoc-members:
+   :show-inheritance:
