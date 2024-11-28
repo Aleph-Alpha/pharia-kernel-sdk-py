@@ -89,7 +89,8 @@ class DevCsi(Csi):
             project: The name of the studio project to export traces to. Will be created if it does not exist.
         """
         csi = cls()
-        exporter = StudioExporter(StudioClient(project))
+        client = StudioClient.with_project(project)
+        exporter = StudioExporter(client)
         csi.set_span_exporter(exporter)
         return csi
 
