@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.3.4...v0.3.5) (2024-11-28)
+
+
+### Features
+
+* replace JFROG_PASSWORD by JFROG_TOKEN ([94ceca2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/94ceca20c6384709fe1065c39e375d82d4dcb1d1))
+
+
+### Documentation
+
+* Replace password with token in skill registry ([451138a](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/451138a43fad3fa220f16c66bd4857f7f310fc31))
+
 ## [0.3.4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.3.3...v0.3.4) (2024-11-20)
 
 
