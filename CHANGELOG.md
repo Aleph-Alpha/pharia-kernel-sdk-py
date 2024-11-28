@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.4.0...v0.4.1) (2024-11-28)
+
+
+### Bug Fixes
+
+* create projects in studio on dev csi creation ([00f9814](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/00f981494920df3348aa6826b658a4447ce713f0))
+
 ## [0.4.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.3.4...v0.4.0) (2024-11-28)
 
 
