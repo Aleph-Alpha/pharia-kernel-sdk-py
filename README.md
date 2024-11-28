@@ -64,7 +64,7 @@ pharia-skill build examples.haiku
 
 ## Deploying Skills
 
-Pharia Skill is provided as a tool for deploying Skills. For deployment, you need to set the `JFROG_USER` and `JFROG_TOKEN` environment variables in your environment. You also need to set `SKILL_REGISTRY_USER`, `SKILL_REGISTRY_PASSWORD`, `SKILL_REGISTRY`, and `SKILL_REPOSITORY`. The gitlab token must have access to the registry where the skill is deployed to. We have setup a [playground](https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground) to deploy to, so you can set the variables to
+Pharia Skill is provided as a tool for deploying Skills. For deployment, you need to set the `JFROG_USER` and `JFROG_TOKEN` environment variables in your environment. The `JFROG_USER` is your email address. The `JFROG_TOKEN` can be created in the JFrog UI in your personal settings. You also need to set `SKILL_REGISTRY_USER`, `SKILL_REGISTRY_TOKEN`, `SKILL_REGISTRY`, and `SKILL_REPOSITORY`. The token must have access to the registry where the skill is deployed to. We have setup a [playground](https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground) to deploy to, so you can set the variables to
 
 ```shell
 SKILL_REGISTRY=registry.gitlab.aleph-alpha.de
