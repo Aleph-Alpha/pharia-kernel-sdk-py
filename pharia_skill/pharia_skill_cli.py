@@ -80,7 +80,7 @@ class PhariaSkillCli:
             f"Downloading pharia-skill-cli version {cls.PHARIA_SKILL_CLI_VERSION} for {cls.architecture()}"
         )
         url = f"https://alephalpha.jfrog.io/artifactory/pharia-kernel-files/pharia-skill-cli/{cls.PHARIA_SKILL_CLI_VERSION}/{cls.architecture()}"
-        token = os.environ["JFROG_PASSWORD"]
+        token = os.environ["JFROG_TOKEN"]
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
