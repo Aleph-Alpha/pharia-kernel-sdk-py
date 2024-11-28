@@ -73,7 +73,7 @@ jobs:
       - uses: ./.github/actions/jfrog
       - name: Set env variable to publish skill
         shell: bash
-        run: echo "JFROG_PASSWORD=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
+        run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Run Pharia Kernel
         run: sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $AA_API_TOKEN
       - name: Run kernel tests
@@ -111,7 +111,7 @@ jobs:
       - uses: ./.github/actions/jfrog
       - name: Set env variable to publish skill
         shell: bash
-        run: echo "JFROG_PASSWORD=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
+        run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Test skill building
         run: |
           poetry run pharia-skill build tests.skills.haiku
