@@ -106,7 +106,7 @@ class PhariaSkillCli:
         """
         try:
             skill_registry_user = os.environ["SKILL_REGISTRY_USER"]
-            skill_registry_password = os.environ["SKILL_REGISTRY_TOKEN"]
+            skill_registry_token = os.environ["SKILL_REGISTRY_TOKEN"]
             skill_registry = os.environ["SKILL_REGISTRY"]
             skill_repository = os.environ["SKILL_REPOSITORY"]
         except KeyError as e:
@@ -137,7 +137,7 @@ class PhariaSkillCli:
             "-u",
             skill_registry_user,
             "-p",
-            skill_registry_password,
+            skill_registry_token,
             "-t",
             "latest",
             skill,
