@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from pharia_skill import ChatParams, ChatResponse, Csi, IndexPath, Message, skill
 
-index = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
+index = IndexPath("Kernel", "test", "asym-64")
 
 
 class Input(BaseModel):
@@ -19,9 +19,9 @@ class Output(BaseModel):
 
 
 @skill
-def answer_about_heidelberg(csi: Csi, input: Input) -> Output:
-    """Answer questions about Heidelberg from Wikipedia"""
-    documents = csi.search(index, "Heidelberg", 3, 0.5)
+def answer_about_kernel(csi: Csi, input: Input) -> Output:
+    """Answer questions about Pharia Kernel from the docs"""
+    documents = csi.search(index, "Kernel", 3, 0.5)
     if not documents:
         return Output(answer="no relevant documents found", number_of_documents=0)
     context = "\n".join([doc.content for doc in documents])

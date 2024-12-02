@@ -4,13 +4,13 @@ An example of how to test skill code using a remote kernel
 
 from pharia_skill.testing import DevCsi
 
-from .rag import Input, Output, answer_about_heidelberg
+from .rag import Input, Output, answer_about_kernel
 
 
-def test_answer_about_heidelberg():
+def test_answer_about_kernel():
     csi = DevCsi()
-    input = Input(question="What is the population?")
-    result = answer_about_heidelberg(csi, input)
+    input = Input(question="What is it?")
+    result = answer_about_kernel(csi, input)
     assert isinstance(result, Output)
-    assert "Heidelberg" in result.answer
-    assert result.number_of_documents > 1
+    assert "Kernel" in result.answer
+    assert result.number_of_documents == 1
