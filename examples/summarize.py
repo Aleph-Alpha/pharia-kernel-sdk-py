@@ -12,8 +12,10 @@ from pharia_skill import (
     skill,
 )
 
-MODEL = "luminous-nextgen-7b-control-384k"
-MODEL_CONTEXT_SIZE = 8192
+MODEL = "luminous-base-control"
+# wrong model, prompts need to be updated
+MODEL = "llama-3.1-8b-instruct"
+MODEL_CONTEXT_SIZE = 2048
 
 
 class SummaryLength(str, Enum):
