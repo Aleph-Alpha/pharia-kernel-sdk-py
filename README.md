@@ -1,7 +1,8 @@
 # Pharia Kernel Python SDK
 
 You build your skill in Python, which is then compiled into a Wasm module.
-Then, the skill is deployed to [Pharia Kernel](https://pharia-kernel.aleph-alpha.stackit.run), where it can be invoked on demand.
+Then, the skill is deployed to an [instance of Pharia Kernel](https://pharia-kernel.product.pharia.com),
+where it can be invoked on demand.
 To this end, this SDK provides some tooling and APIs for skill development.
 
 You can access the [Documentation](https://aleph-alpha-pharia-kernel-sdk-py.readthedocs-hosted.com/en/latest/index.html)
@@ -84,7 +85,10 @@ We have to extend the existing `skills` entries by providing the `name` and the 
 
 ```toml
 # namespace.toml
-skills = [{ name = "haiku", tag = "latest" }]
+skills = [
+    { name = "greet" },
+    { name = "haiku", tag = "latest" }
+]
 ```
 
 ## Contributing
