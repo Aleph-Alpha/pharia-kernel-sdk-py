@@ -92,16 +92,16 @@ def test_complete_all(csi: Csi, model: str):
 @pytest.mark.kernel
 def test_search(csi: Csi):
     # Given an existing index
-    index_path = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
-    query = "What is the population of Heidelberg?"
+    index_path = IndexPath("Kernel", "test", "asym-64")
+    query = "What is the Kernel?"
 
     # When searching
     result = csi.search(index_path, query)
 
     # Then we get a result
     assert len(result) == 1
-    assert "Heidelberg" in result[0].content
-    assert "Heidelberg" in result[0].document_path.name
+    assert "Kernel" in result[0].content
+    assert "kernel" in result[0].document_path.name
 
 
 class StubStudioClient(SpanClient):
