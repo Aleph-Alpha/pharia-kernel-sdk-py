@@ -80,12 +80,12 @@ jobs:
         run: poetry run pytest -m 'kernel'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
-          PHARIA_STUDIO_ADDRESS: https://pharia-studio.aleph-alpha.stackit.run
+          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
       - name: Run example tests
         run: poetry run pytest examples
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
-          PHARIA_STUDIO_ADDRESS: https://pharia-studio.aleph-alpha.stackit.run
+          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
 
   integration-test:
     runs-on: ${{ matrix.os }}
