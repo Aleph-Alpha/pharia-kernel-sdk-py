@@ -29,7 +29,7 @@ opentelemetry-exporter-otlp = "^1.28.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
-ruff = "^0.8.0"
+ruff = "^0.8.1"
 mypy = "^1.13.0"
 pre-commit = "^4.0.1"
 pydoclint = "^0.5.9"
