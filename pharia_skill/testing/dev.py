@@ -68,7 +68,7 @@ class DevCsi(Csi):
     The following environment variables are required:
 
     * `PHARIA_AI_TOKEN` (Pharia AI token)
-    * `PHARIA_KERNEL_ADDRESS` (Pharia Kernel endpoint; example: "https://pharia-kernel.aleph-alpha.stackit.run")
+    * `PHARIA_KERNEL_ADDRESS` (Pharia Kernel endpoint; example: "https://pharia-kernel.product.pharia.com")
 
     If you want to export traces to Pharia Studio, also set:
 
