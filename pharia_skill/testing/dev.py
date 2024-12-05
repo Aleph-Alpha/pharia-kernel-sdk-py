@@ -42,7 +42,7 @@ class HttpClient(CsiClient):
     def __init__(self):
         load_dotenv()
         self.url = os.environ["PHARIA_KERNEL_ADDRESS"] + "/csi"
-        token = os.environ["AA_API_TOKEN"]
+        token = os.environ["PHARIA_AI_TOKEN"]
         self.session = requests.Session()
         self.session.headers = {"Authorization": f"Bearer {token}"}
 
@@ -67,7 +67,7 @@ class DevCsi(Csi):
 
     The following environment variables are required:
 
-    * `AA_API_TOKEN` (Aleph Alpha API token)
+    * `PHARIA_AI_TOKEN` (Pharia AI token)
     * `PHARIA_KERNEL_ADDRESS` (Pharia Kernel endpoint; example: "https://pharia-kernel.aleph-alpha.stackit.run")
 
     If you want to export traces to Pharia Studio, also set:

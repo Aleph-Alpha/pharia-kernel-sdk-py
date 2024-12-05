@@ -15,7 +15,7 @@ permissions:
   id-token: write
 
 env:
- ARTIFACTORY_URL: "https://alephalpha.jfrog.io"
+  ARTIFACTORY_URL: "https://alephalpha.jfrog.io"
 
 jobs:
   lint:
@@ -51,7 +51,7 @@ jobs:
         run: poetry install
       - name: Test
         run: poetry run pytest -m 'not kernel' tests
-  
+
   kernel-test:
     runs-on: ubuntu-latest
     permissions:
@@ -59,7 +59,7 @@ jobs:
       id-token: write
     env:
       ARTIFACTORY_URL: https://alephalpha.jfrog.io
-      AA_API_TOKEN: ${{ secrets.AA_API_TOKEN }}
+      PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Poetry
@@ -75,7 +75,7 @@ jobs:
         shell: bash
         run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Run Pharia Kernel
-        run: sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $AA_API_TOKEN
+        run: sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $PHARIA_AI_TOKEN
       - name: Run kernel tests
         run: poetry run pytest -m 'kernel'
         env:
@@ -97,7 +97,7 @@ jobs:
       id-token: write
     env:
       ARTIFACTORY_URL: https://alephalpha.jfrog.io
-      AA_API_TOKEN: ${{ secrets.AA_API_TOKEN }}
+      PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Poetry
@@ -121,6 +121,6 @@ jobs:
       - name: Test skill execution on ubuntu only
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $AA_API_TOKEN
-          poetry run sh -x -e ./scripts/run_skill.sh $AA_API_TOKEN
-          poetry run sh -x -e ./scripts/run_failing_skill.sh $AA_API_TOKEN
+          sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $PHARIA_AI_TOKEN
+          poetry run sh -x -e ./scripts/run_skill.sh $PHARIA_AI_TOKEN
+          poetry run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
