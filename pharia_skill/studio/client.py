@@ -39,7 +39,7 @@ class StudioClient(SpanClient):
             project_name (str, required): The human readable identifier provided by the user.
         """
         load_dotenv()
-        self._token = os.environ["AA_API_TOKEN"]
+        self._token = os.environ["PHARIA_AI_TOKEN"]
         self._headers = {
             "Accept": "application/json",
             "Authorization": f"Bearer {self._token}",

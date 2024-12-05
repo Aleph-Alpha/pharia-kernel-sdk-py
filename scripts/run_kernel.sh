@@ -2,7 +2,7 @@
 
 JFROG_USER=$1
 JFROG_TOKEN=$2
-AA_API_TOKEN=$3
+PHARIA_AI_TOKEN=$3
 
 podman login alephalpha.jfrog.io/pharia-kernel-images -u $JFROG_USER -p $JFROG_TOKEN
 podman pull alephalpha.jfrog.io/pharia-kernel-images/pharia-kernel:latest
@@ -12,7 +12,7 @@ mkdir -p skills
 
 (podman run \
   -v ./skills:/app/skills \
-  -e AA_API_TOKEN=$AA_API_TOKEN \
+  -e PHARIA_AI_TOKEN=$PHARIA_AI_TOKEN \
   -e NAMESPACE_UPDATE_INTERVAL=300ms \
   -e LOG_LEVEL="pharia_kernel=debug" \
   -p 8081:8081\
