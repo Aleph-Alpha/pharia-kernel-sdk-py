@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.4.1...v0.5.0) (2024-12-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename env variable to Pharia AI token
+
+### Features
+
+* rename env variable to Pharia AI token ([683e270](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/683e270cd422cb273a9c08b806483eb8a3c32436))
+
+
+### Bug Fixes
+
+* migration ([1551931](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1551931adc30861eb1f3463a9e64a557bb845a7c))
+
+
+### Documentation
+
+* update example Pharia Kernel endpoint ([8959f48](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8959f48355083cfb0704da27c896ab3946a609f0))
+
 ## [0.4.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.4.0...v0.4.1) (2024-11-28)
 
 
