@@ -97,7 +97,7 @@ class PhariaSkillCli:
             subprocess.run(["chmod", "+x", "bin/pharia-skill-cli"], check=True)
         logger.info("Pharia skill CLI installed successfully.")
 
-    def publish(self, skill: str):
+    def publish(self, skill: str, tag: str):
         """Publish a skill to an OCI registry.
 
         Takes a path to a WASM component, wrap it in an OCI image and publish it to an OCI
@@ -139,7 +139,7 @@ class PhariaSkillCli:
             "-p",
             skill_registry_token,
             "-t",
-            "latest",
+            tag,
             skill,
         ]
         subprocess.run(command, check=True)

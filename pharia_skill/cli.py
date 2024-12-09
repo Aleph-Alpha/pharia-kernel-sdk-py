@@ -79,6 +79,11 @@ def main():
     publish_parser.add_argument(
         "skill", help="Path to the component to publish without the .wasm extension"
     )
+    publish_parser.add_argument(
+        "--tag",
+        help='default to "latest" if not provided',
+        default="latest",
+    )
 
     args = parser.parse_args()
 
@@ -88,7 +93,7 @@ def main():
             run_componentize_py(args.skill)
         elif args.command == "publish":
             cli = PhariaSkillCli()
-            cli.publish(args.skill)
+            cli.publish(args.skill, args.tag)
         else:
             parser.print_help()
     except subprocess.CalledProcessError as e:
