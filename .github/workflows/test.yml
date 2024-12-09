@@ -36,6 +36,10 @@ jobs:
         run: poetry run ruff format --diff .
       - name: Check types
         run: poetry run mypy --install-types --non-interactive .
+      - name: Pyright
+        # for catching method override errors with different parameter names
+        # reportIncompatibleMethodOverride, not covered by mypy
+        run: poetry run pyright
 
   unit-test:
     runs-on: ubuntu-latest
