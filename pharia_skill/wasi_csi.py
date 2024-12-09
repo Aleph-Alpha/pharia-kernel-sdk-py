@@ -155,22 +155,20 @@ def language_from_wit(language: WitLanguage) -> Language:
 
 
 class WasiCsi(Csi):
-    def complete(
-        self, model: str, prompt: str, completion_params: CompletionParams
-    ) -> Completion:
-        wit_completion_params = completion_params_wit(completion_params)
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
+        wit_completion_params = completion_params_wit(params)
         completion = wit_csi.complete(model, prompt, wit_completion_params)
         return completion_from_wit(completion)
 
-    def chunk(self, text: str, chunk_params: ChunkParams) -> list[str]:
-        wit_chunk_params = chunk_params_wit(chunk_params)
+    def chunk(self, text: str, params: ChunkParams) -> list[str]:
+        wit_chunk_params = chunk_params_wit(params)
         return wit_csi.chunk(text, wit_chunk_params)
 
     def chat(
-        self, model: str, messages: list[Message], chat_params: ChatParams
+        self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatResponse:
         wit_messages = [message_wit(message) for message in messages]
-        wit_chat_params = chat_params_wit(chat_params)
+        wit_chat_params = chat_params_wit(params)
         response = wit_csi.chat(model, wit_messages, wit_chat_params)
         return chat_response_from_wit(response)
 
