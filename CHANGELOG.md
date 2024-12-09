@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.0...v0.5.1) (2024-12-09)
+
+
+### Bug Fixes
+
+* incompatible method override ([4a6cbf8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4a6cbf8be15d1fb6d18c198bb4c556709756e9e9))
+
 ## [0.5.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.4.1...v0.5.0) (2024-12-05)
 
 
