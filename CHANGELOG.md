@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.1...v0.5.2) (2024-12-10)
+
+
+### Features
+
+* allow specifying skill tag ([6be9f16](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/6be9f165599166518530278fbe0c6f87fb3b2878))
+
 ## [0.5.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.0...v0.5.1) (2024-12-09)
 
 
