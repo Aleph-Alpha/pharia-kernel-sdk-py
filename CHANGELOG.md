@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.2...v0.5.3) (2024-12-10)
+
+
+### Features
+
+* bump cli version to latest ([e2fc319](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e2fc319ea7468be676cd17b4965ff767090064c9))
+
 ## [0.5.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.1...v0.5.2) (2024-12-10)
 
 
