@@ -5,7 +5,7 @@ DevCsi can be used for testing Skill code locally against a running Pharia Kerne
 import json
 import os
 from dataclasses import asdict
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 import requests
 from dotenv import load_dotenv
@@ -229,4 +229,4 @@ class DevCsi(Csi):
             "document_path": asdict(document_path),
         }
         output = self.run("document_metadata", data)
-        return output
+        return cast(JsonSerializable, output)

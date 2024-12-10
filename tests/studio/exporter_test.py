@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Any, Sequence
 
 import pytest
 from opentelemetry.sdk.trace import ReadableSpan
@@ -18,7 +18,7 @@ from pharia_skill.testing.dev import CsiClient
 
 
 class SpyClient(SpanClient):
-    def __init__(self):
+    def __init__(self) -> None:
         self.spans: list[Sequence[StudioSpan]] = []
 
     def submit_spans(self, spans: Sequence[StudioSpan]):
@@ -52,7 +52,7 @@ def haiku(csi: Csi, input: Input) -> Output:
 class StubCsiClient(CsiClient):
     """Use the `DevCsi` without doing any http calls to the Kernel."""
 
-    def run(self, function: str, data: dict) -> dict | list[dict]:
+    def run(self, function: str, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         completion = {"text": "Hello, world!", "finish_reason": "stop"}
         match function:
             case "complete":
@@ -66,7 +66,7 @@ class StubCsiClient(CsiClient):
 
 
 class SaboteurCsiClient(CsiClient):
-    def run(self, function: str, data: dict) -> dict | list[dict]:
+    def run(self, function: str, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         match function:
             case "complete_all":
                 raise RuntimeError("Out of cheese")
@@ -209,7 +209,9 @@ def test_inner_trace_is_matched_with_correct_parent(
     client = SpyClient()
     exporter = StudioExporter(client)
 
-    assert error_span.context.trace_id != inner_span.context.trace_id  # type: ignore
+    assert error_span.context is not None
+    assert inner_span.context is not None
+    assert error_span.context.trace_id != inner_span.context.trace_id
 
     # When we export two spans with different trace ids
     exporter.export([inner_span])

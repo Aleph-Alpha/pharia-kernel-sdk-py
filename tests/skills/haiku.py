@@ -7,7 +7,7 @@ from pydantic import BaseModel, RootModel
 from pharia_skill import ChatParams, CompletionParams, Csi, Message, skill
 
 
-class Input(RootModel):
+class Input(RootModel[str]):
     root: str
 
 

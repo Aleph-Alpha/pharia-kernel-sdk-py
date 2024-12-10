@@ -2,29 +2,35 @@
 Test document search and metadata in WASM
 """
 
-from typing import cast
-
-from pydantic import RootModel
+from pydantic import BaseModel, RootModel
 
 from pharia_skill import Csi, skill
 from pharia_skill.csi import IndexPath
 
 
-class Input(RootModel):
+class Input(RootModel[str]):
     root: str
 
 
-class Output(RootModel):
+class Output(RootModel[str | None]):
     root: str | None
+
+
+class Metadata(BaseModel):
+    url: str
 
 
 @skill
 def haiku(csi: Csi, input: Input) -> Output:
     index_path = IndexPath("Kernel", "test", "asym-64")
-    results = csi.search(index_path=index_path, query=input.root, max_results=1)
-    if not results:
+    search_results = csi.search(index_path=index_path, query=input.root, max_results=1)
+    if not search_results:
         return Output(root=None)
-    metadata = cast(list[dict] | None, csi._document_metadata(results[0].document_path))
-    if not metadata:
+
+    # parse into list of Metadata
+    results = csi._document_metadata(search_results[0].document_path)
+    if not isinstance(results, list):
         return Output(root=None)
-    return Output(root=metadata[0]["url"])
+
+    metadata = [Metadata(**result) for result in results]
+    return Output(root=metadata[0].url)

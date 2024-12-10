@@ -4,10 +4,4 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "cSpell.words": [
-        "autouse",
-        "excinfo",
-        "injective",
-        "Wasi"
-    ]
 }

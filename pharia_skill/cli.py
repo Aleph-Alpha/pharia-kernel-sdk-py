@@ -37,7 +37,7 @@ def setup_wasi_deps() -> None:
         os.chdir("..")
 
 
-def run_componentize_py(skill_module: str, unstable: bool):
+def run_componentize_py(skill_module: str, unstable: bool) -> None:
     """Build the skill to a WASM component using componentize-py.
 
     The call to componentize-py targets the `skill` wit world and adds the downloaded
