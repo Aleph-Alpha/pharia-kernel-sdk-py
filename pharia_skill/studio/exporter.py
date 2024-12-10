@@ -21,7 +21,7 @@ class SpanClient(Protocol):
     def submit_spans(self, spans: Sequence[StudioSpan]) -> None: ...
 
 
-class StudioExporter(SpanExporter):
+class StudioExporter(SpanExporter):  # type: ignore
     """An OpenTelemetry exporter that uploads spans to Studio.
 
     The exporter will create a project on setup if it does not exist yet.
@@ -75,7 +75,7 @@ class StudioExporter(SpanExporter):
         self.spans.clear()
 
 
-class StudioSpanProcessor(SimpleSpanProcessor):
+class StudioSpanProcessor(SimpleSpanProcessor):  # type: ignore[misc]
     """Signal that a processor has been registered by the SDK."""
 
     pass

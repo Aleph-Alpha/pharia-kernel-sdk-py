@@ -1,4 +1,5 @@
 import json
+from typing import cast
 
 from .csi import (
     ChatParams,
@@ -218,4 +219,4 @@ class WasiCsi(Csi):
         wit_document_path = document_path_wit(document_path)
         if not (maybe_metadata := wit_csi.document_metadata(wit_document_path)):
             return None
-        return json.loads(maybe_metadata)
+        return cast(JsonSerializable, json.loads(maybe_metadata))

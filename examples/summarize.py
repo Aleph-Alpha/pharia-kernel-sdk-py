@@ -30,7 +30,7 @@ class Input(BaseModel):
     language: Language | None = None
 
 
-class Output(RootModel):
+class Output(RootModel[str]):
     root: str
 
 

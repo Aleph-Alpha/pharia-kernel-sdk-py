@@ -2,8 +2,8 @@ import pytest
 from pydantic import BaseModel, RootModel
 
 from pharia_skill import CompletionParams, Csi, skill
-from pharia_skill.decorator import Err
 from pharia_skill.wit.exports.skill_handler import Error_InvalidInput
+from pharia_skill.wit.types import Err
 
 
 class Input(BaseModel):

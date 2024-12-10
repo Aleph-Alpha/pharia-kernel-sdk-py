@@ -1,4 +1,5 @@
 import datetime as dt
+from typing import Any
 
 import pytest
 from opentelemetry.sdk.trace import Event, ReadableSpan
@@ -124,7 +125,7 @@ def error_span() -> ReadableSpan:
     )
 
 
-def span_from_json(inner_span: dict) -> ReadableSpan:
+def span_from_json(inner_span: dict[str, Any]) -> ReadableSpan:
     """Load an OpenTelemetry span from it's JSON representation.
 
     When tracing, spans can easily be exported to json with `span.to_json()`.

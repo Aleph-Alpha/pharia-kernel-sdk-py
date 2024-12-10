@@ -231,7 +231,7 @@ class Language(int, Enum):
     DEU = 1
 
 
-JsonSerializable = dict | list | str | int | float | bool | None
+JsonSerializable = dict[str, Any] | list[Any] | str | int | float | bool | None
 """Represent any value that can be serialized/deserialized to/from JSON.
 
 Used to represent the return type of `document_metadata` which is any valid JSON value.

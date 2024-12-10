@@ -45,7 +45,7 @@ class Event(BaseModel):
     timestamp: dt.datetime = Field(default_factory=utc_now)
 
     # Use the attributes field for this as there is no concept of body in OTel events
-    body: Any = Field(default_factory=dict, alias="attributes")
+    body: dict[str, Any] = Field(default_factory=dict, alias="attributes")
     message: str = ""
 
     @model_validator(mode="after")
