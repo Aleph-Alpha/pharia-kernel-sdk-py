@@ -1,3 +1,5 @@
+import json
+
 from .csi import (
     ChatParams,
     ChatResponse,
@@ -46,7 +48,9 @@ def completion_from_wit(completion: WitCompletion) -> Completion:
     )
 
 
-def completion_params_wit(completion_params: CompletionParams) -> WitCompletionParams:
+def completion_params_wit(
+    completion_params: CompletionParams,
+) -> WitCompletionParams:
     return WitCompletionParams(
         max_tokens=completion_params.max_tokens,
         temperature=completion_params.temperature,
@@ -127,6 +131,14 @@ def search_result_from_wit(result: WitSearchResult) -> SearchResult:
     )
 
 
+def document_path_wit(document_path: DocumentPath) -> WitDocumentPath:
+    return WitDocumentPath(
+        namespace=document_path.namespace,
+        collection=document_path.collection,
+        name=document_path.name,
+    )
+
+
 def index_path_wit(index_path: IndexPath) -> WitIndexPath:
     return WitIndexPath(
         namespace=index_path.namespace,
@@ -203,4 +215,7 @@ class WasiCsi(Csi):
         ]
 
     def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
-        raise NotImplementedError("WasiCsi does not support document metadata yet")
+        wit_document_path = document_path_wit(document_path)
+        if not (maybe_metadata := wit_csi.document_metadata(wit_document_path)):
+            return None
+        return json.loads(maybe_metadata)
