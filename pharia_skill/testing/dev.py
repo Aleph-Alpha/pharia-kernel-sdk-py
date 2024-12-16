@@ -23,6 +23,7 @@ from pharia_skill import (
     Csi,
     DocumentPath,
     IndexPath,
+    JsonSerializable,
     Language,
     Message,
     SearchResult,
@@ -215,3 +216,10 @@ class DevCsi(Csi):
             )
             for result in output
         ]
+
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable | None:
+        data = {
+            "document_path": asdict(document_path),
+        }
+        output = self.run(self.document_metadata.__name__, data)
+        return output

@@ -15,6 +15,7 @@ from pharia_skill import (
     DocumentPath,
     FinishReason,
     IndexPath,
+    JsonSerializable,
     Language,
     Message,
     SearchResult,
@@ -70,3 +71,6 @@ class StubCsi(Csi):
                 score=1.0,
             )
         ]
+
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+        return {}

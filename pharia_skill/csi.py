@@ -22,6 +22,7 @@ __all__ = [
     "Message",
     "Role",
     "SearchResult",
+    "JsonSerializable",
 ]
 
 
@@ -230,6 +231,13 @@ class Language(int, Enum):
     DEU = 1
 
 
+JsonSerializable = dict | list | str | int | float | bool | None
+"""Represent any value that can be serialized/deserialized to/from JSON.
+
+Used to represent the return type of `document_metadata` which is any valid JSON value.
+"""
+
+
 class Csi(Protocol):
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         """Generates completions given a prompt.
@@ -349,5 +357,13 @@ class Csi(Protocol):
             result = csi.search(index_path, query)
             r0 = result[0]
             "Heidelberg" in r0.content, "Heidelberg" in r0.document_path.name # True, True
+        """
+        ...
+
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+        """Return metadata of a document.
+
+        Parameters:
+            document_path (DocumentPath, required): The document path to get metadata from.
         """
         ...

@@ -9,6 +9,7 @@ from .csi import (
     DocumentPath,
     FinishReason,
     IndexPath,
+    JsonSerializable,
     Language,
     Message,
     Role,
@@ -200,3 +201,6 @@ class WasiCsi(Csi):
                 wit_index_path, query, max_results, min_score
             )
         ]
+
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+        raise NotImplementedError("WasiCsi does not support document metadata yet")
