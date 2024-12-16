@@ -2,6 +2,7 @@
 A WASI interface dedicated to interacting with Large Language Models and other AI-related tasks.
 """
 from typing import TypeVar, Generic, Union, Optional, Protocol, Tuple, List, Any, Self
+from types import TracebackType
 from enum import Flag, Enum, auto
 from dataclasses import dataclass
 from abc import abstractmethod
@@ -132,5 +133,8 @@ def complete_all(requests: List[CompletionRequest]) -> List[Completion]:
     raise NotImplementedError
 
 def search(index_path: IndexPath, query: str, max_results: int, min_score: Optional[float]) -> List[SearchResult]:
+    raise NotImplementedError
+
+def document_metadata(document_path: DocumentPath) -> Optional[bytes]:
     raise NotImplementedError
 
