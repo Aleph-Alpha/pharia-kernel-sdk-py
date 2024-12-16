@@ -9,6 +9,7 @@ from pharia_skill import (
     CompletionParams,
     CompletionRequest,
     Csi,
+    DocumentPath,
     IndexPath,
     Language,
     Message,
@@ -29,6 +30,18 @@ def csi() -> Csi:
 @pytest.fixture(scope="module")
 def model() -> str:
     return "llama-3.1-8b-instruct"
+
+
+@pytest.fixture
+def given_document() -> DocumentPath:
+    """The tests suite expects a document `kernel-docs` in the `test` collection of the `Kernel` index."""
+    return DocumentPath("Kernel", "test", "kernel-docs")
+
+
+@pytest.fixture
+def given_index() -> IndexPath:
+    """The tests suite expects an index `asym-64` in the `test` collection of the `Kernel` index."""
+    return IndexPath("Kernel", "test", "asym-64")
 
 
 @pytest.mark.kernel
@@ -90,13 +103,11 @@ def test_complete_all(csi: Csi, model: str):
 
 
 @pytest.mark.kernel
-def test_search(csi: Csi):
-    # Given an existing index
-    index_path = IndexPath("Kernel", "test", "asym-64")
+def test_search(csi: Csi, given_index: IndexPath):
     query = "What is the Kernel?"
 
     # When searching
-    result = csi.search(index_path, query)
+    result = csi.search(given_index, query)
 
     # Then we get a result
     assert len(result) == 1
@@ -165,3 +176,10 @@ def test_multiple_csi_instances_do_not_duplicate_exporters():
     # Then only one exporter is attached
     assert len(csi1.provider()._active_span_processor._span_processors) == 1
     assert len(csi2.provider()._active_span_processor._span_processors) == 1
+
+
+@pytest.mark.kernel
+def test_document_metadata(csi: Csi, given_document: DocumentPath):
+    metadata = csi.document_metadata(given_document)
+    assert isinstance(metadata, list)
+    assert metadata[0].get("url") == "https://pharia-kernel.product.pharia.com/"
