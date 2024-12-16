@@ -9,6 +9,12 @@ componentize-py -d skill.wit -w skill bindings --world-module wit .
 cd ..
 ```
 
+To generate bindings with all unstable feature, replace the third command with
+
+```shell
+componentize-py --all-features -d skill.wit -w skill bindings --world-module wit .
+```
+
 When running the examples, you use `pharia_skill` without installing the wheel. You can componentize as follows:
 
 ```shell
