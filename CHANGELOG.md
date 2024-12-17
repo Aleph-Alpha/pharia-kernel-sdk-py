@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.3...v0.5.4) (2024-12-17)
+
+
+### Features
+
+* add document metadata to csi protocol ([f030990](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f030990410da54ddb374359d48874807928f40a2))
+* add unstable option for building ([fcb29ae](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/fcb29aee98af298d8fca5bb64649bceaa056ba7a))
+* implement document metadata for WASI CSI ([9de4a55](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9de4a550c4e79f965033aebc428d17de710b30d7))
+
+
+### Documentation
+
+* add command to generate bindings with unstable features ([08c93dc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/08c93dc662a3ad6ed7105e076e90dde6e3595675))
+
 ## [0.5.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.2...v0.5.3) (2024-12-10)
 
 
