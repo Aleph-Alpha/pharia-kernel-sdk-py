@@ -10,14 +10,5 @@ repos:
     rev: 'v1.13.0'
     hooks:
       - id: mypy
-        additional_dependencies: [pydantic, pytest, opentelemetry-sdk]
+        additional_dependencies: [pydantic, pytest, opentelemetry-sdk, python-dotenv]
         args: [--install-types, --non-interactive]
-
-  # - repo: local
-  #   hooks:
-  #     - id: pyright
-  #       name: Pyright
-  #       entry: pyright
-  #       language: system
-  #       types: [python]
-  #       args: [pharia_skill]
