@@ -10,7 +10,7 @@ repos:
     rev: 'v1.13.0'
     hooks:
       - id: mypy
-        additional_dependencies: [pydantic, pytest]
+        additional_dependencies: [pydantic, pytest, opentelemetry-sdk]
         args: [--install-types, --non-interactive]
 
   # - repo: local
