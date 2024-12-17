@@ -27,12 +27,12 @@ class PhariaSkillCli:
         else ".\\bin\\pharia-skill-cli"
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         load_dotenv()
         self.update_if_needed()
 
     @classmethod
-    def update_if_needed(cls):
+    def update_if_needed(cls) -> None:
         if not os.path.exists(cls.PHARIA_SKILL_CLI_PATH) or not cls.is_up_to_date():
             cls.download_and_install()
             assert cls.is_up_to_date()
@@ -54,7 +54,7 @@ class PhariaSkillCli:
         return result.stdout.strip().split(" ")[-1]
 
     @classmethod
-    def download_and_install(cls):
+    def download_and_install(cls) -> None:
         pharia_skill = cls.download_pharia_skill()
         cls.install_pharia_skill(pharia_skill)
 
@@ -88,7 +88,7 @@ class PhariaSkillCli:
         return response.content
 
     @classmethod
-    def install_pharia_skill(cls, pharia_skill: bytes):
+    def install_pharia_skill(cls, pharia_skill: bytes) -> None:
         os.makedirs("bin", exist_ok=True)
 
         with open("bin/pharia-skill-cli", "wb") as f:
@@ -97,7 +97,7 @@ class PhariaSkillCli:
             subprocess.run(["chmod", "+x", "bin/pharia-skill-cli"], check=True)
         logger.info("Pharia skill CLI installed successfully.")
 
-    def publish(self, skill: str, tag: str):
+    def publish(self, skill: str, tag: str) -> None:
         """Publish a skill to an OCI registry.
 
         Takes a path to a WASM component, wrap it in an OCI image and publish it to an OCI
