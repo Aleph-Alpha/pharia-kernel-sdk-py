@@ -214,7 +214,7 @@ class WasiCsi(Csi):
             )
         ]
 
-    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
         wit_document_path = document_path_wit(document_path)
         if not (maybe_metadata := wit_csi.document_metadata(wit_document_path)):
             return None

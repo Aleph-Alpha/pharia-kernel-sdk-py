@@ -123,7 +123,7 @@ def select_language(text: str, languages: List[Language]) -> Optional[Language]:
     """
     Select the detected language for the provided input based on the list of possible languages.
     If no language matches, None is returned.
-    
+
     text: Text input
     languages: All languages that should be considered during detection.
     """
@@ -137,4 +137,3 @@ def search(index_path: IndexPath, query: str, max_results: int, min_score: Optio
 
 def document_metadata(document_path: DocumentPath) -> Optional[bytes]:
     raise NotImplementedError
-
