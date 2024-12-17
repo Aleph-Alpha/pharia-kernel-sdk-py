@@ -180,6 +180,6 @@ def test_multiple_csi_instances_do_not_duplicate_exporters():
 
 @pytest.mark.kernel
 def test_document_metadata(csi: Csi, given_document: DocumentPath):
-    metadata = csi.document_metadata(given_document)
+    metadata = csi._document_metadata(given_document)
     assert isinstance(metadata, list)
     assert metadata[0].get("url") == "https://pharia-kernel.product.pharia.com/"

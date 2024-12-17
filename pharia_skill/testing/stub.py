@@ -72,5 +72,5 @@ class StubCsi(Csi):
             )
         ]
 
-    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
         return {}

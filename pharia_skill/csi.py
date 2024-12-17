@@ -360,7 +360,7 @@ class Csi(Protocol):
         """
         ...
 
-    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
         """Return metadata of a document.
 
         Parameters:

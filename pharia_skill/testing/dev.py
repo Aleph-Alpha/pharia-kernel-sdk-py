@@ -28,7 +28,11 @@ from pharia_skill import (
     Message,
     SearchResult,
 )
-from pharia_skill.studio import StudioClient, StudioExporter, StudioSpanProcessor
+from pharia_skill.studio import (
+    StudioClient,
+    StudioExporter,
+    StudioSpanProcessor,
+)
 
 
 class CsiClient(Protocol):
@@ -53,7 +57,8 @@ class HttpClient(CsiClient):
 
     def run(self, function: str, data: dict) -> dict:
         response = self.session.post(
-            self.url, json={"version": self.VERSION, "function": function, **data}
+            self.url,
+            json={"version": self.VERSION, "function": function, **data},
         )
         response.raise_for_status()
         return response.json()
@@ -217,9 +222,11 @@ class DevCsi(Csi):
             for result in output
         ]
 
-    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable | None:
+    def _document_metadata(
+        self, document_path: DocumentPath
+    ) -> JsonSerializable | None:
         data = {
             "document_path": asdict(document_path),
         }
-        output = self.run(self.document_metadata.__name__, data)
+        output = self.run("document_metadata", data)
         return output
