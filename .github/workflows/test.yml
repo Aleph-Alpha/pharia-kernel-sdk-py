@@ -119,6 +119,7 @@ jobs:
       - name: Test skill building
         run: |
           poetry run pharia-skill build tests.skills.haiku
+          poetry run pharia-skill build tests.skills.search
           poetry run pharia-skill build tests.skills.failing
       - name: Test skill publishing
         run: poetry run pharia-skill publish haiku
@@ -126,5 +127,6 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $PHARIA_AI_TOKEN
-          poetry run sh -x -e ./scripts/run_skill.sh $PHARIA_AI_TOKEN
+          poetry run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
+          poetry run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
           poetry run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
