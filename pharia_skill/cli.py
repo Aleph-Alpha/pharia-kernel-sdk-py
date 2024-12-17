@@ -16,7 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def setup_wasi_deps():
+def setup_wasi_deps() -> None:
     """Download the Pydantic WASI wheels if they are not already present."""
     if not os.path.exists("wasi_deps"):
         logger.info("Downloading Pydantic Wasi wheels...")
@@ -68,7 +68,7 @@ def run_componentize_py(skill_module: str, unstable: bool):
     subprocess.run(command, check=True)
 
 
-def main():
+def main() -> None:
     load_dotenv()
 
     parser = argparse.ArgumentParser(description="Pharia Skill CLI Tool")

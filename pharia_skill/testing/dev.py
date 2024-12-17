@@ -36,7 +36,7 @@ from pharia_skill.studio import (
 
 
 class CsiClient(Protocol):
-    def run(self, function: str, data: dict) -> Any: ...
+    def run(self, function: str, data: dict[str, Any]) -> Any: ...
 
 
 class HttpClient(CsiClient):
@@ -44,18 +44,18 @@ class HttpClient(CsiClient):
 
     VERSION = "0.2"
 
-    def __init__(self):
+    def __init__(self) -> None:
         load_dotenv()
         self.url = os.environ["PHARIA_KERNEL_ADDRESS"] + "/csi"
         token = os.environ["PHARIA_AI_TOKEN"]
         self.session = requests.Session()
         self.session.headers = {"Authorization": f"Bearer {token}"}
 
-    def __del__(self):
+    def __del__(self) -> None:
         if hasattr(self, "session"):
             self.session.close()
 
-    def run(self, function: str, data: dict) -> dict:
+    def run(self, function: str, data: dict[str, Any]) -> Any:
         response = self.session.post(
             self.url,
             json={"version": self.VERSION, "function": function, **data},
@@ -81,7 +81,7 @@ class DevCsi(Csi):
     * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.aleph-alpha.stackit.run")
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.client: CsiClient = HttpClient()
 
     @classmethod
@@ -101,7 +101,7 @@ class DevCsi(Csi):
         return csi
 
     @classmethod
-    def set_span_exporter(cls, exporter: StudioExporter):
+    def set_span_exporter(cls, exporter: StudioExporter) -> None:
         """Set a span exporter for Studio if it has not been set yet.
 
         This method overwrites any existing exporters, thereby ensuring that there
@@ -138,7 +138,7 @@ class DevCsi(Csi):
 
         return trace.get_tracer_provider()  # type: ignore
 
-    def run(self, function: str, data: dict):
+    def run(self, function: str, data: dict[str, Any]) -> Any:
         with trace.get_tracer(__name__).start_as_current_span(function) as span:
             span.set_attribute("input", json.dumps(data))
             try:

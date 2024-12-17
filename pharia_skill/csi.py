@@ -5,7 +5,7 @@ via the Cognitive System Interface (CSI).
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Protocol
+from typing import Any, Protocol
 
 __all__ = [
     "ChatParams",
@@ -152,7 +152,7 @@ class ChatResponse:
     finish_reason: FinishReason
 
     @staticmethod
-    def from_dict(body: dict) -> "ChatResponse":
+    def from_dict(body: dict[str, Any]) -> "ChatResponse":
         return ChatResponse(
             message=Message(**body["message"]),
             finish_reason=FinishReason(body["finish_reason"]),

@@ -69,7 +69,7 @@ class TaskSpanAttributes(BaseModel):
     output: Any | None = None
 
     @field_validator("input", mode="before")
-    def validate_input(cls, data: str):
+    def validate_input(cls, data: str) -> Any:
         """Load a json string into an arbitrary pydantic model.
 
         OTel attributes do not support dictionary. The input and output is
@@ -78,7 +78,7 @@ class TaskSpanAttributes(BaseModel):
         return json.loads(data)
 
     @field_validator("output", mode="before")
-    def validate_output(cls, data: str):
+    def validate_output(cls, data: str) -> Any:
         return json.loads(data)
 
 
@@ -123,7 +123,7 @@ class StudioSpan(BaseModel):
         return double_to_128bit(data)
 
     @field_validator("status", mode="before")
-    def validate_status(cls, data: dict) -> SpanStatus:
+    def validate_status(cls, data: dict[str, str]) -> SpanStatus:
         if data["status_code"] == "OK":
             return SpanStatus.OK
         return SpanStatus.ERROR

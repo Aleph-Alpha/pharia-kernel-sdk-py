@@ -18,7 +18,7 @@ class SpanClient(Protocol):
     for better modularity and testability.
     """
 
-    def submit_spans(self, spans: Sequence[StudioSpan]): ...
+    def submit_spans(self, spans: Sequence[StudioSpan]) -> None: ...
 
 
 class StudioExporter(SpanExporter):
@@ -51,7 +51,7 @@ class StudioExporter(SpanExporter):
 
         return SpanExportResult.SUCCESS
 
-    def _store_span(self, span: ReadableSpan):
+    def _store_span(self, span: ReadableSpan) -> None:
         """Spans are grouped by trace_id for storage."""
         if span.context is None:
             raise ValueError("Span has no context")
@@ -60,12 +60,12 @@ class StudioExporter(SpanExporter):
             self.spans[trace_id] = []
         self.spans[trace_id].append(span)
 
-    def _flush_trace(self, trace_id: int):
+    def _flush_trace(self, trace_id: int) -> None:
         spans = self.spans.pop(trace_id)
         studio_spans = [StudioSpan.from_otel(span) for span in spans]
         self.client.submit_spans(studio_spans)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Will be called at the end of a session.
 
         There must not be any open spans left, all open spans should have been called with a parent,

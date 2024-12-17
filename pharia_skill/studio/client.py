@@ -67,13 +67,12 @@ class StudioClient(SpanClient):
         return studio_client
 
     def _check_connection(self) -> None:
+        url = urljoin(self.url, "/health")
         try:
-            url = urljoin(self.url, "/health")
             response = requests.get(
                 url,
                 headers=self._headers,
             )
-            response.raise_for_status()
         except MissingSchema:
             raise ValueError(
                 "The given url of the studio client is invalid. Make sure to include http:// in your url."
@@ -82,9 +81,11 @@ class StudioClient(SpanClient):
             raise ValueError(
                 "The given url of the studio client does not point to a server."
             ) from None
+        try:
+            response.raise_for_status()
         except requests.HTTPError:
             raise ValueError(
-                f"The given url of the studio client does not point to a healthy studio: {response.status_code}: {response.json()}"  # type: ignore
+                f"The given url of the studio client does not point to a healthy studio: {response.status_code}: {response.text}"
             ) from None
 
     @property
@@ -140,7 +141,7 @@ class StudioClient(SpanClient):
                 response.raise_for_status()
         return int(response.text)
 
-    def submit_spans(self, spans: Sequence[StudioSpan]):
+    def submit_spans(self, spans: Sequence[StudioSpan]) -> None:
         """Sends the provided spans to Studio as a singular trace.
 
         The method fails if the span list is empty, has already been created or if
@@ -153,7 +154,7 @@ class StudioClient(SpanClient):
             raise ValueError("Tried to upload an empty trace")
         self._upload_trace(StudioSpanList(spans))
 
-    def _upload_trace(self, trace: StudioSpanList):
+    def _upload_trace(self, trace: StudioSpanList) -> None:
         url = urljoin(self.url, f"/api/projects/{self.project_id}/traces")
         response = requests.post(
             url,

@@ -19,4 +19,4 @@ repos:
         entry: pyright
         language: system
         types: [python]
-        args: ["pharia_skill"]
+        args: [pharia_skill]
