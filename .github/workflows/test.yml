@@ -119,7 +119,7 @@ jobs:
       - name: Test skill building
         run: |
           poetry run pharia-skill build tests.skills.haiku
-          poetry run pharia-skill build tests.skills.search
+          poetry run pharia-skill build tests.skills.search --unstable
           poetry run pharia-skill build tests.skills.failing
       - name: Test skill publishing
         run: poetry run pharia-skill publish haiku

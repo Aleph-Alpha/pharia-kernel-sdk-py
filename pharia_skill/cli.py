@@ -37,7 +37,7 @@ def setup_wasi_deps():
         os.chdir("..")
 
 
-def run_componentize_py(skill_module: str):
+def run_componentize_py(skill_module: str, unstable: bool):
     """Build the skill to a WASM component using componentize-py.
 
     The call to componentize-py targets the `skill` wit world and adds the downloaded
@@ -49,8 +49,10 @@ def run_componentize_py(skill_module: str):
         )
         return
     output_file = f"./{skill_module.split('.')[-1]}.wasm"
+    args = ["--all-features"] if unstable else []
     command = [
         "componentize-py",
+        *args,
         "-w",
         "skill",
         "componentize",
@@ -74,10 +76,17 @@ def main():
 
     build_parser = subparsers.add_parser("build", help="Build a skill")
     build_parser.add_argument("skill", help="Python module of the skill to build")
+    build_parser.add_argument(
+        "--unstable",
+        action=argparse.BooleanOptionalAction,
+        help="Enable unstable features for testing. Don't try this at home.",
+        default=False,
+    )
 
     publish_parser = subparsers.add_parser("publish", help="Publish a skill")
     publish_parser.add_argument(
-        "skill", help="Path to the component to publish without the .wasm extension"
+        "skill",
+        help="Path to the component to publish without the .wasm extension",
     )
     publish_parser.add_argument(
         "--tag",
@@ -90,7 +99,7 @@ def main():
     try:
         if args.command == "build":
             setup_wasi_deps()
-            run_componentize_py(args.skill)
+            run_componentize_py(args.skill, args.unstable)
         elif args.command == "publish":
             cli = PhariaSkillCli()
             cli.publish(args.skill, args.tag)
