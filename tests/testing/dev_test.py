@@ -1,5 +1,6 @@
 from dataclasses import asdict
 from typing import Sequence
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -183,3 +184,25 @@ def test_document_metadata(csi: Csi, given_document: DocumentPath):
     metadata = csi._document_metadata(given_document)
     assert isinstance(metadata, list)
     assert metadata[0].get("url") == "https://pharia-kernel.product.pharia.com/"
+
+
+@pytest.mark.kernel
+@patch("requests.Session.post")
+def test_http_error_is_handled(mock_post):
+    # Given an http client that returns a 400 error with a message
+    client = HttpClient()
+    msg = "The specified CSI version is not supported by this Kernel installation yet. Try updating your Kernel version or downgrading your SDK."
+    mock_response = Mock()
+    mock_response.status_code = 400
+    mock_response.text = msg
+    mock_post.return_value = mock_response
+
+    # When doing a HTTP CSI request
+    with pytest.raises(Exception) as e:
+        client.run(
+            "complete",
+            {},
+        )
+
+    # Then the error message is forwarded
+    assert e.value.args[0] == msg
