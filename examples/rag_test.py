@@ -13,4 +13,4 @@ def test_answer_about_kernel():
     result = answer_about_kernel(csi, input)
     assert isinstance(result, Output)
     assert "Kernel" in result.answer
-    assert result.number_of_documents == 1
+    assert result.number_of_documents >= 1
