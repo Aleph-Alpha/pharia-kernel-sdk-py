@@ -170,9 +170,15 @@ class DevCsi(Csi):
     def chat(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatResponse:
+        # we want our external python interface to be compatible with the openai interface
+        # and have lowercase role names. Our internal interfaces uses uppercase role names,
+        # so we do a conversion here.
+        serialized_messages = [
+            {"role": m.role.title(), "content": m.content} for m in messages
+        ]
         data = {
             "model": model,
-            "messages": [asdict(m) for m in messages],
+            "messages": serialized_messages,
             "params": asdict(params),
         }
         output = self.run(self.chat.__name__, data)
