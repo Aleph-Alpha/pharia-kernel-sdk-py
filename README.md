@@ -47,6 +47,29 @@ def run(csi: Csi, input: Input) -> Output:
     return Output(haiku=response.message.content.strip())
 ```
 
+### Chat Interface & Conversational Search
+
+The [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) is emerging as a standard to expose conversational interface of LLMs.
+This API is also offered in the `Csi` with the `chat` method. Leveraging this, you can easily expose your own custom flavoured chat API as a Kernel Skill.
+Note that you can return expose internal datatypes in the interface of you skill as long as they are wrapped in a `Pydantic` model:
+
+```python
+from pharia_skill import Csi, Message, skill
+
+class ChatInterface(BaseModel):
+    message: list[Message]
+
+@skill
+def run(csi: Csi, input: ChatInterface) -> ChatInterface:
+    # Alter the input message in any way to apply your own flavour
+    # You could add a search lookup to allow conversational search, or just 
+    # prepend a custom system prompt
+    input = apply_flavour(input)
+    return csi.chat("llama-3.1-8b-instruct", input.messages)
+```
+
+Now, you can directly point a compatible UI at your skill endpoint and start chatting.
+
 ### Testing
 
 The `@skill` annotation does not modify the annotated function, which allows the test code to inject different variants of CSI.
