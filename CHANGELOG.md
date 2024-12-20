@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.4...v0.5.5) (2024-12-20)
+
+
+### Features
+
+* update internal string representation of role enums to lower case ([ecd85bc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ecd85bcc4e78ee783199d774650dae4ca599f026))
+
+
+### Documentation
+
+* add section about exposing internal types ([57f5dd0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/57f5dd0baff803374e2db4c4da2e90d04af796ea))
+
 ## [0.5.4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.3...v0.5.4) (2024-12-17)
 
 
