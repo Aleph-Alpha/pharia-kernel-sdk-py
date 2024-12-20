@@ -109,9 +109,9 @@ class ChatParams:
 class Role(str, Enum):
     """A role used for a message in a chat."""
 
-    User = "User"
-    Assistant = "Assistant"
-    System = "System"
+    User = "user"
+    Assistant = "assistant"
+    System = "system"
 
 
 @dataclass
