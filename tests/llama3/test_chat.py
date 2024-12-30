@@ -1,0 +1,79 @@
+import pytest
+
+from pharia_skill.llama3 import (
+    BuiltInTool,
+    ChatRequest,
+    ChatResponse,
+    Message,
+)
+
+
+def test_chat_request_to_prompt():
+    system = Message.system("You are a poet who strictly speaks in haikus.")
+    user = Message.user("oat milk")
+
+    chat_request = ChatRequest(messages=[system, user])
+
+    prompt = chat_request.as_prompt()
+
+    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+oat milk<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+"""
+
+    assert prompt == expected
+
+
+def test_start_with_assistant():
+    assistant = Message.assistant("You are a poet who strictly speaks in haikus.")
+    user = Message.user("oat milk")
+
+    with pytest.raises(ValueError):
+        ChatRequest(messages=[assistant, user])
+
+
+def test_end_with_assistant():
+    user = Message.user("oat milk")
+    assistant = Message.assistant("You are a poet who strictly speaks in haikus.")
+
+    with pytest.raises(ValueError):
+        ChatRequest(messages=[user, assistant])
+
+
+def test_system_prompt_is_optional():
+    system = Message.system("You are a poet who strictly speaks in haikus.")
+    user = Message.user("oat milk")
+    assistant = Message.assistant("Hello!")
+    ipython = Message.ipython("print('hello')")
+
+    ChatRequest(messages=[user, assistant, ipython])
+    ChatRequest(messages=[system, user, assistant, ipython])
+
+
+def test_not_alternating_messages():
+    user = Message.user("oat milk")
+    ipython = Message.ipython("print('hello')")
+
+    with pytest.raises(ValueError):
+        ChatRequest(messages=[user, ipython])
+
+
+def test_chat_response_from_reply():
+    reply = "Hello tim!<|eot_id|>"
+    chat_response = ChatResponse.from_reply(reply)
+
+    assert chat_response.message.content == "Hello tim!"
+
+
+def test_chat_response_from_reply_with_tool_call():
+    reply = "<|python_tag|>def is_prime(n):\n   return True<|eom_id|>"
+    chat_response = ChatResponse.from_reply(reply)
+
+    assert chat_response.message.content == ""
+    assert len(chat_response.message.tool_calls) == 1
+    tool_call = chat_response.message.tool_calls[0]
+    assert tool_call.tool_name == BuiltInTool.CodeInterpreter
+    assert tool_call.arguments == {"code": "def is_prime(n):\n   return True"}
