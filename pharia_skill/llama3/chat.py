@@ -1,8 +1,11 @@
 """Take a chat request and convert it to a prompt"""
 
+import json
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
+
+from pydantic import BaseModel
 
 
 class StopReason(str, Enum):
@@ -31,7 +34,29 @@ class BuiltInTool(str, Enum):
 
 @dataclass
 class ToolDefinition:
-    tool_name: BuiltInTool
+    """A tool can either be a built-in tool or a custom tool."""
+
+    tool_name: BuiltInTool | str
+    description: str | None = None
+
+    # the user can define parameters with a custom pydantic model
+    parameters: type[BaseModel] | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        prompt = {
+            "type": "function",
+            "function": {
+                "name": self.tool_name,
+                "description": self.description,
+                "parameters": self.parameters.model_json_schema()
+                if self.parameters is not None
+                else None,
+            },
+        }
+        return prompt
+
+    def as_prompt(self) -> str:
+        return json.dumps(self.as_dict(), indent=4)
 
 
 @dataclass
@@ -152,8 +177,14 @@ class ChatRequest:
 
     def build_in_tools_without_code_interpreter(self) -> list[ToolDefinition]:
         return [
-            tool for tool in self.tools if tool.tool_name != BuiltInTool.CodeInterpreter
+            tool
+            for tool in self.tools
+            if tool.tool_name in list(BuiltInTool)
+            and tool.tool_name != BuiltInTool.CodeInterpreter
         ]
+
+    def user_provided_tools(self) -> list[ToolDefinition]:
+        return [tool for tool in self.tools if tool.tool_name not in list(BuiltInTool)]
 
     @property
     def system(self) -> Message | None:
@@ -169,15 +200,35 @@ class ChatRequest:
             prompt += f"\n{self.messages[0].content}"
         return Message.system(prompt)
 
-    def messages_without_system(self) -> list[Message]:
-        return [message for message in self.messages if message.role != Role.System]
+    @property
+    def user(self) -> Message:
+        provided = (
+            self.messages[0] if self.messages[0].role == Role.User else self.messages[1]
+        )
+        assert provided.role == Role.User, "User message must be provided"
+
+        if not self.user_provided_tools():
+            return provided
+
+        prompt = "Answer the user's question by making use of the following functions if needed.\n\n"
+        for tool in self.user_provided_tools():
+            prompt += f"{tool.as_prompt()}\n"
+
+        prompt += "\nReturn function calls in JSON format."
+        prompt += f"\n\nQuestion: {provided.content}"
+        return Message.user(prompt)
+
+    def messages_without_system_and_first_user(self) -> list[Message]:
+        messages = [message for message in self.messages if message.role != Role.System]
+        return messages[1:]
 
     def as_prompt(self) -> str:
         """Convert the chat request to a prompt"""
         prompt = "<|begin_of_text|>"
         prompt += self.system.as_prompt() if self.system else ""
+        prompt += self.user.as_prompt()
 
-        for message in self.messages_without_system():
+        for message in self.messages_without_system_and_first_user():
             prompt += message.as_prompt()
 
         prompt += Role.Assistant.header
