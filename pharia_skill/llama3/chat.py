@@ -50,7 +50,7 @@ class Message:
     """
 
     role: Role
-    content: str
+    content: str | None
     tool_calls: list[ToolCall] = field(default_factory=list)
 
     @classmethod
@@ -148,14 +148,35 @@ class ChatResponse:
     def from_reply(reply: str) -> "ChatResponse":
         reply = reply.replace(StopReason.EndOfTurn, "")
         reply = reply.replace(StopReason.EndOfMessage, "")
+        reply = reply.strip()
         if reply.startswith("<|python_tag|>"):
-            tool_call = ToolCall(
-                tool_name=BuiltInTool.CodeInterpreter,
-                arguments={"code": reply[len("<|python_tag|>") :].strip()},
-            )
+            stripped = reply[len("<|python_tag|>") :]
+            if stripped.startswith("brave_search.call"):
+                tool_call = ToolCall(
+                    tool_name=BuiltInTool.BraveSearch,
+                    arguments={
+                        "query": stripped.split('brave_search.call(query="')[1]
+                        .split('")')[0]
+                        .strip()
+                    },
+                )
+            elif stripped.startswith("wolfram_alpha.call"):
+                tool_call = ToolCall(
+                    tool_name=BuiltInTool.WolframAlpha,
+                    arguments={
+                        "query": stripped.split('wolfram_alpha.call(query="')[1]
+                        .split('")')[0]
+                        .strip()
+                    },
+                )
+            else:
+                tool_call = ToolCall(
+                    tool_name=BuiltInTool.CodeInterpreter,
+                    arguments={"code": stripped.strip()},
+                )
             message = Message(
                 role=Role.Assistant,
-                content="",
+                content=None,
                 tool_calls=[tool_call],
             )
             return ChatResponse(message=message)
