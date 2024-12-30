@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
 
 
 class StopReason(str, Enum):
@@ -36,8 +35,26 @@ class ToolDefinition:
 
 @dataclass
 class ToolCall:
-    tool_name: BuiltInTool | str
-    arguments: dict[str, Any]
+    tool_name: BuiltInTool
+    arguments: dict[str, str]
+
+    def as_prompt(self) -> str:
+        """Reconstruct the model response from a parsed tool call.
+
+        There should only be one source of truth. As the response is stored in
+        a parsed format, we need to convert it to a prompt string to construct
+        the message history for a later interactions with the model.
+        """
+        if self.tool_name == BuiltInTool.CodeInterpreter:
+            assert "code" in self.arguments
+            return self.arguments["code"]
+        elif self.tool_name == BuiltInTool.BraveSearch:
+            assert "query" in self.arguments
+            return f'brave_search.call(query="{self.arguments["query"]}")'
+        elif self.tool_name == BuiltInTool.WolframAlpha:
+            assert "query" in self.arguments
+            return f'wolfram_alpha.call(query="{self.arguments["query"]}")'
+        raise ValueError(f"Unsupported tool name: {self.tool_name}")
 
 
 @dataclass
@@ -70,6 +87,12 @@ class Message:
         return cls(role=Role.IPython, content=content)
 
     def as_prompt(self) -> str:
+        if self.content is None:
+            assert self.tool_calls, "Tool calls must be present if content is None"
+            assert (
+                len(self.tool_calls) == 1
+            ), "Currently only one tool call is supported"
+            return f"{self.role.header}\n\n<|python_tag|>{self.tool_calls[0].as_prompt()}{StopReason.EndOfMessage.value}"
         return f"{self.role.header}\n\n{self.content}{StopReason.EndOfTurn.value}"
 
 
