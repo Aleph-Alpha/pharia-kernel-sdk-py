@@ -5,6 +5,8 @@ from pharia_skill.llama3 import (
     ChatRequest,
     ChatResponse,
     Message,
+    Role,
+    ToolCall,
     ToolDefinition,
 )
 
@@ -153,3 +155,30 @@ def test_wolfram_alpha_call_is_parsed():
     tool_call = chat_response.message.tool_calls[0]
     assert tool_call.tool_name == BuiltInTool.WolframAlpha
     assert tool_call.arguments == {"query": "solve x^3 - 4x^2 + 6x - 24 = 0"}
+
+
+def test_code_interpreter_tool_call_as_prompt():
+    tool_call = ToolCall(
+        tool_name=BuiltInTool.CodeInterpreter,
+        arguments={"code": "def is_prime(n):\n   return True"},
+    )
+    assert tool_call.as_prompt() == "def is_prime(n):\n   return True"
+
+
+def test_brave_search_tool_call_as_prompt():
+    tool_call = ToolCall(
+        tool_name=BuiltInTool.BraveSearch,
+        arguments={"query": "current weather in Menlo Park, California"},
+    )
+    expected = 'brave_search.call(query="current weather in Menlo Park, California")'
+    assert tool_call.as_prompt() == expected
+
+
+def test_tool_call_message_as_prompt():
+    tool_call = ToolCall(
+        tool_name=BuiltInTool.BraveSearch,
+        arguments={"query": "current weather in Menlo Park, California"},
+    )
+    message = Message(role=Role.Assistant, content=None, tool_calls=[tool_call])
+    expected = '<|start_header_id|>assistant<|end_header_id|>\n\n<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")<|eom_id|>'
+    assert message.as_prompt() == expected
