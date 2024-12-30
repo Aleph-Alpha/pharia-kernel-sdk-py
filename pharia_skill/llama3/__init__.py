@@ -6,6 +6,7 @@ from .chat import (
     Role,
     ToolCall,
     ToolDefinition,
+    ToolResponse,
 )
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "Message",
     "Role",
     "ToolCall",
+    "ToolResponse",
     "BuiltInTool",
     "ToolDefinition",
 ]

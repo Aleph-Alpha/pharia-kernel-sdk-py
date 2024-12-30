@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Literal
 
 
 class StopReason(str, Enum):
@@ -31,6 +32,23 @@ class BuiltInTool(str, Enum):
 @dataclass
 class ToolDefinition:
     tool_name: BuiltInTool
+
+
+@dataclass
+class ToolResponse:
+    tool_name: BuiltInTool
+    status: Literal["success", "failure"]
+    # can be a any str representation of the output, e.g. '{"result": "[]"}'
+    stdout: str | None
+    stderr: str | None
+
+    def as_prompt(self) -> str:
+        prompt = "completed" if self.status == "success" else "failed"
+        if self.stdout:
+            prompt += f"[stdout]{self.stdout}[/stdout]"
+        if self.stderr:
+            prompt += f"[stderr]{self.stderr}[/stderr]"
+        return prompt
 
 
 @dataclass
@@ -68,7 +86,8 @@ class Message:
 
     role: Role
     content: str | None
-    tool_calls: list[ToolCall] = field(default_factory=list)
+    tool_call: ToolCall | None = None
+    tool_response: ToolResponse | None = None
 
     @classmethod
     def user(cls, content: str) -> "Message":
@@ -87,12 +106,15 @@ class Message:
         return cls(role=Role.IPython, content=content)
 
     def as_prompt(self) -> str:
-        if self.content is None:
-            assert self.tool_calls, "Tool calls must be present if content is None"
-            assert (
-                len(self.tool_calls) == 1
-            ), "Currently only one tool call is supported"
-            return f"{self.role.header}\n\n<|python_tag|>{self.tool_calls[0].as_prompt()}{StopReason.EndOfMessage.value}"
+        if self.tool_call is not None:
+            assert self.role == Role.Assistant, "Tool call must be an assistant message"
+            return f"{self.role.header}\n\n<|python_tag|>{self.tool_call.as_prompt()}{StopReason.EndOfMessage.value}"
+
+        if self.tool_response is not None:
+            assert self.role == Role.IPython, "Tool response must be an ipython message"
+            return f"{self.role.header}\n\n{self.tool_response.as_prompt()}{StopReason.EndOfTurn.value}"
+
+        assert self.content is not None, "Content must be present"
         return f"{self.role.header}\n\n{self.content}{StopReason.EndOfTurn.value}"
 
 
@@ -200,7 +222,7 @@ class ChatResponse:
             message = Message(
                 role=Role.Assistant,
                 content=None,
-                tool_calls=[tool_call],
+                tool_call=tool_call,
             )
             return ChatResponse(message=message)
         return ChatResponse(message=Message.assistant(reply))
