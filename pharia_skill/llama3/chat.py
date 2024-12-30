@@ -5,6 +5,11 @@ from enum import Enum
 from typing import Any
 
 
+class StopReason(str, Enum):
+    EndOfTurn = "<|eot_id|>"
+    EndOfMessage = "<|eom_id|>"
+
+
 class Role(str, Enum):
     """A role used for a message in a chat."""
 
@@ -13,9 +18,20 @@ class Role(str, Enum):
     System = "system"
     IPython = "ipython"
 
+    @property
+    def header(self) -> str:
+        return f"<|start_header_id|>{self.value.lower()}<|end_header_id|>"
+
 
 class BuiltInTool(str, Enum):
     CodeInterpreter = "code_interpreter"
+    WolframAlpha = "wolfram_alpha"
+    BraveSearch = "brave_search"
+
+
+@dataclass
+class ToolDefinition:
+    tool_name: BuiltInTool
 
 
 @dataclass
@@ -54,9 +70,7 @@ class Message:
         return cls(role=Role.IPython, content=content)
 
     def as_prompt(self) -> str:
-        header = f"<|start_header_id|>{self.role.value.lower()}<|end_header_id|>"
-        content = f"\n\n{self.content}<|eot_id|>"
-        return header + content
+        return f"{self.role.header}\n\n{self.content}{StopReason.EndOfTurn.value}"
 
 
 def validate_messages(messages: list[Message]) -> None:
@@ -86,20 +100,42 @@ def validate_messages(messages: list[Message]) -> None:
 @dataclass
 class ChatRequest:
     messages: list[Message]
+    tools: list[ToolDefinition] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         validate_messages(self.messages)
 
-    def header(self, role: Role) -> str:
-        return f"<|start_header_id|>{role.value.lower()}<|end_header_id|>"
+    def build_in_tools_without_code_interpreter(self) -> list[ToolDefinition]:
+        return [
+            tool for tool in self.tools if tool.tool_name != BuiltInTool.CodeInterpreter
+        ]
+
+    @property
+    def system(self) -> Message | None:
+        """Augment the system prompt with the tools"""
+        if not self.tools:
+            return self.messages[0] if self.messages[0].role == Role.System else None
+
+        prompt = "Environment: ipython"
+        if tools := self.build_in_tools_without_code_interpreter():
+            prompt += f"\nTools: {', '.join(tool.tool_name for tool in tools)}"
+
+        if self.messages[0].role == Role.System:
+            prompt += f"\n{self.messages[0].content}"
+        return Message.system(prompt)
+
+    def messages_without_system(self) -> list[Message]:
+        return [message for message in self.messages if message.role != Role.System]
 
     def as_prompt(self) -> str:
         """Convert the chat request to a prompt"""
         prompt = "<|begin_of_text|>"
-        for message in self.messages:
+        prompt += self.system.as_prompt() if self.system else ""
+
+        for message in self.messages_without_system():
             prompt += message.as_prompt()
 
-        prompt += self.header(Role.Assistant)
+        prompt += Role.Assistant.header
         prompt += "\n\n"
         return prompt
 
@@ -110,8 +146,8 @@ class ChatResponse:
 
     @staticmethod
     def from_reply(reply: str) -> "ChatResponse":
-        reply = reply.replace("<|eot_id|>", "")
-        reply = reply.replace("<|eom_id|>", "")
+        reply = reply.replace(StopReason.EndOfTurn, "")
+        reply = reply.replace(StopReason.EndOfMessage, "")
         if reply.startswith("<|python_tag|>"):
             tool_call = ToolCall(
                 tool_name=BuiltInTool.CodeInterpreter,
