@@ -8,6 +8,7 @@ from pharia_skill.llama3 import (
     Role,
     ToolCall,
     ToolDefinition,
+    ToolResponse,
 )
 
 
@@ -131,8 +132,8 @@ def test_chat_response_from_reply_with_tool_call():
     chat_response = ChatResponse.from_reply(reply)
 
     assert chat_response.message.content is None
-    assert len(chat_response.message.tool_calls) == 1
-    tool_call = chat_response.message.tool_calls[0]
+    tool_call = chat_response.message.tool_call
+    assert tool_call is not None
     assert tool_call.tool_name == BuiltInTool.CodeInterpreter
     assert tool_call.arguments == {"code": "def is_prime(n):\n   return True"}
 
@@ -141,8 +142,8 @@ def test_brave_search_call_is_parsed():
     reply = '\n\n<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")<|eom_id|>'
     chat_response = ChatResponse.from_reply(reply)
     assert chat_response.message.content is None
-    assert len(chat_response.message.tool_calls) == 1
-    tool_call = chat_response.message.tool_calls[0]
+    tool_call = chat_response.message.tool_call
+    assert tool_call is not None
     assert tool_call.tool_name == BuiltInTool.BraveSearch
     assert tool_call.arguments == {"query": "current weather in Menlo Park, California"}
 
@@ -151,8 +152,8 @@ def test_wolfram_alpha_call_is_parsed():
     reply = '<|python_tag|>wolfram_alpha.call(query="solve x^3 - 4x^2 + 6x - 24 = 0")<|eom_id|>'
     chat_response = ChatResponse.from_reply(reply)
     assert chat_response.message.content is None
-    assert len(chat_response.message.tool_calls) == 1
-    tool_call = chat_response.message.tool_calls[0]
+    tool_call = chat_response.message.tool_call
+    assert tool_call is not None
     assert tool_call.tool_name == BuiltInTool.WolframAlpha
     assert tool_call.arguments == {"query": "solve x^3 - 4x^2 + 6x - 24 = 0"}
 
@@ -179,6 +180,18 @@ def test_tool_call_message_as_prompt():
         tool_name=BuiltInTool.BraveSearch,
         arguments={"query": "current weather in Menlo Park, California"},
     )
-    message = Message(role=Role.Assistant, content=None, tool_calls=[tool_call])
+    message = Message(role=Role.Assistant, content=None, tool_call=tool_call)
     expected = '<|start_header_id|>assistant<|end_header_id|>\n\n<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")<|eom_id|>'
+    assert message.as_prompt() == expected
+
+
+def test_tool_response_message_as_prompt():
+    tool_response = ToolResponse(
+        tool_name=BuiltInTool.BraveSearch,
+        status="success",
+        stdout='{"weather": "sunny", "temperature": "70 degrees"}',
+        stderr=None,
+    )
+    message = Message(role=Role.IPython, content=None, tool_response=tool_response)
+    expected = '<|start_header_id|>ipython<|end_header_id|>\n\ncompleted[stdout]{"weather": "sunny", "temperature": "70 degrees"}[/stdout]<|eot_id|>'
     assert message.as_prompt() == expected
