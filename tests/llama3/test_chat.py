@@ -1,4 +1,5 @@
 import pytest
+from pydantic import BaseModel, Field
 
 from pharia_skill.llama3 import (
     BuiltInTool,
@@ -110,6 +111,18 @@ You are a poet who strictly speaks in haikus.<|eot_id|>"""
     assert chat_request.system.as_prompt() == expected
 
 
+def test_ipython_environment_activated_with_custom_tool():
+    tool = ToolDefinition(tool_name="my-custom-tool")
+    chat_request = ChatRequest(
+        messages=[Message.user("What is the square root of 16?")], tools=[tool]
+    )
+    expected = """<|start_header_id|>system<|end_header_id|>
+
+Environment: ipython<|eot_id|>"""
+    assert chat_request.system is not None
+    assert chat_request.system.as_prompt() == expected
+
+
 def test_build_in_tools_are_listed():
     tools = [
         ToolDefinition(tool_name=BuiltInTool.CodeInterpreter),
@@ -195,3 +208,88 @@ def test_tool_response_message_as_prompt():
     message = Message(role=Role.IPython, content=None, tool_response=tool_response)
     expected = '<|start_header_id|>ipython<|end_header_id|>\n\ncompleted[stdout]{"weather": "sunny", "temperature": "70 degrees"}[/stdout]<|eot_id|>'
     assert message.as_prompt() == expected
+
+
+def test_tool_definition_for_function():
+    class Parameters(BaseModel):
+        repository: str = Field(
+            description="The name of the GitHub repository to get the readme from",
+        )
+        registry: str = "default"
+
+    tool = ToolDefinition(
+        tool_name="get_github_readme",
+        description="Get the readme of a GitHub repository",
+        parameters=Parameters,
+    )
+    expected = {
+        "type": "function",
+        "function": {
+            "name": "get_github_readme",
+            "description": "Get the readme of a GitHub repository",
+            "parameters": {
+                "type": "object",
+                "required": ["repository"],
+                "title": "Parameters",
+                "properties": {
+                    "repository": {
+                        "type": "string",
+                        "description": "The name of the GitHub repository to get the readme from",
+                        "title": "Repository",
+                    },
+                    "registry": {
+                        "type": "string",
+                        "default": "default",
+                        "title": "Registry",
+                    },
+                },
+            },
+        },
+    }
+    assert tool.as_dict() == expected
+
+
+def test_custom_tool_definition_in_user_prompt():
+    class Parameters(BaseModel):
+        repository: str
+
+    tool = ToolDefinition(
+        tool_name="get_github_readme",
+        description="Get the readme of a GitHub repository",
+        parameters=Parameters,
+    )
+    chat_request = ChatRequest(
+        messages=[Message.user("What is the readme of the pharia-kernel repository?")],
+        tools=[tool],
+    )
+    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+Environment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Answer the user's question by making use of the following functions if needed.
+
+{
+    "type": "function",
+    "function": {
+        "name": "get_github_readme",
+        "description": "Get the readme of a GitHub repository",
+        "parameters": {
+            "properties": {
+                "repository": {
+                    "title": "Repository",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "repository"
+            ],
+            "title": "Parameters",
+            "type": "object"
+        }
+    }
+}
+
+Return function calls in JSON format.
+
+Question: What is the readme of the pharia-kernel repository?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
+    assert chat_request.as_prompt() == expected
