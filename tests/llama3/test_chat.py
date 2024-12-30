@@ -5,6 +5,7 @@ from pharia_skill.llama3 import (
     ChatRequest,
     ChatResponse,
     Message,
+    ToolDefinition,
 )
 
 
@@ -77,3 +78,58 @@ def test_chat_response_from_reply_with_tool_call():
     tool_call = chat_response.message.tool_calls[0]
     assert tool_call.tool_name == BuiltInTool.CodeInterpreter
     assert tool_call.arguments == {"code": "def is_prime(n):\n   return True"}
+
+
+def test_system_prompt_without_tools():
+    user = Message.user("What is the square root of 16?")
+    chat_request = ChatRequest(messages=[user])
+    assert chat_request.system is None
+
+
+def test_system_prompt_without_tools_from_user():
+    system = Message.system("You are a poet who strictly speaks in haikus.")
+    user = Message.user("What is the square root of 16?")
+    chat_request = ChatRequest(messages=[system, user])
+    assert chat_request.system is not None
+    assert "poet" in chat_request.system.content
+
+
+def test_system_prompt_with_tools():
+    tool = ToolDefinition(tool_name=BuiltInTool.CodeInterpreter)
+    user = Message.user("What is the square root of 16?")
+    chat_request = ChatRequest(messages=[user], tools=[tool])
+    expected = """<|start_header_id|>system<|end_header_id|>
+
+Environment: ipython<|eot_id|>"""
+    assert chat_request.system is not None
+    assert chat_request.system.as_prompt() == expected
+
+
+def test_system_prompt_merged_from_user_and_tools():
+    system = Message.system("You are a poet who strictly speaks in haikus.")
+    user = Message.user("What is the square root of 16?")
+    tool = ToolDefinition(tool_name=BuiltInTool.CodeInterpreter)
+    chat_request = ChatRequest(messages=[system, user], tools=[tool])
+    expected = """<|start_header_id|>system<|end_header_id|>
+
+Environment: ipython
+You are a poet who strictly speaks in haikus.<|eot_id|>"""
+    assert chat_request.system is not None
+    assert chat_request.system.as_prompt() == expected
+
+
+def test_build_in_tools_are_listed():
+    tools = [
+        ToolDefinition(tool_name=BuiltInTool.CodeInterpreter),
+        ToolDefinition(tool_name=BuiltInTool.BraveSearch),
+        ToolDefinition(tool_name=BuiltInTool.WolframAlpha),
+    ]
+    chat_request = ChatRequest(
+        messages=[Message.user("What is the square root of 16?")], tools=tools
+    )
+    assert chat_request.system is not None
+    expected = """<|start_header_id|>system<|end_header_id|>
+
+Environment: ipython
+Tools: brave_search, wolfram_alpha<|eot_id|>"""
+    assert chat_request.system.as_prompt() == expected
