@@ -88,7 +88,7 @@ def test_system_prompt_without_tools_from_user():
 
 
 def test_system_prompt_with_tools():
-    tool = ToolDefinition(tool_name=BuiltInTool.CodeInterpreter)
+    tool = ToolDefinition(name=BuiltInTool.CodeInterpreter)
     user = Message.user("What is the square root of 16?")
     chat_request = ChatRequest(messages=[user], tools=[tool])
     expected = """<|start_header_id|>system<|end_header_id|>
@@ -101,7 +101,7 @@ Environment: ipython<|eot_id|>"""
 def test_system_prompt_merged_from_user_and_tools():
     system = Message.system("You are a poet who strictly speaks in haikus.")
     user = Message.user("What is the square root of 16?")
-    tool = ToolDefinition(tool_name=BuiltInTool.CodeInterpreter)
+    tool = ToolDefinition(name=BuiltInTool.CodeInterpreter)
     chat_request = ChatRequest(messages=[system, user], tools=[tool])
     expected = """<|start_header_id|>system<|end_header_id|>
 
@@ -112,7 +112,7 @@ You are a poet who strictly speaks in haikus.<|eot_id|>"""
 
 
 def test_ipython_environment_activated_with_custom_tool():
-    tool = ToolDefinition(tool_name="my-custom-tool")
+    tool = ToolDefinition(name="my-custom-tool")
     chat_request = ChatRequest(
         messages=[Message.user("What is the square root of 16?")], tools=[tool]
     )
@@ -125,9 +125,9 @@ Environment: ipython<|eot_id|>"""
 
 def test_built_in_tools_are_listed():
     tools = [
-        ToolDefinition(tool_name=BuiltInTool.CodeInterpreter),
-        ToolDefinition(tool_name=BuiltInTool.BraveSearch),
-        ToolDefinition(tool_name=BuiltInTool.WolframAlpha),
+        ToolDefinition(name=BuiltInTool.CodeInterpreter),
+        ToolDefinition(name=BuiltInTool.BraveSearch),
+        ToolDefinition(name=BuiltInTool.WolframAlpha),
     ]
     chat_request = ChatRequest(
         messages=[Message.user("What is the square root of 16?")], tools=tools
@@ -218,7 +218,7 @@ def test_tool_definition_for_function():
         registry: str = "default"
 
     tool = ToolDefinition(
-        tool_name="get_github_readme",
+        name="get_github_readme",
         description="Get the readme of a GitHub repository",
         parameters=Parameters,
     )
@@ -251,7 +251,7 @@ def test_custom_tool_definition_in_user_prompt():
         repository: str
 
     tool = ToolDefinition(
-        tool_name="get_github_readme",
+        name="get_github_readme",
         description="Get the readme of a GitHub repository",
         parameters=Parameters,
     )
@@ -299,7 +299,7 @@ def test_parse_function_call_from_response():
 
 
 def test_function_call_serialization():
-    response = """{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
+    response = '{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}'
 
     tool_call = ChatResponse.json_tool_call(response)
     assert tool_call is not None

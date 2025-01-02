@@ -36,7 +36,7 @@ class BuiltInTool(str, Enum):
 class ToolDefinition:
     """A tool can either be a built-in tool or a custom tool."""
 
-    tool_name: BuiltInTool | str
+    name: BuiltInTool | str
     description: str | None = None
 
     # the user can define parameters with a custom pydantic model
@@ -66,7 +66,7 @@ class ToolDefinition:
         prompt = {
             "type": "function",
             "function": {
-                "name": self.tool_name,
+                "name": self.name,
                 "description": self.description,
                 "parameters": parameters,
             },
@@ -203,12 +203,12 @@ class ChatRequest:
         return [
             tool
             for tool in self.tools
-            if tool.tool_name in list(BuiltInTool)
-            and tool.tool_name != BuiltInTool.CodeInterpreter
+            if tool.name in list(BuiltInTool)
+            and tool.name != BuiltInTool.CodeInterpreter
         ]
 
     def user_provided_tools(self) -> list[ToolDefinition]:
-        return [tool for tool in self.tools if tool.tool_name not in list(BuiltInTool)]
+        return [tool for tool in self.tools if tool.name not in list(BuiltInTool)]
 
     @property
     def system(self) -> Message | None:
@@ -218,7 +218,7 @@ class ChatRequest:
 
         prompt = "Environment: ipython"
         if tools := self.built_in_tools_without_code_interpreter():
-            prompt += f"\nTools: {', '.join(tool.tool_name for tool in tools)}"
+            prompt += f"\nTools: {', '.join(tool.name for tool in tools)}"
 
         if self.messages[0].role == Role.System:
             prompt += f"\n{self.messages[0].content}"
