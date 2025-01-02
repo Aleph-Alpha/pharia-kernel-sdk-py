@@ -175,7 +175,7 @@ class ChatRequest:
     def __post_init__(self) -> None:
         validate_messages(self.messages)
 
-    def build_in_tools_without_code_interpreter(self) -> list[ToolDefinition]:
+    def built_in_tools_without_code_interpreter(self) -> list[ToolDefinition]:
         return [
             tool
             for tool in self.tools
@@ -193,7 +193,7 @@ class ChatRequest:
             return self.messages[0] if self.messages[0].role == Role.System else None
 
         prompt = "Environment: ipython"
-        if tools := self.build_in_tools_without_code_interpreter():
+        if tools := self.built_in_tools_without_code_interpreter():
             prompt += f"\nTools: {', '.join(tool.tool_name for tool in tools)}"
 
         if self.messages[0].role == Role.System:
@@ -241,39 +241,57 @@ class ChatResponse:
     message: Message
 
     @staticmethod
-    def from_reply(reply: str) -> "ChatResponse":
+    def json_tool_call(response: str) -> ToolCall | None:
+        try:
+            data = json.loads(response)
+            name = data["name"]
+            return ToolCall(name, data["parameters"])
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+        return None
+
+    @staticmethod
+    def built_in_tool_call(response: str) -> ToolCall:
+        """Parse a tool call from a message that started with the Python Tag."""
+        if response.startswith("brave_search.call"):
+            return ToolCall(
+                tool_name=BuiltInTool.BraveSearch,
+                arguments={
+                    "query": response.split('brave_search.call(query="')[1]
+                    .split('")')[0]
+                    .strip()
+                },
+            )
+        elif response.startswith("wolfram_alpha.call"):
+            return ToolCall(
+                tool_name=BuiltInTool.WolframAlpha,
+                arguments={
+                    "query": response.split('wolfram_alpha.call(query="')[1]
+                    .split('")')[0]
+                    .strip()
+                },
+            )
+        else:
+            return ToolCall(
+                tool_name=BuiltInTool.CodeInterpreter,
+                arguments={"code": response.strip()},
+            )
+
+    @classmethod
+    def from_reply(cls, reply: str) -> "ChatResponse":
         reply = reply.replace(StopReason.EndOfTurn, "")
         reply = reply.replace(StopReason.EndOfMessage, "")
         reply = reply.strip()
-        if reply.startswith("<|python_tag|>"):
-            stripped = reply[len("<|python_tag|>") :]
-            if stripped.startswith("brave_search.call"):
-                tool_call = ToolCall(
-                    tool_name=BuiltInTool.BraveSearch,
-                    arguments={
-                        "query": stripped.split('brave_search.call(query="')[1]
-                        .split('")')[0]
-                        .strip()
-                    },
-                )
-            elif stripped.startswith("wolfram_alpha.call"):
-                tool_call = ToolCall(
-                    tool_name=BuiltInTool.WolframAlpha,
-                    arguments={
-                        "query": stripped.split('wolfram_alpha.call(query="')[1]
-                        .split('")')[0]
-                        .strip()
-                    },
-                )
-            else:
-                tool_call = ToolCall(
-                    tool_name=BuiltInTool.CodeInterpreter,
-                    arguments={"code": stripped.strip()},
-                )
-            message = Message(
-                role=Role.Assistant,
-                content=None,
-                tool_call=tool_call,
-            )
-            return ChatResponse(message=message)
-        return ChatResponse(message=Message.assistant(reply))
+        if not reply.startswith("<|python_tag|>"):
+            return ChatResponse(message=Message.assistant(reply))
+
+        stripped = reply[len("<|python_tag|>") :]
+        tool_call = cls.json_tool_call(stripped) or cls.built_in_tool_call(stripped)
+
+        message = Message(
+            role=Role.Assistant,
+            content=None,
+            tool_call=tool_call,
+        )
+        return ChatResponse(message=message)

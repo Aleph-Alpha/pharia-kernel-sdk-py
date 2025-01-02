@@ -123,7 +123,7 @@ Environment: ipython<|eot_id|>"""
     assert chat_request.system.as_prompt() == expected
 
 
-def test_build_in_tools_are_listed():
+def test_built_in_tools_are_listed():
     tools = [
         ToolDefinition(tool_name=BuiltInTool.CodeInterpreter),
         ToolDefinition(tool_name=BuiltInTool.BraveSearch),
@@ -293,3 +293,11 @@ Return function calls in JSON format.
 
 Question: What is the readme of the pharia-kernel repository?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
     assert chat_request.as_prompt() == expected
+
+
+def test_parse_function_call_from_response():
+    response = """{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
+
+    tool_call = ChatResponse.json_tool_call(response)
+    assert tool_call is not None
+    assert tool_call.arguments["repository"] == "pharia-kernel"
