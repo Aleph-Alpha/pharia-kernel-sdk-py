@@ -96,8 +96,13 @@ class ToolResponse:
 
 @dataclass
 class ToolCall:
-    tool_name: BuiltInTool
+    tool_name: BuiltInTool | str
     arguments: dict[str, str]
+
+    def as_json(self) -> str:
+        return json.dumps(
+            {"type": "function", "name": self.tool_name, "parameters": self.arguments}
+        )
 
     def as_prompt(self) -> str:
         """Reconstruct the model response from a parsed tool call.
@@ -115,7 +120,8 @@ class ToolCall:
         elif self.tool_name == BuiltInTool.WolframAlpha:
             assert "query" in self.arguments
             return f'wolfram_alpha.call(query="{self.arguments["query"]}")'
-        raise ValueError(f"Unsupported tool name: {self.tool_name}")
+        else:
+            return self.as_json()
 
 
 @dataclass
