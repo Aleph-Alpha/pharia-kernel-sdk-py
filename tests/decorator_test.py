@@ -1,5 +1,5 @@
 import pytest
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel, Field, RootModel
 
 from pharia_skill import CompletionParams, Csi, skill
 from pharia_skill.wit.exports.skill_handler import Error_InvalidInput
@@ -150,13 +150,25 @@ def test_skill_with_plain_string_output():
 
 
 def test_skill_pydantic_input_schema():
+    class Input(BaseModel):
+        topic: str = Field(
+            ..., description="The topic of the haiku", examples=["Banana", "Oat milk"]
+        )
+
     @skill
     def foo(csi: Csi, input: Input) -> Output:
         return Output(message=input.topic)
 
     handler = foo.__globals__["SkillHandler"]()
     assert handler._input_schema() == {
-        "properties": {"topic": {"title": "Topic", "type": "string"}},
+        "properties": {
+            "topic": {
+                "description": "The topic of the haiku",
+                "examples": ["Banana", "Oat milk"],
+                "title": "Topic",
+                "type": "string",
+            }
+        },
         "required": ["topic"],
         "title": "Input",
         "type": "object",
