@@ -194,3 +194,25 @@ def test_skill_with_csi_call_raises_not_implemented():
         handler.run(b'{"topic": "llama"}')
 
     assert "NotImplementedError" in excinfo.value.value.value
+
+
+def test_skill_can_list_models():
+    llama = "llama-3.3-70b"
+
+    @skill(models=[llama])
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message="llama")
+
+    handler = foo.__globals__["SkillHandler"]()
+    assert handler._models() == [llama]
+
+
+def test_skill_with_description():
+    llama = "llama-3.3-70b"
+
+    @skill(models=[llama], description="A skill that does nothing")
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message="llama")
+
+    handler = foo.__globals__["SkillHandler"]()
+    assert handler._description() == "A skill that does nothing"
