@@ -42,15 +42,33 @@ class ToolDefinition:
     # the user can define parameters with a custom pydantic model
     parameters: type[BaseModel] | None = None
 
+    @classmethod
+    def _recursive_purge_title(cls, data: dict[str, Any]) -> None:
+        """Remove the title field from a dictionary recursively.
+
+        The title is automatically created based on the name of the pydantic model,
+        but it is not shown in examples of the llama model card, hence we skip it.
+        See https://github.com/pydantic/pydantic/discussions/8504 for more detail.
+        """
+        if isinstance(data, dict):
+            for key in list(data.keys()):
+                if key == "title" and "type" in data.keys():
+                    del data[key]
+                else:
+                    cls._recursive_purge_title(data[key])
+
     def as_dict(self) -> dict[str, Any]:
+        if self.parameters:
+            parameters = self.parameters.model_json_schema()
+            self._recursive_purge_title(parameters)
+        else:
+            parameters = {}
         prompt = {
             "type": "function",
             "function": {
                 "name": self.tool_name,
                 "description": self.description,
-                "parameters": self.parameters.model_json_schema()
-                if self.parameters is not None
-                else None,
+                "parameters": parameters,
             },
         }
         return prompt

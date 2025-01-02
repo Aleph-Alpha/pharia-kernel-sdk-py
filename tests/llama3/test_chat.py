@@ -230,17 +230,14 @@ def test_tool_definition_for_function():
             "parameters": {
                 "type": "object",
                 "required": ["repository"],
-                "title": "Parameters",
                 "properties": {
                     "repository": {
                         "type": "string",
                         "description": "The name of the GitHub repository to get the readme from",
-                        "title": "Repository",
                     },
                     "registry": {
                         "type": "string",
                         "default": "default",
-                        "title": "Registry",
                     },
                 },
             },
@@ -276,14 +273,12 @@ Answer the user's question by making use of the following functions if needed.
         "parameters": {
             "properties": {
                 "repository": {
-                    "title": "Repository",
                     "type": "string"
                 }
             },
             "required": [
                 "repository"
             ],
-            "title": "Parameters",
             "type": "object"
         }
     }
