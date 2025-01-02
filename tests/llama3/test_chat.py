@@ -296,3 +296,11 @@ def test_parse_function_call_from_response():
     tool_call = ChatResponse.json_tool_call(response)
     assert tool_call is not None
     assert tool_call.arguments["repository"] == "pharia-kernel"
+
+
+def test_function_call_serialization():
+    response = """{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
+
+    tool_call = ChatResponse.json_tool_call(response)
+    assert tool_call is not None
+    assert tool_call.as_json() == response
