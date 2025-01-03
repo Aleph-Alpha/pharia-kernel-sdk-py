@@ -15,5 +15,6 @@ mkdir -p skills
   -e PHARIA_AI_TOKEN=$PHARIA_AI_TOKEN \
   -e NAMESPACE_UPDATE_INTERVAL=300ms \
   -e LOG_LEVEL="pharia_kernel=debug" \
+  -e NAMESPACES__DEV__DIRECTORY="skills" \
   -p 8081:8081\
   pharia-kernel | cat) &
