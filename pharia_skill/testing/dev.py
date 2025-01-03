@@ -63,7 +63,13 @@ class HttpClient(CsiClient):
         # The kernel gives out nice error messages in case of a version mismatch.
         # For 400 errors, forward the plain text error message.
         if response.status_code == 400:
-            raise Exception(response.text)
+            try:
+                error = response.json()
+            except requests.JSONDecodeError:
+                error = response.text
+            raise Exception(error)
+
+        # do not show error message for all other errors
         response.raise_for_status()
         return response.json()
 

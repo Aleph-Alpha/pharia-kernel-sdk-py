@@ -1,8 +1,10 @@
+import json
 from dataclasses import asdict
 from typing import Sequence
 from unittest.mock import Mock, patch
 
 import pytest
+import requests
 
 from pharia_skill import (
     ChatParams,
@@ -188,21 +190,39 @@ def test_document_metadata(csi: Csi, given_document: DocumentPath):
 
 @pytest.mark.kernel
 @patch("requests.Session.post")
-def test_http_error_is_handled(mock_post):
-    # Given an http client that returns a 400 error with a message
+def test_text_error_response_used_on_json_decode_error(mock_post):
+    # Given an http client that returns a 400 error that is not json
     client = HttpClient()
-    msg = "The specified CSI version is not supported by this Kernel installation yet. Try updating your Kernel version or downgrading your SDK."
+    response = {"error": "csi-version"}
     mock_response = Mock()
     mock_response.status_code = 400
-    mock_response.text = msg
+    mock_response.json.side_effect = requests.JSONDecodeError("msg", "msg", 0)
+    mock_response.text = json.dumps(response)
     mock_post.return_value = mock_response
 
     # When doing a HTTP CSI request
     with pytest.raises(Exception) as e:
-        client.run(
-            "complete",
-            {},
-        )
+        client.run("complete", {})
 
     # Then the error message is forwarded
-    assert e.value.args[0] == msg
+    assert e.value.args[0] == json.dumps(response)
+
+
+@pytest.mark.kernel
+@patch("requests.Session.post")
+def test_json_error_response_is_used(mock_post):
+    # Given a http client that returns a 400 error with a json response
+    client = HttpClient()
+    response = {"error": "csi-version"}
+    mock_response = Mock()
+    mock_response.status_code = 400
+    mock_response.json.return_value = response
+    mock_response.text = json.dumps(response)
+    mock_post.return_value = mock_response
+
+    # When doing a HTTP CSI request
+    with pytest.raises(Exception) as e:
+        client.run("complete", {})
+
+    # Then the JSON is decoded in the error message
+    assert e.value.args[0] == response
