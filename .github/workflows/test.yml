@@ -79,7 +79,7 @@ jobs:
         shell: bash
         run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Run Pharia Kernel
-        run: sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $PHARIA_AI_TOKEN
+        run: sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN
       - name: Run kernel tests
         run: poetry run pytest -m 'kernel'
         env:
@@ -126,7 +126,7 @@ jobs:
       - name: Test skill execution on ubuntu only
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN $PHARIA_AI_TOKEN
+          sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN
           poetry run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
           poetry run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
           poetry run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
