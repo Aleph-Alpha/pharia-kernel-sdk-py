@@ -11,7 +11,7 @@ authors = [
     "Jia Ho Lee <jiaho.lee@aleph-alpha.com>",
 ]
 readme = "README.md"
-packages = [{ include = "pharia_skill" }]
+packages = [{ include = "pharia_skill", format = "sdist" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
