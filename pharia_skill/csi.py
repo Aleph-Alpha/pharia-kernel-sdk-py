@@ -31,14 +31,15 @@ class CompletionParams:
     """Completion request parameters.
 
     Attributes:
+        return_special_tokens (bool, optional, default False): Whether to include special tokens (e.g. <|endoftext|>, <|python_tag|>) in the completion response.
         max-tokens (int, optional, default None): The maximum tokens that should be inferred. Note, the backing implementation may return less tokens due to other stop reasons.
         temperature (float, optional, default None): The randomness with which the next token is selected.
         top-k (int, optional, default None): The number of possible next tokens the model will choose from.
         top-p (float, optional, default None): The probability total of next tokens the model will choose from.
         stop (list(str), optional, default []): A list of sequences that, if encountered, the API will stop generating further tokens.
-
     """
 
+    return_special_tokens: bool = False
     max_tokens: int | None = None
     temperature: float | None = None
     top_k: int | None = None

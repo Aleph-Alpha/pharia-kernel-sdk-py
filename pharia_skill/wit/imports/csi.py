@@ -135,5 +135,9 @@ def complete_all(requests: List[CompletionRequest]) -> List[Completion]:
 def search(index_path: IndexPath, query: str, max_results: int, min_score: Optional[float]) -> List[SearchResult]:
     raise NotImplementedError
 
+def complete_return_special_tokens(model: str, prompt: str, params: CompletionParams) -> Completion:
+    raise NotImplementedError
+
 def document_metadata(document_path: DocumentPath) -> Optional[bytes]:
     raise NotImplementedError
+
