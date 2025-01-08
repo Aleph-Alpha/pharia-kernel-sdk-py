@@ -13,6 +13,7 @@ class Input(RootModel[str]):
 
 class Output(BaseModel):
     completion: str
+    completion_special_tokens: str
     chat: str
 
 
@@ -31,7 +32,10 @@ def haiku(csi: Csi, input: Input) -> Output:
     chat_completion = csi.chat(
         "llama-3.1-8b-instruct", [msg], ChatParams(max_tokens=64)
     )
+    params = CompletionParams(max_tokens=64, return_special_tokens=True)
+    completion_special_tokens = csi.complete("llama-3.1-8b-instruct", prompt, params)
     return Output(
         completion=completion.text.strip(),
+        completion_special_tokens=completion_special_tokens.text.strip(),
         chat=chat_completion.message.content.strip(),
     )

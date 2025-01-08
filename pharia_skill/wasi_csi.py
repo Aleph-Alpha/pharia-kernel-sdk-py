@@ -171,7 +171,12 @@ def language_from_wit(language: WitLanguage) -> Language:
 class WasiCsi(Csi):
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         wit_completion_params = completion_params_wit(params)
-        completion = wit_csi.complete(model, prompt, wit_completion_params)
+        if params.return_special_tokens:
+            completion = wit_csi.complete_return_special_tokens(
+                model, prompt, wit_completion_params
+            )
+        else:
+            completion = wit_csi.complete(model, prompt, wit_completion_params)
         return completion_from_wit(completion)
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:

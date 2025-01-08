@@ -1,4 +1,4 @@
-package pharia:skill@0.2.8;
+package pharia:skill@0.2.9;
 
 @since(version = 0.1.0)
 world skill {
@@ -173,6 +173,9 @@ interface csi {
 
     @since(version = 0.2.6)
     search: func(index-path: index-path, query: string, max-results: u32, min-score: option<f64>) -> list<search-result>;
+
+    @since(version = 0.2.9)
+    complete-return-special-tokens: func(model: string, prompt: string, params: completion-params) -> completion;
 
     @unstable(feature=document-metadata)
     document-metadata: func(document-path: document-path) -> option<list<u8>>;
