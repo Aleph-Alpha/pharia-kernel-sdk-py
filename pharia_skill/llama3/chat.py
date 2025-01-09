@@ -13,7 +13,7 @@ def chat(
     parsed from the response. The resulting message will not have a content,
     but a `tool_call` attribute.
     """
-    prompt = request.as_prompt()
+    prompt = request.render()
     completion_params = CompletionParams(
         return_special_tokens=True,
         max_tokens=params.max_tokens,
