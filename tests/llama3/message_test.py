@@ -290,6 +290,23 @@ Question: What is the readme of the pharia-kernel repository?<|eot_id|><|start_h
     assert chat_request.as_prompt() == expected
 
 
+def test_tool_call_from_chat_response_without_python_tag():
+    """Llama3.3 does not prefix json tool calls with the python tag."""
+    text = """{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
+    response = ChatResponse.from_text(text)
+    assert response.message.content is None
+    assert response.message.tool_call is not None
+    assert response.message.tool_call.tool_name == "get_github_readme"
+
+
+def test_tool_call_from_chat_response_with_python_tag():
+    text = """\n\n<|python_tag|>{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
+    response = ChatResponse.from_text(text)
+    assert response.message.content is None
+    assert response.message.tool_call is not None
+    assert response.message.tool_call.tool_name == "get_github_readme"
+
+
 def test_parse_function_call_from_response():
     response = """{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
 
