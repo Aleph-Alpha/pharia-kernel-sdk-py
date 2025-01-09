@@ -7,6 +7,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
+# indicate that the response contains a tool call
+PythonTag = "<|python_tag|>"
+
 
 class StopReason(str, Enum):
     EndOfTurn = "<|eot_id|>"
@@ -82,15 +85,14 @@ class ToolResponse:
     tool_name: BuiltInTool | str
     status: Literal["success", "failure"]
     # can be a any str representation of the output, e.g. '{"result": "[]"}'
-    stdout: str | None
-    stderr: str | None
+    content: str
 
     def as_prompt(self) -> str:
         prompt = "completed" if self.status == "success" else "failed"
-        if self.stdout:
-            prompt += f"[stdout]{self.stdout}[/stdout]"
-        if self.stderr:
-            prompt += f"[stderr]{self.stderr}[/stderr]"
+        if self.status == "success":
+            prompt += f"[stdout]{self.content}[/stdout]"
+        else:
+            prompt += f"[stderr]{self.content}[/stderr]"
         return prompt
 
 
@@ -161,7 +163,7 @@ class Message:
     def as_prompt(self) -> str:
         if self.tool_call is not None:
             assert self.role == Role.Assistant, "Tool call must be an assistant message"
-            return f"{self.role.header}\n\n<|python_tag|>{self.tool_call.as_prompt()}{StopReason.EndOfMessage.value}"
+            return f"{self.role.header}\n\n{PythonTag}{self.tool_call.as_prompt()}{StopReason.EndOfMessage.value}"
 
         if self.tool_response is not None:
             assert self.role == Role.IPython, "Tool response must be an ipython message"
@@ -311,8 +313,8 @@ class ChatResponse:
         text = text.replace(StopReason.EndOfTurn, "")
         text = text.replace(StopReason.EndOfMessage, "")
         text = text.strip()
-        python_tag = text.startswith("<|python_tag|>")
-        text = text.replace("<|python_tag|>", "")
+        python_tag = text.startswith(PythonTag)
+        text = text.replace(PythonTag, "")
 
         if python_tag:
             tool_call: ToolCall | None = cls.json_tool_call(
@@ -323,6 +325,8 @@ class ChatResponse:
             # llama3.3 does not. Therefore, we always try to match a function call from the response,
             # even if the python tag is not included. Built in tools are always prefixed with the
             # python tag, even by llama3.3.
+
+            # this contradicts https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/prompt_format.md#model-response-format-5
             tool_call = cls.json_tool_call(text)
         if tool_call is None:
             return ChatResponse(message=Message.assistant(text))
