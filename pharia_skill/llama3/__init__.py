@@ -1,4 +1,5 @@
-from .chat import (
+from .chat import chat
+from .message import (
     BuiltInTool,
     ChatRequest,
     ChatResponse,
@@ -14,6 +15,7 @@ __all__ = [
     "ChatResponse",
     "Message",
     "Role",
+    "chat",
     "ToolCall",
     "ToolResponse",
     "BuiltInTool",
