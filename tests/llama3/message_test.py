@@ -19,7 +19,7 @@ def test_chat_request_to_prompt():
 
     chat_request = ChatRequest(messages=[system, user])
 
-    prompt = chat_request.as_prompt()
+    prompt = chat_request.render()
 
     expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
@@ -84,7 +84,7 @@ def test_system_prompt_without_tools_from_user():
     user = Message.user("What is the square root of 16?")
     chat_request = ChatRequest(messages=[system, user])
     assert chat_request.system is not None
-    assert "poet" in chat_request.system.as_prompt()
+    assert "poet" in chat_request.system.render()
 
 
 def test_system_prompt_with_tools():
@@ -95,7 +95,7 @@ def test_system_prompt_with_tools():
 
 Environment: ipython<|eot_id|>"""
     assert chat_request.system is not None
-    assert chat_request.system.as_prompt() == expected
+    assert chat_request.system.render() == expected
 
 
 def test_system_prompt_merged_from_user_and_tools():
@@ -108,7 +108,7 @@ def test_system_prompt_merged_from_user_and_tools():
 Environment: ipython
 You are a poet who strictly speaks in haikus.<|eot_id|>"""
     assert chat_request.system is not None
-    assert chat_request.system.as_prompt() == expected
+    assert chat_request.system.render() == expected
 
 
 def test_ipython_environment_activated_with_custom_tool():
@@ -120,7 +120,7 @@ def test_ipython_environment_activated_with_custom_tool():
 
 Environment: ipython<|eot_id|>"""
     assert chat_request.system is not None
-    assert chat_request.system.as_prompt() == expected
+    assert chat_request.system.render() == expected
 
 
 def test_built_in_tools_are_listed():
@@ -137,7 +137,7 @@ def test_built_in_tools_are_listed():
 
 Environment: ipython
 Tools: brave_search, wolfram_alpha<|eot_id|>"""
-    assert chat_request.system.as_prompt() == expected
+    assert chat_request.system.render() == expected
 
 
 def test_chat_response_from_reply_with_tool_call():
@@ -171,34 +171,34 @@ def test_wolfram_alpha_call_is_parsed():
     assert tool_call.arguments == {"query": "solve x^3 - 4x^2 + 6x - 24 = 0"}
 
 
-def test_code_interpreter_tool_call_as_prompt():
+def test_code_interpreter_tool_call_render():
     tool_call = ToolCall(
         tool_name=BuiltInTool.CodeInterpreter,
         arguments={"code": "def is_prime(n):\n   return True"},
     )
-    assert tool_call.as_prompt() == "def is_prime(n):\n   return True"
+    assert tool_call.render() == "def is_prime(n):\n   return True"
 
 
-def test_brave_search_tool_call_as_prompt():
+def test_brave_search_tool_call_render():
     tool_call = ToolCall(
         tool_name=BuiltInTool.BraveSearch,
         arguments={"query": "current weather in Menlo Park, California"},
     )
     expected = 'brave_search.call(query="current weather in Menlo Park, California")'
-    assert tool_call.as_prompt() == expected
+    assert tool_call.render() == expected
 
 
-def test_tool_call_message_as_prompt():
+def test_tool_call_message_render():
     tool_call = ToolCall(
         tool_name=BuiltInTool.BraveSearch,
         arguments={"query": "current weather in Menlo Park, California"},
     )
     message = Message(role=Role.Assistant, content=None, tool_call=tool_call)
     expected = '<|start_header_id|>assistant<|end_header_id|>\n\n<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")<|eom_id|>'
-    assert message.as_prompt() == expected
+    assert message.render() == expected
 
 
-def test_tool_response_message_as_prompt():
+def test_tool_response_message_render():
     tool_response = ToolResponse(
         tool_name=BuiltInTool.BraveSearch,
         status="success",
@@ -206,10 +206,10 @@ def test_tool_response_message_as_prompt():
     )
     message = Message(role=Role.IPython, content=None, tool_response=tool_response)
     expected = '<|start_header_id|>ipython<|end_header_id|>\n\ncompleted[stdout]{"weather": "sunny", "temperature": "70 degrees"}[/stdout]<|eot_id|>'
-    assert message.as_prompt() == expected
+    assert message.render() == expected
 
 
-def test_failed_tool_response_message_as_prompt():
+def test_failed_tool_response_message_render():
     tool_response = ToolResponse(
         tool_name=BuiltInTool.BraveSearch,
         status="failure",
@@ -217,7 +217,7 @@ def test_failed_tool_response_message_as_prompt():
     )
     message = Message(role=Role.IPython, content=None, tool_response=tool_response)
     expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"
-    assert message.as_prompt() == expected
+    assert message.render() == expected
 
 
 def test_tool_definition_for_function():
@@ -297,7 +297,7 @@ Answer the user's question by making use of the following functions if needed.
 Return function calls in JSON format.
 
 Question: What is the readme of the pharia-kernel repository?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
-    assert chat_request.as_prompt() == expected
+    assert chat_request.render() == expected
 
 
 def test_tool_call_from_chat_response_without_python_tag():
