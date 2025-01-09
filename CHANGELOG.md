@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.6...v0.5.7) (2025-01-09)
+
+
+### Bug Fixes
+
+* specify sdist and wheel for poetry build to succeed ([2700a87](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2700a870329275ccdf4ecbf726d91df191462475))
+
 ## [0.5.6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.5...v0.5.6) (2025-01-09)
 
 
