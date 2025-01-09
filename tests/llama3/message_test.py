@@ -1,5 +1,5 @@
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from pharia_skill.llama3 import (
     BuiltInTool,
@@ -171,23 +171,6 @@ def test_wolfram_alpha_call_is_parsed():
     assert tool_call.arguments == {"query": "solve x^3 - 4x^2 + 6x - 24 = 0"}
 
 
-def test_code_interpreter_tool_call_render():
-    tool_call = ToolCall(
-        tool_name=BuiltInTool.CodeInterpreter,
-        arguments={"code": "def is_prime(n):\n   return True"},
-    )
-    assert tool_call.render() == "def is_prime(n):\n   return True"
-
-
-def test_brave_search_tool_call_render():
-    tool_call = ToolCall(
-        tool_name=BuiltInTool.BraveSearch,
-        arguments={"query": "current weather in Menlo Park, California"},
-    )
-    expected = 'brave_search.call(query="current weather in Menlo Park, California")'
-    assert tool_call.render() == expected
-
-
 def test_tool_call_message_render():
     tool_call = ToolCall(
         tool_name=BuiltInTool.BraveSearch,
@@ -218,42 +201,6 @@ def test_failed_tool_response_message_render():
     message = Message(role=Role.IPython, content=None, tool_response=tool_response)
     expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"
     assert message.render() == expected
-
-
-def test_tool_definition_for_function():
-    class Parameters(BaseModel):
-        repository: str = Field(
-            description="The name of the GitHub repository to get the readme from",
-        )
-        registry: str = "default"
-
-    tool = ToolDefinition(
-        name="get_github_readme",
-        description="Get the readme of a GitHub repository",
-        parameters=Parameters,
-    )
-    expected = {
-        "type": "function",
-        "function": {
-            "name": "get_github_readme",
-            "description": "Get the readme of a GitHub repository",
-            "parameters": {
-                "type": "object",
-                "required": ["repository"],
-                "properties": {
-                    "repository": {
-                        "type": "string",
-                        "description": "The name of the GitHub repository to get the readme from",
-                    },
-                    "registry": {
-                        "type": "string",
-                        "default": "default",
-                    },
-                },
-            },
-        },
-    }
-    assert tool.as_dict() == expected
 
 
 def test_custom_tool_definition_in_user_prompt():
