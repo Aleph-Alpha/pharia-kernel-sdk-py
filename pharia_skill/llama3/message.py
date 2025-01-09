@@ -154,6 +154,10 @@ class Message:
     def ipython(cls, content: str) -> "Message":
         return cls(role=Role.IPython, content=content)
 
+    @classmethod
+    def from_tool_response(cls, tool_response: ToolResponse) -> "Message":
+        return cls(role=Role.IPython, content=None, tool_response=tool_response)
+
     def as_prompt(self) -> str:
         if self.tool_call is not None:
             assert self.role == Role.Assistant, "Tool call must be an assistant message"

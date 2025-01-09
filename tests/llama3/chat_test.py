@@ -60,7 +60,7 @@ def test_provide_tool_result(csi: DevCsi):
     tool_response = ToolResponse(
         tool_name=tool.name, status="success", stdout="1970-01-01", stderr=None
     )
-    ipython = Message(role=Role.IPython, tool_response=tool_response, content=None)
+    ipython = Message.from_tool_response(tool_response)
     request = ChatRequest(messages=[user, assistant, ipython], tools=[tool])
 
     # Then the response should answer the original question
