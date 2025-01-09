@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.5...v0.5.6) (2025-01-09)
+
+
+### Features
+
+* forward json error message from dev csi ([48d1056](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/48d105682c32bae9cc7b539d94ecf16770fe67b3))
+* support special tokens in completion ([decee64](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/decee649ba8663a02e089b9de3ebe8bea94ae06f))
+
+
+### Bug Fixes
+
+* specify package format type for pharia_skill ([4443294](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4443294d9f044f18cf8a4b07afb6aba4b2cb8ae4))
+
 ## [0.5.5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.4...v0.5.5) (2024-12-20)
 
 
