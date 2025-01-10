@@ -3,9 +3,7 @@ from pydantic import BaseModel
 
 from pharia_skill import ChatParams, llama3
 from pharia_skill.llama3 import (
-    BuiltInTool,
     ChatRequest,
-    ChatResponse,
     Message,
     Role,
     ToolCall,
@@ -73,38 +71,3 @@ def test_provide_tool_result(csi: DevCsi):
     assert response.message.content is not None
     assert "will ship" in response.message.content
     assert "1970" in response.message.content
-
-
-def test_chat_response_from_reply():
-    reply = "Hello tim!<|eot_id|>"
-    chat_response = ChatResponse.from_text(reply)
-
-    assert chat_response.message.content == "Hello tim!"
-
-
-def test_chat_response_from_reply_with_tool_call():
-    reply = "<|python_tag|>def is_prime(n):\n   return True<|eom_id|>"
-    chat_response = ChatResponse.from_text(reply)
-
-    assert chat_response.message.content is None
-    tool_call = chat_response.message.tool_call
-    assert tool_call is not None
-    assert tool_call.tool_name == BuiltInTool.CodeInterpreter
-    assert tool_call.arguments == {"code": "def is_prime(n):\n   return True"}
-
-
-def test_tool_call_from_chat_response_without_python_tag():
-    """Llama3.3 does not prefix json tool calls with the python tag."""
-    text = """{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
-    response = ChatResponse.from_text(text)
-    assert response.message.content is None
-    assert response.message.tool_call is not None
-    assert response.message.tool_call.tool_name == "get_github_readme"
-
-
-def test_tool_call_from_chat_response_with_python_tag():
-    text = """\n\n<|python_tag|>{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
-    response = ChatResponse.from_text(text)
-    assert response.message.content is None
-    assert response.message.tool_call is not None
-    assert response.message.tool_call.tool_name == "get_github_readme"
