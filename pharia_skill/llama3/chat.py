@@ -1,7 +1,30 @@
+from dataclasses import dataclass
+
 from pharia_skill.csi import ChatParams, CompletionParams, Csi
 
-from .message import ChatResponse
+from .message import Message, Role
 from .request import ChatRequest
+from .response import RawResponse, Response
+from .tool import ToolCall
+
+
+@dataclass
+class ChatResponse:
+    message: Message
+
+    @classmethod
+    def from_text(cls, raw: RawResponse) -> "ChatResponse":
+        response = Response.from_raw(raw)
+        tool_call = ToolCall.from_response(response)
+        if tool_call is None:
+            message = Message(role=Role.Assistant, content=response.text)
+        else:
+            message = Message(
+                role=Role.Assistant,
+                content=None,
+                tool_call=tool_call,
+            )
+        return ChatResponse(message=message)
 
 
 def chat(
