@@ -16,6 +16,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
+from .response import Response
+
 
 class BuiltInTool(str, Enum):
     CodeInterpreter = "code_interpreter"
@@ -109,7 +111,7 @@ class ToolCall:
         )
 
     @classmethod
-    def from_text(cls, text: str) -> "ToolCall | None":
+    def from_response(cls, text: Response) -> "ToolCall | None":
         """Parse a tool call from a message that has been stripped of special tokens.
 
         While llama3.1 always include the <|python_tag|> prefix for function calls,
@@ -123,12 +125,10 @@ class ToolCall:
             text (str): The text of the message stripped of any special tokens.
             python_tag (bool): Whether the message started with the Python Tag.
         """
-        python_tag = text.startswith(PythonTag)
-        text = text.replace(PythonTag, "")
-        if python_tag:
-            return cls.json_from_text(text) or cls.built_in_from_text(text)
+        if text.python_tag:
+            return cls.json_from_text(text.text) or cls.built_in_from_text(text.text)
         else:
-            return cls.json_from_text(text)
+            return cls.json_from_text(text.text)
 
     @staticmethod
     def built_in_from_text(text: str) -> "ToolCall":
