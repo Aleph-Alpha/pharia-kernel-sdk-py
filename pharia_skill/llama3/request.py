@@ -120,6 +120,6 @@ class ChatRequest:
         for message in self.messages_without_system_and_first_user():
             prompt += message.render()
 
-        prompt += Role.Assistant.header
+        prompt += Role.Assistant.render()
         prompt += "\n\n"
         return prompt

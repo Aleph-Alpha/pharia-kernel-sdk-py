@@ -1,30 +1,22 @@
 from dataclasses import dataclass
 
-from pharia_skill.csi import ChatParams, CompletionParams, Csi
+from pharia_skill.csi import ChatParams, Completion, CompletionParams, Csi, FinishReason
 
-from .message import Message, Role
+from .message import Message
 from .request import ChatRequest
-from .response import RawResponse, Response
-from .tool import ToolCall
 
 
 @dataclass
 class ChatResponse:
+    """Response from a chat request."""
+
     message: Message
+    finish_reason: FinishReason
 
     @classmethod
-    def from_text(cls, raw: RawResponse) -> "ChatResponse":
-        response = Response.from_raw(raw)
-        tool_call = ToolCall.from_response(response)
-        if tool_call is None:
-            message = Message(role=Role.Assistant, content=response.text)
-        else:
-            message = Message(
-                role=Role.Assistant,
-                content=None,
-                tool_call=tool_call,
-            )
-        return ChatResponse(message=message)
+    def from_completion(cls, completion: Completion) -> "ChatResponse":
+        message = Message.from_raw_response(completion.text)
+        return ChatResponse(message, completion.finish_reason)
 
 
 def chat(
@@ -44,5 +36,5 @@ def chat(
         temperature=params.temperature,
         top_p=params.top_p,
     )
-    response = csi.complete(model, prompt, completion_params)
-    return ChatResponse.from_text(response.text)
+    completion = csi.complete(model, prompt, completion_params)
+    return ChatResponse.from_completion(completion)
