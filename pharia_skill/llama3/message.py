@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from .response import RawResponse, Response, SpecialTokens
+from .response import SpecialTokens
 from .tool import ToolCall, ToolResponse
 
 
@@ -70,22 +70,3 @@ class Message:
 
         assert self.content is not None, "Content must be present"
         return f"{self.role.header}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
-
-
-@dataclass
-class ChatResponse:
-    message: Message
-
-    @classmethod
-    def from_text(cls, raw: RawResponse) -> "ChatResponse":
-        response = Response.from_raw(raw)
-        tool_call = ToolCall.from_response(response)
-        if tool_call is None:
-            message = Message(role=Role.Assistant, content=response.text)
-        else:
-            message = Message(
-                role=Role.Assistant,
-                content=None,
-                tool_call=tool_call,
-            )
-        return ChatResponse(message=message)

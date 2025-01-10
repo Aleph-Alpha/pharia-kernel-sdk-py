@@ -1,6 +1,5 @@
-from .chat import chat
+from .chat import ChatResponse, chat
 from .message import (
-    ChatResponse,
     Message,
     Role,
 )
