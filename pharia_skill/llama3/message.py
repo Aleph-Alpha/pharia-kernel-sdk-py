@@ -5,9 +5,6 @@ from enum import Enum
 
 from .tool import ToolCall, ToolResponse
 
-# indicate that the response contains a tool call
-PythonTag = "<|python_tag|>"
-
 
 class StopReason(str, Enum):
     EndOfTurn = "<|eot_id|>"
@@ -69,7 +66,7 @@ class Message:
     def render(self) -> str:
         if self.tool_call is not None:
             assert self.role == Role.Assistant, "Tool call must be an assistant message"
-            return f"{self.role.header}\n\n{PythonTag}{self.tool_call.render()}{StopReason.EndOfMessage.value}"
+            return f"{self.role.header}\n\n{self.tool_call.render()}{StopReason.EndOfMessage.value}"
 
         if self.tool_response is not None:
             assert self.role == Role.IPython, "Tool response must be an ipython message"
@@ -88,10 +85,8 @@ class ChatResponse:
         text = text.replace(StopReason.EndOfTurn, "")
         text = text.replace(StopReason.EndOfMessage, "")
         text = text.strip()
-        python_tag = text.startswith(PythonTag)
-        text = text.replace(PythonTag, "")
 
-        if (tool_call := ToolCall.from_text(text, python_tag)) is None:
+        if (tool_call := ToolCall.from_text(text)) is None:
             return ChatResponse(message=Message.assistant(text))
 
         message = Message(

@@ -68,6 +68,10 @@ class ToolDefinition:
                     cls._recursive_purge_title(data[key])
 
 
+PythonTag = "<|python_tag|>"
+"""Python tag that is used to indicate that the message is a tool call."""
+
+
 @dataclass
 class ToolCall:
     tool_name: BuiltInTool | str
@@ -80,6 +84,13 @@ class ToolCall:
         a parsed format, we need to convert it to a prompt string to construct
         the message history for a later interactions with the model.
         """
+        if isinstance(self.tool_name, BuiltInTool):
+            return PythonTag + self.render_build_in()
+        else:
+            # see `ToolCall.from_text` for why the python tag is not included here
+            return self.render_json()
+
+    def render_build_in(self) -> str:
         if self.tool_name == BuiltInTool.CodeInterpreter:
             assert "code" in self.arguments
             return self.arguments["code"]
@@ -90,15 +101,15 @@ class ToolCall:
             assert "query" in self.arguments
             return f'wolfram_alpha.call(query="{self.arguments["query"]}")'
         else:
-            return self.as_json()
+            raise ValueError(f"Unknown built-in tool: {self.tool_name}")
 
-    def as_json(self) -> str:
+    def render_json(self) -> str:
         return json.dumps(
             {"type": "function", "name": self.tool_name, "parameters": self.arguments}
         )
 
     @classmethod
-    def from_text(cls, text: str, python_tag: bool) -> "ToolCall | None":
+    def from_text(cls, text: str) -> "ToolCall | None":
         """Parse a tool call from a message that has been stripped of special tokens.
 
         While llama3.1 always include the <|python_tag|> prefix for function calls,
@@ -112,6 +123,8 @@ class ToolCall:
             text (str): The text of the message stripped of any special tokens.
             python_tag (bool): Whether the message started with the Python Tag.
         """
+        python_tag = text.startswith(PythonTag)
+        text = text.replace(PythonTag, "")
         if python_tag:
             return cls.json_from_text(text) or cls.built_in_from_text(text)
         else:
