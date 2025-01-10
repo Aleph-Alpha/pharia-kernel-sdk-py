@@ -1,3 +1,15 @@
+"""
+The `ChatRequest` is the entire conversation state and its context.
+
+It is initially constructed by the user by providing a user and potentially a
+system message. Along with the model and completion parameters, also tools that
+are available to the model (context) can be specified.
+
+The `ChatRequest` can be extended from the LLM side by passing it to the
+`chat` function. Afterwards, it can be extended from the user side by adding
+a message or tool response to the request.
+"""
+
 from dataclasses import dataclass, field
 
 from pharia_skill.csi import ChatParams
@@ -9,6 +21,14 @@ from .tool import BuiltInTool, ToolDefinition, ToolResponse
 
 @dataclass
 class ChatRequest:
+    """Represents the conversation state and context.
+
+    Conversation history and available tools can be provided on initialization.
+    Is automatically extended when passing it to the `chat` function.
+    Can be reused for subsequent conversation turns by extending it with messages
+    or tool results and passing it to the `chat` function again.
+    """
+
     model: str
     messages: list[Message]
     tools: list[ToolDefinition] = field(default_factory=list)
