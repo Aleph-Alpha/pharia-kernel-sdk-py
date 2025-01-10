@@ -1,6 +1,7 @@
 from pharia_skill.csi import ChatParams, CompletionParams, Csi
 
-from .message import ChatRequest, ChatResponse
+from .message import ChatResponse
+from .request import ChatRequest
 
 
 def chat(

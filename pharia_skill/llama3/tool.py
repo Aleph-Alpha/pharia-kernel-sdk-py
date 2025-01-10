@@ -7,7 +7,6 @@ classes in this module.
 1. The model needs to know a about the available tools (`ToolDefinition`).
 2. The model needs to be able to call a tool (`ToolCall`).
 3. The model needs to know th result of the tool call (`ToolResponse`).
-
 """
 
 import json
@@ -74,11 +73,6 @@ class ToolCall:
     tool_name: BuiltInTool | str
     arguments: dict[str, str]
 
-    def as_json(self) -> str:
-        return json.dumps(
-            {"type": "function", "name": self.tool_name, "parameters": self.arguments}
-        )
-
     def render(self) -> str:
         """Reconstruct the model response from a parsed tool call.
 
@@ -97,6 +91,69 @@ class ToolCall:
             return f'wolfram_alpha.call(query="{self.arguments["query"]}")'
         else:
             return self.as_json()
+
+    def as_json(self) -> str:
+        return json.dumps(
+            {"type": "function", "name": self.tool_name, "parameters": self.arguments}
+        )
+
+    @classmethod
+    def from_text(cls, text: str, python_tag: bool) -> "ToolCall | None":
+        """Parse a tool call from a message that has been stripped of special tokens.
+
+        While llama3.1 always include the <|python_tag|> prefix for function calls,
+        llama3.3 does not. Therefore, we always try to match a function call from the response,
+        even if the python tag is not included. Built in tools are always prefixed with the
+        python tag, even by llama3.3.
+
+        This contradicts https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/prompt_format.md#model-response-format-5
+
+        Args:
+            text (str): The text of the message stripped of any special tokens.
+            python_tag (bool): Whether the message started with the Python Tag.
+        """
+        if python_tag:
+            return cls.json_from_text(text) or cls.built_in_from_text(text)
+        else:
+            return cls.json_from_text(text)
+
+    @staticmethod
+    def built_in_from_text(text: str) -> "ToolCall":
+        """Parse a tool call from a message that started with the Python Tag."""
+        if text.startswith("brave_search.call"):
+            return ToolCall(
+                tool_name=BuiltInTool.BraveSearch,
+                arguments={
+                    "query": text.split('brave_search.call(query="')[1]
+                    .split('")')[0]
+                    .strip()
+                },
+            )
+        elif text.startswith("wolfram_alpha.call"):
+            return ToolCall(
+                tool_name=BuiltInTool.WolframAlpha,
+                arguments={
+                    "query": text.split('wolfram_alpha.call(query="')[1]
+                    .split('")')[0]
+                    .strip()
+                },
+            )
+        else:
+            return ToolCall(
+                tool_name=BuiltInTool.CodeInterpreter,
+                arguments={"code": text.strip()},
+            )
+
+    @staticmethod
+    def json_from_text(response: str) -> "ToolCall | None":
+        try:
+            data = json.loads(response)
+            name = data["name"]
+            return ToolCall(name, data["parameters"])
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+        return None
 
 
 @dataclass

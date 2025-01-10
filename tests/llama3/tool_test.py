@@ -54,3 +54,37 @@ def test_tool_definition_for_function():
         },
     }
     assert tool.as_dict() == expected
+
+
+def test_brave_search_call_is_parsed():
+    reply = (
+        'brave_search.call(query="current weather in Menlo Park, California")<|eom_id|>'
+    )
+    tool_call = ToolCall.from_text(reply, python_tag=True)
+    assert tool_call is not None
+    assert tool_call.tool_name == BuiltInTool.BraveSearch
+    assert tool_call.arguments == {"query": "current weather in Menlo Park, California"}
+
+
+def test_wolfram_alpha_call_is_parsed():
+    reply = 'wolfram_alpha.call(query="solve x^3 - 4x^2 + 6x - 24 = 0")<|eom_id|>'
+    tool_call = ToolCall.from_text(reply, python_tag=True)
+    assert tool_call is not None
+    assert tool_call.tool_name == BuiltInTool.WolframAlpha
+    assert tool_call.arguments == {"query": "solve x^3 - 4x^2 + 6x - 24 = 0"}
+
+
+def test_parse_function_call_from_response():
+    response = """{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}"""
+
+    tool_call = ToolCall.json_from_text(response)
+    assert tool_call is not None
+    assert tool_call.arguments["repository"] == "pharia-kernel"
+
+
+def test_function_call_serialization():
+    response = '{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}'
+
+    tool_call = ToolCall.json_from_text(response)
+    assert tool_call is not None
+    assert tool_call.as_json() == response

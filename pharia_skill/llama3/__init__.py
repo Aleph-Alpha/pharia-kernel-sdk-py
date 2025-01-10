@@ -1,10 +1,10 @@
 from .chat import chat
 from .message import (
-    ChatRequest,
     ChatResponse,
     Message,
     Role,
 )
+from .request import ChatRequest
 from .tool import BuiltInTool, ToolCall, ToolDefinition, ToolResponse
 
 __all__ = [
