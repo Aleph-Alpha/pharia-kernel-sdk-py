@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+from pharia_skill.llama3.response import Response
 from pharia_skill.llama3.tool import BuiltInTool, ToolCall, ToolDefinition
 
 
@@ -40,16 +41,28 @@ def test_tool_definition_for_function():
 
 
 def test_brave_search_call_is_parsed():
-    reply = '<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")<|eom_id|>'
-    tool_call = ToolCall.from_text(reply)
+    # Given a response with a call to Brave Search
+    raw = '<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")<|eom_id|>'
+    response = Response.from_raw(raw)
+
+    # When parsing the tool call
+    tool_call = ToolCall.from_response(response)
+
+    # Then
     assert tool_call is not None
     assert tool_call.tool_name == BuiltInTool.BraveSearch
     assert tool_call.arguments == {"query": "current weather in Menlo Park, California"}
 
 
 def test_wolfram_alpha_call_is_parsed():
-    reply = '<|python_tag|>wolfram_alpha.call(query="solve x^3 - 4x^2 + 6x - 24 = 0")<|eom_id|>'
-    tool_call = ToolCall.from_text(reply)
+    # Given a response with a call to Wolfram Alpha
+    raw = '<|python_tag|>wolfram_alpha.call(query="solve x^3 - 4x^2 + 6x - 24 = 0")<|eom_id|>'
+    response = Response.from_raw(raw)
+
+    # When parsing the tool call
+    tool_call = ToolCall.from_response(response)
+
+    # Then
     assert tool_call is not None
     assert tool_call.tool_name == BuiltInTool.WolframAlpha
     assert tool_call.arguments == {"query": "solve x^3 - 4x^2 + 6x - 24 = 0"}

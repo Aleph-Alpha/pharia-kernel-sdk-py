@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 
 from .message import Message, Role
+from .response import SpecialTokens
 from .tool import BuiltInTool, ToolDefinition
 
 
@@ -112,7 +113,7 @@ class ChatRequest:
 
     def render(self) -> str:
         """Convert the chat request to a prompt"""
-        prompt = "<|begin_of_text|>"
+        prompt = SpecialTokens.BeginOfText.value
         prompt += self.system.render() if self.system else ""
         prompt += self.user.render()
 
