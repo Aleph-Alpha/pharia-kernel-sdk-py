@@ -1,7 +1,8 @@
 import pytest
 from pydantic import BaseModel
 
-from pharia_skill import ChatParams, llama3
+from pharia_skill import llama3
+from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason
 from pharia_skill.llama3 import (
     ChatRequest,
     Message,
@@ -18,8 +19,7 @@ def csi() -> DevCsi:
     return DevCsi()
 
 
-llama_70b = "llama-3.3-70b-instruct"
-llama_8b = "llama-3.1-8b-instruct"
+llama = "llama-3.1-8b-instruct"
 
 
 class ShipmentParams(BaseModel):
@@ -34,13 +34,12 @@ tool = ToolDefinition(
 
 
 def test_trigger_tool_call(csi: DevCsi):
-    # Given a chat request with a tool definition and a message
-    # that requires the tool
+    # Given a chat request with a tool definition and a message that requires the tool
     message = Message.user("When will the order `42` ship?")
-    request = ChatRequest(messages=[message], tools=[tool])
+    request = ChatRequest(llama, [message], [tool])
 
     # When doing a chat request
-    response = llama3.chat(csi, llama_70b, request, ChatParams())
+    response = llama3.chat(csi, request)
 
     # Then the response should have a tool call
     assert response.message.role == Role.Assistant
@@ -49,25 +48,98 @@ def test_trigger_tool_call(csi: DevCsi):
     assert response.message.tool_call.tool_name == "get_shipment_date"
     assert response.message.tool_call.arguments == {"order_id": "42"}
 
+    # And the original request should be extended
+    assert request.messages[-1].role == Role.Assistant
+
 
 def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
     user = Message.user("When will the order `42` ship?")
-    tool_call = ToolCall(tool_name=tool.name, arguments={"order_id": "42"})
+    tool_call = ToolCall(tool.name, arguments={"order_id": "42"})
     assistant = Message(role=Role.Assistant, content=None, tool_call=tool_call)
 
-    # When providing a tool response
-    tool_response = ToolResponse(
-        tool_name=tool.name, status="success", content="1970-01-01"
-    )
+    # When providing a tool response back to the model
+    tool_response = ToolResponse(tool.name, content="1970-01-01")
     ipython = Message.from_tool_response(tool_response)
-    request = ChatRequest(messages=[user, assistant, ipython], tools=[tool])
+    request = ChatRequest(llama, [user, assistant, ipython], [tool])
+    response = llama3.chat(csi, request)
 
     # Then the response should answer the original question
-    response = llama3.chat(csi, llama_70b, request, ChatParams())
-
     assert response.message.role == Role.Assistant
     assert response.message.tool_call is None
     assert response.message.content is not None
     assert "will ship" in response.message.content
     assert "1970" in response.message.content
+
+
+class MockCsi(Csi):
+    """Csi that can be loaded up with expectations"""
+
+    def __init__(self, completion: Completion):
+        self.completion = completion
+        self.prompts: list[str] = []
+
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
+        self.prompts.append(prompt)
+        return self.completion
+
+
+def test_tool_response_can_be_added_to_prompt():
+    # Given a chat request with a tool definition and a message that requires the tool
+    message = Message.user("When will the order `42` ship?")
+    request = ChatRequest(llama, [message], [tool])
+
+    # And given a csi that always responds with a function call
+    completion = Completion(
+        text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": 42}}',
+        finish_reason=FinishReason.STOP,
+    )
+    csi = MockCsi(completion)  #  type: ignore
+
+    # When doing a chat request
+    response = llama3.chat(csi, request)
+    assert response.message.tool_call is not None
+
+    # And providing the tool response
+    tool_response = ToolResponse(tool.name, content='{"result": "1970-01-01"}')
+    request.extend_with_tool_response(tool_response)
+
+    # And doing another chat request against a spy csi
+    response = llama3.chat(csi, request)
+
+    # Then the whole context is included in the second prompt
+    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+Environment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Answer the user\'s question by making use of the following functions if needed.
+
+{
+    "type": "function",
+    "function": {
+        "name": "get_shipment_date",
+        "description": "Get the shipment date for a specific order",
+        "parameters": {
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "order_id"
+            ],
+            "type": "object"
+        }
+    }
+}
+
+Return function calls in JSON format.
+
+Question: When will the order `42` ship?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": 42}}<|eom_id|><|start_header_id|>ipython<|end_header_id|>
+
+completed[stdout]{"result": "1970-01-01"}[/stdout]<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+"""
+    assert csi.prompts[-1] == expected
