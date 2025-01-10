@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_serializer, model_validator
 
 from .response import Response
 
@@ -57,7 +57,14 @@ class ToolDefinition(BaseModel):
     def render(self) -> str:
         return json.dumps(self.as_dict(), indent=4)
 
+    @model_serializer
     def as_dict(self) -> dict[str, Any]:
+        """Json Schema serialiation for a `ToolDefinition`.
+
+        Pydantic is not able to serialize a model meta class to a dictionary.
+        Therefore, the json schema is also set as the default way to serialize
+        a `ToolDefinition`.
+        """
         if isinstance(self.parameters, dict):
             parameters = self.parameters
         elif isinstance(self.parameters, type):
@@ -217,7 +224,6 @@ class ToolCall:
 @dataclass
 class ToolResponse:
     tool_name: BuiltInTool | str
-    # can be a any str representation of the output, e.g. '{"result": "[]"}'
     content: str
     success: bool = True
 

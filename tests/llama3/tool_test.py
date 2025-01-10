@@ -147,3 +147,15 @@ def test_load_tool_definition_from_dict():
     assert tool.name == "get_github_readme"
     assert tool.description == "Get the readme of a GitHub repository"
     assert tool.as_dict() == data
+
+
+def test_tool_definition_can_be_serialized():
+    class Parameters(BaseModel):
+        registry: str = "default"
+
+    tool = ToolDefinition(
+        name="get_github_readme",
+        description="Get the readme of a GitHub repository",
+        parameters=Parameters,
+    )
+    tool.model_dump_json()

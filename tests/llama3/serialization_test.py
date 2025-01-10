@@ -41,10 +41,7 @@ def test_chat_request_can_be_deserialized():
                                 "type": "string",
                                 "description": "The name of the GitHub repository to get the readme from",
                             },
-                            "registry": {
-                                "type": "string",
-                                "default": "default",
-                            },
+                            "registry": {"type": "string", "default": "default"},
                         },
                     },
                 },

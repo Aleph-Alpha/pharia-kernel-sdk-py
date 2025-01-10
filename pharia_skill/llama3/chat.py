@@ -49,9 +49,6 @@ def chat(csi: Csi, request: ChatRequest) -> ChatResponse:
         # construct the tool response
         tool_response = ToolResponse(tool.name, content="1970-01-01")
 
-        # provide the tool response back to the model
-        ipython = Message.from_tool_response(tool_response)
-
         request.provide_tool_response(tool_response)
 
         # chat with the model again
