@@ -4,6 +4,25 @@ from pharia_skill.llama3.response import Response
 from pharia_skill.llama3.tool import BuiltInTool, ToolCall, ToolDefinition
 
 
+def test_tool_definition_with_custom_parameters():
+    tool = ToolDefinition(
+        name="get_github_readme",
+        description="Get the readme of a GitHub repository",
+        parameters={"my_param": "my_value"},
+    )
+    expected = {
+        "type": "function",
+        "function": {
+            "name": "get_github_readme",
+            "description": "Get the readme of a GitHub repository",
+            "parameters": {
+                "my_param": "my_value",
+            },
+        },
+    }
+    assert tool.as_dict() == expected
+
+
 def test_tool_definition_for_function():
     class Parameters(BaseModel):
         repository: str = Field(
@@ -99,3 +118,32 @@ def test_brave_search_tool_call_render():
     )
     expected = '<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")'
     assert tool_call.render() == expected
+
+
+def test_load_tool_definition_from_dict():
+    data = {
+        "type": "function",
+        "function": {
+            "name": "get_github_readme",
+            "description": "Get the readme of a GitHub repository",
+            "parameters": {
+                "type": "object",
+                "required": ["repository"],
+                "properties": {
+                    "repository": {
+                        "type": "string",
+                        "description": "The name of the GitHub repository to get the readme from",
+                    },
+                    "registry": {
+                        "type": "string",
+                        "default": "default",
+                    },
+                },
+            },
+        },
+    }
+
+    tool = ToolDefinition(**data)  # type: ignore[arg-type]
+    assert tool.name == "get_github_readme"
+    assert tool.description == "Get the readme of a GitHub repository"
+    assert tool.as_dict() == data

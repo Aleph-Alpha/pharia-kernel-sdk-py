@@ -36,7 +36,7 @@ class Message:
     """
 
     role: Role
-    content: str | None
+    content: str | None = None
     tool_call: ToolCall | None = None
     tool_response: ToolResponse | None = None
 
