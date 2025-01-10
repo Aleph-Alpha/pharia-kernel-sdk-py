@@ -20,8 +20,8 @@ def test_tool_call_message_render():
 def test_tool_response_message_render():
     tool_response = ToolResponse(
         tool_name=BuiltInTool.BraveSearch,
-        status="success",
         content='{"weather": "sunny", "temperature": "70 degrees"}',
+        success=True,
     )
     message = Message(role=Role.IPython, content=None, tool_response=tool_response)
     expected = '<|start_header_id|>ipython<|end_header_id|>\n\ncompleted[stdout]{"weather": "sunny", "temperature": "70 degrees"}[/stdout]<|eot_id|>'
@@ -31,8 +31,8 @@ def test_tool_response_message_render():
 def test_failed_tool_response_message_render():
     tool_response = ToolResponse(
         tool_name=BuiltInTool.BraveSearch,
-        status="failure",
         content="failed to connect to server",
+        success=False,
     )
     message = Message(role=Role.IPython, content=None, tool_response=tool_response)
     expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"

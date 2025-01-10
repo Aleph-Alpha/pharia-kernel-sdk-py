@@ -1,58 +1,61 @@
 from dataclasses import dataclass, field
 
+from pharia_skill.csi import ChatParams
+
 from .message import Message, Role
 from .response import SpecialTokens
-from .tool import BuiltInTool, ToolDefinition
-
-
-def validate_messages(messages: list[Message]) -> None:
-    """Validate the order of messages in a chat request."""
-    if not messages:
-        raise ValueError("Messages cannot be empty")
-
-    if messages[0].role not in (Role.System, Role.User):
-        raise ValueError("First message must be a system or user message")
-
-    cursor = 1 if messages[0].role == Role.System else 0
-
-    # check that alternating between user/tool and assistant
-    for i, message in enumerate(messages[cursor:]):
-        if i % 2 == 0:
-            if message.role not in (Role.User, Role.IPython):
-                raise ValueError("User messages must alternate with assistant messages")
-        else:
-            if message.role != Role.Assistant:
-                raise ValueError("Assistant messages must alternate with user messages")
-
-    # check that the last message is a user/ipython message
-    if messages[-1].role not in (Role.User, Role.IPython):
-        raise ValueError("Last message must be a user or ipython message")
+from .tool import BuiltInTool, ToolDefinition, ToolResponse
 
 
 @dataclass
 class ChatRequest:
+    model: str
     messages: list[Message]
     tools: list[ToolDefinition] = field(default_factory=list)
+    params: ChatParams = field(default_factory=ChatParams)
 
     def __post_init__(self) -> None:
         validate_messages(self.messages)
 
-    def system_prompt_tools(self) -> list[ToolDefinition]:
-        """Subset of specified tools that need to be activated in the system prompt.
+    def extend(self, message: Message) -> None:
+        """Add a message to a chat request.
 
-        CodeInterpreter is automatically included when IPython is activated and does
-        not need to be listed in the system prompt.
+        When conversations have multiple turns (e.g. with tool calling), the
+        conversation can be extended by adding a message to the request.
         """
-        return [
-            tool
-            for tool in self.tools
-            if tool.name in list(BuiltInTool)
-            and tool.name != BuiltInTool.CodeInterpreter
-        ]
+        validate_messages(self.messages + [message])
+        self._extend(message)
 
-    def user_provided_tools(self) -> list[ToolDefinition]:
-        """Subset of specified tools that need to be injected into the user message."""
-        return [tool for tool in self.tools if tool.name not in list(BuiltInTool)]
+    def extend_with_tool_response(self, tool_response: ToolResponse) -> None:
+        """Add a tool response to a chat request.
+
+        You will typically want to do this after the model has requested a tool call,
+        you have executed the tool call, and now want to pass it to the model for another
+        chat turn.
+        """
+        message = Message.from_tool_response(tool_response)
+        self.extend(message)
+
+    def _extend(self, message: Message) -> None:
+        """Add a message to a chat request without validation.
+
+        This allows appending the LLM reply to the conversation by
+        not asserting that the conversation ends in a user or ipython message.
+        """
+        self.messages.append(message)
+
+    def render(self) -> str:
+        """Convert the chat request to a prompt that can be passed to the model."""
+        prompt = SpecialTokens.BeginOfText.value
+        prompt += self.system.render() if self.system else ""
+        prompt += self.user.render()
+
+        for message in self.messages_without_system_and_first_user():
+            prompt += message.render()
+
+        prompt += Role.Assistant.render()
+        prompt += "\n\n"
+        return prompt
 
     @property
     def system(self) -> Message | None:
@@ -77,6 +80,19 @@ class ChatRequest:
         if self.messages[0].role == Role.System:
             prompt += f"\n{self.messages[0].content}"
         return Message.system(prompt)
+
+    def system_prompt_tools(self) -> list[ToolDefinition]:
+        """Subset of specified tools that need to be activated in the system prompt.
+
+        CodeInterpreter is automatically included when IPython is activated and does
+        not need to be listed in the system prompt.
+        """
+        return [
+            tool
+            for tool in self.tools
+            if tool.name in list(BuiltInTool)
+            and tool.name != BuiltInTool.CodeInterpreter
+        ]
 
     @property
     def user(self) -> Message:
@@ -103,6 +119,10 @@ class ChatRequest:
         prompt += f"\n\nQuestion: {provided.content}"
         return Message.user(prompt)
 
+    def user_provided_tools(self) -> list[ToolDefinition]:
+        """Subset of specified tools that need to be injected into the user message."""
+        return [tool for tool in self.tools if tool.name not in list(BuiltInTool)]
+
     def messages_without_system_and_first_user(self) -> list[Message]:
         """The system and first user prompt are altered.
 
@@ -111,15 +131,36 @@ class ChatRequest:
         messages = [message for message in self.messages if message.role != Role.System]
         return messages[1:]
 
-    def render(self) -> str:
-        """Convert the chat request to a prompt"""
-        prompt = SpecialTokens.BeginOfText.value
-        prompt += self.system.render() if self.system else ""
-        prompt += self.user.render()
 
-        for message in self.messages_without_system_and_first_user():
-            prompt += message.render()
+def validate_messages(messages: list[Message]) -> None:
+    """Validate the order of messages in a chat request.
 
-        prompt += Role.Assistant.render()
-        prompt += "\n\n"
-        return prompt
+    We enforce a sensible Llama3 prompt (even though it might not be required by the model),
+    to give the developer early feedback if he is using the chat request incorrectly.
+
+    Rules:
+        1. The first message must be a system or user message.
+        2. The conversation excluding a potential system message must alternate between user/ipython and assistant.
+        3. The last message must be a user or ipython message.
+    """
+    if not messages:
+        raise ValueError("Messages cannot be empty")
+
+    # 1. check that the first message is a system or user message
+    if messages[0].role not in (Role.System, Role.User):
+        raise ValueError("First message must be a system or user message")
+
+    cursor = 1 if messages[0].role == Role.System else 0
+
+    # 2. check alternating between user/tool and assistant
+    for i, message in enumerate(messages[cursor:]):
+        if i % 2 == 0:
+            if message.role not in (Role.User, Role.IPython):
+                raise ValueError("User messages must alternate with assistant messages")
+        else:
+            if message.role != Role.Assistant:
+                raise ValueError("Assistant messages must alternate with user messages")
+
+    # 3. check that the last message is a user/ipython message
+    if messages[-1].role not in (Role.User, Role.IPython):
+        raise ValueError("Last message must be a user or ipython message")

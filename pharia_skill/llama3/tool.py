@@ -12,7 +12,7 @@ classes in this module.
 import json
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -172,13 +172,13 @@ class ToolCall:
 @dataclass
 class ToolResponse:
     tool_name: BuiltInTool | str
-    status: Literal["success", "failure"]
     # can be a any str representation of the output, e.g. '{"result": "[]"}'
     content: str
+    success: bool = True
 
     def render(self) -> str:
-        prompt = "completed" if self.status == "success" else "failed"
-        if self.status == "success":
+        prompt = "completed" if self.success else "failed"
+        if self.success:
             prompt += f"[stdout]{self.content}[/stdout]"
         else:
             prompt += f"[stderr]{self.content}[/stderr]"

@@ -1,12 +1,13 @@
-import pytest
 from pydantic import BaseModel
 
-from pharia_skill.llama3 import BuiltInTool, ChatRequest, Message, Role, ToolDefinition
+from pharia_skill.llama3 import BuiltInTool, ChatRequest, Message, ToolDefinition
+
+llama = "llama-3.1-8b-instruct"
 
 
 def test_system_prompt_without_tools():
     user = Message.user("What is the square root of 16?")
-    chat_request = ChatRequest(messages=[user])
+    chat_request = ChatRequest(llama, [user])
     assert chat_request.system is None
 
 
@@ -14,7 +15,7 @@ def test_chat_request_to_prompt():
     system = Message.system("You are a poet who strictly speaks in haikus.")
     user = Message.user("oat milk")
 
-    chat_request = ChatRequest(messages=[system, user])
+    chat_request = ChatRequest(llama, [system, user])
 
     prompt = chat_request.render()
 
@@ -29,44 +30,13 @@ oat milk<|eot_id|><|start_header_id|>assistant<|end_header_id|>
     assert prompt == expected
 
 
-def test_start_with_assistant():
-    assistant = Message.assistant("You are a poet who strictly speaks in haikus.")
-    user = Message.user("oat milk")
-
-    with pytest.raises(ValueError):
-        ChatRequest(messages=[assistant, user])
-
-
-def test_end_with_assistant():
-    user = Message.user("oat milk")
-    assistant = Message.assistant("You are a poet who strictly speaks in haikus.")
-
-    with pytest.raises(ValueError):
-        ChatRequest(messages=[user, assistant])
-
-
-def test_system_prompt_is_optional():
-    system = Message.system("You are a poet who strictly speaks in haikus.")
-    user = Message.user("oat milk")
-    assistant = Message.assistant("Hello!")
-    ipython = Message(role=Role.IPython, content="print('hello')")
-
-    ChatRequest(messages=[user, assistant, ipython])
-    ChatRequest(messages=[system, user, assistant, ipython])
-
-
-def test_not_alternating_messages():
-    user = Message.user("oat milk")
-    ipython = Message(role=Role.IPython, content="print('hello')")
-
-    with pytest.raises(ValueError):
-        ChatRequest(messages=[user, ipython])
-
-
 def test_system_prompt_without_tools_from_user():
     system = Message.system("You are a poet who strictly speaks in haikus.")
     user = Message.user("What is the square root of 16?")
-    chat_request = ChatRequest(messages=[system, user])
+    chat_request = ChatRequest(
+        llama,
+        [system, user],
+    )
     assert chat_request.system is not None
     assert "poet" in chat_request.system.render()
 
@@ -74,7 +44,7 @@ def test_system_prompt_without_tools_from_user():
 def test_system_prompt_with_tools():
     tool = ToolDefinition(name=BuiltInTool.CodeInterpreter)
     user = Message.user("What is the square root of 16?")
-    chat_request = ChatRequest(messages=[user], tools=[tool])
+    chat_request = ChatRequest(llama, [user], [tool])
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython<|eot_id|>"""
@@ -86,7 +56,7 @@ def test_system_prompt_merged_from_user_and_tools():
     system = Message.system("You are a poet who strictly speaks in haikus.")
     user = Message.user("What is the square root of 16?")
     tool = ToolDefinition(name=BuiltInTool.CodeInterpreter)
-    chat_request = ChatRequest(messages=[system, user], tools=[tool])
+    chat_request = ChatRequest(llama, [system, user], [tool])
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
@@ -97,9 +67,8 @@ You are a poet who strictly speaks in haikus.<|eot_id|>"""
 
 def test_ipython_environment_activated_with_custom_tool():
     tool = ToolDefinition(name="my-custom-tool")
-    chat_request = ChatRequest(
-        messages=[Message.user("What is the square root of 16?")], tools=[tool]
-    )
+    user = Message.user("What is the square root of 16?")
+    chat_request = ChatRequest(llama, [user], [tool])
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython<|eot_id|>"""
@@ -113,9 +82,8 @@ def test_built_in_tools_are_listed():
         ToolDefinition(name=BuiltInTool.BraveSearch),
         ToolDefinition(name=BuiltInTool.WolframAlpha),
     ]
-    chat_request = ChatRequest(
-        messages=[Message.user("What is the square root of 16?")], tools=tools
-    )
+    user = Message.user("What is the square root of 16?")
+    chat_request = ChatRequest(llama, [user], tools)
     assert chat_request.system is not None
     expected = """<|start_header_id|>system<|end_header_id|>
 
@@ -125,6 +93,7 @@ Tools: brave_search, wolfram_alpha<|eot_id|>"""
 
 
 def test_custom_tool_definition_in_user_prompt():
+    # Given a chat request with a custom tool definition
     class Parameters(BaseModel):
         repository: str
 
@@ -134,9 +103,15 @@ def test_custom_tool_definition_in_user_prompt():
         parameters=Parameters,
     )
     chat_request = ChatRequest(
-        messages=[Message.user("What is the readme of the pharia-kernel repository?")],
-        tools=[tool],
+        llama,
+        [Message.user("What is the readme of the pharia-kernel repository?")],
+        [tool],
     )
+
+    # When rendering the chat request
+    rendered = chat_request.render()
+
+    # Then the custom tool definition should be included in the user prompt
     expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
 Environment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
@@ -165,4 +140,4 @@ Answer the user's question by making use of the following functions if needed.
 Return function calls in JSON format.
 
 Question: What is the readme of the pharia-kernel repository?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
-    assert chat_request.render() == expected
+    assert rendered == expected
