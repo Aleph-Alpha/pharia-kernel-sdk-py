@@ -53,15 +53,11 @@ class Message:
         return cls(role=Role.System, content=content)
 
     @classmethod
-    def ipython(cls, content: str) -> "Message":
-        return cls(role=Role.IPython, content=content)
-
-    @classmethod
     def from_tool_response(cls, tool_response: ToolResponse) -> "Message":
         """Construct a message from a tool response.
 
-        This is a convenience method which allows a quick conversion of a tool response
-        to the message.
+        Given the LLM has requested a tool call and you have executed the tool call,
+        use this method to construct a message to append to the conversation.
         """
         return cls(role=Role.IPython, content=None, tool_response=tool_response)
 
