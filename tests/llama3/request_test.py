@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from pharia_skill.llama3 import BuiltInTool, ChatRequest, Message, ToolDefinition
+from pharia_skill.llama3 import BuiltInTool, ChatRequest, Message, Role, ToolDefinition
 
 
 def test_system_prompt_without_tools():
@@ -49,7 +49,7 @@ def test_system_prompt_is_optional():
     system = Message.system("You are a poet who strictly speaks in haikus.")
     user = Message.user("oat milk")
     assistant = Message.assistant("Hello!")
-    ipython = Message.ipython("print('hello')")
+    ipython = Message(role=Role.IPython, content="print('hello')")
 
     ChatRequest(messages=[user, assistant, ipython])
     ChatRequest(messages=[system, user, assistant, ipython])
@@ -57,7 +57,7 @@ def test_system_prompt_is_optional():
 
 def test_not_alternating_messages():
     user = Message.user("oat milk")
-    ipython = Message.ipython("print('hello')")
+    ipython = Message(role=Role.IPython, content="print('hello')")
 
     with pytest.raises(ValueError):
         ChatRequest(messages=[user, ipython])
