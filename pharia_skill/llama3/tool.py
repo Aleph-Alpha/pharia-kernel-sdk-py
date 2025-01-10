@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from .response import Response
 
@@ -25,21 +25,42 @@ class BuiltInTool(str, Enum):
     BraveSearch = "brave_search"
 
 
-@dataclass
-class ToolDefinition:
-    """A tool can either be a built-in tool or a custom tool."""
+class ToolDefinition(BaseModel):
+    """Provide context on a tool that can be called by the model.
+
+    A tool can be setup from a json schema or by directly providing its name,
+    definition and parameters. The parameters can be provided as a pydantic model,
+    allowing the user to not worry about writing json schema. The type of the each
+    parameter is automatically inferred from the pydantic model. Here is an example
+    of a definition that would render to json schema with three fields. The schema
+    would have a description for the repository field and a default value for the
+    tag field.
+
+    Example::
+
+        from pydantic import BaseMode, Field
+
+        class Parameters(BaseModel):
+            registry: str
+            repository: str = Field(
+                description="The name of the GitHub repository to get the readme from",
+            )
+            tag: str = "latest"
+
+
+    """
 
     name: BuiltInTool | str
     description: str | None = None
-
-    # the user can define parameters with a custom pydantic model
-    parameters: type[BaseModel] | None = None
+    parameters: type[BaseModel] | dict[str, Any] | None = None
 
     def render(self) -> str:
         return json.dumps(self.as_dict(), indent=4)
 
     def as_dict(self) -> dict[str, Any]:
-        if self.parameters:
+        if isinstance(self.parameters, dict):
+            parameters = self.parameters
+        elif isinstance(self.parameters, type):
             parameters = self.parameters.model_json_schema()
             self._recursive_purge_title(parameters)
         else:
@@ -68,6 +89,30 @@ class ToolDefinition:
                     del data[key]
                 else:
                     cls._recursive_purge_title(data[key])
+
+    @model_validator(mode="before")  # pyright: ignore
+    @classmethod
+    def deserialize(cls, values: Any) -> Any:
+        """Custom deserialization for a `ToolDefinition`.
+
+        Tool definition can be provided in two ways:
+
+        1. From a json schema (e.g.) if the definition is coming via HTTP.
+        2. With a Pydantic model, if the definition is provided in code.
+
+        While a `ToolDefinition` will render to a json schema definition building on
+        pydantic.model_json_schema, it also needs to be able to load from a json schema.
+
+        Therefore, the values need to be augmented in the deserialization step.
+        """
+        if values.get("function") is not None:
+            if values.get("name") is None:
+                values["name"] = values["function"]["name"]
+            if values.get("description") is None:
+                values["description"] = values["function"]["description"]
+            if values.get("parameters") is None:
+                values["parameters"] = values["function"]["parameters"]
+        return values
 
 
 PythonTag = "<|python_tag|>"
