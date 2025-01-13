@@ -1,40 +1,22 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from pharia_skill.llama3.response import Response
-from pharia_skill.llama3.tool import BuiltInTool, ToolCall, ToolDefinition
+from pharia_skill.llama3.tool import (
+    BuiltInTool,
+    Tool,
+    ToolCall,
+)
 
 
-def test_tool_definition_with_custom_parameters():
-    tool = ToolDefinition(
-        name="get_github_readme",
-        description="Get the readme of a GitHub repository",
-        parameters={"my_param": "my_value"},
-    )
-    expected = {
-        "type": "function",
-        "function": {
-            "name": "get_github_readme",
-            "description": "Get the readme of a GitHub repository",
-            "parameters": {
-                "my_param": "my_value",
-            },
-        },
-    }
-    assert tool.as_dict() == expected
+def test_pydantic_tool_definition_for_function():
+    class GetGithubReadme(Tool):
+        """Get the readme of a GitHub repository"""
 
-
-def test_tool_definition_for_function():
-    class Parameters(BaseModel):
         repository: str = Field(
             description="The name of the GitHub repository to get the readme from",
         )
         registry: str = "default"
 
-    tool = ToolDefinition(
-        name="get_github_readme",
-        description="Get the readme of a GitHub repository",
-        parameters=Parameters,
-    )
     expected = {
         "type": "function",
         "function": {
@@ -56,7 +38,7 @@ def test_tool_definition_for_function():
             },
         },
     }
-    assert tool.as_dict() == expected
+    assert GetGithubReadme.render() == expected
 
 
 def test_brave_search_call_is_parsed():
@@ -120,42 +102,13 @@ def test_brave_search_tool_call_render():
     assert tool_call.render() == expected
 
 
-def test_load_tool_definition_from_dict():
-    data = {
-        "type": "function",
-        "function": {
-            "name": "get_github_readme",
-            "description": "Get the readme of a GitHub repository",
-            "parameters": {
-                "type": "object",
-                "required": ["repository"],
-                "properties": {
-                    "repository": {
-                        "type": "string",
-                        "description": "The name of the GitHub repository to get the readme from",
-                    },
-                    "registry": {
-                        "type": "string",
-                        "default": "default",
-                    },
-                },
-            },
-        },
-    }
+# def test_tool_definition_can_be_serialized():
+#     class CParameters(BaseModel):
+#         registry: str = "default"
 
-    tool = ToolDefinition(**data)  # type: ignore[arg-type]
-    assert tool.name == "get_github_readme"
-    assert tool.description == "Get the readme of a GitHub repository"
-    assert tool.as_dict() == data
-
-
-def test_tool_definition_can_be_serialized():
-    class Parameters(BaseModel):
-        registry: str = "default"
-
-    tool = ToolDefinition(
-        name="get_github_readme",
-        description="Get the readme of a GitHub repository",
-        parameters=Parameters,
-    )
-    tool.model_dump_json()
+#     tool = ToolDefinition(
+#         name="get_github_readme",
+#         description="Get the readme of a GitHub repository",
+#         parameters=Parameters,
+#     )
+#     tool.model_dump_json()

@@ -1,6 +1,9 @@
-from pydantic import BaseModel
-
-from pharia_skill.llama3 import BuiltInTool, ChatRequest, Message, ToolDefinition
+from pharia_skill.llama3 import (
+    BuiltInTool,
+    ChatRequest,
+    Message,
+    Tool,
+)
 
 llama = "llama-3.1-8b-instruct"
 
@@ -42,9 +45,8 @@ def test_system_prompt_without_tools_from_user():
 
 
 def test_system_prompt_with_tools():
-    tool = ToolDefinition(name=BuiltInTool.CodeInterpreter)
     user = Message.user("What is the square root of 16?")
-    chat_request = ChatRequest(llama, [user], [tool])
+    chat_request = ChatRequest(llama, [user], [BuiltInTool.CodeInterpreter])
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython<|eot_id|>"""
@@ -55,8 +57,7 @@ Environment: ipython<|eot_id|>"""
 def test_system_prompt_merged_from_user_and_tools():
     system = Message.system("You are a poet who strictly speaks in haikus.")
     user = Message.user("What is the square root of 16?")
-    tool = ToolDefinition(name=BuiltInTool.CodeInterpreter)
-    chat_request = ChatRequest(llama, [system, user], [tool])
+    chat_request = ChatRequest(llama, [system, user], [BuiltInTool.CodeInterpreter])
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
@@ -66,9 +67,11 @@ You are a poet who strictly speaks in haikus.<|eot_id|>"""
 
 
 def test_ipython_environment_activated_with_custom_tool():
-    tool = ToolDefinition(name="my-custom-tool")
+    class MyCustomTool(Tool):
+        pass
+
     user = Message.user("What is the square root of 16?")
-    chat_request = ChatRequest(llama, [user], [tool])
+    chat_request = ChatRequest(llama, [user], [MyCustomTool])
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython<|eot_id|>"""
@@ -78,9 +81,9 @@ Environment: ipython<|eot_id|>"""
 
 def test_built_in_tools_are_listed():
     tools = [
-        ToolDefinition(name=BuiltInTool.CodeInterpreter),
-        ToolDefinition(name=BuiltInTool.BraveSearch),
-        ToolDefinition(name=BuiltInTool.WolframAlpha),
+        BuiltInTool.CodeInterpreter,
+        BuiltInTool.BraveSearch,
+        BuiltInTool.WolframAlpha,
     ]
     user = Message.user("What is the square root of 16?")
     chat_request = ChatRequest(llama, [user], tools)
@@ -94,18 +97,15 @@ Tools: brave_search, wolfram_alpha<|eot_id|>"""
 
 def test_custom_tool_definition_in_user_prompt():
     # Given a chat request with a custom tool definition
-    class Parameters(BaseModel):
+    class GetGithubReadme(Tool):
+        """Get the readme of a GitHub repository"""
+
         repository: str
 
-    tool = ToolDefinition(
-        name="get_github_readme",
-        description="Get the readme of a GitHub repository",
-        parameters=Parameters,
-    )
     chat_request = ChatRequest(
         llama,
         [Message.user("What is the readme of the pharia-kernel repository?")],
-        [tool],
+        [GetGithubReadme],
     )
 
     # When rendering the chat request

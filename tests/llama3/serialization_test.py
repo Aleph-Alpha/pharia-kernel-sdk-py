@@ -61,7 +61,8 @@ def test_chat_request_can_be_deserialized():
     # Then the request is serialized successfully
     assert len(chat.root.messages) == 1
     assert len(chat.root.tools) == 1
-    assert chat.root.tools[0].name == "get_github_readme"
+    assert isinstance(chat.root.tools[0], dict)
+    assert chat.root.tools[0]["function"]["name"] == "get_github_readme"
     assert chat.root.messages[0].role == Role.User
 
 
