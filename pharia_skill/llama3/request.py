@@ -11,7 +11,9 @@ a message or tool response to the request.
 """
 
 from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Any, Sequence
+
+from pydantic import field_serializer
 
 from pharia_skill.csi import ChatParams
 
@@ -20,6 +22,7 @@ from .message import Message, Role
 from .response import SpecialTokens
 from .tool import (
     BuiltInTool,
+    JsonSchema,
     ToolDefinition,
     ToolResponse,
     render_tool,
@@ -146,6 +149,24 @@ class ChatRequest:
         """
         messages = [message for message in self.messages if message.role != Role.System]
         return messages[1:]
+
+    @field_serializer("tools")
+    def as_dict(
+        self, tools: list[ToolDefinition]
+    ) -> list[dict[str, Any] | JsonSchema | str]:
+        """Pydantic can not serialize type[BaseModel], so we serialize it manually.
+
+        Error serializing to JSON: PydanticSerializationError
+        """
+        serialized: list[dict[str, Any] | JsonSchema | str] = []
+        for tool in tools:
+            if isinstance(tool, BuiltInTool):
+                serialized.append(tool.value)
+            elif isinstance(tool, dict):
+                serialized.append(tool)
+            else:
+                serialized.append(tool.render())
+        return serialized
 
 
 def validate_messages(messages: list[Message]) -> None:
