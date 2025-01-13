@@ -1,22 +1,23 @@
 from pharia_skill.llama3 import (
     BuiltInTool,
     ChatRequest,
-    Message,
+    SystemMessage,
     Tool,
+    UserMessage,
 )
 
 llama = "llama-3.1-8b-instruct"
 
 
 def test_system_prompt_without_tools():
-    user = Message.user("What is the square root of 16?")
+    user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(llama, [user])
     assert chat_request.system is None
 
 
 def test_chat_request_to_prompt():
-    system = Message.system("You are a poet who strictly speaks in haikus.")
-    user = Message.user("oat milk")
+    system = SystemMessage("You are a poet who strictly speaks in haikus.")
+    user = UserMessage("oat milk")
 
     chat_request = ChatRequest(llama, [system, user])
 
@@ -34,8 +35,8 @@ oat milk<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
 
 def test_system_prompt_without_tools_from_user():
-    system = Message.system("You are a poet who strictly speaks in haikus.")
-    user = Message.user("What is the square root of 16?")
+    system = SystemMessage("You are a poet who strictly speaks in haikus.")
+    user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(
         llama,
         [system, user],
@@ -45,7 +46,7 @@ def test_system_prompt_without_tools_from_user():
 
 
 def test_system_prompt_with_tools():
-    user = Message.user("What is the square root of 16?")
+    user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(llama, [user], [BuiltInTool.CodeInterpreter])
     expected = """<|start_header_id|>system<|end_header_id|>
 
@@ -55,8 +56,8 @@ Environment: ipython<|eot_id|>"""
 
 
 def test_system_prompt_merged_from_user_and_tools():
-    system = Message.system("You are a poet who strictly speaks in haikus.")
-    user = Message.user("What is the square root of 16?")
+    system = SystemMessage("You are a poet who strictly speaks in haikus.")
+    user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(llama, [system, user], [BuiltInTool.CodeInterpreter])
     expected = """<|start_header_id|>system<|end_header_id|>
 
@@ -70,7 +71,7 @@ def test_ipython_environment_activated_with_custom_tool():
     class MyCustomTool(Tool):
         pass
 
-    user = Message.user("What is the square root of 16?")
+    user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(llama, [user], [MyCustomTool])
     expected = """<|start_header_id|>system<|end_header_id|>
 
@@ -85,7 +86,7 @@ def test_built_in_tools_are_listed():
         BuiltInTool.BraveSearch,
         BuiltInTool.WolframAlpha,
     ]
-    user = Message.user("What is the square root of 16?")
+    user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(llama, [user], tools)
     assert chat_request.system is not None
     expected = """<|start_header_id|>system<|end_header_id|>
@@ -104,7 +105,7 @@ def test_custom_tool_definition_in_user_prompt():
 
     chat_request = ChatRequest(
         llama,
-        [Message.user("What is the readme of the pharia-kernel repository?")],
+        [UserMessage("What is the readme of the pharia-kernel repository?")],
         [GetGithubReadme],
     )
 

@@ -8,6 +8,7 @@ A message is one turn in a conversation with an LLM. Messages are constructed in
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Literal, Protocol
 
 from .response import SpecialTokens
 
@@ -24,25 +25,36 @@ class Role(str, Enum):
         return f"<|start_header_id|>{self.value.lower()}<|end_header_id|>"
 
 
+class MessageApi(Protocol):
+    """A base message that can be rendered."""
+
+    content: str
+    role: Role
+
+    def render(self) -> str:
+        """Render the message to a string."""
+        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
+
+
 @dataclass
-class Message:
-    """Describes a (user or system) message in a chat.
+class UserMessage(MessageApi):
+    """Describes a user message in a chat.
 
     Parameters:
-        role (Role, required): The role of the message.
         content (str, required): The content of the message.
     """
 
-    content: str | None
-    role: Role
+    content: str
+    role: Literal[Role.User] = Role.User
 
-    @classmethod
-    def user(cls, content: str) -> "Message":
-        return cls(role=Role.User, content=content)
 
-    @classmethod
-    def system(cls, content: str) -> "Message":
-        return cls(role=Role.System, content=content)
+@dataclass
+class SystemMessage(MessageApi):
+    """Describes a system message in a chat.
 
-    def render(self) -> str:
-        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
+    Parameters:
+        content (str, required): The content of the message.
+    """
+
+    content: str
+    role: Literal[Role.System] = Role.System

@@ -67,6 +67,22 @@ def test_chat_request_can_be_deserialized():
     assert chat.root.messages[0].role == Role.User
 
 
+def test_built_in_tool_can_be_deserialized():
+    data = {
+        "model": "llama-3.1-8b-instruct",
+        "tools": ["code_interpreter"],
+        "messages": [
+            {
+                "role": "user",
+                "content": "Hello, World!",
+            }
+        ],
+    }
+    chat = ChatApi.model_validate(data)
+    assert len(chat.root.tools) == 1
+    assert chat.root.tools[0] == "code_interpreter"
+
+
 def test_tool_result_can_be_deserialized():
     # Given a chat request with a tool call and a tool response
     data = {

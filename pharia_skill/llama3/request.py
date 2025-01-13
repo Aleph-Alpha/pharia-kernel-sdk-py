@@ -18,7 +18,7 @@ from pydantic import field_serializer
 from pharia_skill.csi import ChatParams
 
 from .assistant import AssistantMessage
-from .message import Message, Role
+from .message import Role, SystemMessage, UserMessage
 from .response import SpecialTokens
 from .tool import (
     BuiltInTool,
@@ -27,6 +27,8 @@ from .tool import (
     ToolResponse,
     render_tool,
 )
+
+Message = SystemMessage | UserMessage | AssistantMessage | ToolResponse
 
 
 @dataclass
@@ -40,7 +42,7 @@ class ChatRequest:
     """
 
     model: str
-    messages: list[Message | AssistantMessage | ToolResponse]
+    messages: list[Message]
     tools: Sequence[ToolDefinition | BuiltInTool] = field(default_factory=list)
     params: ChatParams = field(default_factory=ChatParams)
 
@@ -78,7 +80,7 @@ class ChatRequest:
         return prompt
 
     @property
-    def system(self) -> Message | None:
+    def system(self) -> SystemMessage | None:
         """The system message that will be rendered.
 
         Conditionally activate the IPython environment if tools are provided.
@@ -99,7 +101,7 @@ class ChatRequest:
         # include the original system prompt
         if self.messages[0].role == Role.System:
             prompt += f"\n{self.messages[0].content}"
-        return Message.system(prompt)
+        return SystemMessage(prompt)
 
     def system_prompt_tools(self) -> list[BuiltInTool]:
         """Subset of specified tools that need to be activated in the system prompt.
@@ -114,7 +116,7 @@ class ChatRequest:
         ]
 
     @property
-    def user(self) -> Message:
+    def user(self) -> UserMessage:
         """The user message that will be rendered.
 
         User provided tools are injected into the user message and
@@ -136,7 +138,7 @@ class ChatRequest:
 
         prompt += "\nReturn function calls in JSON format."
         prompt += f"\n\nQuestion: {provided.content}"
-        return Message.user(prompt)
+        return UserMessage(prompt)
 
     def user_provided_tools(self) -> list[ToolDefinition]:
         """Subset of specified tools that need to be injected into the user message."""
@@ -147,7 +149,9 @@ class ChatRequest:
 
         This is the rest of the messages that don't need to be altered.
         """
-        messages = [message for message in self.messages if message.role != Role.System]
+        messages: list[Message] = [
+            message for message in self.messages if message.role != Role.System
+        ]
         return messages[1:]
 
     @field_serializer("tools")

@@ -17,7 +17,7 @@ from typing import Any, Literal, TypedDict
 
 from pydantic import BaseModel
 
-from .message import Message, Role
+from .message import MessageApi, Role
 from .response import Response, SpecialTokens
 
 
@@ -216,7 +216,7 @@ def render_tool(tool: type[Tool] | JsonSchema) -> str:
 
 
 @dataclass
-class ToolResponse(Message):
+class ToolResponse(MessageApi):
     """
     Response for the model after a tool call has been executed.
 
@@ -224,7 +224,8 @@ class ToolResponse(Message):
     the result can be passed back to the model as a `ToolResponse`.
     """
 
-    role: Literal[Role.IPython] = Role.IPython  # mypy: ignore[assignment]
+    content: str
+    role: Literal[Role.IPython] = Role.IPython
     success: bool = True
 
     def render(self) -> str:

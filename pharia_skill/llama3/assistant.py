@@ -1,22 +1,22 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from .message import Message, Role
+from .message import MessageApi, Role
 from .response import RawResponse, Response, SpecialTokens
 from .tool import ToolCall
 
 
 @dataclass
-class AssistantMessage(Message):
+class AssistantMessage(MessageApi):
     """A message that is returned from the LLM.
 
     With tool calling, the different messages diverge in their attributes,
     which is why they are represented by different classes.
     """
 
+    content: str | None = None  # type: ignore[assignment]
     role: Literal[Role.Assistant] = Role.Assistant
     tool_call: ToolCall | None = None
-    content: str | None = None
 
     @classmethod
     def from_raw_response(cls, raw: RawResponse) -> "AssistantMessage":

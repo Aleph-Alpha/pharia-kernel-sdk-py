@@ -43,3 +43,11 @@ def test_tool_call_from_chat_response_with_python_tag():
     assert message.content is None
     assert message.tool_call is not None
     assert message.tool_call.name == "get_github_readme"
+
+
+def test_render_assistant_message():
+    message = AssistantMessage(content="Hello, world!")
+    assert (
+        message.render()
+        == "<|start_header_id|>assistant<|end_header_id|>\n\nHello, world!<|eot_id|>"
+    )
