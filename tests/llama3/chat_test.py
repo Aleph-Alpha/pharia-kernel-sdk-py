@@ -40,7 +40,7 @@ def test_trigger_tool_call(csi: DevCsi):
     assert response.message.role == Role.Assistant
     assert response.message.content is None
     assert response.message.tool_call is not None
-    assert response.message.tool_call.tool_name == GetShipmentDate.name()
+    assert response.message.tool_call.name == GetShipmentDate.name()
     assert response.message.tool_call.arguments == {"order_id": "42"}
 
     # And the original request should be extended
@@ -54,9 +54,8 @@ def test_provide_tool_result(csi: DevCsi):
     assistant = AssistantMessage(tool_call=tool_call)
 
     # When providing a tool response back to the model
-    tool_response = ToolResponse(GetShipmentDate.name(), content="1970-01-01")
-    ipython = Message.from_tool_response(tool_response)
-    request = ChatRequest(llama, [user, assistant, ipython], [GetShipmentDate])
+    tool = ToolResponse(content="1970-01-01")
+    request = ChatRequest(llama, [user, assistant, tool], [GetShipmentDate])
     response = llama3.chat(csi, request)
 
     # Then the response should answer the original question
@@ -96,10 +95,8 @@ def test_tool_response_can_be_added_to_prompt():
     assert response.message.tool_call is not None
 
     # And providing the tool response
-    tool_response = ToolResponse(
-        "get_shipment_date", content='{"result": "1970-01-01"}'
-    )
-    request.extend_with_tool_response(tool_response)
+    tool = ToolResponse(content='{"result": "1970-01-01"}')
+    request.extend(tool)
 
     # And doing another chat request against a spy csi
     response = llama3.chat(csi, request)

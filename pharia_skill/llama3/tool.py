@@ -17,6 +17,7 @@ from typing import Any, Literal, TypedDict
 
 from pydantic import BaseModel
 
+from .message import Message, Role
 from .response import Response, SpecialTokens
 
 
@@ -115,7 +116,7 @@ ToolDefinition = type[Tool] | JsonSchema
 
 @dataclass
 class ToolCall:
-    tool_name: BuiltInTool | str
+    name: BuiltInTool | str
     arguments: dict[str, str]
 
     def render(self) -> str:
@@ -125,28 +126,28 @@ class ToolCall:
         a parsed format, we need to convert it to a prompt string to construct
         the message history for a later interactions with the model.
         """
-        if isinstance(self.tool_name, BuiltInTool):
+        if isinstance(self.name, BuiltInTool):
             return SpecialTokens.PythonTag + self.render_build_in()
         else:
             # see `ToolCall.from_text` for why the python tag is not included here
             return self.render_json()
 
     def render_build_in(self) -> str:
-        if self.tool_name == BuiltInTool.CodeInterpreter:
+        if self.name == BuiltInTool.CodeInterpreter:
             assert "code" in self.arguments
             return self.arguments["code"]
-        elif self.tool_name == BuiltInTool.BraveSearch:
+        elif self.name == BuiltInTool.BraveSearch:
             assert "query" in self.arguments
             return f'brave_search.call(query="{self.arguments["query"]}")'
-        elif self.tool_name == BuiltInTool.WolframAlpha:
+        elif self.name == BuiltInTool.WolframAlpha:
             assert "query" in self.arguments
             return f'wolfram_alpha.call(query="{self.arguments["query"]}")'
         else:
-            raise ValueError(f"Unknown built-in tool: {self.tool_name}")
+            raise ValueError(f"Unknown built-in tool: {self.name}")
 
     def render_json(self) -> str:
         return json.dumps(
-            {"type": "function", "name": self.tool_name, "parameters": self.arguments}
+            {"type": "function", "name": self.name, "parameters": self.arguments}
         )
 
     @classmethod
@@ -175,7 +176,7 @@ class ToolCall:
         """Parse a tool call from a message that started with the Python Tag."""
         if text.startswith("brave_search.call"):
             return ToolCall(
-                tool_name=BuiltInTool.BraveSearch,
+                name=BuiltInTool.BraveSearch,
                 arguments={
                     "query": text.split('brave_search.call(query="')[1]
                     .split('")')[0]
@@ -184,7 +185,7 @@ class ToolCall:
             )
         elif text.startswith("wolfram_alpha.call"):
             return ToolCall(
-                tool_name=BuiltInTool.WolframAlpha,
+                name=BuiltInTool.WolframAlpha,
                 arguments={
                     "query": text.split('wolfram_alpha.call(query="')[1]
                     .split('")')[0]
@@ -193,7 +194,7 @@ class ToolCall:
             )
         else:
             return ToolCall(
-                tool_name=BuiltInTool.CodeInterpreter,
+                name=BuiltInTool.CodeInterpreter,
                 arguments={"code": text.strip()},
             )
 
@@ -209,21 +210,30 @@ class ToolCall:
         return None
 
 
+def render_tool(tool: type[Tool] | JsonSchema) -> str:
+    schema = tool if isinstance(tool, dict) else tool.render()
+    return json.dumps(schema, indent=4)
+
+
 @dataclass
-class ToolResponse:
-    tool_name: BuiltInTool | str
-    content: str
+class ToolResponse(Message):
+    """
+    Response for the model after a tool call has been executed.
+
+    Given the LLM has requested a tool call and the developer has executed the tool call,
+    the result can be passed back to the model as a `ToolResponse`.
+    """
+
+    role: Literal[Role.IPython] = Role.IPython  # mypy: ignore[assignment]
     success: bool = True
 
     def render(self) -> str:
+        return f"{self.role.render()}\n\n{self.output()}{SpecialTokens.EndOfTurn.value}"
+
+    def output(self) -> str:
         prompt = "completed" if self.success else "failed"
         if self.success:
             prompt += f"[stdout]{self.content}[/stdout]"
         else:
             prompt += f"[stderr]{self.content}[/stderr]"
         return prompt
-
-
-def render_tool(tool: type[Tool] | JsonSchema) -> str:
-    schema = tool if isinstance(tool, dict) else tool.render()
-    return json.dumps(schema, indent=4)

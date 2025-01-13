@@ -5,6 +5,7 @@ from pharia_skill.llama3.tool import (
     BuiltInTool,
     Tool,
     ToolCall,
+    ToolResponse,
 )
 
 
@@ -51,7 +52,7 @@ def test_brave_search_call_is_parsed():
 
     # Then
     assert tool_call is not None
-    assert tool_call.tool_name == BuiltInTool.BraveSearch
+    assert tool_call.name == BuiltInTool.BraveSearch
     assert tool_call.arguments == {"query": "current weather in Menlo Park, California"}
 
 
@@ -65,7 +66,7 @@ def test_wolfram_alpha_call_is_parsed():
 
     # Then
     assert tool_call is not None
-    assert tool_call.tool_name == BuiltInTool.WolframAlpha
+    assert tool_call.name == BuiltInTool.WolframAlpha
     assert tool_call.arguments == {"query": "solve x^3 - 4x^2 + 6x - 24 = 0"}
 
 
@@ -87,7 +88,7 @@ def test_json_function_call_render():
 
 def test_code_interpreter_tool_call_render():
     tool_call = ToolCall(
-        tool_name=BuiltInTool.CodeInterpreter,
+        name=BuiltInTool.CodeInterpreter,
         arguments={"code": "def is_prime(n):\n   return True"},
     )
     assert tool_call.render() == "<|python_tag|>def is_prime(n):\n   return True"
@@ -95,20 +96,26 @@ def test_code_interpreter_tool_call_render():
 
 def test_brave_search_tool_call_render():
     tool_call = ToolCall(
-        tool_name=BuiltInTool.BraveSearch,
+        name=BuiltInTool.BraveSearch,
         arguments={"query": "current weather in Menlo Park, California"},
     )
     expected = '<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")'
     assert tool_call.render() == expected
 
 
-# def test_tool_definition_can_be_serialized():
-#     class CParameters(BaseModel):
-#         registry: str = "default"
+def test_tool_response_message_render():
+    tool = ToolResponse(
+        content='{"weather": "sunny", "temperature": "70 degrees"}',
+        success=True,
+    )
+    expected = '<|start_header_id|>ipython<|end_header_id|>\n\ncompleted[stdout]{"weather": "sunny", "temperature": "70 degrees"}[/stdout]<|eot_id|>'
+    assert tool.render() == expected
 
-#     tool = ToolDefinition(
-#         name="get_github_readme",
-#         description="Get the readme of a GitHub repository",
-#         parameters=Parameters,
-#     )
-#     tool.model_dump_json()
+
+def test_failed_tool_response_message_render():
+    tool = ToolResponse(
+        content="failed to connect to server",
+        success=False,
+    )
+    expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"
+    assert tool.render() == expected

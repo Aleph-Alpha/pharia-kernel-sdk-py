@@ -14,6 +14,7 @@ from pharia_skill.llama3 import (
     ChatResponse,
     Role,
     ToolCall,
+    ToolResponse,
 )
 
 
@@ -89,10 +90,7 @@ def test_tool_result_can_be_deserialized():
             },
             {
                 "role": "ipython",
-                "tool_response": {
-                    "tool_name": "get_delivery_date",
-                    "content": "2025-07-01",
-                },
+                "content": "2025-07-01",
             },
         ],
     }
@@ -100,10 +98,19 @@ def test_tool_result_can_be_deserialized():
     # When deserializing it to the ChatApi model
     chat = ChatApi.model_validate(data)
 
-    # Then the last message is a tool response
-    assert chat.root.messages[-1].role == Role.IPython
-    assert chat.root.messages[-1].tool_response is not None
-    assert chat.root.messages[-1].tool_response.content == "2025-07-01"
+    # Then we get three messages
+    messages = chat.root.messages
+    assert len(messages) == 3
+
+    # And the third one is a tool response
+    assert isinstance(messages[2], ToolResponse)
+    assert chat.root.messages[2].content == "2025-07-01"
+
+    # And the second one is an assistant one
+    assert isinstance(messages[1], AssistantMessage)
+
+    # And the first one is a user message
+    assert messages[0].role == Role.User
 
 
 class ChatOutput(RootModel[ChatResponse]):
@@ -117,7 +124,7 @@ class ChatOutput(RootModel[ChatResponse]):
 
 def test_chat_response_can_be_serialized():
     # Given a chat response with a function call
-    tool_call = ToolCall(tool_name="get_shipment_date", arguments={"order_id": "42"})
+    tool_call = ToolCall(name="get_shipment_date", arguments={"order_id": "42"})
     message = AssistantMessage(tool_call=tool_call)
     response = ChatResponse(message, FinishReason.STOP)
 
@@ -125,11 +132,10 @@ def test_chat_response_can_be_serialized():
     data = ChatOutput(root=response).model_dump_json(indent=4)
     expected = """{
     "message": {
-        "role": "assistant",
         "content": null,
-        "tool_response": null,
+        "role": "assistant",
         "tool_call": {
-            "tool_name": "get_shipment_date",
+            "name": "get_shipment_date",
             "arguments": {
                 "order_id": "42"
             }

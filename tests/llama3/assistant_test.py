@@ -3,7 +3,7 @@ from pharia_skill.llama3 import AssistantMessage, BuiltInTool, ToolCall
 
 def test_tool_call_message_render():
     tool_call = ToolCall(
-        tool_name=BuiltInTool.BraveSearch,
+        name=BuiltInTool.BraveSearch,
         arguments={"query": "current weather in Menlo Park, California"},
     )
     message = AssistantMessage(tool_call=tool_call)
@@ -24,7 +24,7 @@ def test_message_from_response_with_tool_call():
 
     assert message.content is None
     assert message.tool_call is not None
-    assert message.tool_call.tool_name == BuiltInTool.CodeInterpreter
+    assert message.tool_call.name == BuiltInTool.CodeInterpreter
     assert message.tool_call.arguments == {"code": "def is_prime(n):\n   return True"}
 
 
@@ -34,7 +34,7 @@ def test_message_tool_call_without_python_tag():
     message = AssistantMessage.from_raw_response(response)
     assert message.content is None
     assert message.tool_call is not None
-    assert message.tool_call.tool_name == "get_github_readme"
+    assert message.tool_call.name == "get_github_readme"
 
 
 def test_tool_call_from_chat_response_with_python_tag():
@@ -42,4 +42,4 @@ def test_tool_call_from_chat_response_with_python_tag():
     message = AssistantMessage.from_raw_response(response)
     assert message.content is None
     assert message.tool_call is not None
-    assert message.tool_call.tool_name == "get_github_readme"
+    assert message.tool_call.name == "get_github_readme"

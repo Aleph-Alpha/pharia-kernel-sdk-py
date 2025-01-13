@@ -5,7 +5,7 @@ from .message import (
     Role,
 )
 from .request import ChatRequest
-from .tool import BuiltInTool, Tool, ToolCall, ToolResponse
+from .tool import BuiltInTool, Tool, ToolCall, ToolDefinition, ToolResponse
 
 __all__ = [
     "ChatRequest",
@@ -15,6 +15,7 @@ __all__ = [
     "AssistantMessage",
     "chat",
     "ToolCall",
+    "ToolDefinition",
     "ToolResponse",
     "BuiltInTool",
     "Tool",
