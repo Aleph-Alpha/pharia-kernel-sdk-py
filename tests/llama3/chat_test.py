@@ -1,5 +1,4 @@
 import pytest
-from pydantic import BaseModel
 
 from pharia_skill import llama3
 from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason
@@ -7,8 +6,8 @@ from pharia_skill.llama3 import (
     ChatRequest,
     Message,
     Role,
+    Tool,
     ToolCall,
-    ToolDefinition,
     ToolResponse,
 )
 from pharia_skill.testing import DevCsi
@@ -22,21 +21,16 @@ def csi() -> DevCsi:
 llama = "llama-3.1-8b-instruct"
 
 
-class ShipmentParams(BaseModel):
+class GetShipmentDate(Tool):
+    """Get the shipment date for a specific order"""
+
     order_id: str
-
-
-tool = ToolDefinition(
-    name="get_shipment_date",
-    description="Get the shipment date for a specific order",
-    parameters=ShipmentParams,
-)
 
 
 def test_trigger_tool_call(csi: DevCsi):
     # Given a chat request with a tool definition and a message that requires the tool
     message = Message.user("When will the order `42` ship?")
-    request = ChatRequest(llama, [message], [tool])
+    request = ChatRequest(llama, [message], [GetShipmentDate])
 
     # When doing a chat request
     response = llama3.chat(csi, request)
@@ -45,7 +39,7 @@ def test_trigger_tool_call(csi: DevCsi):
     assert response.message.role == Role.Assistant
     assert response.message.content is None
     assert response.message.tool_call is not None
-    assert response.message.tool_call.tool_name == "get_shipment_date"
+    assert response.message.tool_call.tool_name == GetShipmentDate.name()
     assert response.message.tool_call.arguments == {"order_id": "42"}
 
     # And the original request should be extended
@@ -55,13 +49,13 @@ def test_trigger_tool_call(csi: DevCsi):
 def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
     user = Message.user("When will the order `42` ship?")
-    tool_call = ToolCall(tool.name, arguments={"order_id": "42"})
+    tool_call = ToolCall(GetShipmentDate.name(), arguments={"order_id": "42"})
     assistant = Message(role=Role.Assistant, content=None, tool_call=tool_call)
 
     # When providing a tool response back to the model
-    tool_response = ToolResponse(tool.name, content="1970-01-01")
+    tool_response = ToolResponse(GetShipmentDate.name(), content="1970-01-01")
     ipython = Message.from_tool_response(tool_response)
-    request = ChatRequest(llama, [user, assistant, ipython], [tool])
+    request = ChatRequest(llama, [user, assistant, ipython], [GetShipmentDate])
     response = llama3.chat(csi, request)
 
     # Then the response should answer the original question
@@ -87,7 +81,7 @@ class MockCsi(Csi):
 def test_tool_response_can_be_added_to_prompt():
     # Given a chat request with a tool definition and a message that requires the tool
     message = Message.user("When will the order `42` ship?")
-    request = ChatRequest(llama, [message], [tool])
+    request = ChatRequest(llama, [message], [GetShipmentDate])
 
     # And given a csi that always responds with a function call
     completion = Completion(
@@ -101,7 +95,9 @@ def test_tool_response_can_be_added_to_prompt():
     assert response.message.tool_call is not None
 
     # And providing the tool response
-    tool_response = ToolResponse(tool.name, content='{"result": "1970-01-01"}')
+    tool_response = ToolResponse(
+        "get_shipment_date", content='{"result": "1970-01-01"}'
+    )
     request.extend_with_tool_response(tool_response)
 
     # And doing another chat request against a spy csi

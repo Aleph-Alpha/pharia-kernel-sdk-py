@@ -10,11 +10,12 @@ classes in this module.
 """
 
 import json
+import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Literal, TypedDict
 
-from pydantic import BaseModel, model_serializer, model_validator
+from pydantic import BaseModel
 
 from .response import Response
 
@@ -25,62 +26,72 @@ class BuiltInTool(str, Enum):
     BraveSearch = "brave_search"
 
 
-class ToolDefinition(BaseModel):
-    """Provide context on a tool that can be called by the model.
+class Function(TypedDict):
+    name: str
+    description: str
+    parameters: dict[str, Any]
 
-    A tool can be setup from a json schema or by directly providing its name,
-    definition and parameters. The parameters can be provided as a pydantic model,
-    allowing the user to not worry about writing json schema. The type of the each
-    parameter is automatically inferred from the pydantic model. Here is an example
-    of a definition that would render to json schema with three fields. The schema
-    would have a description for the repository field and a default value for the
-    tag field.
+
+class JsonSchema(TypedDict):
+    """Provide a tool definition as a json schema.
+
+    While `Tool` is a more user-friendly way to define a tool in
+    code, in some cases it might put too many constraints on the user. E.g., it can
+    not be serialized from a json http request. Therefore, function definitions can
+    also be provided in the serialized, json schema format.
+    """
+
+    type: Literal["function"]
+    function: Function
+
+
+class Tool(BaseModel):
+    """Provide a tool definition as a Pydantic model.
+
+    The name of the class will be used as function name. The description of the
+    function is taken from the docstring of the class. The parameters are
+    specified as attributes of the model. Type hints and default arguments can
+    be used to specify the schema, and a description of a parameter can be added
+    with the `Field` class.
 
     Example::
 
         from pydantic import BaseMode, Field
 
-        class Parameters(BaseModel):
+        class GetImageInformation(BaseModel):
+            "Retrieve information about a specific image."
+
             registry: str
             repository: str = Field(
-                description="The name of the GitHub repository to get the readme from",
+                description="The full identifier of the image in the registry",
             )
             tag: str = "latest"
-
-
     """
 
-    name: BuiltInTool | str
-    description: str | None = None
-    parameters: type[BaseModel] | dict[str, Any] | None = None
+    @classmethod
+    def name(cls) -> str:
+        return cls._to_snake_case(cls.__name__)
 
-    def render(self) -> str:
-        return json.dumps(self.as_dict(), indent=4)
-
-    @model_serializer
-    def as_dict(self) -> dict[str, Any]:
-        """Json Schema serialiation for a `ToolDefinition`.
-
-        Pydantic is not able to serialize a model meta class to a dictionary.
-        Therefore, the json schema is also set as the default way to serialize
-        a `ToolDefinition`.
-        """
-        if isinstance(self.parameters, dict):
-            parameters = self.parameters
-        elif isinstance(self.parameters, type):
-            parameters = self.parameters.model_json_schema()
-            self._recursive_purge_title(parameters)
-        else:
-            parameters = {}
-        prompt = {
+    @classmethod
+    def render(cls) -> dict[str, Any]:
+        schema = cls.model_json_schema()
+        description = schema.get("description")
+        if description is not None:
+            del schema["description"]
+        data = {
             "type": "function",
             "function": {
-                "name": self.name,
-                "description": self.description,
-                "parameters": parameters,
+                "name": cls.name(),
+                "description": description,
+                "parameters": schema,
             },
         }
-        return prompt
+        cls._recursive_purge_title(data)
+        return data
+
+    @classmethod
+    def _to_snake_case(cls, name: str) -> str:
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
     @classmethod
     def _recursive_purge_title(cls, data: dict[str, Any]) -> None:
@@ -97,30 +108,9 @@ class ToolDefinition(BaseModel):
                 else:
                     cls._recursive_purge_title(data[key])
 
-    @model_validator(mode="before")  # pyright: ignore
-    @classmethod
-    def deserialize(cls, values: Any) -> Any:
-        """Custom deserialization for a `ToolDefinition`.
 
-        Tool definition can be provided in two ways:
-
-        1. From a json schema (e.g.) if the definition is coming via HTTP.
-        2. With a Pydantic model, if the definition is provided in code.
-
-        While a `ToolDefinition` will render to a json schema definition building on
-        pydantic.model_json_schema, it also needs to be able to load from a json schema.
-
-        Therefore, the values need to be augmented in the deserialization step.
-        """
-        if values.get("function") is not None:
-            if values.get("name") is None:
-                values["name"] = values["function"]["name"]
-            if values.get("description") is None:
-                values["description"] = values["function"]["description"]
-            if values.get("parameters") is None:
-                values["parameters"] = values["function"]["parameters"]
-        return values
-
+ToolDefinition = type[Tool] | JsonSchema
+"""A tool can either be defined as a Pydantic model or directly as a json schema."""
 
 PythonTag = "<|python_tag|>"
 """Python tag that is used to indicate that the message is a tool call."""
@@ -234,3 +224,8 @@ class ToolResponse:
         else:
             prompt += f"[stderr]{self.content}[/stderr]"
         return prompt
+
+
+def render_tool(tool: type[Tool] | JsonSchema) -> str:
+    schema = tool if isinstance(tool, dict) else tool.render()
+    return json.dumps(schema, indent=4)

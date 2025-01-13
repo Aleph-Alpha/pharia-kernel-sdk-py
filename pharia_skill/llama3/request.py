@@ -11,12 +11,18 @@ a message or tool response to the request.
 """
 
 from dataclasses import dataclass, field
+from typing import Sequence
 
 from pharia_skill.csi import ChatParams
 
 from .message import Message, Role
 from .response import SpecialTokens
-from .tool import BuiltInTool, ToolDefinition, ToolResponse
+from .tool import (
+    BuiltInTool,
+    ToolDefinition,
+    ToolResponse,
+    render_tool,
+)
 
 
 @dataclass
@@ -31,7 +37,7 @@ class ChatRequest:
 
     model: str
     messages: list[Message]
-    tools: list[ToolDefinition] = field(default_factory=list)
+    tools: Sequence[ToolDefinition | BuiltInTool] = field(default_factory=list)
     params: ChatParams = field(default_factory=ChatParams)
 
     def __post_init__(self) -> None:
@@ -94,14 +100,14 @@ class ChatRequest:
 
         prompt = "Environment: ipython"
         if tools := self.system_prompt_tools():
-            prompt += f"\nTools: {', '.join(tool.name for tool in tools)}"
+            prompt += f"\nTools: {', '.join(tool.value for tool in tools)}"
 
         # include the original system prompt
         if self.messages[0].role == Role.System:
             prompt += f"\n{self.messages[0].content}"
         return Message.system(prompt)
 
-    def system_prompt_tools(self) -> list[ToolDefinition]:
+    def system_prompt_tools(self) -> list[BuiltInTool]:
         """Subset of specified tools that need to be activated in the system prompt.
 
         CodeInterpreter is automatically included when IPython is activated and does
@@ -110,8 +116,7 @@ class ChatRequest:
         return [
             tool
             for tool in self.tools
-            if tool.name in list(BuiltInTool)
-            and tool.name != BuiltInTool.CodeInterpreter
+            if isinstance(tool, BuiltInTool) and tool != BuiltInTool.CodeInterpreter
         ]
 
     @property
@@ -133,7 +138,7 @@ class ChatRequest:
 
         prompt = "Answer the user's question by making use of the following functions if needed.\n\n"
         for tool in self.user_provided_tools():
-            prompt += f"{tool.render()}\n"
+            prompt += f"{render_tool(tool)}\n"
 
         prompt += "\nReturn function calls in JSON format."
         prompt += f"\n\nQuestion: {provided.content}"
@@ -141,7 +146,7 @@ class ChatRequest:
 
     def user_provided_tools(self) -> list[ToolDefinition]:
         """Subset of specified tools that need to be injected into the user message."""
-        return [tool for tool in self.tools if tool.name not in list(BuiltInTool)]
+        return [tool for tool in self.tools if not isinstance(tool, BuiltInTool)]
 
     def messages_without_system_and_first_user(self) -> list[Message]:
         """The system and first user prompt are altered.
