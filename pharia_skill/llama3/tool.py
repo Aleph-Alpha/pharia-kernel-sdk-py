@@ -17,7 +17,7 @@ from typing import Any, Literal, TypedDict
 
 from pydantic import BaseModel
 
-from .response import Response
+from .response import Response, SpecialTokens
 
 
 class BuiltInTool(str, Enum):
@@ -112,9 +112,6 @@ class Tool(BaseModel):
 ToolDefinition = type[Tool] | JsonSchema
 """A tool can either be defined as a Pydantic model or directly as a json schema."""
 
-PythonTag = "<|python_tag|>"
-"""Python tag that is used to indicate that the message is a tool call."""
-
 
 @dataclass
 class ToolCall:
@@ -129,7 +126,7 @@ class ToolCall:
         the message history for a later interactions with the model.
         """
         if isinstance(self.tool_name, BuiltInTool):
-            return PythonTag + self.render_build_in()
+            return SpecialTokens.PythonTag + self.render_build_in()
         else:
             # see `ToolCall.from_text` for why the python tag is not included here
             return self.render_json()
