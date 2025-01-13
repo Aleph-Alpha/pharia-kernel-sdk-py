@@ -3,6 +3,7 @@ import pytest
 from pharia_skill import llama3
 from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason
 from pharia_skill.llama3 import (
+    AssistantMessage,
     ChatRequest,
     Message,
     Role,
@@ -50,7 +51,7 @@ def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
     user = Message.user("When will the order `42` ship?")
     tool_call = ToolCall(GetShipmentDate.name(), arguments={"order_id": "42"})
-    assistant = Message(role=Role.Assistant, content=None, tool_call=tool_call)
+    assistant = AssistantMessage(tool_call=tool_call)
 
     # When providing a tool response back to the model
     tool_response = ToolResponse(GetShipmentDate.name(), content="1970-01-01")

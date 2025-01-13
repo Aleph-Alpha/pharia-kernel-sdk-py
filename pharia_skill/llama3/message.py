@@ -10,8 +10,8 @@ to be constructed from the tool response: `Message.from_tool_response(tool_respo
 from dataclasses import dataclass
 from enum import Enum
 
-from .response import RawResponse, Response, SpecialTokens
-from .tool import ToolCall, ToolResponse
+from .response import SpecialTokens
+from .tool import ToolResponse
 
 
 class Role(str, Enum):
@@ -37,16 +37,11 @@ class Message:
 
     role: Role
     content: str | None = None
-    tool_call: ToolCall | None = None
     tool_response: ToolResponse | None = None
 
     @classmethod
     def user(cls, content: str) -> "Message":
         return cls(role=Role.User, content=content)
-
-    @classmethod
-    def assistant(cls, content: str) -> "Message":
-        return cls(role=Role.Assistant, content=content)
 
     @classmethod
     def system(cls, content: str) -> "Message":
@@ -61,23 +56,7 @@ class Message:
         """
         return cls(role=Role.IPython, content=None, tool_response=tool_response)
 
-    @classmethod
-    def from_raw_response(cls, raw: RawResponse) -> "Message":
-        response = Response.from_raw(raw)
-        tool_call = ToolCall.from_response(response)
-        if tool_call is not None:
-            return Message(
-                role=Role.Assistant,
-                content=None,
-                tool_call=tool_call,
-            )
-        return Message(role=Role.Assistant, content=response.text)
-
     def render(self) -> str:
-        if self.tool_call is not None:
-            assert self.role == Role.Assistant, "Tool call must be an assistant message"
-            return f"{self.role.render()}\n\n{self.tool_call.render()}{SpecialTokens.EndOfMessage.value}"
-
         if self.tool_response is not None:
             assert self.role == Role.IPython, "Tool response must be an ipython message"
             return f"{self.role.render()}\n\n{self.tool_response.render()}{SpecialTokens.EndOfTurn.value}"

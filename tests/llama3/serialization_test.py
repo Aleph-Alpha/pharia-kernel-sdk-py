@@ -9,9 +9,9 @@ from pydantic import RootModel
 
 from pharia_skill import FinishReason
 from pharia_skill.llama3 import (
+    AssistantMessage,
     ChatRequest,
     ChatResponse,
-    Message,
     Role,
     ToolCall,
 )
@@ -89,7 +89,6 @@ def test_tool_result_can_be_deserialized():
             },
             {
                 "role": "ipython",
-                "content": "",
                 "tool_response": {
                     "tool_name": "get_delivery_date",
                     "content": "2025-07-01",
@@ -119,7 +118,7 @@ class ChatOutput(RootModel[ChatResponse]):
 def test_chat_response_can_be_serialized():
     # Given a chat response with a function call
     tool_call = ToolCall(tool_name="get_shipment_date", arguments={"order_id": "42"})
-    message = Message(role=Role.Assistant, content=None, tool_call=tool_call)
+    message = AssistantMessage(tool_call=tool_call)
     response = ChatResponse(message, FinishReason.STOP)
 
     # When serializing it via `ChatOutput`
@@ -128,13 +127,13 @@ def test_chat_response_can_be_serialized():
     "message": {
         "role": "assistant",
         "content": null,
+        "tool_response": null,
         "tool_call": {
             "tool_name": "get_shipment_date",
             "arguments": {
                 "order_id": "42"
             }
-        },
-        "tool_response": null
+        }
     },
     "finish_reason": "stop"
 }"""
