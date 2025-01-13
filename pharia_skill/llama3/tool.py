@@ -154,7 +154,7 @@ class ToolCall:
     def from_response(cls, text: Response) -> "ToolCall | None":
         """Parse a tool call from a message that has been stripped of special tokens.
 
-        While llama3.1 always include the <|python_tag|> prefix for function calls,
+        While llama3.1 always includes the <|python_tag|> prefix for function calls,
         llama3.3 does not. Therefore, we always try to match a function call from the response,
         even if the python tag is not included. Built in tools are always prefixed with the
         python tag, even by llama3.3.
