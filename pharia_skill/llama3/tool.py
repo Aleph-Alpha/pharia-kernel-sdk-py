@@ -70,10 +70,6 @@ class Tool(BaseModel):
     """
 
     @classmethod
-    def name(cls) -> str:
-        return cls._to_snake_case(cls.__name__)
-
-    @classmethod
     def render(cls) -> dict[str, Any]:
         schema = cls.model_json_schema()
         description = schema.get("description")
@@ -89,6 +85,10 @@ class Tool(BaseModel):
         }
         cls._recursive_purge_title(data)
         return data
+
+    @classmethod
+    def name(cls) -> str:
+        return cls._to_snake_case(cls.__name__)
 
     @classmethod
     def _to_snake_case(cls, name: str) -> str:
