@@ -13,9 +13,12 @@ import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
 
 from pydantic import BaseModel
+
+# import from typing_extensions for Python < 3.12 compatibility
+from typing_extensions import TypedDict
 
 from .message import MessageApi, Role
 from .response import Response, SpecialTokens
