@@ -5,11 +5,11 @@ from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason
 from pharia_skill.llama3 import (
     AssistantMessage,
     ChatRequest,
-    Message,
     Role,
     Tool,
     ToolCall,
     ToolResponse,
+    UserMessage,
 )
 from pharia_skill.testing import DevCsi
 
@@ -30,8 +30,8 @@ class GetShipmentDate(Tool):
 
 def test_trigger_tool_call(csi: DevCsi):
     # Given a chat request with a tool definition and a message that requires the tool
-    message = Message.user("When will the order `42` ship?")
-    request = ChatRequest(llama, [message], [GetShipmentDate])
+    message = UserMessage("When will the order `42` ship?")
+    request = ChatRequest(llama, [message], tools=[GetShipmentDate])
 
     # When doing a chat request
     response = llama3.chat(csi, request)
@@ -49,7 +49,7 @@ def test_trigger_tool_call(csi: DevCsi):
 
 def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
-    user = Message.user("When will the order `42` ship?")
+    user = UserMessage("When will the order `42` ship?")
     tool_call = ToolCall(GetShipmentDate.name(), arguments={"order_id": "42"})
     assistant = AssistantMessage(tool_call=tool_call)
 
@@ -80,7 +80,7 @@ class MockCsi(Csi):
 
 def test_tool_response_can_be_added_to_prompt():
     # Given a chat request with a tool definition and a message that requires the tool
-    message = Message.user("When will the order `42` ship?")
+    message = UserMessage("When will the order `42` ship?")
     request = ChatRequest(llama, [message], [GetShipmentDate])
 
     # And given a csi that always responds with a function call
