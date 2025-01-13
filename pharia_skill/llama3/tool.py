@@ -164,6 +164,7 @@ class ToolCall:
             text (str): The text of the message stripped of any special tokens.
             python_tag (bool): Whether the message started with the Python Tag.
         """
+
         if text.python_tag:
             return cls.json_from_text(text.text) or cls.built_in_from_text(text.text)
         else:

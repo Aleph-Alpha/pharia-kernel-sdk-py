@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from pharia_skill.csi import CompletionParams, Csi, FinishReason
 
-from .message import Message
+from .assistant import AssistantMessage
 from .request import ChatRequest
 
 
@@ -10,7 +10,7 @@ from .request import ChatRequest
 class ChatResponse:
     """Response from a chat request."""
 
-    message: Message
+    message: AssistantMessage
     finish_reason: FinishReason
 
 
@@ -68,7 +68,7 @@ def chat(csi: Csi, request: ChatRequest) -> ChatResponse:
     )
 
     completion = csi.complete(request.model, request.render(), completion_params)
-    message = Message.from_raw_response(completion.text)
+    message = AssistantMessage.from_raw_response(completion.text)
 
     request._extend(message)
     return ChatResponse(message, completion.finish_reason)

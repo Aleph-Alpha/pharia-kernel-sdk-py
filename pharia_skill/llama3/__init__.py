@@ -1,3 +1,4 @@
+from .assistant import AssistantMessage
 from .chat import ChatResponse, chat
 from .message import (
     Message,
@@ -11,6 +12,7 @@ __all__ = [
     "ChatResponse",
     "Message",
     "Role",
+    "AssistantMessage",
     "chat",
     "ToolCall",
     "ToolResponse",
