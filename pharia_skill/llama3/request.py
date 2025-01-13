@@ -15,6 +15,7 @@ from typing import Sequence
 
 from pharia_skill.csi import ChatParams
 
+from .assistant import AssistantMessage
 from .message import Message, Role
 from .response import SpecialTokens
 from .tool import (
@@ -36,7 +37,7 @@ class ChatRequest:
     """
 
     model: str
-    messages: list[Message]
+    messages: list[Message | AssistantMessage | ToolResponse]
     tools: Sequence[ToolDefinition | BuiltInTool] = field(default_factory=list)
     params: ChatParams = field(default_factory=ChatParams)
 
@@ -51,16 +52,6 @@ class ChatRequest:
         """
         validate_messages(self.messages + [message])
         self._extend(message)
-
-    def extend_with_tool_response(self, tool_response: ToolResponse) -> None:
-        """Add a tool response to a chat request.
-
-        You will typically want to do this after the model has requested a tool call,
-        you have executed the tool call, and now want to pass it to the model for another
-        chat turn.
-        """
-        message = Message.from_tool_response(tool_response)
-        self.extend(message)
 
     def _extend(self, message: Message) -> None:
         """Add a message to a chat request without validation.
