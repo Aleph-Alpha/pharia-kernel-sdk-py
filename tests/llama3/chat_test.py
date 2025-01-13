@@ -28,6 +28,7 @@ class GetShipmentDate(Tool):
     order_id: str
 
 
+@pytest.mark.kernel
 def test_trigger_tool_call(csi: DevCsi):
     # Given a chat request with a tool definition and a message that requires the tool
     message = UserMessage("When will the order `42` ship?")
@@ -47,6 +48,7 @@ def test_trigger_tool_call(csi: DevCsi):
     assert request.messages[-1].role == Role.Assistant
 
 
+@pytest.mark.kernel
 def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
     user = UserMessage("When will the order `42` ship?")

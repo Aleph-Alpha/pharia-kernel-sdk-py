@@ -1,5 +1,5 @@
 from examples.chat import ChatApi, chat_api
-from pharia_skill.llama3 import ChatRequest, Message, Tool
+from pharia_skill.llama3 import ChatRequest, Tool, UserMessage
 from pharia_skill.testing import DevCsi
 
 
@@ -12,7 +12,7 @@ class GetShipmentDate(Tool):
 def test_chat_api():
     # Given a chat api request with a user message and a tool definition
     csi = DevCsi()
-    user = Message.user("When will my order (42) arrive?")
+    user = UserMessage("When will my order (42) arrive?")
     request = ChatRequest("llama-3.1-8b-instruct", [user], [GetShipmentDate])
     input = ChatApi(root=request)
 
@@ -26,7 +26,7 @@ def test_chat_api():
 
 
 def test_model_dump():
-    user = Message.user("When will my order (42) arrive?")
+    user = UserMessage("When will my order (42) arrive?")
     request = ChatRequest("llama-3.1-8b-instruct", [user], [GetShipmentDate])
     input = ChatApi(root=request)
     input.model_dump_json()
