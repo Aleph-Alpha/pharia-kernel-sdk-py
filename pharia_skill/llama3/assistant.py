@@ -14,7 +14,7 @@ class AssistantMessage(MessageApi):
     which is why they are represented by different classes.
     """
 
-    content: str | None = None  # type: ignore[assignment]
+    content: str | None = None
     role: Literal[Role.Assistant] = Role.Assistant
     tool_call: ToolCall | None = None
 
@@ -29,4 +29,4 @@ class AssistantMessage(MessageApi):
     def render(self) -> str:
         if self.tool_call is not None:
             return f"{self.role.render()}\n\n{self.tool_call.render()}{SpecialTokens.EndOfMessage.value}"
-        return super().render()
+        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"

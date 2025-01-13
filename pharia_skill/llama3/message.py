@@ -28,12 +28,9 @@ class Role(str, Enum):
 class MessageApi(Protocol):
     """A base message that can be rendered."""
 
-    content: str
-    role: Role
-
     def render(self) -> str:
         """Render the message to a string."""
-        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
+        ...
 
 
 @dataclass
@@ -47,6 +44,9 @@ class UserMessage(MessageApi):
     content: str
     role: Literal[Role.User] = Role.User
 
+    def render(self) -> str:
+        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
+
 
 @dataclass
 class SystemMessage(MessageApi):
@@ -58,3 +58,6 @@ class SystemMessage(MessageApi):
 
     content: str
     role: Literal[Role.System] = Role.System
+
+    def render(self) -> str:
+        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
