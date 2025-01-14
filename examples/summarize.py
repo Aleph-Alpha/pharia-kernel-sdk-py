@@ -69,11 +69,11 @@ class Instruction(NamedTuple):
         return CompletionRequest(model=MODEL, prompt=self.prompt(text), params=params)
 
     def prompt(self, text: str) -> str:
-        return f"""{self.summarization_prompt}
+        return f"""<|begin_of_text|><|start_header_id|>user<|end_header_id|>
 
-{text}
+{self.summarization_prompt}
 
-### Response:"""
+{text}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
 
 
 @skill
