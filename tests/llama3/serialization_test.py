@@ -5,6 +5,7 @@ tool calling ability to the outside world and add a small abstraction on
 top of the completion endpoint.
 """
 
+import pytest
 from pydantic import RootModel
 
 from pharia_skill import FinishReason
@@ -12,16 +13,119 @@ from pharia_skill.llama3 import (
     AssistantMessage,
     ChatRequest,
     ChatResponse,
+    CodeInterpreter,
+    JsonSchema,
     Role,
+    Tool,
     ToolCall,
     ToolResponse,
+    UserMessage,
 )
+
+
+class GetGithubReadme(Tool):
+    pass
 
 
 class ChatApi(RootModel[ChatRequest]):
     """Expose a chat api with function calling by forwarding a `ChatRequest`."""
 
     root: ChatRequest
+
+
+def test_chat_request_field_serializer_built_in_tool():
+    request = ChatRequest("llama-3.1-8b-instruct", [UserMessage("Hi")])
+    tools = [CodeInterpreter]
+
+    serialized = request.as_dict(tools)
+
+    assert serialized == ["code_interpreter"]
+
+
+def test_chat_request_field_serializer_custom_typed_tool():
+    request = ChatRequest("llama-3.1-8b-instruct", [UserMessage("Hi")])
+    tools = [GetGithubReadme]
+
+    serialized = request.as_dict(tools)
+    assert serialized == [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_github_readme",
+                "description": None,
+                "parameters": {
+                    "properties": {},
+                    "type": "object",
+                },
+            },
+        }
+    ]
+
+
+def test_chat_request_field_serializer_custom_tool():
+    request = ChatRequest("llama-3.1-8b-instruct", [UserMessage("Hi")])
+    tools = [
+        JsonSchema(
+            {
+                "type": "function",
+                "function": {
+                    "name": "custom-tool-definition",
+                    "description": "Custom Tool",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                    },
+                },
+            }
+        )
+    ]
+
+    serialized = request.as_dict(tools)
+    assert serialized == tools
+
+
+def test_chat_request_validate_built_in_tool():
+    serialized = ["code_interpreter"]
+    validated = ChatRequest.validate_tools(serialized)  # pyright: ignore[reportCallIssue]
+    assert validated == [CodeInterpreter]
+
+
+def test_chat_request_validate_unknown_tool():
+    serialized = ["unknown_tool"]
+    with pytest.raises(ValueError):
+        ChatRequest.validate_tools(serialized)  # pyright: ignore[reportCallIssue]
+
+
+def test_chat_request_validate_custom_tool():
+    serialized = [
+        {
+            "type": "function",
+            "function": {
+                "name": "custom-tool-definition",
+                "description": "Custom Tool",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                },
+            },
+        }
+    ]
+    validated = ChatRequest.validate_tools(serialized)  # pyright: ignore[reportCallIssue]
+    assert validated == [
+        JsonSchema(
+            {
+                "type": "function",
+                "function": {
+                    "name": "custom-tool-definition",
+                    "description": "Custom Tool",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                    },
+                },
+            }
+        )
+    ]
 
 
 def test_chat_request_can_be_deserialized():
@@ -80,7 +184,7 @@ def test_built_in_tool_can_be_deserialized():
     }
     chat = ChatApi.model_validate(data)
     assert len(chat.root.tools) == 1
-    assert chat.root.tools[0] == "code_interpreter"
+    assert chat.root.tools[0] == CodeInterpreter
 
 
 def test_tool_result_can_be_deserialized():

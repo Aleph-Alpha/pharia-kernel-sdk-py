@@ -12,7 +12,6 @@ classes in this module.
 import json
 import re
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Literal, Sequence
 
 from pydantic import BaseModel
@@ -26,7 +25,7 @@ from .response import Response, SpecialTokens
 
 class Function(TypedDict):
     name: str
-    description: str
+    description: str | None
     parameters: dict[str, Any]
 
 
@@ -107,25 +106,26 @@ class Tool(BaseModel):
                     cls._recursive_purge_title(data[key])
 
 
-class BuiltInTool(str, Enum):
-    CodeInterpreter = "code_interpreter"
-    WolframAlpha = "wolfram_alpha"
-    BraveSearch = "brave_search"
+class BuiltInTool(Tool):
+    pass
 
 
-class CodeInterpreter(Tool):
+class CodeInterpreter(BuiltInTool):
     src: str
 
 
-class WolframAlpha(Tool):
+class WolframAlpha(BuiltInTool):
     query: str
 
 
-class BraveSearch(Tool):
+class BraveSearch(BuiltInTool):
     query: str
 
 
-ToolDefinition = type[Tool] | JsonSchema | BuiltInTool
+BuiltInTools = (CodeInterpreter, WolframAlpha, BraveSearch)
+
+
+ToolDefinition = type[Tool] | JsonSchema
 """A tool can either be defined as a Pydantic model or directly as a json schema."""
 
 
@@ -136,7 +136,7 @@ class ToolCall:
     Arguments are not validated against the provided schema.
     """
 
-    name: BuiltInTool | str
+    name: str
     arguments: Tool | dict[str, Any]
 
     def render(self) -> str:
@@ -146,7 +146,7 @@ class ToolCall:
         a parsed format, we need to convert it to a prompt string to construct
         the message history for a later interactions with the model.
         """
-        if isinstance(self.name, BuiltInTool):
+        if isinstance(self.arguments, BuiltInTool):
             return SpecialTokens.PythonTag + self.render_build_in()
         else:
             # see `ToolCall.raw_from_response` for why the python tag is not included here
@@ -213,7 +213,7 @@ class ToolCall:
         """Parse a tool call from a message that started with the Python Tag."""
         if text.startswith("brave_search.call"):
             return ToolCall(
-                BuiltInTool.BraveSearch,
+                "brave_search",
                 BraveSearch(
                     query=text.split('brave_search.call(query="')[1]
                     .split('")')[0]
@@ -222,7 +222,7 @@ class ToolCall:
             )
         elif text.startswith("wolfram_alpha.call"):
             return ToolCall(
-                BuiltInTool.WolframAlpha,
+                "wolfram_alpha",
                 WolframAlpha(
                     query=text.split('wolfram_alpha.call(query="')[1]
                     .split('")')[0]
@@ -231,7 +231,7 @@ class ToolCall:
             )
         else:
             return ToolCall(
-                BuiltInTool.CodeInterpreter,
+                "code_interpreter",
                 CodeInterpreter(src=text.strip()),
             )
 
@@ -245,11 +245,6 @@ class ToolCall:
             pass
 
         return None
-
-
-def render_tool(tool: type[Tool] | JsonSchema) -> str:
-    schema = tool if isinstance(tool, dict) else tool.render()
-    return json.dumps(schema, indent=4)
 
 
 @dataclass

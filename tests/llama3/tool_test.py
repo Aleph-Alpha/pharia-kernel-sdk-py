@@ -4,7 +4,6 @@ from pydantic import Field, ValidationError
 from pharia_skill.llama3.response import Response
 from pharia_skill.llama3.tool import (
     BraveSearch,
-    BuiltInTool,
     CodeInterpreter,
     Tool,
     ToolCall,
@@ -57,7 +56,7 @@ def test_brave_search_call_is_parsed():
 
     # Then
     assert tool_call is not None
-    assert tool_call.name == BuiltInTool.BraveSearch
+    assert tool_call.name == "brave_search"
     match tool_call.arguments:
         case BraveSearch(query=query):
             assert query == "current weather in Menlo Park, California"
@@ -75,7 +74,7 @@ def test_wolfram_alpha_call_is_parsed():
 
     # Then
     assert tool_call is not None
-    assert tool_call.name == BuiltInTool.WolframAlpha
+    assert tool_call.name == "wolfram_alpha"
     match tool_call.arguments:
         case WolframAlpha(query=query):
             assert query == "solve x^3 - 4x^2 + 6x - 24 = 0"
@@ -114,7 +113,7 @@ def test_render_tool_call_with_typed_args():
 
 def test_code_interpreter_tool_call_render():
     tool_call = ToolCall(
-        BuiltInTool.CodeInterpreter,
+        "code_interpreter",
         CodeInterpreter(src="def is_prime(n):\n   return True"),
     )
     assert tool_call.render() == "<|python_tag|>def is_prime(n):\n   return True"
@@ -122,7 +121,7 @@ def test_code_interpreter_tool_call_render():
 
 def test_brave_search_tool_call_render():
     tool_call = ToolCall(
-        BuiltInTool.BraveSearch,
+        "brave_search",
         BraveSearch(query="current weather in Menlo Park, California"),
     )
     expected = '<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")'

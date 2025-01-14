@@ -1,18 +1,42 @@
 from pharia_skill.llama3 import (
-    BuiltInTool,
+    BraveSearch,
     ChatRequest,
+    CodeInterpreter,
     SystemMessage,
     Tool,
     UserMessage,
+    WolframAlpha,
 )
 
 llama = "llama-3.1-8b-instruct"
+
+
+class GetGithubReadme(Tool):
+    """Get the readme of a GitHub repository"""
+
+    repository: str
 
 
 def test_system_prompt_without_tools():
     user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(llama, [user])
     assert chat_request.system is None
+
+
+def test_system_prompt_tools():
+    user = UserMessage("What is the square root of 16?")
+    chat_request = ChatRequest(
+        llama, [user], tools=[CodeInterpreter, BraveSearch, GetGithubReadme]
+    )
+    assert chat_request.system_prompt_tools() == [BraveSearch]
+
+
+def test_user_provided_tools():
+    user = UserMessage("What is the square root of 16?")
+    chat_request = ChatRequest(
+        llama, [user], tools=[CodeInterpreter, BraveSearch, GetGithubReadme]
+    )
+    assert chat_request.user_provided_tools() == [GetGithubReadme]
 
 
 def test_chat_request_to_prompt():
@@ -47,7 +71,7 @@ def test_system_prompt_without_tools_from_user():
 
 def test_system_prompt_with_tools():
     user = UserMessage("What is the square root of 16?")
-    chat_request = ChatRequest(llama, [user], [BuiltInTool.CodeInterpreter])
+    chat_request = ChatRequest(llama, [user], [CodeInterpreter])
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython<|eot_id|>"""
@@ -58,7 +82,7 @@ Environment: ipython<|eot_id|>"""
 def test_system_prompt_merged_from_user_and_tools():
     system = SystemMessage("You are a poet who strictly speaks in haikus.")
     user = UserMessage("What is the square root of 16?")
-    chat_request = ChatRequest(llama, [system, user], [BuiltInTool.CodeInterpreter])
+    chat_request = ChatRequest(llama, [system, user], [CodeInterpreter])
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
@@ -81,11 +105,7 @@ Environment: ipython<|eot_id|>"""
 
 
 def test_built_in_tools_are_listed():
-    tools = [
-        BuiltInTool.CodeInterpreter,
-        BuiltInTool.BraveSearch,
-        BuiltInTool.WolframAlpha,
-    ]
+    tools: list[type[Tool]] = [CodeInterpreter, BraveSearch, WolframAlpha]
     user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(llama, [user], tools)
     assert chat_request.system is not None
@@ -98,11 +118,6 @@ Tools: brave_search, wolfram_alpha<|eot_id|>"""
 
 def test_custom_tool_definition_in_user_prompt():
     # Given a chat request with a custom tool definition
-    class GetGithubReadme(Tool):
-        """Get the readme of a GitHub repository"""
-
-        repository: str
-
     chat_request = ChatRequest(
         llama,
         [UserMessage("What is the readme of the pharia-kernel repository?")],

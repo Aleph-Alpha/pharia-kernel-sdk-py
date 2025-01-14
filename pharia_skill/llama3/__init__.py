@@ -4,8 +4,8 @@ from .message import Role, SystemMessage, UserMessage
 from .request import ChatRequest
 from .tool import (
     BraveSearch,
-    BuiltInTool,
     CodeInterpreter,
+    JsonSchema,
     Tool,
     ToolCall,
     ToolDefinition,
@@ -24,8 +24,8 @@ __all__ = [
     "ToolCall",
     "ToolDefinition",
     "ToolResponse",
-    "BuiltInTool",
     "BraveSearch",
+    "JsonSchema",
     "CodeInterpreter",
     "WolframAlpha",
     "Tool",
