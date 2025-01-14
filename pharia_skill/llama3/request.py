@@ -10,10 +10,11 @@ The `ChatRequest` can be extended from the LLM side by passing it to the
 a message or tool response to the request.
 """
 
+import json
 from dataclasses import dataclass, field
 from typing import Any, Sequence
 
-from pydantic import field_serializer
+from pydantic import field_serializer, field_validator
 
 from pharia_skill.csi import ChatParams
 
@@ -22,11 +23,11 @@ from .message import Role, SystemMessage, UserMessage
 from .response import SpecialTokens
 from .tool import (
     BuiltInTool,
+    BuiltInTools,
+    CodeInterpreter,
     JsonSchema,
-    Tool,
     ToolDefinition,
     ToolResponse,
-    render_tool,
 )
 
 Message = SystemMessage | UserMessage | AssistantMessage | ToolResponse
@@ -97,14 +98,14 @@ class ChatRequest:
 
         prompt = "Environment: ipython"
         if tools := self.system_prompt_tools():
-            prompt += f"\nTools: {', '.join(tool.value for tool in tools)}"
+            prompt += f"\nTools: {', '.join(tool.name() for tool in tools)}"
 
         # include the original system prompt
         if self.messages[0].role == Role.System:
             prompt += f"\n{self.messages[0].content}"
         return SystemMessage(prompt)
 
-    def system_prompt_tools(self) -> list[BuiltInTool]:
+    def system_prompt_tools(self) -> list[type[BuiltInTool]]:
         """Subset of specified tools that need to be activated in the system prompt.
 
         CodeInterpreter is automatically included when IPython is activated and does
@@ -113,7 +114,9 @@ class ChatRequest:
         return [
             tool
             for tool in self.tools
-            if isinstance(tool, BuiltInTool) and tool != BuiltInTool.CodeInterpreter
+            if isinstance(tool, type)
+            and issubclass(tool, BuiltInTool)
+            and not tool == CodeInterpreter
         ]
 
     @property
@@ -125,6 +128,11 @@ class ChatRequest:
 
         Reference: https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/prompt_format.md#input-prompt-format-5
         """
+
+        def render_tool(tool: ToolDefinition) -> str:
+            schema = tool if isinstance(tool, dict) else tool.render()
+            return json.dumps(schema, indent=4)
+
         provided = (
             self.messages[0] if self.messages[0].role == Role.User else self.messages[1]
         )
@@ -141,9 +149,13 @@ class ChatRequest:
         prompt += f"\n\nQuestion: {provided.content}"
         return UserMessage(prompt)
 
-    def user_provided_tools(self) -> list[type[Tool] | JsonSchema]:
+    def user_provided_tools(self) -> list[ToolDefinition]:
         """Subset of specified tools that need to be injected into the user message."""
-        return [tool for tool in self.tools if not isinstance(tool, BuiltInTool)]
+        return [
+            tool
+            for tool in self.tools
+            if (not isinstance(tool, type) or not issubclass(tool, BuiltInTool))
+        ]
 
     def messages_without_system_and_first_user(self) -> list[Message]:
         """The system and first user prompt are altered.
@@ -157,7 +169,7 @@ class ChatRequest:
 
     @field_serializer("tools")
     def as_dict(
-        self, tools: list[ToolDefinition]
+        self, tools: Sequence[ToolDefinition]
     ) -> list[dict[str, Any] | JsonSchema | str]:
         """Pydantic can not serialize type[BaseModel], so we serialize it manually.
 
@@ -165,13 +177,28 @@ class ChatRequest:
         """
         serialized: list[dict[str, Any] | JsonSchema | str] = []
         for tool in tools:
-            if isinstance(tool, BuiltInTool):
-                serialized.append(tool.value)
+            if isinstance(tool, type) and issubclass(tool, BuiltInTool):
+                serialized.append(tool.name())
             elif isinstance(tool, dict):
                 serialized.append(tool)
             else:
                 serialized.append(tool.render())
         return serialized
+
+    @field_validator("tools", mode="before")
+    @classmethod
+    def validate_tools(cls, value: Any) -> Sequence[ToolDefinition]:
+        assert isinstance(value, list), "Tools must be a list"
+        tools = []
+        for tool in value:
+            if isinstance(tool, str):
+                known = next((b for b in BuiltInTools if tool == b.name()), None)
+                if not known:
+                    raise ValueError(f"Invalid built in tool: {tool}")
+                tools.append(known)
+            elif isinstance(tool, dict):
+                tools.append(JsonSchema(**tool))  # type: ignore
+        return tools
 
 
 def validate_messages(messages: list[Message]) -> None:
