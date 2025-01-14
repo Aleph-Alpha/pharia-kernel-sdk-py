@@ -1,4 +1,11 @@
-from pharia_skill.llama3 import AssistantMessage, BuiltInTool, Tool, ToolCall
+from pharia_skill.llama3 import (
+    AssistantMessage,
+    BraveSearch,
+    BuiltInTool,
+    CodeInterpreter,
+    Tool,
+    ToolCall,
+)
 
 
 class GetGitHubReadme(Tool):
@@ -7,8 +14,8 @@ class GetGitHubReadme(Tool):
 
 def test_tool_call_message_render():
     tool_call = ToolCall(
-        name=BuiltInTool.BraveSearch,
-        arguments={"query": "current weather in Menlo Park, California"},
+        BuiltInTool.BraveSearch,
+        BraveSearch(query="current weather in Menlo Park, California"),
     )
     message = AssistantMessage(tool_call=tool_call)
     expected = '<|start_header_id|>assistant<|end_header_id|>\n\n<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")<|eom_id|>'
@@ -32,7 +39,8 @@ def test_message_from_response_with_tool_call():
     assert message.tool_call is not None
     assert isinstance(message.tool_call, ToolCall)
     assert message.tool_call.name == BuiltInTool.CodeInterpreter
-    assert message.tool_call.arguments == {"code": "def is_prime(n):\n   return True"}
+    assert isinstance(message.tool_call.arguments, CodeInterpreter)
+    assert message.tool_call.arguments.src == "def is_prime(n):\n   return True"
 
 
 def test_message_tool_call_without_python_tag():
