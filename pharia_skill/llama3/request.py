@@ -22,10 +22,10 @@ from .assistant import AssistantMessage
 from .message import Role, SystemMessage, UserMessage
 from .response import SpecialTokens
 from .tool import (
-    BuiltInTool,
     BuiltInTools,
     CodeInterpreter,
     JsonSchema,
+    Tool,
     ToolDefinition,
     ToolResponse,
 )
@@ -105,7 +105,7 @@ class ChatRequest:
             prompt += f"\n{self.messages[0].content}"
         return SystemMessage(prompt)
 
-    def system_prompt_tools(self) -> list[type[BuiltInTool]]:
+    def system_prompt_tools(self) -> Sequence[type[Tool]]:
         """Subset of specified tools that need to be activated in the system prompt.
 
         CodeInterpreter is automatically included when IPython is activated and does
@@ -115,7 +115,7 @@ class ChatRequest:
             tool
             for tool in self.tools
             if isinstance(tool, type)
-            and issubclass(tool, BuiltInTool)
+            and tool in BuiltInTools
             and not tool == CodeInterpreter
         ]
 
@@ -151,11 +151,7 @@ class ChatRequest:
 
     def user_provided_tools(self) -> list[ToolDefinition]:
         """Subset of specified tools that need to be injected into the user message."""
-        return [
-            tool
-            for tool in self.tools
-            if (not isinstance(tool, type) or not issubclass(tool, BuiltInTool))
-        ]
+        return [tool for tool in self.tools if tool not in BuiltInTools]
 
     def messages_without_system_and_first_user(self) -> list[Message]:
         """The system and first user prompt are altered.
@@ -177,10 +173,10 @@ class ChatRequest:
         """
         serialized: list[dict[str, Any] | JsonSchema | str] = []
         for tool in tools:
-            if isinstance(tool, type) and issubclass(tool, BuiltInTool):
-                serialized.append(tool.name())
-            elif isinstance(tool, dict):
+            if isinstance(tool, dict):
                 serialized.append(tool)
+            elif tool in BuiltInTools:
+                serialized.append(tool.name())
             else:
                 serialized.append(tool.render())
         return serialized
