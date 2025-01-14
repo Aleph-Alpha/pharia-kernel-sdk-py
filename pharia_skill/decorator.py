@@ -50,17 +50,17 @@ def skill(
     assert len(signature) == 2, "Skills must have exactly two arguments."
 
     input_model: Type[UserInput] = signature[1].annotation
-    assert issubclass(
-        input_model, BaseModel
-    ), "The second argument must be a Pydantic model"
+    assert issubclass(input_model, BaseModel), (
+        "The second argument must be a Pydantic model"
+    )
 
-    assert (
-        func.__annotations__.get("return") is not None
-    ), "The function must have a return type annotation"
+    assert func.__annotations__.get("return") is not None, (
+        "The function must have a return type annotation"
+    )
     output_model: Type[UserOutput] = func.__annotations__["return"]
-    assert issubclass(
-        output_model, BaseModel
-    ), "The return type must be a Pydantic model"
+    assert issubclass(output_model, BaseModel), (
+        "The return type must be a Pydantic model"
+    )
 
     class SkillHandler(exports.SkillHandler):
         def run(self, input: bytes) -> bytes:
