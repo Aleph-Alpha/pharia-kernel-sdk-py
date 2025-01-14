@@ -97,8 +97,16 @@ def test_select_language(csi: Csi):
 @pytest.mark.kernel
 def test_complete_all(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
-    request_1 = CompletionRequest(model, "Say hello to Alice", params)
-    request_2 = CompletionRequest(model, "Say hello to Bob", params)
+    request_1 = CompletionRequest(
+        model,
+        "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nSay hello to Alice<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+        params,
+    )
+    request_2 = CompletionRequest(
+        model,
+        "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nSay hello to Bob<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+        params,
+    )
     result = csi.complete_all([request_1, request_2])
     assert len(result) == 2
     assert "Alice" in result[0].text
