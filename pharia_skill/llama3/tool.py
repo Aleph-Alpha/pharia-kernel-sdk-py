@@ -106,23 +106,19 @@ class Tool(BaseModel):
                     cls._recursive_purge_title(data[key])
 
 
-class BuiltInTool(Tool):
-    pass
-
-
-class CodeInterpreter(BuiltInTool):
+class CodeInterpreter(Tool):
     src: str
 
 
-class WolframAlpha(BuiltInTool):
+class WolframAlpha(Tool):
     query: str
 
 
-class BraveSearch(BuiltInTool):
+class BraveSearch(Tool):
     query: str
 
 
-BuiltInTools = (CodeInterpreter, WolframAlpha, BraveSearch)
+BuiltInTools: tuple[type[Tool], ...] = (CodeInterpreter, WolframAlpha, BraveSearch)
 
 
 ToolDefinition = type[Tool] | JsonSchema
@@ -146,7 +142,7 @@ class ToolCall:
         a parsed format, we need to convert it to a prompt string to construct
         the message history for a later interactions with the model.
         """
-        if isinstance(self.arguments, BuiltInTool):
+        if any(isinstance(self.arguments, tool) for tool in BuiltInTools):
             return SpecialTokens.PythonTag + self.render_build_in()
         else:
             # see `ToolCall.raw_from_response` for why the python tag is not included here
