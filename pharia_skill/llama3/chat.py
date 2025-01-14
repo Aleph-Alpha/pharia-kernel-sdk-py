@@ -68,7 +68,7 @@ def chat(csi: Csi, request: ChatRequest) -> ChatResponse:
     )
 
     completion = csi.complete(request.model, request.render(), completion_params)
-    message = AssistantMessage.from_raw_response(completion.text)
+    message = AssistantMessage.from_raw_response(completion.text, request.tools)
 
     request._extend(message)
     return ChatResponse(message, completion.finish_reason)

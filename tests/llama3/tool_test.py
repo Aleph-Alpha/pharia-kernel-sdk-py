@@ -1,4 +1,5 @@
-from pydantic import Field
+import pytest
+from pydantic import Field, ValidationError
 
 from pharia_skill.llama3.response import Response
 from pharia_skill.llama3.tool import (
@@ -9,15 +10,16 @@ from pharia_skill.llama3.tool import (
 )
 
 
+class GetGithubReadme(Tool):
+    """Get the readme of a GitHub repository"""
+
+    repository: str = Field(
+        description="The name of the GitHub repository to get the readme from",
+    )
+    registry: str = "default"
+
+
 def test_pydantic_tool_definition_for_function():
-    class GetGithubReadme(Tool):
-        """Get the readme of a GitHub repository"""
-
-        repository: str = Field(
-            description="The name of the GitHub repository to get the readme from",
-        )
-        registry: str = "default"
-
     expected = {
         "type": "function",
         "function": {
@@ -75,6 +77,7 @@ def test_parse_function_call_from_response():
 
     tool_call = ToolCall.json_from_text(response)
     assert tool_call is not None
+    assert isinstance(tool_call.arguments, dict)
     assert tool_call.arguments["repository"] == "pharia-kernel"
 
 
@@ -84,6 +87,18 @@ def test_json_function_call_render():
     tool_call = ToolCall.json_from_text(response)
     assert tool_call is not None
     assert tool_call.render_json() == response
+
+
+def test_render_tool_call_with_typed_args():
+    response = '{"type": "function", "name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}'
+
+    tool_call = ToolCall.json_from_text(response)
+    assert tool_call is not None
+
+    tool_call.try_parse([GetGithubReadme])
+    assert isinstance(tool_call.arguments, GetGithubReadme)
+
+    assert tool_call.render() == response
 
 
 def test_code_interpreter_tool_call_render():
@@ -119,3 +134,42 @@ def test_failed_tool_response_message_render():
     )
     expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"
     assert tool.render() == expected
+
+
+def test_no_parsing_without_provided_tools():
+    raw = ToolCall(
+        name="get_github_readme",
+        arguments={"repository": "pharia-kernel"},
+    )
+    raw.try_parse([])
+    assert isinstance(raw.arguments, dict)
+
+
+def test_no_parsing_for_wrong_tool():
+    tools = [GetGithubReadme]
+    raw = ToolCall(
+        name="push_jira",
+        arguments={"repository": "pharia-kernel"},
+    )
+    raw.try_parse(tools)
+    assert isinstance(raw.arguments, dict)
+
+
+def test_parsing_of_correct_tool():
+    tools = [GetGithubReadme]
+    raw = ToolCall(
+        name="get_github_readme",
+        arguments={"repository": "pharia-kernel"},
+    )
+    raw.try_parse(tools)
+    assert isinstance(raw.arguments, GetGithubReadme)
+
+
+def test_parsing_of_invalid_format_raises():
+    tools = [GetGithubReadme]
+    raw = ToolCall(
+        name="get_github_readme",
+        arguments={"whatever": "pharia-kernel"},
+    )
+    with pytest.raises(ValidationError):
+        raw.try_parse(tools)
