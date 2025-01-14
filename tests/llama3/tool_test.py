@@ -3,10 +3,13 @@ from pydantic import Field, ValidationError
 
 from pharia_skill.llama3.response import Response
 from pharia_skill.llama3.tool import (
+    BraveSearch,
     BuiltInTool,
+    CodeInterpreter,
     Tool,
     ToolCall,
     ToolResponse,
+    WolframAlpha,
 )
 
 
@@ -55,7 +58,11 @@ def test_brave_search_call_is_parsed():
     # Then
     assert tool_call is not None
     assert tool_call.name == BuiltInTool.BraveSearch
-    assert tool_call.arguments == {"query": "current weather in Menlo Park, California"}
+    match tool_call.arguments:
+        case BraveSearch(query=query):
+            assert query == "current weather in Menlo Park, California"
+        case _:
+            assert False, "Expected BraveSearch"
 
 
 def test_wolfram_alpha_call_is_parsed():
@@ -69,7 +76,11 @@ def test_wolfram_alpha_call_is_parsed():
     # Then
     assert tool_call is not None
     assert tool_call.name == BuiltInTool.WolframAlpha
-    assert tool_call.arguments == {"query": "solve x^3 - 4x^2 + 6x - 24 = 0"}
+    match tool_call.arguments:
+        case WolframAlpha(query=query):
+            assert query == "solve x^3 - 4x^2 + 6x - 24 = 0"
+        case _:
+            assert False, "Expected WolframAlpha"
 
 
 def test_parse_function_call_from_response():
@@ -103,16 +114,16 @@ def test_render_tool_call_with_typed_args():
 
 def test_code_interpreter_tool_call_render():
     tool_call = ToolCall(
-        name=BuiltInTool.CodeInterpreter,
-        arguments={"code": "def is_prime(n):\n   return True"},
+        BuiltInTool.CodeInterpreter,
+        CodeInterpreter(src="def is_prime(n):\n   return True"),
     )
     assert tool_call.render() == "<|python_tag|>def is_prime(n):\n   return True"
 
 
 def test_brave_search_tool_call_render():
     tool_call = ToolCall(
-        name=BuiltInTool.BraveSearch,
-        arguments={"query": "current weather in Menlo Park, California"},
+        BuiltInTool.BraveSearch,
+        BraveSearch(query="current weather in Menlo Park, California"),
     )
     expected = '<|python_tag|>brave_search.call(query="current weather in Menlo Park, California")'
     assert tool_call.render() == expected

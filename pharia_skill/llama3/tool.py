@@ -13,7 +13,7 @@ import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal, Sequence, cast
+from typing import Any, Literal, Sequence
 
 from pydantic import BaseModel
 
@@ -22,12 +22,6 @@ from typing_extensions import TypedDict
 
 from .message import MessageApi, Role
 from .response import Response, SpecialTokens
-
-
-class BuiltInTool(str, Enum):
-    CodeInterpreter = "code_interpreter"
-    WolframAlpha = "wolfram_alpha"
-    BraveSearch = "brave_search"
 
 
 class Function(TypedDict):
@@ -113,6 +107,24 @@ class Tool(BaseModel):
                     cls._recursive_purge_title(data[key])
 
 
+class BuiltInTool(str, Enum):
+    CodeInterpreter = "code_interpreter"
+    WolframAlpha = "wolfram_alpha"
+    BraveSearch = "brave_search"
+
+
+class CodeInterpreter(Tool):
+    src: str
+
+
+class WolframAlpha(Tool):
+    query: str
+
+
+class BraveSearch(Tool):
+    query: str
+
+
 ToolDefinition = type[Tool] | JsonSchema | BuiltInTool
 """A tool can either be defined as a Pydantic model or directly as a json schema."""
 
@@ -141,19 +153,15 @@ class ToolCall:
             return self.render_json()
 
     def render_build_in(self) -> str:
-        if not isinstance(self.arguments, dict):
-            raise ValueError("Arguments of built-in tools must be a dictionary.")
-        if self.name == BuiltInTool.CodeInterpreter:
-            assert "code" in self.arguments
-            return cast(str, self.arguments["code"])
-        elif self.name == BuiltInTool.BraveSearch:
-            assert "query" in self.arguments
-            return f'brave_search.call(query="{self.arguments["query"]}")'
-        elif self.name == BuiltInTool.WolframAlpha:
-            assert "query" in self.arguments
-            return f'wolfram_alpha.call(query="{self.arguments["query"]}")'
-        else:
-            raise ValueError(f"Unknown built-in tool: {self.name}")
+        match self.arguments:
+            case CodeInterpreter(src=src):
+                return src
+            case WolframAlpha(query=query):
+                return f'wolfram_alpha.call(query="{query}")'
+            case BraveSearch(query=query):
+                return f'brave_search.call(query="{query}")'
+            case _:
+                raise ValueError(f"Unknown built-in tool: {self.name}")
 
     def render_json(self) -> str:
         parameters = (
@@ -172,7 +180,8 @@ class ToolCall:
         """
         arguments = self.arguments
         if not isinstance(arguments, dict):
-            raise ValueError("Tool call is already parsed.")
+            # already parsed
+            return
 
         for tool in tools:
             if isinstance(tool, type) and tool.name() == self.name:
@@ -204,26 +213,26 @@ class ToolCall:
         """Parse a tool call from a message that started with the Python Tag."""
         if text.startswith("brave_search.call"):
             return ToolCall(
-                name=BuiltInTool.BraveSearch,
-                arguments={
-                    "query": text.split('brave_search.call(query="')[1]
+                BuiltInTool.BraveSearch,
+                BraveSearch(
+                    query=text.split('brave_search.call(query="')[1]
                     .split('")')[0]
                     .strip()
-                },
+                ),
             )
         elif text.startswith("wolfram_alpha.call"):
             return ToolCall(
-                name=BuiltInTool.WolframAlpha,
-                arguments={
-                    "query": text.split('wolfram_alpha.call(query="')[1]
+                BuiltInTool.WolframAlpha,
+                WolframAlpha(
+                    query=text.split('wolfram_alpha.call(query="')[1]
                     .split('")')[0]
                     .strip()
-                },
+                ),
             )
         else:
             return ToolCall(
-                name=BuiltInTool.CodeInterpreter,
-                arguments={"code": text.strip()},
+                BuiltInTool.CodeInterpreter,
+                CodeInterpreter(src=text.strip()),
             )
 
     @staticmethod
