@@ -23,6 +23,7 @@ from .response import SpecialTokens
 from .tool import (
     BuiltInTool,
     JsonSchema,
+    Tool,
     ToolDefinition,
     ToolResponse,
     render_tool,
@@ -43,7 +44,7 @@ class ChatRequest:
 
     model: str
     messages: list[Message]
-    tools: Sequence[ToolDefinition | BuiltInTool] = field(default_factory=list)
+    tools: Sequence[ToolDefinition] = field(default_factory=list)
     params: ChatParams = field(default_factory=ChatParams)
 
     def __post_init__(self) -> None:
@@ -140,7 +141,7 @@ class ChatRequest:
         prompt += f"\n\nQuestion: {provided.content}"
         return UserMessage(prompt)
 
-    def user_provided_tools(self) -> list[ToolDefinition]:
+    def user_provided_tools(self) -> list[type[Tool] | JsonSchema]:
         """Subset of specified tools that need to be injected into the user message."""
         return [tool for tool in self.tools if not isinstance(tool, BuiltInTool)]
 

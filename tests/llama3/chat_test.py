@@ -41,8 +41,8 @@ def test_trigger_tool_call(csi: DevCsi):
     assert response.message.role == Role.Assistant
     assert response.message.content is None
     assert response.message.tool_call is not None
-    assert response.message.tool_call.name == GetShipmentDate.name()
-    assert response.message.tool_call.arguments == {"order_id": "42"}
+    assert isinstance(response.message.tool_call.arguments, GetShipmentDate)
+    assert response.message.tool_call.arguments.order_id == "42"
 
     # And the original request should be extended
     assert request.messages[-1].role == Role.Assistant
@@ -80,6 +80,24 @@ class MockCsi(Csi):
         return self.completion
 
 
+def test_tool_response_is_parsed_into_provided_class():
+    # Given a tool specified as pydantic model
+    message = UserMessage("When will the order `42` ship?")
+    request = ChatRequest(llama, [message], [GetShipmentDate])
+    completion = Completion(
+        text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}',
+        finish_reason=FinishReason.STOP,
+    )
+    csi = MockCsi(completion)  #  type: ignore
+
+    # When doing a completion request
+    response = llama3.chat(csi, request)
+
+    # Then the response is parsed into the provided class
+    assert response.message.tool_call is not None
+    assert isinstance(response.message.tool_call.arguments, GetShipmentDate)
+
+
 def test_tool_response_can_be_added_to_prompt():
     # Given a chat request with a tool definition and a message that requires the tool
     message = UserMessage("When will the order `42` ship?")
@@ -87,7 +105,7 @@ def test_tool_response_can_be_added_to_prompt():
 
     # And given a csi that always responds with a function call
     completion = Completion(
-        text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": 42}}',
+        text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}',
         finish_reason=FinishReason.STOP,
     )
     csi = MockCsi(completion)  #  type: ignore
@@ -95,6 +113,7 @@ def test_tool_response_can_be_added_to_prompt():
     # When doing a chat request
     response = llama3.chat(csi, request)
     assert response.message.tool_call is not None
+    assert isinstance(response.message.tool_call.arguments, GetShipmentDate)
 
     # And providing the tool response
     tool = ToolResponse(content='{"result": "1970-01-01"}')
@@ -133,7 +152,7 @@ Return function calls in JSON format.
 
 Question: When will the order `42` ship?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": 42}}<|eom_id|><|start_header_id|>ipython<|end_header_id|>
+{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}<|eom_id|><|start_header_id|>ipython<|end_header_id|>
 
 completed[stdout]{"result": "1970-01-01"}[/stdout]<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 

@@ -13,7 +13,7 @@ import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, Sequence, cast
 
 from pydantic import BaseModel
 
@@ -113,14 +113,19 @@ class Tool(BaseModel):
                     cls._recursive_purge_title(data[key])
 
 
-ToolDefinition = type[Tool] | JsonSchema
+ToolDefinition = type[Tool] | JsonSchema | BuiltInTool
 """A tool can either be defined as a Pydantic model or directly as a json schema."""
 
 
 @dataclass
 class ToolCall:
+    """A tool call as parsed from the response of the model.
+
+    Arguments are not validated against the provided schema.
+    """
+
     name: BuiltInTool | str
-    arguments: dict[str, str]
+    arguments: Tool | dict[str, Any]
 
     def render(self) -> str:
         """Reconstruct the model response from a parsed tool call.
@@ -132,13 +137,15 @@ class ToolCall:
         if isinstance(self.name, BuiltInTool):
             return SpecialTokens.PythonTag + self.render_build_in()
         else:
-            # see `ToolCall.from_text` for why the python tag is not included here
+            # see `ToolCall.raw_from_response` for why the python tag is not included here
             return self.render_json()
 
     def render_build_in(self) -> str:
+        if not isinstance(self.arguments, dict):
+            raise ValueError("Arguments of built-in tools must be a dictionary.")
         if self.name == BuiltInTool.CodeInterpreter:
             assert "code" in self.arguments
-            return self.arguments["code"]
+            return cast(str, self.arguments["code"])
         elif self.name == BuiltInTool.BraveSearch:
             assert "query" in self.arguments
             return f'brave_search.call(query="{self.arguments["query"]}")'
@@ -149,9 +156,27 @@ class ToolCall:
             raise ValueError(f"Unknown built-in tool: {self.name}")
 
     def render_json(self) -> str:
-        return json.dumps(
-            {"type": "function", "name": self.name, "parameters": self.arguments}
+        parameters = (
+            self.arguments
+            if isinstance(self.arguments, dict)
+            else self.arguments.model_dump(exclude_unset=True)
         )
+        return json.dumps(
+            {"type": "function", "name": self.name, "parameters": parameters}
+        )
+
+    def try_parse(self, tools: Sequence[ToolDefinition]) -> None:
+        """Try to validate a tool call into one of the provided tools.
+
+        This provides the user with strong type hints.
+        """
+        arguments = self.arguments
+        if not isinstance(arguments, dict):
+            raise ValueError("Tool call is already parsed.")
+
+        for tool in tools:
+            if isinstance(tool, type) and tool.name() == self.name:
+                self.arguments = tool(**arguments)
 
     @classmethod
     def from_response(cls, text: Response) -> "ToolCall | None":
