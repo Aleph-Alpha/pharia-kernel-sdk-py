@@ -32,7 +32,7 @@ pytest = "^8.3.4"
 ruff = "^0.8.1"
 mypy = "^1.13.0"
 pre-commit = "^4.0.1"
-pydoclint = "^0.5.9"
+pydoclint = "^0.6.0"
 types-requests = "^2.32.0.20241016"
 pyright = "^1.1.390"
 
