@@ -21,8 +21,8 @@ def test_chat_api():
 
     # Then a function call is returned
     assert result.message.tool_call is not None
-    assert result.message.tool_call.name == "get_shipment_date"
-    assert result.message.tool_call.arguments == {"order_id": "42"}
+    assert isinstance(result.message.tool_call.arguments, GetShipmentDate)
+    assert result.message.tool_call.arguments.order_id == 42
 
 
 def test_model_dump():
