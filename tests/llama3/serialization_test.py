@@ -86,14 +86,14 @@ def test_chat_request_field_serializer_custom_tool():
 
 def test_chat_request_validate_built_in_tool():
     serialized = ["code_interpreter"]
-    validated = ChatRequest.validate_tools(serialized)  # pyright: ignore[reportCallIssue]
+    validated = ChatRequest.validate_tools(serialized)  # type: ignore
     assert validated == [CodeInterpreter]
 
 
 def test_chat_request_validate_unknown_tool():
     serialized = ["unknown_tool"]
     with pytest.raises(ValueError):
-        ChatRequest.validate_tools(serialized)  # pyright: ignore[reportCallIssue]
+        ChatRequest.validate_tools(serialized)  # type: ignore
 
 
 def test_chat_request_validate_custom_tool():
@@ -110,7 +110,7 @@ def test_chat_request_validate_custom_tool():
             },
         }
     ]
-    validated = ChatRequest.validate_tools(serialized)  # pyright: ignore[reportCallIssue]
+    validated = ChatRequest.validate_tools(serialized)  # type: ignore
     assert validated == [
         JsonSchema(
             {
