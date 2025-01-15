@@ -106,7 +106,12 @@ class Tool(BaseModel):
                     cls._recursive_purge_title(data[key])
 
     def render_tool_call(self) -> str:
-        """Convert a tool call to prompt format again."""
+        """Convert a tool call to prompt format again.
+
+        When a tool call has been loaded from a model response, it is part of the
+        conversation and needs to be converted back to a prompt when providing the
+        full conversation history to the model for the next turn.
+        """
         return json.dumps(
             {
                 "type": "function",
