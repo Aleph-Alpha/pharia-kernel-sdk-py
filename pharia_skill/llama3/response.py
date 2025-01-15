@@ -2,8 +2,8 @@
 This module encapsulates knowledge about the structure of llama3 prompts and responses.
 """
 
+from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple
 
 
 class SpecialTokens(str, Enum):
@@ -20,7 +20,8 @@ Contains special tokens and whitespace.
 """
 
 
-class Response(NamedTuple):
+@dataclass(frozen=True)
+class Response:
     """Inner part of the completion.
 
     The text is stripped from all special tokens and stop reasons.
