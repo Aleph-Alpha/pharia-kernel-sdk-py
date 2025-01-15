@@ -1,5 +1,4 @@
 import json
-from typing import cast
 
 from .csi import (
     ChatParams,
@@ -53,6 +52,7 @@ def completion_params_wit(
     completion_params: CompletionParams,
 ) -> WitCompletionParams:
     return WitCompletionParams(
+        return_special_tokens=completion_params.return_special_tokens,
         max_tokens=completion_params.max_tokens,
         temperature=completion_params.temperature,
         top_k=completion_params.top_k,
@@ -169,15 +169,12 @@ def language_from_wit(language: WitLanguage) -> Language:
 
 
 class WasiCsi(Csi):
-    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
-        wit_completion_params = completion_params_wit(params)
-        if params.return_special_tokens:
-            completion = wit_csi.complete_return_special_tokens(
-                model, prompt, wit_completion_params
-            )
-        else:
-            completion = wit_csi.complete(model, prompt, wit_completion_params)
-        return completion_from_wit(completion)
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
+        wit_requests = [completion_request_wit(request) for request in requests]
+        wit_completions = wit_csi.complete(wit_requests)
+        return [
+            completion_from_wit(wit_completion) for wit_completion in wit_completions
+        ]
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
         wit_chunk_params = chunk_params_wit(params)
@@ -198,13 +195,6 @@ class WasiCsi(Csi):
             return None
         return language_from_wit(wit_language)
 
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        wit_requests = [completion_request_wit(request) for request in requests]
-        wit_completions = wit_csi.complete_all(wit_requests)
-        return [
-            completion_from_wit(wit_completion) for wit_completion in wit_completions
-        ]
-
     def search(
         self,
         index_path: IndexPath,
@@ -220,8 +210,12 @@ class WasiCsi(Csi):
             )
         ]
 
-    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
-        wit_document_path = document_path_wit(document_path)
-        if not (maybe_metadata := wit_csi.document_metadata(wit_document_path)):
-            return None
-        return cast(JsonSerializable, json.loads(maybe_metadata))
+    def document_metadata_all(
+        self, requests: list[DocumentPath]
+    ) -> list[JsonSerializable]:
+        wit_requests = [document_path_wit(request) for request in requests]
+        responses = wit_csi.document_metadata(wit_requests)
+        return [
+            json.loads(maybe_metadata) if maybe_metadata else None
+            for maybe_metadata in responses
+        ]

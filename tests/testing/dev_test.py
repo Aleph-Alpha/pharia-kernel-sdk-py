@@ -55,12 +55,17 @@ def test_http_client_run(model: str):
     result = client.run(
         "complete",
         {
-            "model": model,
-            "prompt": "Say hello to Bob",
-            "params": asdict(params),
+            "requests": [
+                {
+                    "model": model,
+                    "prompt": "Say hello to Bob",
+                    "params": asdict(params),
+                }
+            ]
         },
     )
-    assert result.get("text") is not None
+    assert len(result) == 1
+    assert result[0].get("text") is not None
 
 
 @pytest.mark.kernel
@@ -191,7 +196,7 @@ def test_multiple_csi_instances_do_not_duplicate_exporters():
 
 @pytest.mark.kernel
 def test_document_metadata(csi: Csi, given_document: DocumentPath):
-    metadata = csi._document_metadata(given_document)
+    metadata = csi.document_metadata(given_document)
     assert isinstance(metadata, list)
     assert metadata[0].get("url") == "https://pharia-kernel.product.pharia.com/"
 

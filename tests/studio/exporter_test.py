@@ -56,8 +56,6 @@ class StubCsiClient(CsiClient):
         completion = {"text": "Hello, world!", "finish_reason": "stop"}
         match function:
             case "complete":
-                return completion
-            case "complete_all":
                 return [completion]
             case "search":
                 return []
@@ -68,7 +66,7 @@ class StubCsiClient(CsiClient):
 class SaboteurCsiClient(CsiClient):
     def run(self, function: str, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         match function:
-            case "complete_all":
+            case "complete":
                 raise RuntimeError("Out of cheese")
             case "search":
                 return []
@@ -127,10 +125,11 @@ def test_csi_call_is_traced(stub_dev_csi: DevCsi):
     assert client.spans[0][0].status == SpanStatus.OK
 
     # And the input and output are set as attributes
-    assert "Say hello to Bob" in client.spans[0][0].attributes.input["prompt"]
+    input = client.spans[0][0].attributes.input
+    assert "Say hello to Bob" in input["requests"][0]["prompt"]
     output = client.spans[0][0].attributes.output
     assert output is not None
-    assert output["text"] == "Hello, world!"
+    assert output[0]["text"] == "Hello, world!"
 
 
 def test_skill_is_traced(stub_dev_csi: DevCsi):
@@ -143,7 +142,7 @@ def test_skill_is_traced(stub_dev_csi: DevCsi):
     # Then the skill and the completion are traced
     assert len(client.spans) == 1
     assert client.spans[0][0].name == "search"
-    assert client.spans[0][1].name == "complete_all"
+    assert client.spans[0][1].name == "complete"
     assert client.spans[0][2].name == "haiku"
 
     # And the traces are nested
@@ -151,7 +150,7 @@ def test_skill_is_traced(stub_dev_csi: DevCsi):
 
 
 def test_csi_exception_is_traced(saboteur_dev_csi: DevCsi):
-    # Given a csi with a failing complete_all
+    # Given a csi with a failing complete
     client = SpyClient()
     exporter = StudioExporter(client)
     saboteur_dev_csi.set_span_exporter(exporter)
@@ -165,7 +164,7 @@ def test_csi_exception_is_traced(saboteur_dev_csi: DevCsi):
     first, second, third = client.spans[0]
     assert first.name == "search"
     assert first.status == SpanStatus.OK
-    assert second.name == "complete_all"
+    assert second.name == "complete"
     assert second.status == SpanStatus.ERROR
     assert third.name == "haiku"
     assert third.status == SpanStatus.ERROR

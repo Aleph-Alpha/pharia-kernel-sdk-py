@@ -2,14 +2,11 @@
 StubCsi can be used for testing without a backing Pharia Kernel instance.
 """
 
-from dataclasses import asdict
-
 from pharia_skill import (
     ChatParams,
     ChatResponse,
     ChunkParams,
     Completion,
-    CompletionParams,
     CompletionRequest,
     Csi,
     DocumentPath,
@@ -30,11 +27,14 @@ class StubCsi(Csi):
     This can also be used as a base class for mock implementation.
     """
 
-    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
-        return Completion(
-            text=prompt,
-            finish_reason=FinishReason.STOP,
-        )
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
+        return [
+            Completion(
+                text=request.prompt,
+                finish_reason=FinishReason.STOP,
+            )
+            for request in requests
+        ]
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
         return [text]
@@ -49,9 +49,6 @@ class StubCsi(Csi):
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         return languages[0] if languages else None
-
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        return [self.complete(**asdict(request)) for request in requests]
 
     def search(
         self,
@@ -72,5 +69,7 @@ class StubCsi(Csi):
             )
         ]
 
-    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
-        return {}
+    def document_metadata_all(
+        self, requests: list[DocumentPath]
+    ) -> list[JsonSerializable]:
+        return [{} for request in requests]

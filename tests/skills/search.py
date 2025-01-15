@@ -28,7 +28,7 @@ def haiku(csi: Csi, input: Input) -> Output:
         return Output(root=None)
 
     # parse into list of Metadata
-    results = csi._document_metadata(search_results[0].document_path)
+    results = csi.document_metadata(search_results[0].document_path)
     if not isinstance(results, list):
         return Output(root=None)
 

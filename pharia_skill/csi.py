@@ -258,6 +258,26 @@ class Csi(Protocol):
             params = CompletionParams(max_tokens=64)
             completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
         """
+        request = CompletionRequest(model, prompt, params)
+        completion = self.complete_all([request])
+        return completion[0]
+
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
+        """Generates several completions potentially in parallel. Returns as soon as all completions are ready.
+
+        Parameters:
+            requests (list[CompletionRequest], required): List of completion requests.
+
+        Examples::
+
+            params = CompletionParams(max_tokens=64)
+            request_1 = CompletionRequest(model, "Say hello to Alice", params)
+            request_2 = CompletionRequest(model, "Say hello to Bob", params)
+            result = csi.complete_all([request_1, request_2])
+            len(result) # 2
+            "Alice" in result[0].text # True
+            "Bob" in result[1].text # True
+        """
         ...
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
@@ -318,24 +338,6 @@ class Csi(Protocol):
         """
         ...
 
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        """Generates several completions potentially in parallel. Returns as soon as all completions are ready.
-
-        Parameters:
-            requests (list[CompletionRequest], required): List of completion requests.
-
-        Examples::
-
-            params = CompletionParams(max_tokens=64)
-            request_1 = CompletionRequest(model, "Say hello to Alice", params)
-            request_2 = CompletionRequest(model, "Say hello to Bob", params)
-            result = csi.complete_all([request_1, request_2])
-            len(result) # 2
-            "Alice" in result[0].text # True
-            "Bob" in result[1].text # True
-        """
-        ...
-
     def search(
         self,
         index_path: IndexPath,
@@ -361,7 +363,17 @@ class Csi(Protocol):
         """
         ...
 
-    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+        """Return metadata of a document.
+
+        Parameters:
+            document_path (DocumentPath, required): The document path to get metadata from.
+        """
+        return self.document_metadata_all([document_path])[0]
+
+    def document_metadata_all(
+        self, requests: list[DocumentPath]
+    ) -> list[JsonSerializable]:
         """Return metadata of a document.
 
         Parameters:

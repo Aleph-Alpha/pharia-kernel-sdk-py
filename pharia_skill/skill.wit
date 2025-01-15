@@ -1,4 +1,4 @@
-package pharia:skill@0.2.9;
+package pharia:skill@0.3.0-alpha.2;
 
 @since(version = 0.1.0)
 world skill {
@@ -46,7 +46,7 @@ interface csi {
     }
 
     /// Completion request parameters
-    @since(version = 0.2.0)
+    // @since(version = 0.3.0)
     record completion-params {
         /// The maximum tokens that should be inferred.
         ///
@@ -61,10 +61,9 @@ interface csi {
         top-p: option<f64>,
         /// A list of sequences that, if encountered, the API will stop generating further tokens.
         stop: list<string>,
+        /// Whether to include special tokens like `<|eot_id|>` in the completion
+        return-special-tokens: bool
     }
-
-    @since(version = 0.2.0)
-    complete: func(model: string, prompt: string, params: completion-params) -> completion;
 
     @since(version = 0.2.7)
     enum role {
@@ -143,40 +142,37 @@ interface csi {
         params: completion-params
     }
 
-    @since(version = 0.2.3)
-    complete-all: func(requests: list<completion-request>) -> list<completion>;
+    /// @since(version = 0.3.0)
+    complete: func(requests: list<completion-request>) -> list<completion>;
 
     /// Which documents you want to search in, and which type of index should be used
     @since(version = 0.2.6)
     record index-path {
         /// The namespace the collection belongs to
-         namespace: string,
+        namespace: string,
         /// The collection you want to search in
-         collection: string,
+        collection: string,
         /// The search index you want to use for the collection
-         index: string,
+        index: string,
     }
 
     @since(version = 0.2.6)
     record document-path {
-         namespace: string,
-         collection: string,
-         name: string,
+        namespace: string,
+        collection: string,
+        name: string,
     }
 
     @since(version = 0.2.6)
     record search-result {
-         document-path: document-path,
-         content: string,
-         score: f64,
+        document-path: document-path,
+        content: string,
+        score: f64,
     }
 
     @since(version = 0.2.6)
     search: func(index-path: index-path, query: string, max-results: u32, min-score: option<f64>) -> list<search-result>;
 
-    @since(version = 0.2.9)
-    complete-return-special-tokens: func(model: string, prompt: string, params: completion-params) -> completion;
-
-    @unstable(feature=document-metadata)
-    document-metadata: func(document-path: document-path) -> option<list<u8>>;
+    /// @since(version = 0.3.0)
+    document-metadata: func(requests: list<document-path>) -> list<option<list<u8>>>;
 }

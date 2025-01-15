@@ -32,12 +32,14 @@ class Completion:
 class CompletionParams:
     """
     Completion request parameters
+    @since(version = 0.3.0)
     """
     max_tokens: Optional[int]
     temperature: Optional[float]
     top_k: Optional[int]
     top_p: Optional[float]
     stop: List[str]
+    return_special_tokens: bool
 
 class Role(Enum):
     USER = 0
@@ -110,9 +112,6 @@ class SearchResult:
     score: float
 
 
-def complete(model: str, prompt: str, params: CompletionParams) -> Completion:
-    raise NotImplementedError
-
 def chat(model: str, messages: List[Message], params: ChatParams) -> ChatResponse:
     raise NotImplementedError
 
@@ -123,21 +122,24 @@ def select_language(text: str, languages: List[Language]) -> Optional[Language]:
     """
     Select the detected language for the provided input based on the list of possible languages.
     If no language matches, None is returned.
-
+    
     text: Text input
     languages: All languages that should be considered during detection.
     """
     raise NotImplementedError
 
-def complete_all(requests: List[CompletionRequest]) -> List[Completion]:
+def complete(requests: List[CompletionRequest]) -> List[Completion]:
+    """
+    @since(version = 0.3.0)
+    """
     raise NotImplementedError
 
 def search(index_path: IndexPath, query: str, max_results: int, min_score: Optional[float]) -> List[SearchResult]:
     raise NotImplementedError
 
-def complete_return_special_tokens(model: str, prompt: str, params: CompletionParams) -> Completion:
-    raise NotImplementedError
-
-def document_metadata(document_path: DocumentPath) -> Optional[bytes]:
+def document_metadata(requests: List[DocumentPath]) -> List[Optional[bytes]]:
+    """
+    @since(version = 0.3.0)
+    """
     raise NotImplementedError
 

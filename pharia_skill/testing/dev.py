@@ -18,7 +18,6 @@ from pharia_skill import (
     ChatResponse,
     ChunkParams,
     Completion,
-    CompletionParams,
     CompletionRequest,
     Csi,
     DocumentPath,
@@ -42,7 +41,7 @@ class CsiClient(Protocol):
 class HttpClient(CsiClient):
     """Make requests with a given payload against a running Pharia Kernel."""
 
-    VERSION = "0.2"
+    VERSION = "0.3"
 
     def __init__(self) -> None:
         load_dotenv()
@@ -161,14 +160,13 @@ class DevCsi(Csi):
 
         return output
 
-    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
+    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
         data = {
-            "prompt": prompt,
-            "model": model,
-            "params": asdict(params),
+            "requests": [asdict(request) for request in requests],
         }
-        output = self.run(self.complete.__name__, data)
-        return Completion(**output)
+        # reference `complete` method as defined in the WIT world
+        output = self.run("complete", data)
+        return [Completion(**completion) for completion in output]
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
         data = {
@@ -208,13 +206,6 @@ class DevCsi(Csi):
             case _:
                 return None
 
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        data = {
-            "requests": [asdict(request) for request in requests],
-        }
-        output = self.run(self.complete_all.__name__, data)
-        return [Completion(**completion) for completion in output]
-
     def search(
         self,
         index_path: IndexPath,
@@ -238,11 +229,12 @@ class DevCsi(Csi):
             for result in output
         ]
 
-    def _document_metadata(
-        self, document_path: DocumentPath
-    ) -> JsonSerializable | None:
+    def document_metadata_all(
+        self, requests: list[DocumentPath]
+    ) -> list[JsonSerializable]:
         data = {
-            "document_path": asdict(document_path),
+            "requests": [asdict(request) for request in requests],
         }
+        # reference `document_metadata` method as defined in the WIT world
         output = self.run("document_metadata", data)
-        return cast(JsonSerializable, output)
+        return cast(list[JsonSerializable], output)
