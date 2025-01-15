@@ -6,7 +6,7 @@ from abc import abstractmethod
 import weakref
 
 from ..types import Result, Ok, Err, Some
-
+from ..exports import skill_handler
 
 class SkillHandler(Protocol):
 
@@ -14,6 +14,13 @@ class SkillHandler(Protocol):
     def run(self, input: bytes) -> bytes:
         """
         Raises: `wit.types.Err(wit.imports.skill_handler.Error)`
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def metadata(self) -> skill_handler.SkillMetadata:
+        """
+        @since(version = 0.3.0)
         """
         raise NotImplementedError
 

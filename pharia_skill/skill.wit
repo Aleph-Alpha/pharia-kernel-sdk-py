@@ -1,4 +1,4 @@
-package pharia:skill@0.3.0-alpha.2;
+package pharia:skill@0.3.0-alpha.3;
 
 @since(version = 0.1.0)
 world skill {
@@ -19,6 +19,16 @@ interface skill-handler {
 
     @since(version = 0.1.0)
     run: func(input: list<u8>) -> result<list<u8>, error>;
+
+    // @since(version = 0.3.0)
+    record skill-metadata {
+        description: option<string>,
+        input-schema: string,
+        output-schema: string,
+    }
+
+    // @since(version = 0.3.0)
+    metadata: func() -> skill-metadata;
 }
 
 // A WASI interface dedicated to interacting with Large Language Models and other AI-related tasks.

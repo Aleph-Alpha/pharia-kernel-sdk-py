@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from .csi import Csi
 from .wasi_csi import WasiCsi
 from .wit import exports
-from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput
+from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput, SkillMetadata
 from .wit.types import Err
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
@@ -79,6 +79,12 @@ def skill(
 
         def _input_schema(self) -> dict[str, Any]:
             return input_model.model_json_schema()
+
+        def metadata(self) -> SkillMetadata:
+            description=func.__doc__
+            input_schema=json.dumps(input_model.model_json_schema())
+            output_schema=json.dumps(output_model.model_json_schema())
+            return SkillMetadata(description, input_schema, output_schema)
 
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
 

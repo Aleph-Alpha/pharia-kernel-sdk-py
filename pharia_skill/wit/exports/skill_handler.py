@@ -25,3 +25,12 @@ The set of errors which may be raised by functions in this interface
 """
 
 
+@dataclass
+class SkillMetadata:
+    """
+    @since(version = 0.3.0)
+    """
+    description: Optional[str]
+    input_schema: str
+    output_schema: str
+

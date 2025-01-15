@@ -1,4 +1,5 @@
 import pytest
+import json
 from pydantic import BaseModel, Field, RootModel
 
 from pharia_skill import CompletionParams, Csi, skill
@@ -194,3 +195,28 @@ def test_skill_with_csi_call_raises_not_implemented():
         handler.run(b'{"topic": "llama"}')
 
     assert "NotImplementedError" in excinfo.value.value.value
+
+
+def test_skill_metadata():
+    @skill
+    def foo(csi: Csi, input: Input) -> Output:
+        """bar"""
+        return Output(message="llama")
+
+    handler = foo.__globals__["SkillHandler"]()
+    metadata = handler.metadata()
+
+    assert metadata.description == "bar"
+    assert json.loads(metadata.input_schema) == Input.model_json_schema()
+    assert json.loads(metadata.output_schema) == Output.model_json_schema()
+
+
+def test_skill_metadata_without_docstring():
+    @skill
+    def foo(csi: Csi, input: Input) -> Output:
+        return Output(message="llama")
+
+    handler = foo.__globals__["SkillHandler"]()
+    metadata = handler.metadata()
+
+    assert metadata.description is None
