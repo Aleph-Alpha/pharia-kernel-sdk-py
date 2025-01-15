@@ -100,6 +100,9 @@ class ChatRequest:
         if tools := self.system_prompt_tools():
             prompt += f"\nTools: {', '.join(tool.name() for tool in tools)}"
 
+        if CodeInterpreter in self.tools:
+            prompt += "\nIf you decide to run python code, assign the result to a variable called `result`."
+
         # include the original system prompt
         if self.messages[0].role == Role.System:
             prompt += f"\n{self.messages[0].content}"

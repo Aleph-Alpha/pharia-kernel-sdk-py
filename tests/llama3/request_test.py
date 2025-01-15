@@ -74,7 +74,8 @@ def test_system_prompt_with_tools():
     chat_request = ChatRequest(llama, [user], [CodeInterpreter])
     expected = """<|start_header_id|>system<|end_header_id|>
 
-Environment: ipython<|eot_id|>"""
+Environment: ipython
+If you decide to run python code, assign the result to a variable called `result`.<|eot_id|>"""
     assert chat_request.system is not None
     assert chat_request.system.render() == expected
 
@@ -86,6 +87,7 @@ def test_system_prompt_merged_from_user_and_tools():
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
+If you decide to run python code, assign the result to a variable called `result`.
 You are a poet who strictly speaks in haikus.<|eot_id|>"""
     assert chat_request.system is not None
     assert chat_request.system.render() == expected
@@ -112,7 +114,8 @@ def test_built_in_tools_are_listed():
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
-Tools: brave_search, wolfram_alpha<|eot_id|>"""
+Tools: brave_search, wolfram_alpha
+If you decide to run python code, assign the result to a variable called `result`.<|eot_id|>"""
     assert chat_request.system.render() == expected
 
 
