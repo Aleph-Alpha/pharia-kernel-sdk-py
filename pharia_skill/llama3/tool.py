@@ -23,6 +23,31 @@ from .message import MessageApi, Role
 from .response import Response, SpecialTokens
 
 
+@dataclass
+class ToolResponse(MessageApi):
+    """
+    Response for the model after a tool call has been executed.
+
+    Given the LLM has requested a tool call and the developer has executed the tool call,
+    the result can be passed back to the model as a `ToolResponse`.
+    """
+
+    content: str
+    role: Literal[Role.IPython] = Role.IPython
+    success: bool = True
+
+    def render(self) -> str:
+        return f"{self.role.render()}\n\n{self.output()}{SpecialTokens.EndOfTurn.value}"
+
+    def output(self) -> str:
+        prompt = "completed" if self.success else "failed"
+        if self.success:
+            prompt += f"[stdout]{self.content}[/stdout]"
+        else:
+            prompt += f"[stderr]{self.content}[/stderr]"
+        return prompt
+
+
 class Function(TypedDict):
     name: str
     description: str | None
@@ -126,6 +151,11 @@ class CodeInterpreter(Tool):
 
     def render_tool_call(self) -> str:
         return SpecialTokens.PythonTag + self.src
+
+    def run(self) -> ToolResponse:
+        global_vars: dict[str, Any] = {}
+        exec(self.src, global_vars)
+        return ToolResponse(content=str(global_vars.get("result")))
 
 
 class WolframAlpha(Tool):
@@ -244,28 +274,3 @@ class ToolCall:
             pass
 
         return None
-
-
-@dataclass
-class ToolResponse(MessageApi):
-    """
-    Response for the model after a tool call has been executed.
-
-    Given the LLM has requested a tool call and the developer has executed the tool call,
-    the result can be passed back to the model as a `ToolResponse`.
-    """
-
-    content: str
-    role: Literal[Role.IPython] = Role.IPython
-    success: bool = True
-
-    def render(self) -> str:
-        return f"{self.role.render()}\n\n{self.output()}{SpecialTokens.EndOfTurn.value}"
-
-    def output(self) -> str:
-        prompt = "completed" if self.success else "failed"
-        if self.success:
-            prompt += f"[stdout]{self.content}[/stdout]"
-        else:
-            prompt += f"[stderr]{self.content}[/stderr]"
-        return prompt

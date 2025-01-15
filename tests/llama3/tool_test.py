@@ -183,3 +183,11 @@ def test_parsing_of_invalid_format_raises():
     )
     with pytest.raises(ValidationError):
         raw.try_parse(tools)
+
+
+def test_run_code_interpreter():
+    code = "def is_prime(n):\n    return True\n\nresult=is_prime(7)"
+    tool = CodeInterpreter(src=code)
+    result = tool.run()
+    assert result.success
+    assert result.content == "True"
