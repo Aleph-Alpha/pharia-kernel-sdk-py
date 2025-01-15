@@ -105,17 +105,36 @@ class Tool(BaseModel):
                 else:
                     cls._recursive_purge_title(data[key])
 
+    def render_tool_call(self) -> str:
+        """Convert a tool call to prompt format again."""
+        return json.dumps(
+            {
+                "type": "function",
+                "name": self.name(),
+                "parameters": self.model_dump(exclude_unset=True),
+            }
+        )
+
 
 class CodeInterpreter(Tool):
     src: str
+
+    def render_tool_call(self) -> str:
+        return SpecialTokens.PythonTag + self.src
 
 
 class WolframAlpha(Tool):
     query: str
 
+    def render_tool_call(self) -> str:
+        return SpecialTokens.PythonTag + f'wolfram_alpha.call(query="{self.query}")'
+
 
 class BraveSearch(Tool):
     query: str
+
+    def render_tool_call(self) -> str:
+        return SpecialTokens.PythonTag + f'brave_search.call(query="{self.query}")'
 
 
 BuiltInTools: tuple[type[Tool], ...] = (CodeInterpreter, WolframAlpha, BraveSearch)
@@ -142,32 +161,11 @@ class ToolCall:
         a parsed format, we need to convert it to a prompt string to construct
         the message history for a later interactions with the model.
         """
-        if any(isinstance(self.arguments, tool) for tool in BuiltInTools):
-            return SpecialTokens.PythonTag + self.render_build_in()
-        else:
-            # see `ToolCall.raw_from_response` for why the python tag is not included here
-            return self.render_json()
-
-    def render_build_in(self) -> str:
-        match self.arguments:
-            case CodeInterpreter(src=src):
-                return src
-            case WolframAlpha(query=query):
-                return f'wolfram_alpha.call(query="{query}")'
-            case BraveSearch(query=query):
-                return f'brave_search.call(query="{query}")'
-            case _:
-                raise ValueError(f"Unknown built-in tool: {self.name}")
-
-    def render_json(self) -> str:
-        parameters = (
-            self.arguments
-            if isinstance(self.arguments, dict)
-            else self.arguments.model_dump(exclude_unset=True)
-        )
-        return json.dumps(
-            {"type": "function", "name": self.name, "parameters": parameters}
-        )
+        if isinstance(self.arguments, dict):
+            return json.dumps(
+                {"type": "function", "name": self.name, "parameters": self.arguments}
+            )
+        return self.arguments.render_tool_call()
 
     def try_parse(self, tools: Sequence[ToolDefinition]) -> None:
         """Try to validate a tool call into one of the provided tools.
