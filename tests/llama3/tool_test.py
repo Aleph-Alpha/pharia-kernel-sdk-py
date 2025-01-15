@@ -96,7 +96,7 @@ def test_json_function_call_render():
 
     tool_call = ToolCall.json_from_text(response)
     assert tool_call is not None
-    assert tool_call.render_json() == response
+    assert tool_call.render() == response
 
 
 def test_render_tool_call_with_typed_args():
