@@ -74,12 +74,6 @@ def skill(
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))
 
-        def _output_schema(self) -> dict[str, Any]:
-            return output_model.model_json_schema()
-
-        def _input_schema(self) -> dict[str, Any]:
-            return input_model.model_json_schema()
-
         def metadata(self) -> SkillMetadata:
             description=func.__doc__
             input_schema=json.dumps(input_model.model_json_schema())
