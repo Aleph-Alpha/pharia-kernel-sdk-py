@@ -199,6 +199,7 @@ def test_tool_result_can_be_deserialized():
             },
             {
                 "role": "assistant",
+                "content": None,
                 "tool_calls": [
                     {
                         "name": "get_delivery_date",

@@ -18,6 +18,9 @@ class AssistantReply(MessageApi):
     # like `if isinstance(response.message, ToolRequest): ...`
     tool_calls: None = None
 
+    def __init__(self, content: str):
+        self.content = content
+
     def render(self) -> str:
         return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
 
@@ -31,6 +34,9 @@ class ToolRequest(MessageApi):
 
     # keep the content field, see `AssistantReply` for explanation
     content: None = None
+
+    def __init__(self, tool_calls: list[ToolCall]):
+        self.tool_calls = tool_calls
 
     def render(self) -> str:
         """Llama will end messages with <|eom_id|> instead of <|eot_id|> if it responds
@@ -57,5 +63,5 @@ def from_raw_response(
         tool_call = ToolCall.from_response(response)
         if tool_call is not None:
             tool_call.try_parse(tools)
-            return ToolRequest(content=None, tool_calls=[tool_call])
-    return AssistantReply(content=response.text)
+            return ToolRequest([tool_call])
+    return AssistantReply(response.text)
