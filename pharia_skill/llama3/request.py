@@ -85,13 +85,17 @@ class ChatRequest:
     def system(self) -> SystemMessage | None:
         """The system message that will be rendered.
 
-        Conditionally activate the IPython environment if tools are provided.
+        Ensures that if the user has provided a system message himself, it is not merged.
+
+        Conditionally activate the IPython environment if any tools are provided. Activating
+        this environment is optional in case there is only user-defined tools. By always activating
+        it, we don't need to parse this knowledge to `AssistantMessage.render`, and can always end
+        in <|eom_id|> token.
+
         If built in tools are configured, they are listed in the system prompt.
         The code interpreter tools is automatically included when IPython is activated.
-        Ensures that if the user has provided a system message himself, it is not overwritten.
 
         Reference: https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/prompt_format.md#input-prompt-format-2
-
         """
         if not self.tools:
             return self.messages[0] if self.messages[0].role == Role.System else None
