@@ -16,8 +16,9 @@ from typing import Any, Sequence
 
 from pydantic import field_serializer, field_validator
 
-from pharia_skill.csi import ChatParams
+from pharia_skill.csi import ChatParams, CompletionParams, Csi, FinishReason
 
+from . import assistant
 from .assistant import AssistantMessage
 from .message import Role, SystemMessage, UserMessage
 from .response import SpecialTokens
@@ -31,6 +32,14 @@ from .tool import (
 )
 
 Message = SystemMessage | UserMessage | AssistantMessage | ToolResponse
+
+
+@dataclass
+class ChatResponse:
+    """Response from a chat request."""
+
+    message: AssistantMessage
+    finish_reason: FinishReason
 
 
 @dataclass
@@ -51,6 +60,52 @@ class ChatRequest:
     def __post_init__(self) -> None:
         validate_messages(self.messages)
 
+    def chat(self, csi: Csi) -> ChatResponse:
+        """Chat with a Llama model.
+
+        Appends responses from the model to the conversation history.
+        Available tools can be specified as part of the `ChatRequest`. If the model decides
+        to do a tool call, this will be available on the response:
+
+        Example::
+            # define the tool
+            class GetGithubReadme(BaseModel):
+                repository: str
+
+            # construct the `ChatRequest` with the user question
+            user = Message.user("When will my order (42) arrive?")
+            request = ChatRequest(llama, [user], tools=[GetGithubReadme])
+
+            # chat with the model
+            response = request.chat(csi)
+
+            # receive the tool call back
+            assert response.message.tool_call is not None
+
+            # execute the tool call (e.g. via http request) and construct the tool response
+            tool_response = ToolResponse(tool.name, content="1970-01-01")
+
+            # extend the request and run a new chat
+            request.extend(tool_response)
+            response = request.chat(csi)
+        """
+        validate_messages(self.messages)
+
+        # as we are doing a completion request, we need to construct the completion
+        # params, which are slightly different from the chat request params
+        completion_params = CompletionParams(
+            return_special_tokens=True,
+            max_tokens=self.params.max_tokens,
+            temperature=self.params.temperature,
+            top_p=self.params.top_p,
+        )
+
+        completion = csi.complete(self.model, self.render(), completion_params)
+        message = assistant.from_raw_response(completion.text, self.tools)
+
+        self.messages.append(message)
+        return ChatResponse(message, completion.finish_reason)
+
     def extend(self, message: Message) -> None:
         """Add a message to a chat request.
 
@@ -58,14 +113,6 @@ class ChatRequest:
         conversation can be extended by adding a message to the request.
         """
         validate_messages(self.messages + [message])
-        self._extend(message)
-
-    def _extend(self, message: Message) -> None:
-        """Add a message to a chat request without validation.
-
-        This allows appending the LLM reply to the conversation by
-        not asserting that the conversation ends in a user or ipython message.
-        """
         self.messages.append(message)
 
     def render(self) -> str:

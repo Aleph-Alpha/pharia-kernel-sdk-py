@@ -1,7 +1,6 @@
 from .assistant import AssistantMessage
-from .chat import ChatResponse, chat
 from .message import Role, SystemMessage, UserMessage
-from .request import ChatRequest
+from .request import ChatRequest, ChatResponse
 from .tool import (
     BraveSearch,
     CodeInterpreter,
@@ -20,7 +19,6 @@ __all__ = [
     "SystemMessage",
     "Role",
     "AssistantMessage",
-    "chat",
     "ToolCall",
     "ToolDefinition",
     "ToolResponse",
