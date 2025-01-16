@@ -38,7 +38,7 @@ def test_user_provided_tools():
     chat_request = ChatRequest(
         llama, [user], tools=[CodeInterpreter, BraveSearch, GetGithubReadme]
     )
-    assert chat_request.user_provided_tools() == [GetGithubReadme]
+    assert chat_request.json_based_tools() == [GetGithubReadme]
 
 
 def test_chat_request_to_prompt():
