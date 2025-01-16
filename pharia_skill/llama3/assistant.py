@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from typing import Literal, Sequence
 
-from .message import MessageApi, Role
+from .message import Role
 from .response import RawResponse, Response, SpecialTokens
 from .tool import ToolCall, ToolDefinition
 
 
 @dataclass
-class AssistantReply(MessageApi):
+class AssistantReply:
     """A "normal" (no tool call) response from the model."""
 
     content: str
@@ -26,7 +26,7 @@ class AssistantReply(MessageApi):
 
 
 @dataclass
-class ToolRequest(MessageApi):
+class ToolRequest:
     """A response from the LLM that contains a tool call."""
 
     tool_calls: list[ToolCall]

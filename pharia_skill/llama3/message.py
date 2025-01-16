@@ -1,5 +1,5 @@
 """
-A class implementing `MessageApi` represents ne turn in a conversation with an LLM.
+A message represents one turn in a conversation with an LLM.
 
 1. To start a conversation with an LLM, a developer creates a user and optionally system message: `UserMessage(content)`.
 2. The LLM responds with an `AssistantReply` or a `ToolRequest`.
@@ -8,7 +8,7 @@ A class implementing `MessageApi` represents ne turn in a conversation with an L
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal, Protocol
+from typing import Literal
 
 from .response import SpecialTokens
 
@@ -25,16 +25,8 @@ class Role(str, Enum):
         return f"<|start_header_id|>{self.value.lower()}<|end_header_id|>"
 
 
-class MessageApi(Protocol):
-    """A base message that can be rendered."""
-
-    def render(self) -> str:
-        """Render the message to a string."""
-        ...
-
-
 @dataclass
-class UserMessage(MessageApi):
+class UserMessage:
     """Describes a user message in a chat.
 
     Parameters:
@@ -52,7 +44,7 @@ class UserMessage(MessageApi):
 
 
 @dataclass
-class SystemMessage(MessageApi):
+class SystemMessage:
     """Describes a system message in a chat.
 
     Parameters:

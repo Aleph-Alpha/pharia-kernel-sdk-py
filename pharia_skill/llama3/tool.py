@@ -19,12 +19,12 @@ from pydantic import BaseModel
 # import from typing_extensions for Python < 3.12 compatibility
 from typing_extensions import TypedDict
 
-from .message import MessageApi, Role
+from .message import Role
 from .response import Response, SpecialTokens
 
 
 @dataclass
-class ToolResponse(MessageApi):
+class ToolResponse:
     """
     Response for the model after a tool call has been executed.
 
