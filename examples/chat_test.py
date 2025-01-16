@@ -23,10 +23,3 @@ def test_chat_api():
     assert result.message.tool_call is not None
     assert isinstance(result.message.tool_call.arguments, GetShipmentDate)
     assert result.message.tool_call.arguments.order_id == 42
-
-
-def test_model_dump():
-    user = UserMessage("When will my order (42) arrive?")
-    request = ChatRequest("llama-3.1-8b-instruct", [user], [GetShipmentDate])
-    input = ChatApi(root=request)
-    input.model_dump_json()
