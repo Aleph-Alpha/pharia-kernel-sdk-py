@@ -1,8 +1,8 @@
 """
-A message is one turn in a conversation with an LLM. Messages are constructed in three ways:
+A class implementing `MessageApi` represents ne turn in a conversation with an LLM.
 
-1. To start a conversation with an LLM, a developer creates a user and optionally system message: `Message.user(content)`.
-2. The LLM responds with an `AssistantMessage` that may contain a tool call.
+1. To start a conversation with an LLM, a developer creates a user and optionally system message: `UserMessage(content)`.
+2. The LLM responds with an `AssistantReply` or a `ToolRequest`.
 3. If the LLM has requested a tool call, the developer executes the tool call and responds with a `ToolResponse`.
 """
 
