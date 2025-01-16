@@ -21,6 +21,7 @@ from pharia_skill.llama3 import (
     ToolResponse,
     UserMessage,
 )
+from pharia_skill.llama3.assistant import ToolRequest
 
 
 class GetGithubReadme(Tool):
@@ -200,11 +201,8 @@ def test_tool_result_can_be_deserialized():
                 "role": "assistant",
                 "tool_calls": [
                     {
-                        "type": "function",
-                        "function": {
-                            "name": "get_delivery_date",
-                            "parameters": '{"order_id":"123456"}',
-                        },
+                        "name": "get_delivery_date",
+                        "arguments": {"order_id": "123456"},
                     }
                 ],
             },
@@ -245,21 +243,23 @@ class ChatOutput(RootModel[ChatResponse]):
 def test_chat_response_can_be_serialized():
     # Given a chat response with a function call
     tool_call = ToolCall(name="get_shipment_date", arguments={"order_id": "42"})
-    message = AssistantMessage(tool_call=tool_call)
+    message = ToolRequest(tool_calls=[tool_call])
     response = ChatResponse(message, FinishReason.STOP)
 
     # When serializing it via `ChatOutput`
     data = ChatOutput(root=response).model_dump_json(indent=4)
     expected = """{
     "message": {
-        "content": null,
-        "role": "assistant",
-        "tool_call": {
-            "name": "get_shipment_date",
-            "arguments": {
-                "order_id": "42"
+        "tool_calls": [
+            {
+                "name": "get_shipment_date",
+                "arguments": {
+                    "order_id": "42"
+                }
             }
-        }
+        ],
+        "role": "assistant",
+        "content": null
     },
     "finish_reason": "stop"
 }"""

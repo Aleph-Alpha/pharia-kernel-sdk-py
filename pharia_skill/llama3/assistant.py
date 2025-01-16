@@ -7,28 +7,30 @@ from .tool import ToolCall, ToolDefinition
 
 
 @dataclass
-class AssistantMessage(MessageApi):
-    """A message that is returned from the LLM.
+class AssistantReply(MessageApi):
+    """A "normal" (no tool call) response from the model."""
 
-    With tool calling, the different messages diverge in their attributes,
-    which is why they are represented by different classes.
-    """
-
-    content: str | None = None
+    content: str
     role: Literal[Role.Assistant] = Role.Assistant
-    tool_call: ToolCall | None = None
 
-    @classmethod
-    def from_raw_response(
-        cls, raw: RawResponse, tools: Sequence[ToolDefinition] | None = None
-    ) -> "AssistantMessage":
-        response = Response.from_raw(raw)
-        if tools:
-            tool_call = ToolCall.from_response(response)
-            if tool_call is not None:
-                tool_call.try_parse(tools)
-                return AssistantMessage(tool_call=tool_call)
-        return AssistantMessage(content=response.text)
+    # keep the `tool_calls` field as it allows consumers to do:
+    # `if response.message.tool_calls: ...` instead of needing to do a type check
+    # like `if isinstance(response.message, ToolRequest): ...`
+    tool_calls: None = None
+
+    def render(self) -> str:
+        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
+
+
+@dataclass
+class ToolRequest(MessageApi):
+    """A response from the LLM that contains a tool call."""
+
+    tool_calls: list[ToolCall]
+    role: Literal[Role.Assistant] = Role.Assistant
+
+    # keep the content field, see `AssistantReply` for explanation
+    content: None = None
 
     def render(self) -> str:
         """Llama will end messages with <|eom_id|> instead of <|eot_id|> if it responds
@@ -39,7 +41,21 @@ class AssistantMessage(MessageApi):
 
         We always turn on `ipython` in the system prompt, so we always use `<|eom_id|>` for serialization.
         """
-        if self.tool_call is not None:
-            return f"{self.role.render()}\n\n{self.tool_call.render()}{SpecialTokens.EndOfMessage.value}"
+        content = "".join([tool_call.render() for tool_call in self.tool_calls])
+        return f"{self.role.render()}\n\n{content}{SpecialTokens.EndOfMessage.value}"
 
-        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
+
+AssistantMessage = ToolRequest | AssistantReply
+"""A message that is returned from the LLM."""
+
+
+def from_raw_response(
+    raw: RawResponse, tools: Sequence[ToolDefinition] | None = None
+) -> AssistantMessage:
+    response = Response.from_raw(raw)
+    if tools:
+        tool_call = ToolCall.from_response(response)
+        if tool_call is not None:
+            tool_call.try_parse(tools)
+            return ToolRequest(content=None, tool_calls=[tool_call])
+    return AssistantReply(content=response.text)

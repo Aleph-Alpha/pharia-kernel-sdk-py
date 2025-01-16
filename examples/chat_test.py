@@ -20,6 +20,6 @@ def test_chat_api():
     result = chat_api(csi, input).root
 
     # Then a function call is returned
-    assert result.message.tool_call is not None
-    assert isinstance(result.message.tool_call.arguments, GetShipmentDate)
-    assert result.message.tool_call.arguments.order_id == 42
+    assert result.message.tool_calls
+    assert isinstance(result.message.tool_calls[0].arguments, GetShipmentDate)
+    assert result.message.tool_calls[0].arguments.order_id == 42
