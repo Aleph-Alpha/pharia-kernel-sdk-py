@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 from pharia_skill import Csi, skill
-from pharia_skill.llama3 import ChatRequest, CodeInterpreter, UserMessage, chat
+from pharia_skill.llama3 import ChatRequest, CodeInterpreter, UserMessage
 
 
 class Input(BaseModel):
@@ -21,7 +21,7 @@ def code(csi: Csi, input: Input) -> Output:
     request = ChatRequest(
         model="llama-3.3-70b-instruct", messages=[message], tools=[CodeInterpreter]
     )
-    response = chat(csi, request)
+    response = request.chat(csi)
     if not response.message.tool_calls:
         return Output(
             answer=str(response.message.content), executed_code=None, code_result=None
@@ -35,7 +35,7 @@ def code(csi: Csi, input: Input) -> Output:
     request.extend(tool_output)
 
     # chat again, and return the output
-    response = chat(csi, request)
+    response = request.chat(csi)
     return Output(
         answer=str(response.message.content),
         executed_code=tool_call.src,

@@ -1,7 +1,7 @@
 from pydantic import RootModel
 
 from pharia_skill import Csi, skill
-from pharia_skill.llama3 import ChatRequest, ChatResponse, chat
+from pharia_skill.llama3 import ChatRequest, ChatResponse
 
 
 class ChatApi(RootModel[ChatRequest]):
@@ -22,5 +22,4 @@ class ChatOutput(RootModel[ChatResponse]):
 @skill
 def chat_api(csi: Csi, request: ChatApi) -> ChatOutput:
     """Expose a chat API with function calling"""
-    response = chat(csi, request.root)
-    return ChatOutput(root=response)
+    return ChatOutput(root=request.root.chat(csi))

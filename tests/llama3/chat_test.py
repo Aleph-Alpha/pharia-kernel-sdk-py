@@ -1,6 +1,5 @@
 import pytest
 
-from pharia_skill import llama3
 from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason
 from pharia_skill.llama3 import (
     ChatRequest,
@@ -22,10 +21,53 @@ def csi() -> DevCsi:
 llama = "llama-3.1-8b-instruct"
 
 
+class MockCsi(Csi):
+    """Csi that can be loaded up with expectations"""
+
+    def __init__(self, completion: Completion):
+        self.completion = completion
+        self.prompts: list[str] = []
+
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
+        self.prompts.append(prompt)
+        return self.completion
+
+
 class GetShipmentDate(Tool):
     """Get the shipment date for a specific order"""
 
     order_id: str
+
+
+def test_can_not_chat_twice_without_appending_message():
+    # Given a chat request after a chat request
+    message = UserMessage("What is the meaning of life?")
+    request = ChatRequest(llama, [message])
+    completion = Completion(text="42", finish_reason=FinishReason.STOP)
+    csi = MockCsi(completion)  # type: ignore
+
+    request.chat(csi)
+
+    # When doing another chat request
+    with pytest.raises(ValueError):
+        # Then an error should be raised
+        request.chat(csi)
+
+
+def test_can_chat_twice_when_providing_user_response():
+    # Given a chat request after a chat request
+    message = UserMessage("What is the meaning of life?")
+    request = ChatRequest(llama, [message])
+    completion = Completion(text="42", finish_reason=FinishReason.STOP)
+    csi = MockCsi(completion)  # type: ignore
+
+    request.chat(csi)
+
+    # When extending the request with a user response
+    request.extend(UserMessage("Are you sure?"))
+
+    # Then another chat request can be done
+    request.chat(csi)
 
 
 @pytest.mark.kernel
@@ -35,7 +77,7 @@ def test_trigger_tool_call(csi: DevCsi):
     request = ChatRequest(llama, [message], tools=[GetShipmentDate])
 
     # When doing a chat request
-    response = llama3.chat(csi, request)
+    response = request.chat(csi)
 
     # Then the response should have a tool call
     assert response.message.role == Role.Assistant
@@ -58,7 +100,7 @@ def test_provide_tool_result(csi: DevCsi):
     # When providing a tool response back to the model
     tool = ToolResponse(content="1970-01-01")
     request = ChatRequest(llama, [user, tool_call_message, tool], [GetShipmentDate])
-    response = llama3.chat(csi, request)
+    response = request.chat(csi)
 
     # Then the response should answer the original question
     assert response.message.role == Role.Assistant
@@ -66,18 +108,6 @@ def test_provide_tool_result(csi: DevCsi):
     assert response.message.content is not None
     assert "will ship" in response.message.content
     assert "1970" in response.message.content
-
-
-class MockCsi(Csi):
-    """Csi that can be loaded up with expectations"""
-
-    def __init__(self, completion: Completion):
-        self.completion = completion
-        self.prompts: list[str] = []
-
-    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
-        self.prompts.append(prompt)
-        return self.completion
 
 
 def test_tool_response_is_parsed_into_provided_class():
@@ -91,7 +121,7 @@ def test_tool_response_is_parsed_into_provided_class():
     csi = MockCsi(completion)  #  type: ignore
 
     # When doing a completion request
-    response = llama3.chat(csi, request)
+    response = request.chat(csi)
 
     # Then the response is parsed into the provided class
     assert response.message.tool_calls
@@ -111,7 +141,7 @@ def test_tool_response_can_be_added_to_prompt():
     csi = MockCsi(completion)  #  type: ignore
 
     # When doing a chat request
-    response = llama3.chat(csi, request)
+    response = request.chat(csi)
     assert response.message.tool_calls
     assert isinstance(response.message.tool_calls[0].arguments, GetShipmentDate)
 
@@ -120,7 +150,7 @@ def test_tool_response_can_be_added_to_prompt():
     request.extend(tool)
 
     # And doing another chat request against a spy csi
-    response = llama3.chat(csi, request)
+    response = request.chat(csi)
 
     # Then the whole context is included in the second prompt
     expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
