@@ -1,15 +1,14 @@
 import pytest
 from pydantic import Field, ValidationError
 
-from pharia_skill.llama3.response import Response
-from pharia_skill.llama3.tool import (
+from pharia_skill.llama3 import (
     BraveSearch,
     CodeInterpreter,
     Tool,
     ToolCall,
-    ToolResponse,
     WolframAlpha,
 )
+from pharia_skill.llama3.response import Response
 
 
 class GetGithubReadme(Tool):
@@ -128,24 +127,6 @@ def test_brave_search_tool_call_render():
     assert tool_call.render() == expected
 
 
-def test_tool_response_message_render():
-    tool = ToolResponse(
-        content='{"weather": "sunny", "temperature": "70 degrees"}',
-        success=True,
-    )
-    expected = '<|start_header_id|>ipython<|end_header_id|>\n\ncompleted[stdout]{"weather": "sunny", "temperature": "70 degrees"}[/stdout]<|eot_id|>'
-    assert tool.render() == expected
-
-
-def test_failed_tool_response_message_render():
-    tool = ToolResponse(
-        content="failed to connect to server",
-        success=False,
-    )
-    expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"
-    assert tool.render() == expected
-
-
 def test_no_parsing_without_provided_tools():
     raw = ToolCall(
         name="get_github_readme",
@@ -189,5 +170,4 @@ def test_run_code_interpreter():
     code = "def is_prime(n):\n    return True\n\nresult=is_prime(7)"
     tool = CodeInterpreter(src=code)
     result = tool.run()
-    assert result.success
-    assert result.content == "True"
+    assert result is True

@@ -2,10 +2,10 @@ import pytest
 
 from pharia_skill.llama3 import (
     SystemMessage,
-    ToolResponse,
+    ToolMessage,
     UserMessage,
 )
-from pharia_skill.llama3.assistant import AssistantReply
+from pharia_skill.llama3.message import AssistantReply
 from pharia_skill.llama3.request import validate_messages
 
 
@@ -33,7 +33,7 @@ def test_system_prompt_is_optional():
     system = SystemMessage("You are a poet who strictly speaks in haikus.")
     user = UserMessage("oat milk")
     assistant = AssistantReply(content="Hello!")
-    ipython = ToolResponse("print('hello')")
+    ipython = ToolMessage("print('hello')")
 
     validate_messages([user, assistant, ipython])
     validate_messages([system, user, assistant, ipython])
@@ -41,7 +41,7 @@ def test_system_prompt_is_optional():
 
 def test_not_alternating_messages():
     user = UserMessage("oat milk")
-    ipython = ToolResponse("print('hello')")
+    ipython = ToolMessage("print('hello')")
 
     with pytest.raises(ValueError):
         validate_messages([user, ipython])

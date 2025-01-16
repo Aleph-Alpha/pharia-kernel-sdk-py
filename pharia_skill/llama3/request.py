@@ -18,20 +18,18 @@ from pydantic import field_serializer, field_validator
 
 from pharia_skill.csi import ChatParams, CompletionParams, Csi, FinishReason
 
-from . import assistant
-from .assistant import AssistantMessage
-from .message import Role, SystemMessage, UserMessage
-from .response import SpecialTokens
-from .tool import (
-    BuiltInTools,
-    CodeInterpreter,
-    JsonSchema,
-    Tool,
-    ToolDefinition,
-    ToolResponse,
+from .message import (
+    AssistantMessage,
+    Role,
+    SystemMessage,
+    ToolMessage,
+    UserMessage,
+    from_raw_response,
 )
+from .response import SpecialTokens
+from .tool import BuiltInTools, CodeInterpreter, JsonSchema, Tool, ToolDefinition
 
-Message = SystemMessage | UserMessage | AssistantMessage | ToolResponse
+Message = SystemMessage | UserMessage | AssistantMessage | ToolMessage
 
 
 @dataclass
@@ -101,7 +99,7 @@ class ChatRequest:
         )
 
         completion = csi.complete(self.model, self.render(), completion_params)
-        message = assistant.from_raw_response(completion.text, self.tools)
+        message = from_raw_response(completion.text, self.tools)
 
         self.messages.append(message)
         return ChatResponse(message, completion.finish_reason)

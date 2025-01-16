@@ -1,7 +1,9 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 from pharia_skill import Csi, skill
-from pharia_skill.llama3 import ChatRequest, CodeInterpreter, UserMessage
+from pharia_skill.llama3 import ChatRequest, CodeInterpreter, ToolMessage, UserMessage
 
 
 class Input(BaseModel):
@@ -11,7 +13,7 @@ class Input(BaseModel):
 class Output(BaseModel):
     answer: str
     executed_code: str | None
-    code_result: str | None
+    code_result: Any
 
 
 @skill
@@ -31,13 +33,13 @@ def code(csi: Csi, input: Input) -> Output:
     tool_call = response.message.tool_calls[0].arguments
     assert isinstance(tool_call, CodeInterpreter)
 
-    tool_output = tool_call.run()
-    request.extend(tool_output)
+    output = tool_call.run()
+    request.extend(ToolMessage(output))
 
     # chat again, and return the output
     response = request.chat(csi)
     return Output(
         answer=str(response.message.content),
         executed_code=tool_call.src,
-        code_result=tool_output.content,
+        code_result=output,
     )
