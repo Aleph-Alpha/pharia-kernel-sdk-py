@@ -18,10 +18,10 @@ from pharia_skill.llama3 import (
     Role,
     Tool,
     ToolCall,
-    ToolResponse,
+    ToolMessage,
     UserMessage,
 )
-from pharia_skill.llama3.assistant import ToolRequest
+from pharia_skill.llama3.message import AssistantToolRequest
 
 
 class GetGithubReadme(Tool):
@@ -222,7 +222,7 @@ def test_tool_result_can_be_deserialized():
     assert len(messages) == 3
 
     # And the third one is a tool response
-    assert isinstance(messages[2], ToolResponse)
+    assert isinstance(messages[2], ToolMessage)
     assert chat.root.messages[2].content == "2025-07-01"
 
     # And the second one is an assistant one
@@ -244,7 +244,7 @@ class ChatOutput(RootModel[ChatResponse]):
 def test_chat_response_can_be_serialized():
     # Given a chat response with a function call
     tool_call = ToolCall(name="get_shipment_date", arguments={"order_id": "42"})
-    message = ToolRequest(tool_calls=[tool_call])
+    message = AssistantToolRequest(tool_calls=[tool_call])
     response = ChatResponse(message, FinishReason.STOP)
 
     # When serializing it via `ChatOutput`

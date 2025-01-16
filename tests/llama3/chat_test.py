@@ -6,10 +6,10 @@ from pharia_skill.llama3 import (
     Role,
     Tool,
     ToolCall,
-    ToolResponse,
+    ToolMessage,
     UserMessage,
-    assistant,
 )
+from pharia_skill.llama3.message import AssistantToolRequest
 from pharia_skill.testing import DevCsi
 
 
@@ -95,11 +95,11 @@ def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
     user = UserMessage("When will the order `42` ship?")
     tool_call = ToolCall(GetShipmentDate.name(), arguments={"order_id": "42"})
-    tool_call_message = assistant.ToolRequest(tool_calls=[tool_call])
+    assistant = AssistantToolRequest(tool_calls=[tool_call])
 
     # When providing a tool response back to the model
-    tool = ToolResponse(content="1970-01-01")
-    request = ChatRequest(llama, [user, tool_call_message, tool], [GetShipmentDate])
+    tool = ToolMessage(content="1970-01-01")
+    request = ChatRequest(llama, [user, assistant, tool], [GetShipmentDate])
     response = request.chat(csi)
 
     # Then the response should answer the original question
@@ -146,7 +146,7 @@ def test_tool_response_can_be_added_to_prompt():
     assert isinstance(response.message.tool_calls[0].arguments, GetShipmentDate)
 
     # And providing the tool response
-    tool = ToolResponse(content='{"result": "1970-01-01"}')
+    tool = ToolMessage(content='{"result": "1970-01-01"}')
     request.extend(tool)
 
     # And doing another chat request against a spy csi

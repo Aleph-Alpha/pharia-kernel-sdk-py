@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 
-from pharia_skill.llama3 import SystemMessage, UserMessage
+from pharia_skill.llama3.message import (
+    SystemMessage,
+    ToolMessage,
+    UserMessage,
+)
 
 
 def test_render_user_message():
@@ -41,3 +45,21 @@ def deserialize_user_and_system_message():
     assert isinstance(messages[0], SystemMessage)
     assert isinstance(messages[1], UserMessage)
     assert isinstance(messages[2], SystemMessage)
+
+
+def test_tool_response_message_render():
+    tool = ToolMessage(
+        content='{"weather": "sunny", "temperature": "70 degrees"}',
+        success=True,
+    )
+    expected = '<|start_header_id|>ipython<|end_header_id|>\n\ncompleted[stdout]{"weather": "sunny", "temperature": "70 degrees"}[/stdout]<|eot_id|>'
+    assert tool.render() == expected
+
+
+def test_failed_tool_response_message_render():
+    tool = ToolMessage(
+        content="failed to connect to server",
+        success=False,
+    )
+    expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"
+    assert tool.render() == expected
