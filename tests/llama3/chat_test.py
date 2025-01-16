@@ -3,13 +3,13 @@ import pytest
 from pharia_skill import llama3
 from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason
 from pharia_skill.llama3 import (
-    AssistantMessage,
     ChatRequest,
     Role,
     Tool,
     ToolCall,
     ToolResponse,
     UserMessage,
+    assistant,
 )
 from pharia_skill.testing import DevCsi
 
@@ -40,9 +40,9 @@ def test_trigger_tool_call(csi: DevCsi):
     # Then the response should have a tool call
     assert response.message.role == Role.Assistant
     assert response.message.content is None
-    assert response.message.tool_call is not None
-    assert isinstance(response.message.tool_call.arguments, GetShipmentDate)
-    assert response.message.tool_call.arguments.order_id == "42"
+    assert response.message.tool_calls
+    assert isinstance(response.message.tool_calls[0].arguments, GetShipmentDate)
+    assert response.message.tool_calls[0].arguments.order_id == "42"
 
     # And the original request should be extended
     assert request.messages[-1].role == Role.Assistant
@@ -53,16 +53,16 @@ def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
     user = UserMessage("When will the order `42` ship?")
     tool_call = ToolCall(GetShipmentDate.name(), arguments={"order_id": "42"})
-    assistant = AssistantMessage(tool_call=tool_call)
+    tool_call_message = assistant.ToolRequest(tool_calls=[tool_call])
 
     # When providing a tool response back to the model
     tool = ToolResponse(content="1970-01-01")
-    request = ChatRequest(llama, [user, assistant, tool], [GetShipmentDate])
+    request = ChatRequest(llama, [user, tool_call_message, tool], [GetShipmentDate])
     response = llama3.chat(csi, request)
 
     # Then the response should answer the original question
     assert response.message.role == Role.Assistant
-    assert response.message.tool_call is None
+    assert response.message.tool_calls is None
     assert response.message.content is not None
     assert "will ship" in response.message.content
     assert "1970" in response.message.content
@@ -94,8 +94,8 @@ def test_tool_response_is_parsed_into_provided_class():
     response = llama3.chat(csi, request)
 
     # Then the response is parsed into the provided class
-    assert response.message.tool_call is not None
-    assert isinstance(response.message.tool_call.arguments, GetShipmentDate)
+    assert response.message.tool_calls
+    assert isinstance(response.message.tool_calls[0].arguments, GetShipmentDate)
 
 
 def test_tool_response_can_be_added_to_prompt():
@@ -112,8 +112,8 @@ def test_tool_response_can_be_added_to_prompt():
 
     # When doing a chat request
     response = llama3.chat(csi, request)
-    assert response.message.tool_call is not None
-    assert isinstance(response.message.tool_call.arguments, GetShipmentDate)
+    assert response.message.tool_calls
+    assert isinstance(response.message.tool_calls[0].arguments, GetShipmentDate)
 
     # And providing the tool response
     tool = ToolResponse(content='{"result": "1970-01-01"}')

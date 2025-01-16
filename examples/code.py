@@ -22,13 +22,13 @@ def code(csi: Csi, input: Input) -> Output:
         model="llama-3.3-70b-instruct", messages=[message], tools=[CodeInterpreter]
     )
     response = chat(csi, request)
-    if response.message.tool_call is None:
+    if not response.message.tool_calls:
         return Output(
             answer=str(response.message.content), executed_code=None, code_result=None
         )
 
     # we know that it will be code interpreter
-    tool_call = response.message.tool_call.arguments
+    tool_call = response.message.tool_calls[0].arguments
     assert isinstance(tool_call, CodeInterpreter)
 
     tool_output = tool_call.run()
