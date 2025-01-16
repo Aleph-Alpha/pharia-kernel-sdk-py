@@ -36,6 +36,10 @@ class ToolResponse(MessageApi):
     role: Literal[Role.IPython] = Role.IPython
     success: bool = True
 
+    def __init__(self, content: str, success: bool = True):
+        self.content = content
+        self.success = success
+
     def render(self) -> str:
         return f"{self.role.render()}\n\n{self.output()}{SpecialTokens.EndOfTurn.value}"
 

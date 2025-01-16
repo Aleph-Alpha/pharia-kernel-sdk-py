@@ -44,6 +44,9 @@ class UserMessage(MessageApi):
     content: str
     role: Literal[Role.User] = Role.User
 
+    def __init__(self, content: str):
+        self.content = content
+
     def render(self) -> str:
         return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
 
@@ -58,6 +61,9 @@ class SystemMessage(MessageApi):
 
     content: str
     role: Literal[Role.System] = Role.System
+
+    def __init__(self, content: str):
+        self.content = content
 
     def render(self) -> str:
         return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
