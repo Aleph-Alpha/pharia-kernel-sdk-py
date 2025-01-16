@@ -91,7 +91,19 @@ class Tool(BaseModel):
     """
 
     @classmethod
-    def render(cls) -> dict[str, Any]:
+    def json_schema(cls) -> dict[str, Any]:
+        """The (slightly incompliant) json schema of a tool.
+
+        For all specified tools, this schema is passed to the model.
+        LLama expects a json object with `type` "function" as the root elements
+        and a `function` object with the keys `name`, `description`, and `parameters`.
+
+        Only for the parameters, we can make use of the json schema representation of a
+        pydantic models. Note that the output schema is invalid json schema, as there is
+        no `function` type in the json schema specification:
+
+        https://json-schema.org/draft/2020-12/json-schema-validation#section-6.1.1
+        """
         schema = cls.model_json_schema()
         description = schema.get("description")
         if description is not None:

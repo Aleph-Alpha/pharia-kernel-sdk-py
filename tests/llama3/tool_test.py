@@ -43,7 +43,7 @@ def test_pydantic_tool_definition_for_function():
             },
         },
     }
-    assert GetGithubReadme.render() == expected
+    assert GetGithubReadme.json_schema() == expected
 
 
 def test_brave_search_call_is_parsed():
