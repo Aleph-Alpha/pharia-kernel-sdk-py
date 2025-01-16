@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+
 from pharia_skill.llama3 import (
     BraveSearch,
     ChatRequest,
@@ -160,3 +162,23 @@ Return function calls in JSON format.
 
 Question: What is the readme of the pharia-kernel repository?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
     assert rendered == expected
+
+
+def test_chat_request_with_tool_definition_is_serializable():
+    """Assert that a chat request is serializable.
+
+    type[BaseModel] are not serializable by default, so this test
+    ensures custom serialization of the `tools` attribute does not
+    raise an error.
+    """
+
+    # Given an instance of a pydantic model with a chat request attribute
+    class ChatApi(BaseModel):
+        request: ChatRequest
+
+    user = UserMessage("When will my order (42) arrive?")
+    request = ChatRequest("llama-3.1-8b-instruct", [user], [GetGithubReadme])
+    chat = ChatApi(request=request)
+
+    # Then the model can be dumped to json without an error
+    chat.model_dump_json()
