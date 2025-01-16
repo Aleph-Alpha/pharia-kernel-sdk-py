@@ -133,7 +133,7 @@ class ChatRequest:
         """
 
         def render_tool(tool: ToolDefinition) -> str:
-            schema = tool if isinstance(tool, dict) else tool.render()
+            schema = tool if isinstance(tool, dict) else tool.json_schema()
             return json.dumps(schema, indent=4)
 
         provided = (
@@ -181,7 +181,7 @@ class ChatRequest:
             elif tool in BuiltInTools:
                 serialized.append(tool.name())
             else:
-                serialized.append(tool.render())
+                serialized.append(tool.json_schema())
         return serialized
 
     @field_validator("tools", mode="before")
