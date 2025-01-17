@@ -4,11 +4,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-# import from typing_extensions for Python < 3.12 compatibility
-from typing_extensions import TypedDict
-
-from .response import SpecialTokens
-
 
 class Tool(BaseModel):
     """Provide a tool definition as a Pydantic model.
@@ -85,7 +80,7 @@ class Tool(BaseModel):
                 else:
                     cls._recursive_purge_title(data[key])
 
-    def render_tool_call(self) -> str:
+    def render(self) -> str:
         """Convert a tool call to prompt format again.
 
         When a tool call has been loaded from a model response, it is part of the
@@ -94,20 +89,19 @@ class Tool(BaseModel):
         """
         return json.dumps(
             {
-                "type": "function",
                 "name": self.name(),
                 "parameters": self.model_dump(exclude_unset=True),
             }
         )
 
 
-class Function(TypedDict):
+class Function(BaseModel):
     name: str
-    description: str | None
     parameters: dict[str, Any]
+    description: str | None = None
 
 
-class JsonSchema(TypedDict):
+class JsonSchema(BaseModel):
     """Provide a tool definition as a json schema.
 
     While `Tool` is a more user-friendly way to define a tool in
@@ -116,8 +110,11 @@ class JsonSchema(TypedDict):
     also be provided in the serialized, json schema format.
     """
 
-    type: Literal["function"]
+    type: Literal["function"] = "function"
     function: Function
+
+    def name(self) -> str:
+        return self.function.name
 
 
 ToolDefinition = type[Tool] | JsonSchema
@@ -127,8 +124,8 @@ ToolDefinition = type[Tool] | JsonSchema
 class CodeInterpreter(Tool):
     src: str
 
-    def render_tool_call(self) -> str:
-        return SpecialTokens.PythonTag + self.src
+    def render(self) -> str:
+        return self.src
 
     def run(self) -> Any:
         global_vars: dict[str, Any] = {}
@@ -139,15 +136,15 @@ class CodeInterpreter(Tool):
 class WolframAlpha(Tool):
     query: str
 
-    def render_tool_call(self) -> str:
-        return SpecialTokens.PythonTag + f'wolfram_alpha.call(query="{self.query}")'
+    def render(self) -> str:
+        return f'wolfram_alpha.call(query="{self.query}")'
 
 
 class BraveSearch(Tool):
     query: str
 
-    def render_tool_call(self) -> str:
-        return SpecialTokens.PythonTag + f'brave_search.call(query="{self.query}")'
+    def render(self) -> str:
+        return f'brave_search.call(query="{self.query}")'
 
 
 BuiltInTools: tuple[type[Tool], ...] = (CodeInterpreter, WolframAlpha, BraveSearch)

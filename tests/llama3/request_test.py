@@ -22,6 +22,12 @@ def test_no_system_prompt_included_if_no_tools_provided():
     assert "system" not in chat_request.render()
 
 
+def test_system_prompt_included_if_only_custom_tools_provided():
+    user = UserMessage("What is the square root of 16?")
+    chat_request = ChatRequest(llama, [user], tools=[GetGithubReadme])
+    assert "system" in chat_request.render()
+
+
 def test_chat_request_to_prompt():
     system = SystemMessage("You are a poet who strictly speaks in haikus.")
     user = UserMessage("oat milk")
@@ -53,9 +59,7 @@ def test_custom_tool_definition_in_user_prompt():
     rendered = chat_request.render()
 
     # Then the custom tool definition should be included in the user prompt
-    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-Environment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
+    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
 
 Answer the user's question by making use of the following functions if needed.
 
