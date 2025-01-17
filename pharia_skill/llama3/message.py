@@ -6,12 +6,13 @@ A message represents one turn in a conversation with an LLM.
 3. If the LLM has requested a tool call, the developer executes the tool call and responds with a `ToolResponse`.
 """
 
+import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, Sequence
 
 from .response import RawResponse, Response, SpecialTokens
-from .tool import ToolDefinition
+from .tool import BuiltInTools, CodeInterpreter, Tool, ToolDefinition
 from .tool_call import ToolCall
 
 
@@ -41,8 +42,37 @@ class UserMessage:
     def __init__(self, content: str):
         self.content = content
 
-    def render(self) -> str:
-        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
+    def render(self, tools: Sequence[ToolDefinition]) -> str:
+        def render_tool(tool: ToolDefinition) -> str:
+            schema = tool if isinstance(tool, dict) else tool.json_schema()
+            return json.dumps(schema, indent=4)
+
+        def render_content(content: str) -> str:
+            return f"{Role.User.render()}\n\n{content}{SpecialTokens.EndOfTurn.value}"
+
+        if not (tools := self.json_based_tools(tools)):
+            return render_content(self.content)
+
+        prompt = "Answer the user's question by making use of the following functions if needed.\n\n"
+        for tool in tools:
+            prompt += f"{render_tool(tool)}\n"
+
+        prompt += "\nReturn function calls in JSON format."
+        prompt += f"\n\nQuestion: {self.content}"
+        return render_content(prompt)
+
+    @staticmethod
+    def json_based_tools(tools: Sequence[ToolDefinition]) -> Sequence[ToolDefinition]:
+        """Tools that are defined as JSON schema and invoked with json based tool calling.
+
+        We insert these in the user prompt. The model card states:
+
+        The tool definition is provided in the user prompt, as that is how the model was
+        trained for the built in JSON tool calling. However, it's possible to provide
+        the tool definition in the system prompt as well—and get similar results.
+        Developers must test which way works best for their use case.
+        """
+        return [tool for tool in tools if tool not in BuiltInTools]
 
 
 @dataclass
@@ -59,8 +89,61 @@ class SystemMessage:
     def __init__(self, content: str):
         self.content = content
 
-    def render(self) -> str:
-        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
+    @classmethod
+    def empty(cls) -> "SystemMessage":
+        """Create an empty system message.
+
+        When the user has not provided a system message but specified tools, we create
+        an empty system message that can be rendered with the tools.
+        """
+        return cls("")
+
+    def render(self, tools: Sequence[ToolDefinition]) -> str:
+        """Render a system message and inject tools into the prompt.
+
+        Conditionally activate the IPython environment if any tools are provided. Activating
+        this environment is optional in case there is only user-defined tools. By always activating
+        it, we don't need to parse this knowledge to `AssistantMessage.render`, and can always end
+        in <|eom_id|> token.
+
+        If built in tools are configured, they are listed in the system prompt.
+        The code interpreter tools is automatically included when IPython is activated.
+
+        Reference: https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/prompt_format.md#input-prompt-format-2
+        """
+
+        def render_content(content: str) -> str:
+            return f"{Role.System.render()}\n\n{content}{SpecialTokens.EndOfTurn.value}"
+
+        if not tools:
+            return render_content(self.content)
+
+        content = "Environment: ipython"
+        if filtered := self.system_prompt_tools(tools):
+            content += f"\nTools: {', '.join(tool.name() for tool in filtered)}"
+
+        if CodeInterpreter in tools:
+            content += "\nIf you decide to run python code, assign the result to a variable called `result`."
+
+        # include the original system prompt
+        if self.content:
+            content += f"\n{self.content}"
+        return render_content(content)
+
+    @staticmethod
+    def system_prompt_tools(tools: Sequence[ToolDefinition]) -> list[type[Tool]]:
+        """Subset of specified tools that need to be activated in the system prompt.
+
+        CodeInterpreter is automatically included when IPython is activated and does
+        not need to be listed in the system prompt.
+        """
+        return [
+            tool
+            for tool in tools
+            if isinstance(tool, type)
+            and tool in BuiltInTools
+            and not tool == CodeInterpreter
+        ]
 
 
 @dataclass
@@ -80,7 +163,7 @@ class ToolMessage:
         self.content = content
         self.success = success
 
-    def render(self) -> str:
+    def render(self, tools: Sequence[ToolDefinition]) -> str:
         return f"{self.role.render()}\n\n{self.output()}{SpecialTokens.EndOfTurn.value}"
 
     def output(self) -> str:
@@ -107,7 +190,7 @@ class AssistantReply:
     def __init__(self, content: str):
         self.content = content
 
-    def render(self) -> str:
+    def render(self, tools: Sequence[ToolDefinition]) -> str:
         return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
 
 
@@ -124,7 +207,7 @@ class AssistantToolRequest:
     def __init__(self, tool_calls: list[ToolCall]):
         self.tool_calls = tool_calls
 
-    def render(self) -> str:
+    def render(self, tools: Sequence[ToolDefinition]) -> str:
         """Llama will end messages with <|eom_id|> instead of <|eot_id|> if it responds
         with a tool call and `Environment: ipython` is set in the system prompt. If `ipython`
         is not turned on, it will also end tool calls with <|eot_id|>.

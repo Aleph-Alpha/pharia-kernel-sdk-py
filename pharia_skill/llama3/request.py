@@ -10,7 +10,6 @@ The `ChatRequest` can be extended from the LLM side by passing it to the
 a message or tool response to the request.
 """
 
-import json
 from dataclasses import dataclass, field
 from typing import Any, Sequence
 
@@ -27,7 +26,7 @@ from .message import (
     from_raw_response,
 )
 from .response import SpecialTokens
-from .tool import BuiltInTools, CodeInterpreter, JsonSchema, Tool, ToolDefinition
+from .tool import BuiltInTools, JsonSchema, ToolDefinition
 
 Message = SystemMessage | UserMessage | AssistantMessage | ToolMessage
 
@@ -115,113 +114,19 @@ class ChatRequest:
 
     def render(self) -> str:
         """Convert the chat request to a prompt that can be passed to the model."""
-        prompt = SpecialTokens.BeginOfText.value
-        prompt += self.system.render() if self.system else ""
-        prompt += self.user.render()
+        messages = self.messages
 
-        for message in self.messages_without_system_and_first_user():
-            prompt += message.render()
+        system_prompt_needed = self.tools and self.messages[0].role != Role.System
+        if system_prompt_needed:
+            messages.insert(0, SystemMessage.empty())
+
+        prompt = SpecialTokens.BeginOfText.value
+        for message in messages:
+            prompt += message.render(self.tools)
 
         prompt += Role.Assistant.render()
         prompt += "\n\n"
         return prompt
-
-    @property
-    def system(self) -> SystemMessage | None:
-        """The system message that will be rendered.
-
-        Ensures that if the user has provided a system message himself, it is not merged.
-
-        Conditionally activate the IPython environment if any tools are provided. Activating
-        this environment is optional in case there is only user-defined tools. By always activating
-        it, we don't need to parse this knowledge to `AssistantMessage.render`, and can always end
-        in <|eom_id|> token.
-
-        If built in tools are configured, they are listed in the system prompt.
-        The code interpreter tools is automatically included when IPython is activated.
-
-        Reference: https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/prompt_format.md#input-prompt-format-2
-        """
-        if not self.tools:
-            return self.messages[0] if self.messages[0].role == Role.System else None
-
-        prompt = "Environment: ipython"
-        if tools := self.system_prompt_tools():
-            prompt += f"\nTools: {', '.join(tool.name() for tool in tools)}"
-
-        if CodeInterpreter in self.tools:
-            prompt += "\nIf you decide to run python code, assign the result to a variable called `result`."
-
-        # include the original system prompt
-        if self.messages[0].role == Role.System:
-            prompt += f"\n{self.messages[0].content}"
-        return SystemMessage(prompt)
-
-    def system_prompt_tools(self) -> Sequence[type[Tool]]:
-        """Subset of specified tools that need to be activated in the system prompt.
-
-        CodeInterpreter is automatically included when IPython is activated and does
-        not need to be listed in the system prompt.
-        """
-        return [
-            tool
-            for tool in self.tools
-            if isinstance(tool, type)
-            and tool in BuiltInTools
-            and not tool == CodeInterpreter
-        ]
-
-    @property
-    def user(self) -> UserMessage:
-        """The user message that will be rendered.
-
-        User provided tools are injected into the user message and
-        the model is encouraged to use the available tools.
-
-        Reference: https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/prompt_format.md#input-prompt-format-5
-        """
-
-        def render_tool(tool: ToolDefinition) -> str:
-            schema = tool if isinstance(tool, dict) else tool.json_schema()
-            return json.dumps(schema, indent=4)
-
-        provided = (
-            self.messages[0] if self.messages[0].role == Role.User else self.messages[1]
-        )
-        assert provided.role == Role.User, "User message must be provided"
-
-        if not self.json_based_tools():
-            return provided
-
-        prompt = "Answer the user's question by making use of the following functions if needed.\n\n"
-        for tool in self.json_based_tools():
-            prompt += f"{render_tool(tool)}\n"
-
-        prompt += "\nReturn function calls in JSON format."
-        prompt += f"\n\nQuestion: {provided.content}"
-        return UserMessage(prompt)
-
-    def json_based_tools(self) -> list[ToolDefinition]:
-        """Tools that are defined as JSON schema and invoked with json based tool calling.
-
-        We insert these in the user prompt. The model card states:
-
-        The tool definition is provided in the user prompt, as that is how the model was
-        trained for the built in JSON tool calling. However, it's possible to provide
-        the tool definition in the system prompt as well—and get similar results.
-        Developers must test which way works best for their use case.
-        """
-        return [tool for tool in self.tools if tool not in BuiltInTools]
-
-    def messages_without_system_and_first_user(self) -> list[Message]:
-        """The system and first user prompt are altered.
-
-        This is the rest of the messages that don't need to be altered.
-        """
-        messages: list[Message] = [
-            message for message in self.messages if message.role != Role.System
-        ]
-        return messages[1:]
 
     @field_serializer("tools")
     def as_dict(
