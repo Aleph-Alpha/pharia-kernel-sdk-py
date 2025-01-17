@@ -75,29 +75,12 @@ class ToolCall:
         text: str, tools: Sequence[ToolDefinition]
     ) -> "ToolCall | None":
         """Parse a tool call from a message that started with the Python Tag."""
-        if text.startswith("brave_search.call") and BraveSearch in tools:
-            return ToolCall(
-                "brave_search",
-                BraveSearch(
-                    query=text.split('brave_search.call(query="')[1]
-                    .split('")')[0]
-                    .strip()
-                ),
-            )
-        elif text.startswith("wolfram_alpha.call") and WolframAlpha in tools:
-            return ToolCall(
-                "wolfram_alpha",
-                WolframAlpha(
-                    query=text.split('wolfram_alpha.call(query="')[1]
-                    .split('")')[0]
-                    .strip()
-                ),
-            )
+        if BraveSearch in tools and (brave_search := BraveSearch.try_from_text(text)):
+            return ToolCall("brave_search", brave_search)
+        elif WolframAlpha in tools and (wolfram := WolframAlpha.try_from_text(text)):
+            return ToolCall("wolfram_alpha", wolfram)
         elif CodeInterpreter in tools:
-            return ToolCall(
-                "code_interpreter",
-                CodeInterpreter(src=text.strip()),
-            )
+            return ToolCall("code_interpreter", CodeInterpreter(src=text.strip()))
         return None
 
     @classmethod

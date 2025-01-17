@@ -139,12 +139,28 @@ class WolframAlpha(Tool):
     def render(self) -> str:
         return f'wolfram_alpha.call(query="{self.query}")'
 
+    @staticmethod
+    def try_from_text(text: str) -> "WolframAlpha | None":
+        if not text.startswith("wolfram_alpha.call"):
+            return None
+        return WolframAlpha(
+            query=text.split('wolfram_alpha.call(query="')[1].split('")')[0].strip()
+        )
+
 
 class BraveSearch(Tool):
     query: str
 
     def render(self) -> str:
         return f'brave_search.call(query="{self.query}")'
+
+    @staticmethod
+    def try_from_text(text: str) -> "BraveSearch | None":
+        if not text.startswith("brave_search.call"):
+            return None
+        return BraveSearch(
+            query=text.split('brave_search.call(query="')[1].split('")')[0].strip()
+        )
 
 
 BuiltInTools: tuple[type[Tool], ...] = (CodeInterpreter, WolframAlpha, BraveSearch)
