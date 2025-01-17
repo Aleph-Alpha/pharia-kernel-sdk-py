@@ -33,8 +33,13 @@ class Response:
 
     @staticmethod
     def from_raw(raw: RawResponse) -> "Response":
+        """Parse a raw response (as received from the model)."""
         raw = raw.replace(SpecialTokens.EndOfTurn, "")
         raw = raw.replace(SpecialTokens.EndOfMessage, "")
+
+        # Strip all whitespace from the message.
+        # We assume that no model response or tool call should
+        # start or end with whitespace.
         raw = raw.strip()
         python_tag = raw.startswith(SpecialTokens.PythonTag)
         text = raw.replace(SpecialTokens.PythonTag, "")
