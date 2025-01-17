@@ -143,9 +143,11 @@ class WolframAlpha(Tool):
     def try_from_text(text: str) -> "WolframAlpha | None":
         if not text.startswith("wolfram_alpha.call"):
             return None
-        return WolframAlpha(
-            query=text.split('wolfram_alpha.call(query="')[1].split('")')[0].strip()
-        )
+        try:
+            query = text.split('wolfram_alpha.call(query="')[1].split('")')[0].strip()
+            return WolframAlpha(query=query)
+        except IndexError:
+            return None
 
 
 class BraveSearch(Tool):
@@ -158,9 +160,11 @@ class BraveSearch(Tool):
     def try_from_text(text: str) -> "BraveSearch | None":
         if not text.startswith("brave_search.call"):
             return None
-        return BraveSearch(
-            query=text.split('brave_search.call(query="')[1].split('")')[0].strip()
-        )
+        try:
+            query = text.split('brave_search.call(query="')[1].split('")')[0].strip()
+            return BraveSearch(query=query)
+        except IndexError:
+            return None
 
 
 BuiltInTools: tuple[type[Tool], ...] = (CodeInterpreter, WolframAlpha, BraveSearch)
