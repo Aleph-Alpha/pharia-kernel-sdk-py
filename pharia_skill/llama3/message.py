@@ -12,7 +12,7 @@ from enum import Enum
 from typing import Literal, Sequence
 
 from .response import RawResponse, Response, SpecialTokens
-from .tool import BuiltInTools, CodeInterpreter, Tool, ToolDefinition
+from .tool import BuiltInTools, CodeInterpreter, JsonSchema, Tool, ToolDefinition
 from .tool_call import ToolCall
 
 
@@ -41,7 +41,11 @@ class UserMessage:
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
         def render_tool(tool: ToolDefinition) -> str:
-            schema = tool if isinstance(tool, dict) else tool.json_schema()
+            schema = (
+                tool.model_dump()
+                if isinstance(tool, JsonSchema)
+                else tool.json_schema()
+            )
             return json.dumps(schema, indent=4)
 
         def render_content(content: str) -> str:
@@ -98,10 +102,10 @@ class SystemMessage:
     def render(self, tools: Sequence[ToolDefinition]) -> str:
         """Render a system message and inject tools into the prompt.
 
-        Conditionally activate the IPython environment if any tools are provided. Activating
-        this environment is optional in case there is only user-defined tools. By always activating
-        it, we don't need to parse this knowledge to `AssistantMessage.render`, and can always end
-        in <|eom_id|> token.
+        Always activate the IPython environment if any tools are provided. Activating
+        this environment is optional in case there is only user-defined tools. However,
+        eval shows that the tool call quality for json based tools is better when the
+        IPython environment is activated.
 
         If built in tools are configured, they are listed in the system prompt.
         The code interpreter tools is automatically included when IPython is activated.
@@ -115,6 +119,7 @@ class SystemMessage:
         if not tools:
             return render_content(self.content)
 
+        # CodeInterpreter is automatically included when IPython is activated and does not need to be listed in the system prompt.
         content = "Environment: ipython"
         if filtered := self.system_prompt_tools(tools):
             content += f"\nTools: {', '.join(tool.name() for tool in filtered)}"
@@ -139,7 +144,7 @@ class SystemMessage:
             for tool in tools
             if isinstance(tool, type)
             and tool in BuiltInTools
-            and not tool == CodeInterpreter
+            and tool != CodeInterpreter
         ]
 
 
@@ -181,33 +186,35 @@ class AssistantMessage:
     tool_calls: list[ToolCall] | None = None
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
-        """Llama will end messages with <|eom_id|> instead of <|eot_id|> if it responds
+        """Always end in <|eom_id|> for tool calls because we always activate the IPython environment.
+
+        Llama will end messages with <|eom_id|> instead of <|eot_id|> if it responds
         with a tool call and `Environment: ipython` is set in the system prompt. If `ipython`
         is not turned on, it will also end tool calls with <|eot_id|>.
 
         Reference: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/
-
-        We always turn on `ipython` in the system prompt, so we always use `<|eom_id|>` for serialization.
         """
 
-        def render_content(content: str) -> str:
-            return f"{Role.Assistant.render()}\n\n{content}{SpecialTokens.EndOfMessage.value}"
+        def render_content(
+            content: str,
+            end: Literal[SpecialTokens.EndOfTurn, SpecialTokens.EndOfMessage],
+        ) -> str:
+            return f"{Role.Assistant.render()}\n\n{content}{end.value}"
 
         if not self.tool_calls:
             assert self.content is not None, "Content must be set if no tool calls."
-            return render_content(self.content)
+            return render_content(self.content, SpecialTokens.EndOfTurn)
 
-        content = "".join([tool_call.render() for tool_call in self.tool_calls])
-        return render_content(content)
+        content = SpecialTokens.PythonTag.value
+        content += "".join([tool_call.render() for tool_call in self.tool_calls])
+
+        return render_content(content, SpecialTokens.EndOfMessage)
 
     @staticmethod
     def from_raw_response(
         raw: RawResponse, tools: Sequence[ToolDefinition] | None = None
     ) -> "AssistantMessage":
         response = Response.from_raw(raw)
-        if tools:
-            tool_call = ToolCall.from_response(response)
-            if tool_call is not None:
-                tool_call.try_parse(tools)
-                return AssistantMessage(tool_calls=[tool_call])
+        if tools and (tool_call := ToolCall.from_response(response, tools)):
+            return AssistantMessage(tool_calls=[tool_call])
         return AssistantMessage(content=response.text)

@@ -1,11 +1,13 @@
 from pydantic import BaseModel
 
 from pharia_skill.llama3.message import (
+    AssistantMessage,
     SystemMessage,
     ToolMessage,
     UserMessage,
 )
 from pharia_skill.llama3.tool import BraveSearch, CodeInterpreter, Tool, WolframAlpha
+from pharia_skill.llama3.tool_call import ToolCall
 
 
 class GetGithubReadme(Tool):
@@ -15,9 +17,9 @@ class GetGithubReadme(Tool):
 
 
 def test_render_system_message():
-    message = SystemMessage("You are a helpful assistant.")
+    system = SystemMessage("You are a helpful assistant.")
     expected = "<|start_header_id|>system<|end_header_id|>\n\nYou are a helpful assistant.<|eot_id|>"
-    assert message.render(tools=[]) == expected
+    assert system.render(tools=[]) == expected
 
 
 def test_system_prompt_tools():
@@ -46,12 +48,10 @@ You are a poet who strictly speaks in haikus.<|eot_id|>"""
     assert system.render(tools) == expected
 
 
-def test_ipython_environment_activated_with_custom_tool():
+def test_ipython_environment_activated_by_custom_tool():
     system = SystemMessage.empty()
     tools = [GetGithubReadme]
-    expected = """<|start_header_id|>system<|end_header_id|>
-
-Environment: ipython<|eot_id|>"""
+    expected = """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython<|eot_id|>"""
     assert system.render(tools) == expected
 
 
@@ -154,3 +154,20 @@ def test_render_failed_tool_response():
     )
     expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"
     assert tool.render(tools=[]) == expected
+
+
+def test_render_assistant_message_without_tool_calls():
+    message = AssistantMessage("Hello, world!")
+    expected = (
+        "<|start_header_id|>assistant<|end_header_id|>\n\nHello, world!<|eot_id|>"
+    )
+    assert message.render(tools=[]) == expected
+
+
+def test_render_assistant_messages_without_ipython_ends_in_eom():
+    tool_call = ToolCall(
+        name="get_github_readme", parameters=GetGithubReadme(repository="pharia-kernel")
+    )
+    message = AssistantMessage(tool_calls=[tool_call])
+    expected = """<|start_header_id|>assistant<|end_header_id|>\n\n<|python_tag|>{"name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}<|eom_id|>"""
+    assert message.render(tools=[GetGithubReadme]) == expected

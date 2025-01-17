@@ -14,7 +14,14 @@ from dataclasses import dataclass
 from typing import Any, Sequence
 
 from .response import Response
-from .tool import BraveSearch, CodeInterpreter, Tool, ToolDefinition, WolframAlpha
+from .tool import (
+    BraveSearch,
+    BuiltInTools,
+    CodeInterpreter,
+    Tool,
+    ToolDefinition,
+    WolframAlpha,
+)
 
 
 @dataclass
@@ -25,7 +32,7 @@ class ToolCall:
     """
 
     name: str
-    arguments: Tool | dict[str, Any]
+    parameters: Tool | dict[str, Any]
 
     def render(self) -> str:
         """Reconstruct the model response from a parsed tool call.
@@ -34,28 +41,14 @@ class ToolCall:
         a parsed format, we need to convert it to a prompt string to construct
         the message history for a later interactions with the model.
         """
-        if isinstance(self.arguments, dict):
-            return json.dumps(
-                {"type": "function", "name": self.name, "parameters": self.arguments}
-            )
-        return self.arguments.render_tool_call()
-
-    def try_parse(self, tools: Sequence[ToolDefinition]) -> None:
-        """Try to validate a tool call into one of the provided tools.
-
-        This provides the user with strong type hints.
-        """
-        arguments = self.arguments
-        if not isinstance(arguments, dict):
-            # already parsed
-            return
-
-        for tool in tools:
-            if isinstance(tool, type) and tool.name() == self.name:
-                self.arguments = tool(**arguments)
+        if isinstance(self.parameters, dict):
+            return json.dumps({"name": self.name, "parameters": self.parameters})
+        return self.parameters.render()
 
     @classmethod
-    def from_response(cls, text: Response) -> "ToolCall | None":
+    def from_response(
+        cls, text: Response, tools: Sequence[ToolDefinition]
+    ) -> "ToolCall | None":
         """Parse a tool call from a message that has been stripped of special tokens.
 
         While llama3.1 always includes the <|python_tag|> prefix for function calls,
@@ -71,14 +64,18 @@ class ToolCall:
         """
 
         if text.python_tag:
-            return cls.json_from_text(text.text) or cls.built_in_from_text(text.text)
+            return cls.json_from_text(text.text, tools) or cls.built_in_from_text(
+                text.text, tools
+            )
         else:
-            return cls.json_from_text(text.text)
+            return cls.json_from_text(text.text, tools)
 
     @staticmethod
-    def built_in_from_text(text: str) -> "ToolCall":
+    def built_in_from_text(
+        text: str, tools: Sequence[ToolDefinition]
+    ) -> "ToolCall | None":
         """Parse a tool call from a message that started with the Python Tag."""
-        if text.startswith("brave_search.call"):
+        if text.startswith("brave_search.call") and BraveSearch in tools:
             return ToolCall(
                 "brave_search",
                 BraveSearch(
@@ -87,7 +84,7 @@ class ToolCall:
                     .strip()
                 ),
             )
-        elif text.startswith("wolfram_alpha.call"):
+        elif text.startswith("wolfram_alpha.call") and WolframAlpha in tools:
             return ToolCall(
                 "wolfram_alpha",
                 WolframAlpha(
@@ -96,18 +93,34 @@ class ToolCall:
                     .strip()
                 ),
             )
-        else:
+        elif CodeInterpreter in tools:
             return ToolCall(
                 "code_interpreter",
                 CodeInterpreter(src=text.strip()),
             )
+        return None
 
-    @staticmethod
-    def json_from_text(response: str) -> "ToolCall | None":
+    @classmethod
+    def json_from_text(
+        cls, response: str, tools: Sequence[ToolDefinition]
+    ) -> "ToolCall | None":
+        """Try parsing a tool call into one of the user provided tools.
+
+        Raise a pydantic validation error if the model tries a call that
+        can not be parsed into the provided schema.
+        """
         try:
             data = json.loads(response)
             name = data["name"]
-            return ToolCall(name, data["parameters"])
+            parameters = data["parameters"]
+            tool = next(
+                (t for t in tools if t.name() == name and t not in BuiltInTools), None
+            )
+            if tool:
+                if isinstance(tool, type):
+                    parameters = tool(**parameters)
+
+                return ToolCall(name, parameters)
         except (json.JSONDecodeError, KeyError):
             pass
 

@@ -64,24 +64,20 @@ def test_chat_request_field_serializer_custom_typed_tool():
 
 def test_chat_request_field_serializer_custom_tool():
     request = ChatRequest("llama-3.1-8b-instruct", [UserMessage("Hi")])
-    tools = [
-        JsonSchema(
-            {
-                "type": "function",
-                "function": {
-                    "name": "custom-tool-definition",
-                    "description": "Custom Tool",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {},
-                    },
-                },
-            }
-        )
-    ]
-
-    serialized = request.as_dict(tools)
-    assert serialized == tools
+    data = {
+        "type": "function",
+        "function": {
+            "name": "custom-tool-definition",
+            "description": "Custom Tool",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
+        },
+    }
+    tool = JsonSchema(**data)  # type: ignore
+    serialized = request.as_dict([tool])
+    assert serialized == [data]
 
 
 def test_chat_request_validate_built_in_tool():
@@ -97,35 +93,20 @@ def test_chat_request_validate_unknown_tool():
 
 
 def test_chat_request_validate_custom_tool():
-    serialized = [
-        {
-            "type": "function",
-            "function": {
-                "name": "custom-tool-definition",
-                "description": "Custom Tool",
-                "parameters": {
-                    "type": "object",
-                    "properties": {},
-                },
+    schema = {
+        "type": "function",
+        "function": {
+            "name": "custom-tool-definition",
+            "description": "Custom Tool",
+            "parameters": {
+                "type": "object",
+                "properties": {},
             },
-        }
-    ]
+        },
+    }
+    serialized = [schema]
     validated = ChatRequest.validate_tools(serialized)  # type: ignore
-    assert validated == [
-        JsonSchema(
-            {
-                "type": "function",
-                "function": {
-                    "name": "custom-tool-definition",
-                    "description": "Custom Tool",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {},
-                    },
-                },
-            }
-        )
-    ]
+    assert validated == [JsonSchema(**schema)]  # type: ignore
 
 
 def test_chat_request_can_be_deserialized():
@@ -166,8 +147,8 @@ def test_chat_request_can_be_deserialized():
     # Then the request is serialized successfully
     assert len(chat.root.messages) == 1
     assert len(chat.root.tools) == 1
-    assert isinstance(chat.root.tools[0], dict)
-    assert chat.root.tools[0]["function"]["name"] == "get_github_readme"
+    assert isinstance(chat.root.tools[0], JsonSchema)
+    assert chat.root.tools[0].name() == "get_github_readme"
     assert chat.root.messages[0].role == Role.User
 
 
@@ -202,7 +183,7 @@ def test_tool_result_can_be_deserialized():
                 "tool_calls": [
                     {
                         "name": "get_delivery_date",
-                        "arguments": {"order_id": "123456"},
+                        "parameters": {"order_id": "123456"},
                     }
                 ],
             },
@@ -256,7 +237,7 @@ class ChatOutput(RootModel[ChatResponse]):
 
 def test_chat_response_can_be_serialized():
     # Given a chat response with a function call
-    tool_call = ToolCall(name="get_shipment_date", arguments={"order_id": "42"})
+    tool_call = ToolCall(name="get_shipment_date", parameters={"order_id": "42"})
     message = AssistantMessage(tool_calls=[tool_call])
     response = ChatResponse(message, FinishReason.STOP)
 
@@ -269,7 +250,7 @@ def test_chat_response_can_be_serialized():
         "tool_calls": [
             {
                 "name": "get_shipment_date",
-                "arguments": {
+                "parameters": {
                     "order_id": "42"
                 }
             }

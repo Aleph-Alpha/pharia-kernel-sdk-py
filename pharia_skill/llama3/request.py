@@ -115,6 +115,8 @@ class ChatRequest:
         """Convert the chat request to a prompt that can be passed to the model."""
         messages = self.messages
 
+        # always activate ipython environment in the system prompt if any tools are provided.
+        # see `SystemMessage.render` for more details.
         system_prompt_needed = self.tools and self.messages[0].role != Role.System
         if system_prompt_needed:
             messages.insert(0, SystemMessage.empty())
@@ -137,8 +139,8 @@ class ChatRequest:
         """
         serialized: list[dict[str, Any] | JsonSchema | str] = []
         for tool in tools:
-            if isinstance(tool, dict):
-                serialized.append(tool)
+            if isinstance(tool, JsonSchema):
+                serialized.append(tool.model_dump())
             elif tool in BuiltInTools:
                 serialized.append(tool.name())
             else:

@@ -21,5 +21,5 @@ def test_chat_api():
 
     # Then a function call is returned
     assert result.message.tool_calls
-    assert isinstance(result.message.tool_calls[0].arguments, GetShipmentDate)
-    assert result.message.tool_calls[0].arguments.order_id == 42
+    assert isinstance(result.message.tool_calls[0].parameters, GetShipmentDate)
+    assert result.message.tool_calls[0].parameters.order_id == 42

@@ -30,7 +30,7 @@ def code(csi: Csi, input: Input) -> Output:
         )
 
     # we know that it will be code interpreter
-    tool_call = response.message.tool_calls[0].arguments
+    tool_call = response.message.tool_calls[0].parameters
     assert isinstance(tool_call, CodeInterpreter)
 
     output = tool_call.run()

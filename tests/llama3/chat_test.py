@@ -83,8 +83,8 @@ def test_trigger_tool_call(csi: DevCsi):
     assert response.message.role == Role.Assistant
     assert response.message.content is None
     assert response.message.tool_calls
-    assert isinstance(response.message.tool_calls[0].arguments, GetShipmentDate)
-    assert response.message.tool_calls[0].arguments.order_id == "42"
+    assert isinstance(response.message.tool_calls[0].parameters, GetShipmentDate)
+    assert response.message.tool_calls[0].parameters.order_id == "42"
 
     # And the original request should be extended
     assert request.messages[-1].role == Role.Assistant
@@ -94,7 +94,7 @@ def test_trigger_tool_call(csi: DevCsi):
 def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
     user = UserMessage("When will the order `42` ship?")
-    tool_call = ToolCall(GetShipmentDate.name(), arguments={"order_id": "42"})
+    tool_call = ToolCall(GetShipmentDate.name(), parameters={"order_id": "42"})
     assistant = AssistantMessage(tool_calls=[tool_call])
 
     # When providing a tool response back to the model
@@ -125,7 +125,7 @@ def test_tool_response_is_parsed_into_provided_class():
 
     # Then the response is parsed into the provided class
     assert response.message.tool_calls
-    assert isinstance(response.message.tool_calls[0].arguments, GetShipmentDate)
+    assert isinstance(response.message.tool_calls[0].parameters, GetShipmentDate)
 
 
 def test_tool_response_can_be_added_to_prompt():
@@ -143,7 +143,7 @@ def test_tool_response_can_be_added_to_prompt():
     # When doing a chat request
     response = request.chat(csi)
     assert response.message.tool_calls
-    assert isinstance(response.message.tool_calls[0].arguments, GetShipmentDate)
+    assert isinstance(response.message.tool_calls[0].parameters, GetShipmentDate)
 
     # And providing the tool response
     tool = ToolMessage(content='{"result": "1970-01-01"}')
@@ -153,9 +153,7 @@ def test_tool_response_can_be_added_to_prompt():
     response = request.chat(csi)
 
     # Then the whole context is included in the second prompt
-    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-Environment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
+    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
 
 Answer the user\'s question by making use of the following functions if needed.
 
@@ -182,7 +180,7 @@ Return function calls in JSON format.
 
 Question: When will the order `42` ship?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}<|eom_id|><|start_header_id|>ipython<|end_header_id|>
+<|python_tag|>{"name": "get_shipment_date", "parameters": {"order_id": "42"}}<|eom_id|><|start_header_id|>ipython<|end_header_id|>
 
 completed[stdout]{"result": "1970-01-01"}[/stdout]<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
