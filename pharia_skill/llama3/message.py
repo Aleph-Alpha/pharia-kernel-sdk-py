@@ -7,7 +7,7 @@ A message represents one turn in a conversation with an LLM.
 """
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Literal, Sequence
 
@@ -37,10 +37,7 @@ class UserMessage:
     """
 
     content: str
-    role: Literal[Role.User] = Role.User
-
-    def __init__(self, content: str):
-        self.content = content
+    role: Literal[Role.User] = field(init=False, default=Role.User)
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
         def render_tool(tool: ToolDefinition) -> str:
@@ -84,7 +81,7 @@ class SystemMessage:
     """
 
     content: str
-    role: Literal[Role.System] = Role.System
+    role: Literal[Role.System] = field(init=False, default=Role.System)
 
     def __init__(self, content: str):
         self.content = content
@@ -156,7 +153,7 @@ class ToolMessage:
     """
 
     content: str
-    role: Literal[Role.IPython] = Role.IPython
+    role: Literal[Role.IPython] = field(init=False, default=Role.IPython)
     success: bool = True
 
     def __init__(self, content: str, success: bool = True):
@@ -180,12 +177,12 @@ class AssistantReply:
     """A "normal" (no tool call) response from the model."""
 
     content: str
-    role: Literal[Role.Assistant] = Role.Assistant
+    role: Literal[Role.Assistant] = field(init=False, default=Role.Assistant)
 
     # keep the `tool_calls` field as it allows consumers to do:
     # `if response.message.tool_calls: ...` instead of needing to do a type check
     # like `if isinstance(response.message, ToolRequest): ...`
-    tool_calls: None = None
+    tool_calls: None = field(init=False, default=None)
 
     def __init__(self, content: str):
         self.content = content
@@ -199,13 +196,10 @@ class AssistantToolRequest:
     """A response from the LLM that contains a tool call."""
 
     tool_calls: list[ToolCall]
-    role: Literal[Role.Assistant] = Role.Assistant
+    role: Literal[Role.Assistant] = field(init=False, default=Role.Assistant)
 
     # keep the content field, see `AssistantReply` for explanation
-    content: None = None
-
-    def __init__(self, tool_calls: list[ToolCall]):
-        self.tool_calls = tool_calls
+    content: None = field(init=False, default=None)
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
         """Llama will end messages with <|eom_id|> instead of <|eot_id|> if it responds
