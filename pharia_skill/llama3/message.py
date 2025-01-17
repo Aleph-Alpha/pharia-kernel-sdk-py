@@ -2,7 +2,7 @@
 A message represents one turn in a conversation with an LLM.
 
 1. To start a conversation with an LLM, a developer creates a user and optionally system message: `UserMessage(content)`.
-2. The LLM responds with an `AssistantReply` or a `ToolRequest`.
+2. The LLM responds with an `AssistantMessage` which can include tool calls.
 3. If the LLM has requested a tool call, the developer executes the tool call and responds with a `ToolResponse`.
 """
 
@@ -173,33 +173,12 @@ class ToolMessage:
 
 
 @dataclass
-class AssistantReply:
-    """A "normal" (no tool call) response from the model."""
+class AssistantMessage:
+    """A message that is returned from the LLM."""
 
-    content: str
+    content: str | None = None
     role: Literal[Role.Assistant] = field(init=False, default=Role.Assistant)
-
-    # keep the `tool_calls` field as it allows consumers to do:
-    # `if response.message.tool_calls: ...` instead of needing to do a type check
-    # like `if isinstance(response.message, ToolRequest): ...`
-    tool_calls: None = field(init=False, default=None)
-
-    def __init__(self, content: str):
-        self.content = content
-
-    def render(self, tools: Sequence[ToolDefinition]) -> str:
-        return f"{self.role.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
-
-
-@dataclass
-class AssistantToolRequest:
-    """A response from the LLM that contains a tool call."""
-
-    tool_calls: list[ToolCall]
-    role: Literal[Role.Assistant] = field(init=False, default=Role.Assistant)
-
-    # keep the content field, see `AssistantReply` for explanation
-    content: None = field(init=False, default=None)
+    tool_calls: list[ToolCall] | None = None
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
         """Llama will end messages with <|eom_id|> instead of <|eot_id|> if it responds
@@ -210,21 +189,25 @@ class AssistantToolRequest:
 
         We always turn on `ipython` in the system prompt, so we always use `<|eom_id|>` for serialization.
         """
+
+        def render_content(content: str) -> str:
+            return f"{Role.Assistant.render()}\n\n{content}{SpecialTokens.EndOfMessage.value}"
+
+        if not self.tool_calls:
+            assert self.content is not None, "Content must be set if no tool calls."
+            return render_content(self.content)
+
         content = "".join([tool_call.render() for tool_call in self.tool_calls])
-        return f"{self.role.render()}\n\n{content}{SpecialTokens.EndOfMessage.value}"
+        return render_content(content)
 
-
-AssistantMessage = AssistantToolRequest | AssistantReply
-"""A message that is returned from the LLM."""
-
-
-def from_raw_response(
-    raw: RawResponse, tools: Sequence[ToolDefinition] | None = None
-) -> AssistantMessage:
-    response = Response.from_raw(raw)
-    if tools:
-        tool_call = ToolCall.from_response(response)
-        if tool_call is not None:
-            tool_call.try_parse(tools)
-            return AssistantToolRequest([tool_call])
-    return AssistantReply(response.text)
+    @staticmethod
+    def from_raw_response(
+        raw: RawResponse, tools: Sequence[ToolDefinition] | None = None
+    ) -> "AssistantMessage":
+        response = Response.from_raw(raw)
+        if tools:
+            tool_call = ToolCall.from_response(response)
+            if tool_call is not None:
+                tool_call.try_parse(tools)
+                return AssistantMessage(tool_calls=[tool_call])
+        return AssistantMessage(content=response.text)

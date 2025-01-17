@@ -23,7 +23,6 @@ from .message import (
     SystemMessage,
     ToolMessage,
     UserMessage,
-    from_raw_response,
 )
 from .response import SpecialTokens
 from .tool import BuiltInTools, JsonSchema, ToolDefinition
@@ -98,7 +97,7 @@ class ChatRequest:
         )
 
         completion = csi.complete(self.model, self.render(), completion_params)
-        message = from_raw_response(completion.text, self.tools)
+        message = AssistantMessage.from_raw_response(completion.text, self.tools)
 
         self.messages.append(message)
         return ChatResponse(message, completion.finish_reason)
