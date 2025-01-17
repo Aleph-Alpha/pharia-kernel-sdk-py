@@ -169,6 +169,13 @@ class ToolMessage:
         return f"{self.role.render()}\n\n{self.output()}{SpecialTokens.EndOfTurn.value}"
 
     def output(self) -> str:
+        """Render the output of the tool call.
+
+        The format defined for llama 3.0 seems to work well: https://github.com/meta-llama/llama-models/blob/main/models/llama3/prompt_templates/tool_response.py#L7
+
+        The model card for 3.1 defines a different format `{"output": "..."}` (https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/).
+        However, this format does not produce good results.
+        """
         prompt = "completed" if self.success else "failed"
         if self.success:
             prompt += f"[stdout]{self.content}[/stdout]"
