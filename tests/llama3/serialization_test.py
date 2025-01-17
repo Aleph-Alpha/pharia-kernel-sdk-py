@@ -21,7 +21,6 @@ from pharia_skill.llama3 import (
     ToolMessage,
     UserMessage,
 )
-from pharia_skill.llama3.message import AssistantToolRequest
 
 
 class GetGithubReadme(Tool):
@@ -211,25 +210,39 @@ def test_tool_result_can_be_deserialized():
                 "role": "ipython",
                 "content": "2025-07-01",
             },
+            {
+                "role": "assistant",
+                "content": "It will be delivered in July 2025.",
+            },
+            {
+                "role": "user",
+                "content": "Thank you!",
+            },
         ],
     }
 
     # When deserializing it to the ChatApi model
     chat = ChatApi.model_validate(data)
 
-    # Then we get three messages
+    # Then we get fours messages
     messages = chat.root.messages
-    assert len(messages) == 3
+    assert len(messages) == 5
+
+    # And the first one is a user message
+    assert messages[0].role == Role.User
+
+    # And the second one is an assistant one
+    assert isinstance(messages[1], AssistantMessage)
+    assert messages[1].tool_calls
+    assert messages[1].tool_calls[0].name == "get_delivery_date"
 
     # And the third one is a tool response
     assert isinstance(messages[2], ToolMessage)
     assert chat.root.messages[2].content == "2025-07-01"
 
-    # And the second one is an assistant one
-    assert isinstance(messages[1], AssistantMessage)
-
-    # And the first one is a user message
-    assert messages[0].role == Role.User
+    # And the fourth one is an assistant message
+    assert messages[3].role == Role.Assistant
+    assert messages[3].content == "It will be delivered in July 2025."
 
 
 class ChatOutput(RootModel[ChatResponse]):
@@ -244,13 +257,15 @@ class ChatOutput(RootModel[ChatResponse]):
 def test_chat_response_can_be_serialized():
     # Given a chat response with a function call
     tool_call = ToolCall(name="get_shipment_date", arguments={"order_id": "42"})
-    message = AssistantToolRequest(tool_calls=[tool_call])
+    message = AssistantMessage(tool_calls=[tool_call])
     response = ChatResponse(message, FinishReason.STOP)
 
     # When serializing it via `ChatOutput`
     data = ChatOutput(root=response).model_dump_json(indent=4)
     expected = """{
     "message": {
+        "content": null,
+        "role": "assistant",
         "tool_calls": [
             {
                 "name": "get_shipment_date",
@@ -258,9 +273,7 @@ def test_chat_response_can_be_serialized():
                     "order_id": "42"
                 }
             }
-        ],
-        "role": "assistant",
-        "content": null
+        ]
     },
     "finish_reason": "stop"
 }"""

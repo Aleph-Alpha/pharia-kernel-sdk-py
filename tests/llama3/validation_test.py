@@ -5,12 +5,12 @@ from pharia_skill.llama3 import (
     ToolMessage,
     UserMessage,
 )
-from pharia_skill.llama3.message import AssistantReply
+from pharia_skill.llama3.message import AssistantMessage
 from pharia_skill.llama3.request import validate_messages
 
 
 def test_start_with_assistant():
-    assistant = AssistantReply(
+    assistant = AssistantMessage(
         content="You are a poet who strictly speaks in haikus.",
     )
     user = UserMessage("oat milk")
@@ -21,7 +21,7 @@ def test_start_with_assistant():
 
 def test_end_with_assistant():
     user = UserMessage("oat milk")
-    assistant = AssistantReply(
+    assistant = AssistantMessage(
         content="You are a poet who strictly speaks in haikus.",
     )
 
@@ -32,7 +32,7 @@ def test_end_with_assistant():
 def test_system_prompt_is_optional():
     system = SystemMessage("You are a poet who strictly speaks in haikus.")
     user = UserMessage("oat milk")
-    assistant = AssistantReply(content="Hello!")
+    assistant = AssistantMessage(content="Hello!")
     ipython = ToolMessage("print('hello')")
 
     validate_messages([user, assistant, ipython])

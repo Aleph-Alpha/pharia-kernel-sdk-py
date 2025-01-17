@@ -9,7 +9,7 @@ from pharia_skill.llama3 import (
     ToolMessage,
     UserMessage,
 )
-from pharia_skill.llama3.message import AssistantToolRequest
+from pharia_skill.llama3.message import AssistantMessage
 from pharia_skill.testing import DevCsi
 
 
@@ -95,7 +95,7 @@ def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
     user = UserMessage("When will the order `42` ship?")
     tool_call = ToolCall(GetShipmentDate.name(), arguments={"order_id": "42"})
-    assistant = AssistantToolRequest(tool_calls=[tool_call])
+    assistant = AssistantMessage(tool_calls=[tool_call])
 
     # When providing a tool response back to the model
     tool = ToolMessage(content="1970-01-01")
