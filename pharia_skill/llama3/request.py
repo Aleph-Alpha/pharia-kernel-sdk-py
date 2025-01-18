@@ -11,9 +11,13 @@ a message or tool response to the request.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Sequence
+from typing import Any, Literal, Sequence
 
-from pydantic import field_serializer, field_validator
+from pydantic import (
+    BaseModel,
+    field_serializer,
+    field_validator,
+)
 
 from pharia_skill.csi import ChatParams, CompletionParams, Csi, FinishReason
 
@@ -28,6 +32,12 @@ from .response import SpecialTokens
 from .tool import BuiltInTools, JsonSchema, ToolDefinition
 
 Message = SystemMessage | UserMessage | AssistantMessage | ToolMessage
+
+
+class BuiltInToolSchema(BaseModel):
+    """Built-in tools that can be specified."""
+
+    type: Literal["code_interpreter", "wolfram_alpha", "brave_search"]
 
 
 @dataclass
@@ -130,31 +140,29 @@ class ChatRequest:
         return prompt
 
     @field_serializer("tools")
-    def as_dict(
-        self, tools: Sequence[ToolDefinition]
-    ) -> list[dict[str, Any] | JsonSchema | str]:
-        """Pydantic can not serialize type[BaseModel], so we serialize it manually.
+    def as_dict(self, tools: Sequence[ToolDefinition]) -> list[dict[str, Any]]:
+        """Pydantic can not serialize type[BaseModel], so we serialize it manually."""
+        return [
+            t.model_dump() if isinstance(t, JsonSchema) else t.json_schema()
+            for t in tools
+        ]
 
-        Error serializing to JSON: PydanticSerializationError
-        """
-        serialized: list[dict[str, Any] | JsonSchema | str] = []
-        for tool in tools:
-            if isinstance(tool, JsonSchema):
-                serialized.append(tool.model_dump())
-            elif tool in BuiltInTools:
-                serialized.append(tool.name())
-            else:
-                serialized.append(tool.json_schema())
-        return serialized
-
-    @field_validator("tools", mode="before")
+    @field_validator(
+        "tools",
+        mode="before",
+        # once we are on pydantic 2.10, we can get the correct schema with:
+        # json_schema_input_type=list[JsonSchema | SerializedBuiltInTool],
+    )
     @classmethod
     def validate_tools(cls, value: Any) -> Sequence[ToolDefinition]:
-        assert isinstance(value, list), "Tools must be a list"
+        assert isinstance(value, list)
         tools = []
         for tool in value:
-            if isinstance(tool, str):
-                known = next((b for b in BuiltInTools if tool == b.name()), None)
+            assert isinstance(tool, dict) and tool.get("type")
+            if tool["type"] != "function":
+                known = next(
+                    (b for b in BuiltInTools if tool["type"] == b.name()), None
+                )
                 if not known:
                     raise ValueError(f"Invalid built in tool: {tool}")
                 tools.append(known)
