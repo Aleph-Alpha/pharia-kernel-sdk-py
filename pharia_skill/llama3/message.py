@@ -37,7 +37,7 @@ class UserMessage:
     """
 
     content: str
-    role: Literal[Role.User] = field(init=False, default=Role.User)
+    role: Literal[Role.User] = field(default=Role.User)
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
         def render_tool(tool: ToolDefinition) -> str:
@@ -85,7 +85,7 @@ class SystemMessage:
     """
 
     content: str
-    role: Literal[Role.System] = field(init=False, default=Role.System)
+    role: Literal[Role.System] = field(default=Role.System)
 
     def __init__(self, content: str):
         self.content = content
@@ -158,7 +158,7 @@ class ToolMessage:
     """
 
     content: str
-    role: Literal[Role.IPython] = field(init=False, default=Role.IPython)
+    role: Literal[Role.IPython] = field(default=Role.IPython)
     success: bool = True
 
     def __init__(self, content: str, success: bool = True):
@@ -189,7 +189,7 @@ class AssistantMessage:
     """A message that is returned from the LLM."""
 
     content: str | None = None
-    role: Literal[Role.Assistant] = field(init=False, default=Role.Assistant)
+    role: Literal[Role.Assistant] = field(default=Role.Assistant)
     tool_calls: list[ToolCall] | None = None
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
