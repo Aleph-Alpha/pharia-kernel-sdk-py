@@ -32,6 +32,11 @@ class Tool(BaseModel):
     def json_schema(cls) -> dict[str, Any]:
         """The (slightly incompliant) json schema of a tool.
 
+        This schema is used in two ways:
+
+        1. Passed to the model to define the tool
+        2. For serialization to json as part of a chat request
+
         For all specified tools, this schema is passed to the model.
         LLama expects a json object with `type` "function" as the root elements
         and a `function` object with the keys `name`, `description`, and `parameters`.
@@ -132,6 +137,15 @@ class CodeInterpreter(Tool):
         exec(self.src, global_vars)
         return global_vars.get("result")
 
+    @classmethod
+    def json_schema(cls) -> dict[str, Any]:
+        """Json representation of the code interpreter tool.
+
+        This is not passed to the model, but only used for serialization to json
+        as part of a chat request.
+        """
+        return {"type": "code_interpreter"}
+
 
 class WolframAlpha(Tool):
     query: str
@@ -149,6 +163,15 @@ class WolframAlpha(Tool):
         except IndexError:
             return None
 
+    @classmethod
+    def json_schema(cls) -> dict[str, Any]:
+        """Json representation of the wolfram alpha tool.
+
+        This is not passed to the model, but only used for serialization to json
+        as part of a chat request.
+        """
+        return {"type": "wolfram_alpha"}
+
 
 class BraveSearch(Tool):
     query: str
@@ -165,6 +188,15 @@ class BraveSearch(Tool):
             return BraveSearch(query=query)
         except IndexError:
             return None
+
+    @classmethod
+    def json_schema(cls) -> dict[str, Any]:
+        """Json representation of the brave search tool.
+
+        This is not passed to the model, but only used for serialization to json
+        as part of a chat request.
+        """
+        return {"type": "brave_search"}
 
 
 BuiltInTools: tuple[type[Tool], ...] = (CodeInterpreter, WolframAlpha, BraveSearch)

@@ -39,7 +39,7 @@ def test_chat_request_field_serializer_built_in_tool():
 
     serialized = request.as_dict(tools)
 
-    assert serialized == ["code_interpreter"]
+    assert serialized == [{"type": "code_interpreter"}]
 
 
 def test_chat_request_field_serializer_custom_typed_tool():
@@ -81,14 +81,14 @@ def test_chat_request_field_serializer_custom_tool():
 
 
 def test_chat_request_validate_built_in_tool():
-    serialized = ["code_interpreter"]
+    serialized = [{"type": "code_interpreter"}]
     validated = ChatRequest.validate_tools(serialized)  # type: ignore
     assert validated == [CodeInterpreter]
 
 
 def test_chat_request_validate_unknown_tool():
     serialized = ["unknown_tool"]
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         ChatRequest.validate_tools(serialized)  # type: ignore
 
 
@@ -155,7 +155,7 @@ def test_chat_request_can_be_deserialized():
 def test_built_in_tool_can_be_deserialized():
     data = {
         "model": "llama-3.1-8b-instruct",
-        "tools": ["code_interpreter"],
+        "tools": [{"type": "code_interpreter"}],
         "messages": [
             {
                 "role": "user",
