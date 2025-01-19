@@ -8,20 +8,46 @@ from types import FunctionType, MethodType
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "pharia-kernel-sdk-py"
-copyright = "2024, Aleph Alpha"
+project = "pharia-kernel"
+copyright = "2025, Aleph Alpha"
 author = "Aleph Alpha"
 version = importlib.metadata.version("pharia-kernel-sdk-py")
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+extensions = [
+    "myst_parser",
+    "sphinx_rtd_theme",
+    "sphinx_design",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+]
 
-
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx.ext.napoleon"]
+myst_enable_extensions = [
+    "amsmath",
+    "attrs_inline",
+    "attrs_block",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    # "linkify",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+]
 
 autodoc_default_options = {
     "autodoc_member_order": "bysource",
 }
+
+# do not show full path including pharia_skill
+add_module_names = False
 
 templates_path = ["_templates"]
 exclude_patterns: list[str] = []
@@ -31,6 +57,10 @@ exclude_patterns: list[str] = []
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
+html_use_relative_paths = True
+
+html_static_path = ["../_static"]
+html_style = "../_static/css/my_theme.css"
 
 
 def skip_autodoc_attributes(app, what, name, obj, skip, options):  # type: ignore[no-untyped-def]

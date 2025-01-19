@@ -26,6 +26,8 @@ opentelemetry-api = "^1.28.1"
 opentelemetry-sdk = "^1.28.1"
 opentelemetry-instrumentation = "^0.49b1"
 opentelemetry-exporter-otlp = "^1.28.1"
+myst-parser = "^4.0.0"
+sphinx-design = "^0.6.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
@@ -40,7 +42,7 @@ pyright = "^1.1.390"
 pharia-skill = "pharia_skill.cli:main"
 
 [tool.poetry.extras]
-docs = ["sphinx", "sphinx_rtd_theme"]
+docs = ["sphinx", "sphinx_rtd_theme", "myst-parser", "sphinx_design"]
 
 
 [tool.pytest.ini_options]
