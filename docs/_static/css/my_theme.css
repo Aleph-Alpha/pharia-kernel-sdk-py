@@ -1,0 +1,78 @@
+@import url("theme.css");
+
+.wy-nav-content {
+    max-width: 70%;
+}
+
+.wy-nav-side {
+    background: white;
+}
+
+.wy-side-nav-search {
+    background-color: transparent !important;
+}
+
+.wy-menu-vertical {
+    font-size: 17px;
+}
+
+.wy-menu-vertical li.toctree-l1 > a {
+    font-size: 17px;
+}
+
+.wy-menu-vertical li.toctree-l2 > a {
+    font-size: 15px;
+}
+
+/* Footer is white  */
+.wy-nav-content-wrap {
+    background-color: #fcfcfc !important;
+}
+
+.wy-side-nav-search a {
+    color: #404040 !important;
+}
+
+.wy-menu-vertical li.toctree-l1.current > a {
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+.wy-menu-vertical li.toctree-l1 > a,
+.wy-menu-vertical li.toctree-l2 > a,
+.wy-menu-vertical li.toctree-l3 > a,
+.wy-menu-vertical li.toctree-l4 > a {
+    background: white !important;
+}
+
+.wy-menu-vertical li.toctree-l1.current > a,
+.wy-menu-vertical li.toctree-l2.current > a,
+.wy-menu-vertical li.toctree-l3.current > a,
+.wy-menu-vertical li.toctree-l4.current > a {
+    background: white !important;
+}
+
+.wy-menu-vertical a {
+    color: #404040 !important
+}
+
+.wy-nav-content-wrap {
+    border-left: 1px solid #e0e0e0;
+}
+
+.wy-menu-vertical a:hover {
+    background-color: #f0f0f0 !important;
+    color: #2980B9 !important;
+}
+
+.wy-breadcrumbs li.wy-breadcrumbs-aside {
+    display: none !important;
+}
+
+.wy-side-nav-search input[type="text"] {
+    border-color:#e0e0e0;
+    box-shadow: 0px 0px 0px 0px !important;
+    border-width: 1.2px;
+    border-radius: 5px;
+    
+}
