@@ -4,13 +4,11 @@ There is a few concepts which arise when talking about the Kernel
 
 ## Skill
 
-The first of these primitives is a Skill. A skill is a user-defined function that follows the request/response pattern: It takes some input, and returns some output.
+The first of these primitives is a Skill. A Skill is a user-defined function that follows the request/response pattern: It takes some input, and returns some output.
 
-A skill has a well-defined schema for input and output. What makes it different from a normal Serverless or FaaS (Function as a Service) function is that because it is being run in the context of the Kernel, it will have access to the Cognitive System Interface (CSI), to be defined below.
+A Skill has a well-defined schema for input and output. What makes it different from a normal Serverless or FaaS (Function as a Service) function is that because it is being run in the context of the Kernel, it will have access to the Cognitive System Interface (CSI), to be defined below.
 
-When this skill will get executed, and how, is up to the Kernel, which allows the engineer to focus on the business and AI logic of the skill at hand.
-
-The key is providing a common interface, both for how the skill is called, what is has available at runtime, and how it is deployed that allows for the Kernel to manage the accidental complexity of running the skill.
+When this Skill will get executed, and how, is up to the Kernel, which allows the engineer to focus on the business and AI logic of the Skill at hand.
 
 ## CSI
 

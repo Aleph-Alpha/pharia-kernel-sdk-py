@@ -48,11 +48,11 @@ def rag(csi: Csi, input: Input) -> Output:
 ## Conversational Search
 
 Conversational search is the idea to have a chat conversation with an LLM which has access to a knowledge database.
-To implement this, we first need a skill that exposes a chat interface.
+To implement this, we first need a Skill that exposes a chat interface.
 
 The [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) is emerging as a standard to expose conversational interface of LLMs.
 This API is also offered in the `Csi` with the `chat` method. Leveraging this, you can easily expose your own custom flavoured chat API as a Kernel Skill.
-Note that you can return expose internal datatypes in the interface of you skill as long as they are wrapped in a `Pydantic` model:
+Note that you can return expose internal datatypes in the interface of you Skill as long as they are wrapped in a `Pydantic` model:
 
 ```python
 from pharia_skill import Csi, Message, skill
