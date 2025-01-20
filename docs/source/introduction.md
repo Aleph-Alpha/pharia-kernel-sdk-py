@@ -2,11 +2,6 @@
 
 Frameworks like `llama-stack` and `langchain` allow for quick prototyping of generative AI applications. However, building production-ready AI applications requires solving different challenges. Companies do not want to compromize on security, testability, traceability, and evaluation of their AI logic.
 
-```{image} ../../_static/exhausted.png
-:alt: Exhausted Sloth
-:width: 200px
-```
-
 ## What Problem does the Kernel solve?
 
 Most PoCs that develop AI methodology using a Python framework wrap it in a webserver and containerize it. But this means that each piece of AI logic comes with its own set of libraries, dependencies and webserver. These dependencies need to be kept up to date. Each deployment needs to make decisions on how to do tracing, how to authenticate users and how to solve scaling. Maintaining, updating and synchronizing these containers quickly becomes resource intensive.
