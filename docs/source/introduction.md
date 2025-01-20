@@ -7,7 +7,7 @@ Frameworks like `llama-stack` and `langchain` allow for quick prototyping of gen
 Most PoCs that develop AI methodology using a Python framework wrap it in a webserver and containerize it. But this means that each piece of AI logic comes with its own set of libraries, dependencies and webserver. These dependencies need to be kept up to date. Each deployment needs to make decisions on how to do tracing, how to authenticate users and how to solve scaling. Maintaining, updating and synchronizing these containers quickly becomes resource intensive.
 
 This is the problem the Kernel solves. The Kernel provides a constrained, but capable interface each Skill can interact with.
-Complexity like authentication, tracing and scaling is abstracted away behind this interfaces. The Skill developer can focus on methodology development.
+Complexity like authentication, tracing and scaling is abstracted away behind this interface. The Skill developer can focus on methodology development.
 
 ## Unique Selling Points
 
@@ -17,41 +17,45 @@ The Kernel comes with several Unique Selling Points that makes it the system of 
 
 ### Speed of Deployment
 
-The Kernel allows developers to focus on the problems they are trying to solve. It abstracts away most of the accidental complexity of deploying AI applications.
+The Kernel allows developers to focus on the problems they are trying to solve. It abstracts away most of the complexity of deploying AI applications.
 Once developers are happy with their methodology, a new or updated Skill can be brought into production within seconds.
 
 ### Scalability
 
-Skills in the Kernel run as serverless components. There is no limit on the parallel requests that the Kernel can process. Long, blocking calls to inference which often
-become a problem in AI applications do not prevent your Skill from being accessible. You don't need to monitor hundreds of containers and worry about uptime. Your Skill is always available.
+Skills in the Kernel run as serverless components. This means your code can serve many requests in parallel. Long, blocking calls to inference which often
+become a problem in AI applications do not prevent your Skill from being accessible.
+
+Serverless components also mean that you do not need to worry about uptime and scaling, as the Kernel will allocate resources dynamically between Skills.
 
 ### Maintainability
 
-While you can include dependency libraries into your skill, a Skill is itself does not need to worry about protocols like HTTP or file standard.
-This means there less maintenance burden to update dependencies and adapt to changes in HTTP frameworks.
+You do not need to bring dependencies that take care of protocols like HTTP or file standards, as the Kernel already provides these capabilities.
+Less dependencies mean less maintenance burden to keep dependencies up to date.
 
 ### Security
 
 AI applications become most useful when they have access to your knowledge base.
 This is also when they become a security risk, as this knowledge must not be exposed to unauthorized persons.
-The Kernels restricts the way that Skills can interact with the outside world. 
+The Kernel restricts the way that Skills can interact with the outside world. 
 This allows developers to be creative in their methodology while minimizing the attack surface.
 
-### Central Configuration
+### Compliance
 
-Do you want to switch your telemetry backend or update the way your Skill is traced? Update the setting on the Kernel and all your traces will go to a different place.
+The Kernel exposes some configuration options that can be set centrally for all Skills.
+This means that all of your skills operate in the same way.
+Metrics, telemetry, authentication and inference backend do not need to be specified per Skill.
 
-### GitOps
+### Deployment
 
-Skill management and deployment follows modern best practices. Skills can be scored in arbitrary registries from which the Kernel loads them.
+Skill management and deployment follows modern best practices. Skills can be stored in and loaded from any configured OCI registry.
 
-### Integration
+### Integration into PhariaAI
 
-The Kernel integrates tightly into the Pharia stack. Traces can be viewed in the PhariaStudio and Skills can be evaluated against uploaded datasets.
+The Kernel integrates tightly into the PhariaAI stack. Traces can be viewed in PhariaStudio and Skills can be evaluated against uploaded datasets.
 
 ### Discoverability
 
-The Kernel provides a Skill catalogue that makes it easy to retrieve descriptions and metadata like input and output schema for Skills.
+The Kernel makes it easy to retrieve descriptions and metadata like input and output schema for Skills.
 
 ### Agent Ready
 
