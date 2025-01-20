@@ -1,6 +1,6 @@
 # Agents
 
-```{image} ../../_static/agent.png
+```{image} _static/agent.png
 :alt: Sloth Agent
 :width: 200px
 ```
