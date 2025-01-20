@@ -16,7 +16,7 @@ Cognition and Acquisition. The `Core Concepts` and `Introduction` sections help 
 
 ## Tutorials
 
-Action and Acquisition. A `Tutorials` section should help the user to learn. We don't provide this yet.
+Action and Acquisition. The `Quick Start` section helps users to learn.
 
 
 

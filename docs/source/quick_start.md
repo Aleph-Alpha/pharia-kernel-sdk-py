@@ -1,6 +1,6 @@
 # Quick Start
 
-In this guide, we’ll go through how you can use our Python SDK to build a simple skill that does a completion request. The full code can be found [here](https://github.com/Aleph-Alpha/haiku-skill-python/tree/main).
+In this guide, we’ll go through how you can use our Python SDK to build a simple Skill that does a completion request. The full code can be found [here](https://github.com/Aleph-Alpha/haiku-skill-python/tree/main).
 
 ## 1. Installing the SDK
 
@@ -23,7 +23,7 @@ Next, set the credentials for poetry to pull the SDK from Jfrog.
 poetry config http-basic.jfrog $JFROG_USER $JFROG_TOKEN
 ```
 
-## 2. Developing
+## 2. Writing a Skill
 
 Now, we are ready to write the skill. Create a file called `haiku.py` and add the following code:
 
@@ -71,7 +71,7 @@ pharia-skill build haiku
 
 ## 5. Publishing
 
-We are ready to publish the skill to a registry.
+We are ready to publish the Skill to a registry.
 Make sure you understand which namespaces are configured in the Kernel instance you have access to and which registries they are linked with.
 For the `p-prod` instance, we have setup a [playground](https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground) to deploy to.
 Make sure to set the required environment variables:
@@ -91,7 +91,7 @@ pharia-skill publish haiku
 
 ## 6. Deploying
 
-To know which skills to serve, the Kernel watches a list of configured namespaces. These can be `toml` files hosted on a server.
+To know which Skills to serve, the Kernel watches a list of configured namespaces. These can be `toml` files hosted on a server.
 If deploying to the [playground](https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground) , simply update the `namespace.toml` file
 in the GitLab UI and add your skill:
 

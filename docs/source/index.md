@@ -7,7 +7,7 @@
 
 Welcome to the Kernel 👋
 
-The Kernel provides a focused environment for AI engineers to develop and deploy AI methodology, or skills.
+The Kernel provides a focused environment for AI engineers to develop and deploy AI methodology, or Skills.
 
 ## Quick Links
 
