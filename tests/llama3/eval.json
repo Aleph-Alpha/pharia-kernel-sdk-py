@@ -1,0 +1,64 @@
+{
+    "results": [
+        {
+            "input": "When will the order 42 ship?",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme"
+            ],
+            "expected": "{\"name\": \"get_shipment_date\", \"parameters\": {\"order_id\": 42}}",
+            "output": "{\"name\": \"get_shipment_date\", \"parameters\": {\"order_id\": 42}}",
+            "success": true
+        },
+        {
+            "input": "What is the readme for the pharia-kernel repo?",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme"
+            ],
+            "expected": "{\"name\": \"get_github_readme\", \"parameters\": {\"repository\": \"pharia-kernel\"}}",
+            "output": "{\"name\": \"get_github_readme\", \"parameters\": {\"repository\": \"pharia-kernel\"}}",
+            "success": true
+        },
+        {
+            "input": "What is 3+3?",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme"
+            ],
+            "expected": "6",
+            "output": "{\"type\": \"function\", \"name\": \"get_shipment_date\", \"parameters\": {\"order_id\": \"3\"}}; {\"type\": \"function\", \"name\": \"get_shipment_date\", \"parameters\": {\"order_id\": \"3\"}}",
+            "success": false
+        },
+        {
+            "input": "What are the active orders for the customers 1, 2, and 3?",
+            "tools": [
+                "GetActiveOrders"
+            ],
+            "expected": "{\"name\": \"get_active_orders\", \"parameters\": {\"customers\": [1, 2, 3]}}",
+            "output": "<|python_tag|>{\"type\": \"function\", \"name\": \"get_active_orders\", \"parameters\": {\"customers\": \"[1, 2, 3]\"}}<|eom_id|>",
+            "success": false
+        },
+        {
+            "input": "Tell me a funny joke about a rabbit and a carrot.",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme"
+            ],
+            "expected": "carrot",
+            "output": "{\"name\": \"get_github_readme\", \"parameters\": {\"repository\": \"rabbit-carrot-joke\"}}",
+            "success": false
+        },
+        {
+            "input": "What is GitHub?",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme"
+            ],
+            "expected": "developer",
+            "output": "{\"name\": \"get_github_readme\", \"parameters\": {\"repository\": \"github\"}}",
+            "success": false
+        }
+    ],
+    "accuracy": 0.33
+}

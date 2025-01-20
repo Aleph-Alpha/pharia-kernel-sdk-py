@@ -1,5 +1,6 @@
 from .message import AssistantMessage, Role, ToolMessage, UserMessage
 from .request import ChatRequest, ChatResponse
+from .response import SpecialTokens
 from .tool import (
     BraveSearch,
     CodeInterpreter,
@@ -20,6 +21,7 @@ __all__ = [
     "ToolDefinition",
     "ToolMessage",
     "BraveSearch",
+    "SpecialTokens",
     "JsonSchema",
     "CodeInterpreter",
     "WolframAlpha",
