@@ -11,6 +11,8 @@ class SpecialTokens(str, Enum):
     EndOfMessage = "<|eom_id|>"
     PythonTag = "<|python_tag|>"
     BeginOfText = "<|begin_of_text|>"
+    StartHeader = "<|start_header_id|>"
+    EndHeader = "<|end_header_id|>"
 
 
 RawResponse = str

@@ -104,6 +104,7 @@ class ChatRequest:
             max_tokens=self.params.max_tokens,
             temperature=self.params.temperature,
             top_p=self.params.top_p,
+            stop=[SpecialTokens.StartHeader.value],
         )
 
         completion = csi.complete(self.model, self.render(), completion_params)
@@ -132,8 +133,10 @@ class ChatRequest:
             messages.insert(0, SystemMessage.empty())
 
         prompt = SpecialTokens.BeginOfText.value
-        for message in messages:
-            prompt += message.render(self.tools)
+        for i, message in enumerate(messages):
+            # ensure tools do not get passed to more than one user message
+            tools = self.tools if i <= 1 else []
+            prompt += message.render(tools)
 
         prompt += Role.Assistant.render()
         prompt += "\n\n"

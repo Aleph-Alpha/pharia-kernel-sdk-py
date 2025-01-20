@@ -25,7 +25,7 @@ class Role(str, Enum):
     IPython = "ipython"
 
     def render(self) -> str:
-        return f"<|start_header_id|>{self.value.lower()}<|end_header_id|>"
+        return f"{SpecialTokens.StartHeader.value}{self.value.lower()}{SpecialTokens.EndHeader.value}"
 
 
 @dataclass

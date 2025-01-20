@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from pharia_skill.llama3 import (
+    AssistantMessage,
     ChatRequest,
     SystemMessage,
     Tool,
@@ -106,3 +107,16 @@ def test_chat_request_with_tool_definition_is_serializable():
 
     # Then the model can be dumped to json without an error
     chat.model_dump_json()
+
+
+def test_tools_not_included_in_second_user_prompt():
+    # Given a chat request with two user messages
+    user = UserMessage("What is the meaning of life?")
+    assistant = AssistantMessage("42")
+    chat_request = ChatRequest(llama, [user, assistant, user], tools=[GetGithubReadme])
+
+    # When rendering the chat request
+    rendered = chat_request.render()
+
+    # Then the tool definition is only included once
+    assert rendered.count("github") == 1
