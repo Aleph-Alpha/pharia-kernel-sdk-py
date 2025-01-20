@@ -28,3 +28,11 @@ Testing Module
    :members:
    :undoc-members:
    :show-inheritance:
+
+Llama Module
+~~~~~~~~~~~~~~
+
+.. automodule:: pharia_skill.llama3
+   :members:
+   :undoc-members:
+   :show-inheritance:
