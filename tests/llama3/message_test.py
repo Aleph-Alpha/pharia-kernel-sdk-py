@@ -28,7 +28,7 @@ def test_system_prompt_tools():
 
 
 def test_system_prompt_with_tools():
-    system = SystemMessage.empty()
+    system = SystemMessage("")
     tools = [CodeInterpreter]
     expected = """<|start_header_id|>system<|end_header_id|>
 
@@ -49,7 +49,7 @@ You are a poet who strictly speaks in haikus.<|eot_id|>"""
 
 
 def test_ipython_environment_activated_by_custom_tool():
-    system = SystemMessage.empty()
+    system = SystemMessage("")
     tools = [GetGithubReadme]
     expected = """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython<|eot_id|>"""
     assert system.render(tools) == expected
@@ -57,7 +57,7 @@ def test_ipython_environment_activated_by_custom_tool():
 
 def test_system_prompt_lists_built_in_tools():
     tools: list[type[Tool]] = [CodeInterpreter, BraveSearch, WolframAlpha]
-    system = SystemMessage.empty()
+    system = SystemMessage("")
     expected = """<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython

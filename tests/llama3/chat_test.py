@@ -99,7 +99,7 @@ def test_provide_tool_result(csi: DevCsi):
 
     # When providing a tool response back to the model
     tool = ToolMessage(content="1970-01-01")
-    request = ChatRequest(llama, [user, assistant, tool], [GetShipmentDate])
+    request = ChatRequest(llama, [user, assistant, tool], tools=[GetShipmentDate])
     response = request.chat(csi)
 
     # Then the response should answer the original question
@@ -113,7 +113,7 @@ def test_provide_tool_result(csi: DevCsi):
 def test_tool_response_is_parsed_into_provided_class():
     # Given a tool specified as pydantic model
     message = UserMessage("When will the order `42` ship?")
-    request = ChatRequest(llama, [message], [GetShipmentDate])
+    request = ChatRequest(llama, [message], tools=[GetShipmentDate])
     completion = Completion(
         text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}',
         finish_reason=FinishReason.STOP,
@@ -131,7 +131,7 @@ def test_tool_response_is_parsed_into_provided_class():
 def test_tool_response_can_be_added_to_prompt():
     # Given a chat request with a tool definition and a message that requires the tool
     message = UserMessage("When will the order `42` ship?")
-    request = ChatRequest(llama, [message], [GetShipmentDate])
+    request = ChatRequest(llama, [message], tools=[GetShipmentDate])
 
     # And given a csi that always responds with a function call
     completion = Completion(

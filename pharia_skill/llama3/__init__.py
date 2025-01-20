@@ -1,4 +1,4 @@
-from .message import AssistantMessage, Role, SystemMessage, ToolMessage, UserMessage
+from .message import AssistantMessage, Role, ToolMessage, UserMessage
 from .request import ChatRequest, ChatResponse
 from .tool import (
     BraveSearch,
@@ -14,7 +14,6 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
     "UserMessage",
-    "SystemMessage",
     "Role",
     "AssistantMessage",
     "ToolCall",
