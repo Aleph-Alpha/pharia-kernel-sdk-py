@@ -1,6 +1,6 @@
-# Building
+# How-To
 
-The Kernel SDK provides all the building blocks needed to create sophisticated AI applications. In this section, we will show you how to use these components effectively. 
+The Kernel SDK provides all the building blocks needed to create sophisticated AI applications.
 
 ## Completion
 
