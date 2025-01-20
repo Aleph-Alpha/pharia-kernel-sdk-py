@@ -172,6 +172,7 @@ def test_tool_result_can_be_deserialized():
     # Given a chat request with a tool call and a tool response
     data = {
         "model": "llama-3.1-8b-instruct",
+        "system": "You are a helpful assistant",
         "messages": [
             {
                 "role": "user",
@@ -205,7 +206,7 @@ def test_tool_result_can_be_deserialized():
     # When deserializing it to the ChatApi model
     chat = ChatApi.model_validate(data)
 
-    # Then we get fours messages
+    # Then we get four messages
     messages = chat.root.messages
     assert len(messages) == 5
 
@@ -224,6 +225,9 @@ def test_tool_result_can_be_deserialized():
     # And the fourth one is an assistant message
     assert messages[3].role == Role.Assistant
     assert messages[3].content == "It will be delivered in July 2025."
+
+    # And we receive a system prompt
+    assert chat.root.system == "You are a helpful assistant"
 
 
 class ChatOutput(RootModel[ChatResponse]):

@@ -13,7 +13,7 @@ def test_chat_api():
     # Given a chat api request with a user message and a tool definition
     csi = DevCsi()
     user = UserMessage("When will my order (42) arrive?")
-    request = ChatRequest("llama-3.1-8b-instruct", [user], [GetShipmentDate])
+    request = ChatRequest("llama-3.1-8b-instruct", [user], tools=[GetShipmentDate])
     input = ChatApi(root=request)
 
     # When the chat api is called

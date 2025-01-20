@@ -31,7 +31,7 @@ from .message import (
 from .response import SpecialTokens
 from .tool import BuiltInTools, JsonSchema, ToolDefinition
 
-Message = SystemMessage | UserMessage | AssistantMessage | ToolMessage
+Message = UserMessage | AssistantMessage | ToolMessage
 
 
 class BuiltInToolSchema(BaseModel):
@@ -60,6 +60,18 @@ class ChatRequest:
 
     model: str
     messages: list[Message]
+    """The message history to be passed to the model. Can be `User`, `Assistant`, or `Tool` messages.
+    
+    Note that if you want to include a system prompt, you can use the top-level system parameter —
+    there is no `system` role for input messages in the Messages API."""
+
+    system: str | None = None
+    """An optional system message that can passed to the model.
+
+    Note that you don't have to define tools or specify `Environment: ipython` if you are using tools.
+    The system message is automatically adapted.
+    """
+
     tools: Sequence[ToolDefinition] = field(default_factory=list)
     params: ChatParams = field(default_factory=ChatParams)
 
@@ -124,19 +136,14 @@ class ChatRequest:
 
     def render(self) -> str:
         """Convert the chat request to a prompt that can be passed to the model."""
-        messages = self.messages
-
-        # always activate ipython environment in the system prompt if any tools are provided.
-        # see `SystemMessage.render` for more details.
-        system_prompt_needed = self.tools and self.messages[0].role != Role.System
-        if system_prompt_needed:
-            messages.insert(0, SystemMessage.empty())
-
         prompt = SpecialTokens.BeginOfText.value
-        for i, message in enumerate(messages):
-            # ensure tools do not get passed to more than one user message
-            tools = self.tools if i <= 1 else []
-            prompt += message.render(tools)
+        if self.system or self.tools:
+            prompt += SystemMessage(self.system or "").render(self.tools)
+
+        # tools only get passed to the first user message
+        prompt += self.messages[0].render(self.tools)
+        for message in self.messages[1:]:
+            prompt += message.render([])
 
         prompt += Role.Assistant.render()
         prompt += "\n\n"
@@ -181,27 +188,25 @@ def validate_messages(messages: list[Message]) -> None:
     to give the developer early feedback if he is using the chat request incorrectly.
 
     Rules:
-        1. The first message must be a system or user message.
-        2. The conversation excluding a potential system message must alternate between user/ipython and assistant.
+        1. The first message must be a user message.
+        2. The conversation must alternate between user/ipython and assistant.
         3. The last message must be a user or ipython message.
     """
     if not messages:
         raise ValueError("Messages cannot be empty")
 
     # 1. check that the first message is a system or user message
-    if messages[0].role not in (Role.System, Role.User):
-        raise ValueError("First message must be a system or user message")
-
-    cursor = 1 if messages[0].role == Role.System else 0
+    if messages[0].role != Role.User:
+        raise ValueError("First message must be a user message")
 
     # 2. check alternating between user/tool and assistant
-    for i, message in enumerate(messages[cursor:]):
+    for i, message in enumerate(messages[1:]):
         if i % 2 == 0:
-            if message.role not in (Role.User, Role.IPython):
-                raise ValueError("User messages must alternate with assistant messages")
-        else:
             if message.role != Role.Assistant:
                 raise ValueError("Assistant messages must alternate with user messages")
+        else:
+            if message.role not in (Role.User, Role.IPython):
+                raise ValueError("User messages must alternate with assistant messages")
 
     # 3. check that the last message is a user/ipython message
     if messages[-1].role not in (Role.User, Role.IPython):

@@ -7,7 +7,7 @@ A message represents one turn in a conversation with an LLM.
 """
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, Sequence
 
@@ -37,7 +37,7 @@ class UserMessage:
     """
 
     content: str
-    role: Literal[Role.User] = field(default=Role.User)
+    role: Literal[Role.User] = Role.User
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
         def render_tool(tool: ToolDefinition) -> str:
@@ -80,24 +80,19 @@ class UserMessage:
 class SystemMessage:
     """Describes a system message in a chat.
 
+    This class is not exposed to the user and is not part of the conversation history like other messages.
+    Instead, there is an optional `system` field on the `ChatRequest` which the user can use to set the system message.
+    For rendering of the chat history, we then create a `SystemMessage` with the content of the `system` field.
+
     Parameters:
         content (str, required): The content of the message.
     """
 
     content: str
-    role: Literal[Role.System] = field(default=Role.System)
+    role: Literal[Role.System] = Role.System
 
     def __init__(self, content: str):
         self.content = content
-
-    @classmethod
-    def empty(cls) -> "SystemMessage":
-        """Create an empty system message.
-
-        When the user has not provided a system message but specified tools, we create
-        an empty system message that can be rendered with the tools.
-        """
-        return cls("")
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
         """Render a system message and inject tools into the prompt.
@@ -158,7 +153,7 @@ class ToolMessage:
     """
 
     content: str
-    role: Literal[Role.IPython] = field(default=Role.IPython)
+    role: Literal[Role.IPython] = Role.IPython
     success: bool = True
 
     def __init__(self, content: str, success: bool = True):
@@ -189,7 +184,7 @@ class AssistantMessage:
     """A message that is returned from the LLM."""
 
     content: str | None = None
-    role: Literal[Role.Assistant] = field(default=Role.Assistant)
+    role: Literal[Role.Assistant] = Role.Assistant
     tool_calls: list[ToolCall] | None = None
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:

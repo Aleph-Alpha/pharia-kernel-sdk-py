@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from pharia_skill.llama3 import (
     AssistantMessage,
     ChatRequest,
-    SystemMessage,
     Tool,
     UserMessage,
 )
@@ -30,10 +29,10 @@ def test_system_prompt_included_if_only_custom_tools_provided():
 
 
 def test_chat_request_to_prompt():
-    system = SystemMessage("You are a poet who strictly speaks in haikus.")
+    system = "You are a poet who strictly speaks in haikus."
     user = UserMessage("oat milk")
 
-    chat_request = ChatRequest(llama, [system, user])
+    chat_request = ChatRequest(llama, [user], system=system)
 
     prompt = chat_request.render()
 
@@ -53,7 +52,7 @@ def test_custom_tool_definition_in_user_prompt():
     chat_request = ChatRequest(
         llama,
         [UserMessage("What is the readme of the pharia-kernel repository?")],
-        [GetGithubReadme],
+        tools=[GetGithubReadme],
     )
 
     # When rendering the chat request
@@ -102,7 +101,7 @@ def test_chat_request_with_tool_definition_is_serializable():
         request: ChatRequest
 
     user = UserMessage("When will my order (42) arrive?")
-    request = ChatRequest("llama-3.1-8b-instruct", [user], [GetGithubReadme])
+    request = ChatRequest("llama-3.1-8b-instruct", [user], tools=[GetGithubReadme])
     chat = ChatApi(request=request)
 
     # Then the model can be dumped to json without an error
