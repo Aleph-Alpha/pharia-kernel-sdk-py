@@ -11,23 +11,21 @@ class Input(BaseModel):
 
 
 class Output(BaseModel):
-    answer: str
-    executed_code: str | None
-    code_result: Any
+    answer: str | None
+    executed_code: str | None = None
+    code_result: Any | None = None
 
 
 @skill
 def code(csi: Csi, input: Input) -> Output:
-    """Optionally execute python code that the model has output"""
+    """A skill that optionally executes python code to answer a question"""
     message = UserMessage(content=input.question)
     request = ChatRequest(
         model="llama-3.3-70b-instruct", messages=[message], tools=[CodeInterpreter]
     )
     response = request.chat(csi)
     if not response.message.tool_calls:
-        return Output(
-            answer=str(response.message.content), executed_code=None, code_result=None
-        )
+        return Output(answer=response.message.content)
 
     # we know that it will be code interpreter
     tool_call = response.message.tool_calls[0].parameters
@@ -39,7 +37,7 @@ def code(csi: Csi, input: Input) -> Output:
     # chat again, and return the output
     response = request.chat(csi)
     return Output(
-        answer=str(response.message.content),
+        answer=response.message.content,
         executed_code=tool_call.src,
         code_result=output,
     )
