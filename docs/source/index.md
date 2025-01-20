@@ -26,7 +26,7 @@ The Kernel provides a focused environment for AI engineers to develop and deploy
 introduction
 quick_start
 core_concepts
-building
+how_to
 agents
 references
 ``` 
