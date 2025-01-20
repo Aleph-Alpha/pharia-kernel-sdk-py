@@ -1,6 +1,6 @@
 # Pharia Kernel
 
-```{image} ../../_static/sloth.png
+```{image} _static/sloth.png
 :alt: Kernel Sloth
 :width: 200px
 ```
