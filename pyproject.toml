@@ -42,9 +42,6 @@ pharia-skill = "pharia_skill.cli:main"
 [tool.poetry.extras]
 docs = ["sphinx", "sphinx_rtd_theme"]
 
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
 [tool.pytest.ini_options]
 markers = ["kernel: marks tests that requires Pharia Kernel"]
 
