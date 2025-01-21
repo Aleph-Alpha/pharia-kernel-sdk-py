@@ -128,3 +128,18 @@ def test_tools_not_included_in_second_user_prompt():
 
     # Then the tool definition is only included once
     assert rendered.count("github") == 1
+
+
+def test_schema_includes_built_in_tools():
+    # Given a wrapper class with a ChatRequest attribute
+    class Wrapper(BaseModel):
+        request: ChatRequest
+
+    # When creating the schema
+    schema = Wrapper.model_json_schema()
+
+    # Then the tools are specified to either be "BuiltInToolSchema" or "JsonSchema"
+    assert schema["$defs"]["ChatRequest"]["properties"]["tools"]["items"]["anyOf"] == [
+        {"$ref": "#/$defs/JsonSchema"},
+        {"$ref": "#/$defs/BuiltInToolSchema"},
+    ]

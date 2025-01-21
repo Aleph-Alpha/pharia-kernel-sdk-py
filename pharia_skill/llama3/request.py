@@ -149,8 +149,7 @@ class ChatRequest:
     @field_validator(
         "tools",
         mode="before",
-        # once we are on pydantic 2.10, we can get the correct schema with:
-        # json_schema_input_type=list[JsonSchema | SerializedBuiltInTool],
+        json_schema_input_type=list[JsonSchema | BuiltInToolSchema],
     )
     @classmethod
     def validate_tools(cls, value: Any) -> Sequence[ToolDefinition]:
