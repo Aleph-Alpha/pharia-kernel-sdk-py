@@ -15,7 +15,7 @@ WASM, along with its WASI (WebAssembly System Interface) specification provides 
 
 ### Tool Calling
 
-To support agent-like workflows, the Kernel provides [tool abstractions](references.rst#pharia_skill.tools.Tool) in the SDK. Tool calling usually involves three steps:
+To support agent-like workflows, the Kernel provides [tool abstractions](references.rst#pharia_skill.llama3.Tool) in the SDK. Tool calling usually involves three steps:
 
 1. Users can defined so called tools which are passed to the model.
 2. The model may or may not decide to respond with a tool call.
