@@ -21,7 +21,7 @@ from pharia_skill.testing import DevCsi
 
 
 class GetGithubReadme(Tool):
-    """Get the readme for a github repository."""
+    """Get the readme for a repository in the Aleph Alpha organization on GitHub."""
 
     repository: str
 

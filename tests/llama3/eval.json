@@ -27,7 +27,7 @@
                 "GetGithubReadme"
             ],
             "expected": "6",
-            "output": "{\"type\": \"function\", \"name\": \"get_shipment_date\", \"parameters\": {\"order_id\": \"3\"}}; {\"type\": \"function\", \"name\": \"get_shipment_date\", \"parameters\": {\"order_id\": \"3\"}}",
+            "output": "{\"name\": \"get_shipment_date\", \"parameters\": {\"order_id\": 3}}",
             "success": false
         },
         {
@@ -46,8 +46,8 @@
                 "GetGithubReadme"
             ],
             "expected": "carrot",
-            "output": "{\"name\": \"get_github_readme\", \"parameters\": {\"repository\": \"rabbit-carrot-joke\"}}",
-            "success": false
+            "output": "Here's one:\n\nWhy did the rabbit take his carrot to therapy?\n\nBecause it was feeling a little \"root\"-less! (get it?)",
+            "success": true
         },
         {
             "input": "What is GitHub?",
@@ -56,9 +56,9 @@
                 "GetGithubReadme"
             ],
             "expected": "developer",
-            "output": "{\"name\": \"get_github_readme\", \"parameters\": {\"repository\": \"github\"}}",
-            "success": false
+            "output": "GitHub is a web-based platform for version control and collaboration on software development projects. It allows developers to host and review code, manage projects, and track changes to code over time. GitHub provides a web-based interface for users to view and edit the code, as well as a command-line interface for users who prefer to work with the command line.\n\nGitHub is often used for open-source software development, but it is also used by companies and individuals for private projects. It provides a number of features, including:\n\n1. Version control: GitHub allows developers to track changes to their code over time, making it easier to collaborate and manage projects.\n2. Collaboration: GitHub allows multiple developers to work on the same project simultaneously, making it easier to collaborate and share code.\n3. Code review: GitHub provides a feature for code review, which allows developers to review and comment on each other's code.\n4. Issue tracking: GitHub provides a feature for issue tracking, which allows developers to track bugs and feature requests.\n5. Project management: GitHub provides a feature for project management, which allows developers to manage their projects and track progress.\n\nGitHub is widely used in the software development industry, and is considered an essential tool for many developers. It is also used by non-technical people, such as project managers and business analysts, to manage and track software development projects.\n\nIn the context of the provided function, the `get_github_readme` function is likely used to retrieve the README file for a specific repository on GitHub. The README file is a text file that provides an overview of the project, including its purpose, features, and usage instructions.",
+            "success": true
         }
     ],
-    "accuracy": 0.33
+    "accuracy": 0.67
 }
