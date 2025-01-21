@@ -15,8 +15,8 @@ packages = [{ include = "pharia_skill", format = ["sdist", "wheel"] }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-pydantic-core = "2.14.5"
-pydantic = "2.5.2"
+pydantic-core = "2.27.2"
+pydantic = "2.10.4"
 requests = "^2.32.3"
 python-dotenv = "^1.0.1"
 componentize-py = "^0.16.0"

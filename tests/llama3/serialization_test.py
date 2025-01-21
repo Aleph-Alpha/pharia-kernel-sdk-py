@@ -82,14 +82,14 @@ def test_chat_request_field_serializer_custom_tool():
 
 def test_chat_request_validate_built_in_tool():
     serialized = [{"type": "code_interpreter"}]
-    validated = ChatRequest.validate_tools(serialized)  # type: ignore
+    validated = ChatRequest.validate_tools(serialized)
     assert validated == [CodeInterpreter]
 
 
 def test_chat_request_validate_unknown_tool():
     serialized = ["unknown_tool"]
     with pytest.raises(AssertionError):
-        ChatRequest.validate_tools(serialized)  # type: ignore
+        ChatRequest.validate_tools(serialized)
 
 
 def test_chat_request_validate_custom_tool():
@@ -105,7 +105,7 @@ def test_chat_request_validate_custom_tool():
         },
     }
     serialized = [schema]
-    validated = ChatRequest.validate_tools(serialized)  # type: ignore
+    validated = ChatRequest.validate_tools(serialized)
     assert validated == [JsonSchema(**schema)]  # type: ignore
 
 
