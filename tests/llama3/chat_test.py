@@ -1,3 +1,5 @@
+import datetime as dt
+
 import pytest
 
 from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason
@@ -18,7 +20,7 @@ def csi() -> DevCsi:
     return DevCsi()
 
 
-llama = "llama-3.1-8b-instruct"
+llama = "llama-3.3-70b-instruct"
 
 
 class MockCsi(Csi):
@@ -153,12 +155,15 @@ def test_tool_response_can_be_added_to_prompt():
     response = request.chat(csi)
 
     # Then the whole context is included in the second prompt
-    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+    expected = (
+        """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
-
-You have access to the following functions:
-
+Cutting Knowledge Date: December 2023"""
+        f"\nToday Date: {dt.datetime.now().strftime('%d %B %Y')}"
+        """\n\nAnswer the user's question by making use of the following functions if needed.
+Only use functions if they are relevant to the user's question.
+Here is a list of functions in JSON format:
 {
     "type": "function",
     "function": {
@@ -178,7 +183,9 @@ You have access to the following functions:
     }
 }
 
-Return function calls in JSON format.<|eot_id|><|start_header_id|>user<|end_header_id|>
+Return function calls in JSON format.
+
+You are a helpful assistant.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
 When will the order `42` ship?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
@@ -187,4 +194,5 @@ When will the order `42` ship?<|eot_id|><|start_header_id|>assistant<|end_header
 completed[stdout]{"result": "1970-01-01"}[/stdout]<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
 """
+    )
     assert csi.prompts[-1] == expected

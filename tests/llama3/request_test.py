@@ -1,3 +1,5 @@
+import datetime as dt
+
 from pydantic import BaseModel
 
 from pharia_skill.llama3 import (
@@ -59,30 +61,37 @@ def test_custom_tool_definition_in_system_prompt():
     rendered = chat_request.render()
 
     # Then the custom tool definition should be included in the system prompt
-    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython
+    expected = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-You have access to the following functions:
+Environment: ipython
+Cutting Knowledge Date: December 2023
+Today Date: {dt.datetime.now().strftime("%d %B %Y")}
 
-{
+Answer the user's question by making use of the following functions if needed.
+Only use functions if they are relevant to the user's question.
+Here is a list of functions in JSON format:
+{{
     "type": "function",
-    "function": {
+    "function": {{
         "name": "get_github_readme",
         "description": "Get the readme of a GitHub repository",
-        "parameters": {
-            "properties": {
-                "repository": {
+        "parameters": {{
+            "properties": {{
+                "repository": {{
                     "type": "string"
-                }
-            },
+                }}
+            }},
             "required": [
                 "repository"
             ],
             "type": "object"
-        }
-    }
-}
+        }}
+    }}
+}}
 
-Return function calls in JSON format.<|eot_id|><|start_header_id|>user<|end_header_id|>
+Return function calls in JSON format.
+
+You are a helpful assistant.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
 What is the readme of the pharia-kernel repository?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
     assert rendered == expected

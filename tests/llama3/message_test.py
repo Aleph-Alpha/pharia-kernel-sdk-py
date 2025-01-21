@@ -1,3 +1,5 @@
+import datetime as dt
+
 from pydantic import BaseModel
 
 from pharia_skill.llama3.message import (
@@ -27,23 +29,31 @@ def test_system_prompt_tools():
     assert SystemMessage.system_prompt_tools(tools) == [BraveSearch]
 
 
-def test_system_prompt_with_tools():
+def test_system_prompt_with_code_interpreter():
     system = SystemMessage("")
     tools = [CodeInterpreter]
-    expected = """<|start_header_id|>system<|end_header_id|>
+    expected = f"""<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
-If you decide to run python code, assign the result to a variable called `result`.<|eot_id|>"""
+If you decide to run python code, assign the result to a variable called `result`.
+Cutting Knowledge Date: December 2023
+Today Date: {dt.datetime.now().strftime("%d %B %Y")}
+
+You are a helpful assistant.<|eot_id|>"""
     assert system.render(tools=tools) == expected
 
 
 def test_system_prompt_merged_from_user_and_tools():
     system = SystemMessage("You are a poet who strictly speaks in haikus.")
     tools = [CodeInterpreter]
-    expected = """<|start_header_id|>system<|end_header_id|>
+    expected = f"""<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
 If you decide to run python code, assign the result to a variable called `result`.
+Cutting Knowledge Date: December 2023
+Today Date: {dt.datetime.now().strftime("%d %B %Y")}
+
+You are a helpful assistant.
 You are a poet who strictly speaks in haikus.<|eot_id|>"""
     assert system.render(tools) == expected
 
@@ -51,50 +61,59 @@ You are a poet who strictly speaks in haikus.<|eot_id|>"""
 def test_system_prompt_with_json_based_tools():
     tools = [GetGithubReadme]
     system = SystemMessage("")
-    expected = """<|start_header_id|>system<|end_header_id|>
+    expected = f"""<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
+Cutting Knowledge Date: December 2023
+Today Date: {dt.datetime.now().strftime("%d %B %Y")}
 
-You have access to the following functions:
-
-{
+Answer the user\'s question by making use of the following functions if needed.
+Only use functions if they are relevant to the user's question.
+Here is a list of functions in JSON format:
+{{
     "type": "function",
-    "function": {
+    "function": {{
         "name": "get_github_readme",
         "description": "Get the readme of a GitHub repository",
-        "parameters": {
-            "properties": {
-                "repository": {
+        "parameters": {{
+            "properties": {{
+                "repository": {{
                     "type": "string"
-                }
-            },
+                }}
+            }},
             "required": [
                 "repository"
             ],
             "type": "object"
-        }
-    }
-}
+        }}
+    }}
+}}
 
-Return function calls in JSON format.<|eot_id|>"""
+Return function calls in JSON format.
+
+You are a helpful assistant.<|eot_id|>"""
     assert system.render(tools) == expected
 
 
 def test_ipython_environment_activated_by_custom_tool():
     system = SystemMessage("")
     tools = [GetGithubReadme]
-    expected = """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython\n\nYou have access to the following functions:\n\n"""
+    expected = """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython"""
     assert system.render(tools).startswith(expected)
 
 
 def test_system_prompt_lists_built_in_tools():
     tools: list[type[Tool]] = [CodeInterpreter, BraveSearch, WolframAlpha]
     system = SystemMessage("")
-    expected = """<|start_header_id|>system<|end_header_id|>
+    expected = f"""<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
 Tools: brave_search, wolfram_alpha
-If you decide to run python code, assign the result to a variable called `result`.<|eot_id|>"""
+If you decide to run python code, assign the result to a variable called `result`.
+Cutting Knowledge Date: December 2023
+Today Date: {dt.datetime.now().strftime("%d %B %Y")}
+
+You are a helpful assistant.<|eot_id|>"""
     assert system.render(tools) == expected
 
 

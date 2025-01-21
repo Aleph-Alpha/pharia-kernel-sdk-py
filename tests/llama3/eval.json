@@ -1,5 +1,5 @@
 {
-    "results": [
+    "dataset": [
         {
             "input": "When will the order 42 ship?",
             "tools": [
@@ -21,32 +21,56 @@
             "success": true
         },
         {
-            "input": "What is 3+3?",
-            "tools": [
-                "GetShipmentDate",
-                "GetGithubReadme"
-            ],
-            "expected": "6",
-            "output": "{\"name\": \"get_shipment_date\", \"parameters\": {\"order_id\": 3}}",
-            "success": false
-        },
-        {
             "input": "What are the active orders for the customers 1, 2, and 3?",
             "tools": [
                 "GetActiveOrders"
             ],
             "expected": "{\"name\": \"get_active_orders\", \"parameters\": {\"customers\": [1, 2, 3]}}",
-            "output": "<|python_tag|>{\"type\": \"function\", \"name\": \"get_active_orders\", \"parameters\": {\"customers\": \"[1, 2, 3]\"}}<|eom_id|>",
+            "output": "{\"type\": \"function\", \"name\": \"get_active_orders\", \"parameters\": {\"customers\": \"[1, 2, 3]\"}}<|eom_id|>",
             "success": false
         },
         {
-            "input": "Tell me a funny joke about a rabbit and a carrot.",
+            "input": "Write code to compute the first ten Fibonacci numbers.",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme",
+                "CodeInterpreter"
+            ],
+            "expected": "<class 'pharia_skill.llama3.tool.CodeInterpreter'>",
+            "output": "def fibonacci(n):\n    fib_sequence = [0, 1]\n    while len(fib_sequence) < n:\n        fib_sequence.append(fib_sequence[-1] + fib_sequence[-2])\n    return fib_sequence\n\nresult = fibonacci(10)\nprint(result)",
+            "success": false
+        },
+        {
+            "input": "What is the weather in San Francisco right now?",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme",
+                "CodeInterpreter",
+                "BraveSearch"
+            ],
+            "expected": "<class 'pharia_skill.llama3.tool.BraveSearch'>",
+            "output": "I'm not able to provide real-time weather information. However, I can suggest some ways for you to find out the current weather in San Francisco. You can check online weather websites such as AccuWeather, Weather.com, or the National Weather Service for the latest weather updates. You can also use virtual assistants like Siri, Google Assistant, or Alexa to get the current weather conditions. Additionally, you can check social media or news websites for weather updates. Is there anything else I can help you with?",
+            "success": false
+        },
+        {
+            "input": "What is the meaning of life?",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme",
+                "CodeInterpreter"
+            ],
+            "expected": "life",
+            "output": "I'm not able to provide a definitive answer to this question, as it is a complex and subjective topic that has been debated by philosophers, theologians, and scientists for centuries. The meaning of life can vary greatly depending on one's cultural, religious, and personal beliefs. Some people may find meaning in their relationships, work, or personal achievements, while others may find it in spiritual or philosophical pursuits. Ultimately, the meaning of life is a question that each individual must answer for themselves.",
+            "success": true
+        },
+        {
+            "input": "Can you draft me an application letter for a job at Aleph Alpha?",
             "tools": [
                 "GetShipmentDate",
                 "GetGithubReadme"
             ],
-            "expected": "carrot",
-            "output": "Here's one:\n\nWhy did the rabbit take his carrot to therapy?\n\nBecause it was feeling a little \"root\"-less! (get it?)",
+            "expected": "Dear",
+            "output": "Here's a draft application letter for a job at Aleph Alpha:\n\nDear Hiring Manager at Aleph Alpha,\n\nI am excited to apply for the [Job Title] position at Aleph Alpha, as advertised on [Job Board/Source]. With a strong background in [Relevant Field/Industry], I am confident that my skills and experience make me an ideal candidate for this role.\n\nAs a highly motivated and dedicated professional, I have always been fascinated by the innovative work being done at Aleph Alpha. Your company's commitment to [Aspect of Company's Mission or Values that Resonates with You] resonates deeply with me, and I am excited about the opportunity to contribute to a team that shares my passion for [Related Field/Industry].\n\nWith [Number of Years] years of experience in [Relevant Field/Industry], I possess a unique combination of skills that align perfectly with the job requirements. My expertise in [Key Skills] has allowed me to deliver high-quality results in my previous roles, and I am eager to bring my expertise to Aleph Alpha.\n\nI am particularly impressed by Aleph Alpha's [Initiative/Project] and believe that my skills and experience would be a valuable asset to the team. I am excited about the opportunity to work with a talented team of professionals who share my passion for innovation and excellence.\n\nIn addition to my technical skills and experience, I possess excellent communication and interpersonal skills, which have been demonstrated through my ability to work effectively with cross-functional teams and build strong relationships with colleagues and clients.\n\nThank you for considering my application. I would welcome the opportunity to discuss my qualifications further and explain in greater detail why I am the ideal candidate for this role. Please do not hesitate to contact me at [Your Contact Information].\n\nSincerely,\n\n[Your Name]",
             "success": true
         },
         {
@@ -56,9 +80,31 @@
                 "GetGithubReadme"
             ],
             "expected": "developer",
-            "output": "GitHub is a web-based platform for version control and collaboration on software development projects. It allows developers to host and review code, manage projects, and track changes to code over time. GitHub provides a web-based interface for users to view and edit the code, as well as a command-line interface for users who prefer to work with the command line.\n\nGitHub is often used for open-source software development, but it is also used by companies and individuals for private projects. It provides a number of features, including:\n\n1. Version control: GitHub allows developers to track changes to their code over time, making it easier to collaborate and manage projects.\n2. Collaboration: GitHub allows multiple developers to work on the same project simultaneously, making it easier to collaborate and share code.\n3. Code review: GitHub provides a feature for code review, which allows developers to review and comment on each other's code.\n4. Issue tracking: GitHub provides a feature for issue tracking, which allows developers to track bugs and feature requests.\n5. Project management: GitHub provides a feature for project management, which allows developers to manage their projects and track progress.\n\nGitHub is widely used in the software development industry, and is considered an essential tool for many developers. It is also used by non-technical people, such as project managers and business analysts, to manage and track software development projects.\n\nIn the context of the provided function, the `get_github_readme` function is likely used to retrieve the README file for a specific repository on GitHub. The README file is a text file that provides an overview of the project, including its purpose, features, and usage instructions.",
+            "output": "GitHub is a web-based platform for version control and collaboration on software development projects. It allows developers to host and share their code, track changes, and collaborate with others on a single platform. GitHub provides a range of features, including repositories, pull requests, issues, and project management tools, making it a popular choice for open-source and private software development projects.",
+            "success": true
+        },
+        {
+            "input": "Tell me a funny joke about a rabbit.",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme"
+            ],
+            "expected": "rabbit",
+            "output": "I'd be happy to share a funny joke with you! Here it goes: Why did the rabbit go to the doctor? Because he had hare-loss! I hope that made you hop with laughter!",
+            "success": true
+        },
+        {
+            "input": "What is the square root of 16?",
+            "tools": [
+                "GetShipmentDate",
+                "GetGithubReadme"
+            ],
+            "expected": "4",
+            "output": "The square root of 16 is 4.",
             "success": true
         }
     ],
-    "accuracy": 0.67
+    "accuracy": 0.7,
+    "tool_accuracy": 0.4,
+    "no_tool_accuracy": 1.0
 }

@@ -6,6 +6,7 @@ A message represents one turn in a conversation with an LLM.
 3. If the LLM has requested a tool call, the developer executes the tool call and responds with a `ToolResponse`.
 """
 
+import datetime as dt
 import json
 from dataclasses import dataclass
 from enum import Enum
@@ -102,7 +103,7 @@ class SystemMessage:
         if not tools:
             return render_content(self.content)
 
-        # CodeInterpreter is automatically included when IPython is activated and does not need to be listed in the system prompt.
+        # CodeInterpreter is automatically ijncluded when IPython is activated and does not need to be listed in the system prompt.
         content = "Environment: ipython"
         if filtered := self.system_prompt_tools(tools):
             content += f"\nTools: {', '.join(tool.name() for tool in filtered)}"
@@ -110,11 +111,19 @@ class SystemMessage:
         if CodeInterpreter in tools:
             content += "\nIf you decide to run python code, assign the result to a variable called `result`."
 
+        content += f"\nCutting Knowledge Date: December 2023\nToday Date: {dt.datetime.now().strftime('%d %B %Y')}"
+
         if json_tools := self.json_based_tools(tools):
-            content += "\n\nYou have access to the following functions:\n\n"
+            content += (
+                "\n\nAnswer the user's question by making use of the following functions if needed.\n"
+                "Only use functions if they are relevant to the user's question.\n"
+                "Here is a list of functions in JSON format:\n"
+            )
             for tool in json_tools:
                 content += f"{render_tool(tool)}\n"
             content += "\nReturn function calls in JSON format."
+
+        content += "\n\nYou are a helpful assistant."
 
         # include the original system prompt
         if self.content:
