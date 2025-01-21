@@ -108,17 +108,7 @@ class ChatRequest:
             response = request.chat(csi)
         """
         validate_messages(self.messages)
-
-        # as we are doing a completion request, we need to construct the completion
-        # params, which are slightly different from the chat request params
-        completion_params = CompletionParams(
-            return_special_tokens=True,
-            max_tokens=self.params.max_tokens,
-            temperature=self.params.temperature,
-            top_p=self.params.top_p,
-            stop=[SpecialTokens.StartHeader.value],
-        )
-
+        completion_params = to_completion_params(self.params)
         completion = csi.complete(self.model, self.render(), completion_params)
         message = AssistantMessage.from_raw_response(completion.text, self.tools)
 
@@ -141,8 +131,7 @@ class ChatRequest:
             prompt += SystemMessage(self.system or "").render(self.tools)
 
         # tools only get passed to the first user message
-        prompt += self.messages[0].render(self.tools)
-        for message in self.messages[1:]:
+        for message in self.messages:
             prompt += message.render([])
 
         prompt += Role.Assistant.render()
@@ -179,6 +168,16 @@ class ChatRequest:
             elif isinstance(tool, dict):
                 tools.append(JsonSchema(**tool))  # type: ignore
         return tools
+
+
+def to_completion_params(params: ChatParams) -> CompletionParams:
+    return CompletionParams(
+        return_special_tokens=True,
+        max_tokens=params.max_tokens,
+        temperature=params.temperature,
+        top_p=params.top_p,
+        stop=[SpecialTokens.StartHeader.value],
+    )
 
 
 def validate_messages(messages: list[Message]) -> None:
