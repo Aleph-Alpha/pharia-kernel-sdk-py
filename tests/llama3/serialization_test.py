@@ -6,7 +6,7 @@ top of the completion endpoint.
 """
 
 import pytest
-from pydantic import RootModel
+from pydantic import BaseModel, RootModel
 
 from pharia_skill import FinishReason
 from pharia_skill.llama3 import (
@@ -264,3 +264,17 @@ def test_chat_response_can_be_serialized():
 }"""
 
     assert data == expected
+
+
+def test_tool_call_can_be_deserialized():
+    # given a tool call wrapped in a pydantic model
+    class Wrapper(BaseModel):
+        tool_call: ToolCall
+
+    # when deserializing the wrapper
+    data = {"tool_call": {"name": "get_delivery_date", "parameters": {"order_id": 42}}}
+    tool_call = Wrapper.model_validate(data)
+
+    # then the tool call is serialized into a dict
+    assert tool_call.tool_call.name == "get_delivery_date"
+    assert tool_call.tool_call.parameters == {"order_id": 42}

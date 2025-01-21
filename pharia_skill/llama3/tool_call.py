@@ -32,7 +32,9 @@ class ToolCall:
     """
 
     name: str
-    parameters: Tool | dict[str, Any]
+
+    # tool is put second as for deserialization we always want the dict
+    parameters: dict[str, Any] | Tool
 
     def render(self) -> str:
         """Reconstruct the model response from a parsed tool call.
