@@ -160,7 +160,7 @@ class DevCsi(Csi):
 
         return output
 
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
+    def complete_batch(self, requests: list[CompletionRequest]) -> list[Completion]:
         data = {
             "requests": [asdict(request) for request in requests],
         }
@@ -229,7 +229,7 @@ class DevCsi(Csi):
             for result in output
         ]
 
-    def document_metadata_all(
+    def document_metadata_batch(
         self, requests: list[DocumentPath]
     ) -> list[JsonSerializable]:
         data = {

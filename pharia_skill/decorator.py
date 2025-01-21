@@ -1,7 +1,7 @@
 import inspect
 import json
 import traceback
-from typing import Any, Callable, Type, TypeVar
+from typing import Callable, Type, TypeVar
 
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
@@ -75,9 +75,9 @@ def skill(
                 raise Err(Error_Internal(traceback.format_exc()))
 
         def metadata(self) -> SkillMetadata:
-            description=func.__doc__
-            input_schema=json.dumps(input_model.model_json_schema())
-            output_schema=json.dumps(output_model.model_json_schema())
+            description = func.__doc__
+            input_schema = json.dumps(input_model.model_json_schema())
+            output_schema = json.dumps(output_model.model_json_schema())
             return SkillMetadata(description, input_schema, output_schema)
 
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."

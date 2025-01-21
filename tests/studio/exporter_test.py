@@ -45,7 +45,7 @@ def haiku(csi: Csi, input: Input) -> Output:
         prompt=input.topic,
         params=CompletionParams(max_tokens=64),
     )
-    result = csi.complete_all([request, request])
+    result = csi.complete_batch([request, request])
     return Output(haiku=result[0].text)
 
 

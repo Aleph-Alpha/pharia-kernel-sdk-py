@@ -1,5 +1,6 @@
-import pytest
 import json
+
+import pytest
 from pydantic import BaseModel, Field, RootModel
 
 from pharia_skill import CompletionParams, Csi, skill
@@ -144,7 +145,10 @@ def test_skill_with_plain_string_output():
         return StringReturn("llama")
 
     handler = foo.__globals__["SkillHandler"]()
-    assert json.loads(handler.metadata().output_schema) == {"title": "RootModel[str]", "type": "string"}
+    assert json.loads(handler.metadata().output_schema) == {
+        "title": "RootModel[str]",
+        "type": "string",
+    }
 
     result = handler.run(b'{"topic": "llama"}')
     assert result == b'"llama"'

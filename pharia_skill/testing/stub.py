@@ -27,7 +27,7 @@ class StubCsi(Csi):
     This can also be used as a base class for mock implementation.
     """
 
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
+    def complete_batch(self, requests: list[CompletionRequest]) -> list[Completion]:
         return [
             Completion(
                 text=request.prompt,
@@ -69,7 +69,7 @@ class StubCsi(Csi):
             )
         ]
 
-    def document_metadata_all(
+    def document_metadata_batch(
         self, requests: list[DocumentPath]
     ) -> list[JsonSerializable]:
         return [{} for request in requests]

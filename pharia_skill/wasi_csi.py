@@ -169,7 +169,7 @@ def language_from_wit(language: WitLanguage) -> Language:
 
 
 class WasiCsi(Csi):
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
+    def complete_batch(self, requests: list[CompletionRequest]) -> list[Completion]:
         wit_requests = [completion_request_wit(request) for request in requests]
         wit_completions = wit_csi.complete(wit_requests)
         return [
@@ -210,7 +210,7 @@ class WasiCsi(Csi):
             )
         ]
 
-    def document_metadata_all(
+    def document_metadata_batch(
         self, requests: list[DocumentPath]
     ) -> list[JsonSerializable]:
         wit_requests = [document_path_wit(request) for request in requests]

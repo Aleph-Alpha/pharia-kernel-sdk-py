@@ -97,7 +97,7 @@ def summarize(csi: Csi, input: Input) -> Output:
         requests = [instruction.request(chunk) for chunk in csi.chunk(text, params)]
         # and summarize each chunk
         summaries = [
-            completion.text.strip() for completion in csi.complete_all(requests)
+            completion.text.strip() for completion in csi.complete_batch(requests)
         ]
         # resulting in a (hopefully) smaller text
         text = "\n".join(summaries)

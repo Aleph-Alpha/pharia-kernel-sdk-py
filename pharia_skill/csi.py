@@ -259,10 +259,10 @@ class Csi(Protocol):
             completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
         """
         request = CompletionRequest(model, prompt, params)
-        completion = self.complete_all([request])
+        completion = self.complete_batch([request])
         return completion[0]
 
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
+    def complete_batch(self, requests: list[CompletionRequest]) -> list[Completion]:
         """Generates several completions potentially in parallel. Returns as soon as all completions are ready.
 
         Parameters:
@@ -369,9 +369,9 @@ class Csi(Protocol):
         Parameters:
             document_path (DocumentPath, required): The document path to get metadata from.
         """
-        return self.document_metadata_all([document_path])[0]
+        return self.document_metadata_batch([document_path])[0]
 
-    def document_metadata_all(
+    def document_metadata_batch(
         self, requests: list[DocumentPath]
     ) -> list[JsonSerializable]:
         """Return metadata of a document.
