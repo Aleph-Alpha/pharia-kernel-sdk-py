@@ -1,5 +1,70 @@
 # Changelog
 
+## [0.5.8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.7...v0.5.8) (2025-01-21)
+
+
+### Features
+
+* add build in tools to chat request ([59dda00](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/59dda008f76bd6cbe16aeb97363a66db08f7e414))
+* add helper method to construct message from tool response ([f85fde9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f85fde9a6e8aa4afa4c934b68ba4ddab59d7d176))
+* add llama3 chat request and response ([2f16f4c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2f16f4c834e24f682c536112fc228d0326e25b49))
+* add run method to code interpreter ([2e240ee](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2e240ee191b0a0c0e3b30789559715fd388b76b3))
+* built in tools are also specified as types ([9eac271](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9eac271846278898081a39ee56d65303f6de5f31))
+* built in tools return typed arguments ([3d97d83](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3d97d83f1a91258e74dbbbd07345a363bb237348))
+* chat function becomes method on request ([5ee58c6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5ee58c6c903e0df8359a4077a8a39e28e1388f8c))
+* convert tool calls to prompt again ([a5b1e8b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a5b1e8b3e8c2341c89fc6d5050ce58581977f233))
+* custom tools are serialized to user prompt ([47e764d](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/47e764d7e5af6482e0dd41c4d1d5c12176082674))
+* eval for function calling ([bb28f86](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/bb28f863c309d5e5a91d352be877ed45b7f26e2b))
+* expose chat function fro llama module ([60128b2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/60128b202960c3baa666d5b15f7ab14c1ee1d940))
+* move system prompt out of message list ([08e4011](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/08e4011d9fb9180104d216e6829d3417407fc943))
+* parse build in tool calls from reply ([03855f5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/03855f5d8dba0c077cc4d9f8c58822f8d46ba3ea))
+* parse built in tool calls ([4eec237](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4eec237cc7a446e4d9c024534bd961f67c72c6b2))
+* pass tool response back to the model, limit to one tool call for now ([a7325cf](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a7325cf6d77684c77e71e57380d52852d3d07496))
+* provide current date to the model in system prompt ([2fc53bf](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2fc53bf571d513e9e152c97bb20a0c99787dfc62))
+* provide custom init for dataclasses to deny setting the role ([f4bd081](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f4bd081392bd042239adfdeb0f2f30dc4157683c))
+* put json based tools into system prompt ([9f35ed8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9f35ed8f7c8214935ea840226f9968d092ab3953))
+* remove title key from serialized json schema ([11772bc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/11772bcbc22d6b80d7628eccc4a9f35b746cc935))
+* serialize built in tools as dict ([fb1b1c5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/fb1b1c5b062318ff063754abdd2b43afe378def0))
+* tool call result can be added to existing chat request ([1aba0d4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1aba0d471666e29dbd0b049d68d96f6b2526453b))
+* validate function arguments with provided pydantic model ([b4d97e1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/b4d97e115cadaea3c7aba8a1cdadecddebddfcf7))
+
+
+### Bug Fixes
+
+* also serialize json function calls ([0475387](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/047538721eb2f6564132f9721baf5efdc19c318d))
+* deserialization of tool call ([3b5a451](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3b5a451b8443378bdc037c89ecc9b5e0bddac145))
+* do not exclude role field from init which breaks pydantic 2.10 deserialization ([f376e32](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f376e326805b71356e9d56b520ec282838447e32))
+* do not provide default implementation to avoid type errors ([26defd9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/26defd9a3c2d98881d0bea7fef5c69cf828a8085))
+* import typed dict from typing extensions for version compatibility ([e4fa87c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e4fa87cf55a7fb1ffe65fd616faad864f77a5772))
+* make tool response serializable ([113d645](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/113d6458c6fb25656309a1e2abd4a3b60a66f5ee))
+* model dump of tool definition ([2b25b61](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2b25b618c5f5c2cd03422115abed2a54a675ff37))
+* only render the tools in the first user message ([2502e04](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2502e0454680ad9cc0ef8a574a168a55d3255091))
+* prompt rendering of tool call ([8f58be8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8f58be882ab7cfe4baa2769572562078e22544b4))
+* remove duplicate python tag definition ([0b8a0b9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0b8a0b91aa6506ee3e0491acc5719c0a84e1d481))
+* split assistant message into distinct classes and fix deserialization ([f9f8822](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f9f8822e2cce3d361484951e53057696ab732439))
+
+
+### Documentation
+
+* add comment about whitespace stripping ([07513e9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/07513e9e504133a3df3ec4ea93b7af5727e244e0))
+* add doc string for render tool call ([1bdb69e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1bdb69e8659b91007f348f3b386586804ac36461))
+* add links for tool output format ([951d96e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/951d96ec0f684c985924855fe5c487c112b5e02c))
+* add README.md about different purpose of docs sections ([29fa407](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/29fa407e7a3c461caf1345d447137b773d324e97))
+* add section about function calling ([5546f61](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5546f61ba212adb75c34799cbf3da1a3fef57453))
+* always write skill in upper case ([95a57b9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/95a57b9475249f72130353b09d0eb2c4533c01c3))
+* fix outdated doc string on message module ([ad5fbfe](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ad5fbfe92b9d5753fa48615265f19cfda5af4d9d))
+* fix typo ([9bf8ad1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9bf8ad1eab5bb5523083ce37c12ae54bc07f3cda))
+* remove function call specific stuff ([50870e4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/50870e401c32771f34114cfde1dde8d865f31b5d))
+* remove image of exhausted sloth ([a2b042b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a2b042be6d934e0c44b14960f89e24ac990de58c))
+* remove llama submodule ([34263ff](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/34263ff1d5464a786591178b31d202b9b8b4b525))
+* rename building to how-to ([894fd23](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/894fd23b39980b42c9434452a9218bd1989eca67))
+* restructure read the docs, add a new theme and more content ([8eadc25](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8eadc25d4d5e0bf4ba69f436b71e8b5ec16126e9))
+* specify chat request abstraction ([d6d4077](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/d6d40775ba47277eb45134d8083a611363c9ddd0))
+* specify why ipython is always activated if any tool is provided ([83e2a75](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/83e2a755b1e31ec0c6fbffc1489de0df0de00ec9))
+* specify why json based tools are put into user prompt ([4c76c5b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4c76c5b948d282b9c1976d03d507725e7858761d))
+* streamline USPs ([306cd3a](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/306cd3a57e613230e109232efcf575b566077f53))
+* use absolute image import path ([ee11eeb](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ee11eeb2329d3d218526c45cd525b21cf77738c2))
+
 ## [0.5.7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.6...v0.5.7) (2025-01-09)
 
 
