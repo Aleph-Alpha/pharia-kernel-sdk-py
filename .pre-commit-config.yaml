@@ -10,5 +10,5 @@ repos:
     rev: 'v1.13.0'
     hooks:
       - id: mypy
-        additional_dependencies: [pydantic==2.5.2, pytest, opentelemetry-sdk, python-dotenv]
+        additional_dependencies: [pydantic, pytest, opentelemetry-sdk, python-dotenv]
         args: [--install-types, --non-interactive]

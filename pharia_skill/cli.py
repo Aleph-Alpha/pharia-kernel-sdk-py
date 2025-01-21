@@ -20,21 +20,24 @@ def setup_wasi_deps() -> None:
     """Download the Pydantic WASI wheels if they are not already present."""
     if not os.path.exists("wasi_deps"):
         logger.info("Downloading Pydantic Wasi wheels...")
-        os.makedirs("wasi_deps")
-        os.chdir("wasi_deps")
-
         subprocess.run(
             [
-                "curl",
-                "-OL",
-                "https://github.com/dicej/wasi-wheels/releases/download/latest/pydantic_core-wasi.tar.gz",
+                "pip3",
+                "install",
+                "--target",
+                "wasi_deps",
+                "--only-binary",
+                ":all:",
+                "--platform",
+                "any",
+                "--platform",
+                "wasi_0_0_0_wasm32",
+                "--python-version",
+                "3.12",
+                "https://github.com/benbrandt/wasi-wheels/releases/download/pydantic-core/v2.27.2/pydantic_core-2.27.2-cp312-cp312-wasi_0_0_0_wasm32.whl",
             ],
             check=True,
         )
-
-        subprocess.run(["tar", "xf", "pydantic_core-wasi.tar.gz"], check=True)
-        subprocess.run(["rm", "pydantic_core-wasi.tar.gz"], check=True)
-        os.chdir("..")
 
 
 def run_componentize_py(skill_module: str, unstable: bool) -> None:
