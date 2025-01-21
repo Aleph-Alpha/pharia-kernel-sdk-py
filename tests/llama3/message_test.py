@@ -48,11 +48,43 @@ You are a poet who strictly speaks in haikus.<|eot_id|>"""
     assert system.render(tools) == expected
 
 
+def test_system_prompt_with_json_based_tools():
+    tools = [GetGithubReadme]
+    system = SystemMessage("")
+    expected = """<|start_header_id|>system<|end_header_id|>
+
+Environment: ipython
+
+You have access to the following functions:
+
+{
+    "type": "function",
+    "function": {
+        "name": "get_github_readme",
+        "description": "Get the readme of a GitHub repository",
+        "parameters": {
+            "properties": {
+                "repository": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "repository"
+            ],
+            "type": "object"
+        }
+    }
+}
+
+Return function calls in JSON format.<|eot_id|>"""
+    assert system.render(tools) == expected
+
+
 def test_ipython_environment_activated_by_custom_tool():
     system = SystemMessage("")
     tools = [GetGithubReadme]
-    expected = """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython<|eot_id|>"""
-    assert system.render(tools) == expected
+    expected = """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython\n\nYou have access to the following functions:\n\n"""
+    assert system.render(tools).startswith(expected)
 
 
 def test_system_prompt_lists_built_in_tools():
@@ -83,30 +115,7 @@ def test_render_user_message_with_tools():
 
     expected = """<|start_header_id|>user<|end_header_id|>
 
-Answer the user's question by making use of the following functions if needed.
-
-{
-    "type": "function",
-    "function": {
-        "name": "get_github_readme",
-        "description": "Get the readme of a GitHub repository",
-        "parameters": {
-            "properties": {
-                "repository": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "repository"
-            ],
-            "type": "object"
-        }
-    }
-}
-
-Return function calls in JSON format.
-
-Question: What is the readme of the pharia-kernel repository?<|eot_id|>"""
+What is the readme of the pharia-kernel repository?<|eot_id|>"""
     assert message.render(tools) == expected
 
 

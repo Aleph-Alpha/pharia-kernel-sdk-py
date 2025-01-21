@@ -153,9 +153,11 @@ def test_tool_response_can_be_added_to_prompt():
     response = request.chat(csi)
 
     # Then the whole context is included in the second prompt
-    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
+    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-Answer the user\'s question by making use of the following functions if needed.
+Environment: ipython
+
+You have access to the following functions:
 
 {
     "type": "function",
@@ -176,9 +178,9 @@ Answer the user\'s question by making use of the following functions if needed.
     }
 }
 
-Return function calls in JSON format.
+Return function calls in JSON format.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
-Question: When will the order `42` ship?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+When will the order `42` ship?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
 <|python_tag|>{"name": "get_shipment_date", "parameters": {"order_id": "42"}}<|eom_id|><|start_header_id|>ipython<|end_header_id|>
 

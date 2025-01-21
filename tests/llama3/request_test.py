@@ -47,7 +47,7 @@ oat milk<|eot_id|><|start_header_id|>assistant<|end_header_id|>
     assert prompt == expected
 
 
-def test_custom_tool_definition_in_user_prompt():
+def test_custom_tool_definition_in_system_prompt():
     # Given a chat request with a custom tool definition
     chat_request = ChatRequest(
         llama,
@@ -58,10 +58,10 @@ def test_custom_tool_definition_in_user_prompt():
     # When rendering the chat request
     rendered = chat_request.render()
 
-    # Then the custom tool definition should be included in the user prompt
-    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython<|eot_id|><|start_header_id|>user<|end_header_id|>
+    # Then the custom tool definition should be included in the system prompt
+    expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython
 
-Answer the user's question by making use of the following functions if needed.
+You have access to the following functions:
 
 {
     "type": "function",
@@ -82,9 +82,9 @@ Answer the user's question by making use of the following functions if needed.
     }
 }
 
-Return function calls in JSON format.
+Return function calls in JSON format.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
-Question: What is the readme of the pharia-kernel repository?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
+What is the readme of the pharia-kernel repository?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"""
     assert rendered == expected
 
 

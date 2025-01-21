@@ -40,27 +40,7 @@ class UserMessage:
     role: Literal[Role.User] = Role.User
 
     def render(self, tools: Sequence[ToolDefinition]) -> str:
-        def render_tool(tool: ToolDefinition) -> str:
-            schema = (
-                tool.model_dump()
-                if isinstance(tool, JsonSchema)
-                else tool.json_schema()
-            )
-            return json.dumps(schema, indent=4)
-
-        def render_content(content: str) -> str:
-            return f"{Role.User.render()}\n\n{content}{SpecialTokens.EndOfTurn.value}"
-
-        if not (tools := self.json_based_tools(tools)):
-            return render_content(self.content)
-
-        prompt = "Answer the user's question by making use of the following functions if needed.\n\n"
-        for tool in tools:
-            prompt += f"{render_tool(tool)}\n"
-
-        prompt += "\nReturn function calls in JSON format."
-        prompt += f"\n\nQuestion: {self.content}"
-        return render_content(prompt)
+        return f"{Role.User.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
 
     @staticmethod
     def json_based_tools(tools: Sequence[ToolDefinition]) -> Sequence[ToolDefinition]:
@@ -111,6 +91,14 @@ class SystemMessage:
         def render_content(content: str) -> str:
             return f"{Role.System.render()}\n\n{content}{SpecialTokens.EndOfTurn.value}"
 
+        def render_tool(tool: ToolDefinition) -> str:
+            schema = (
+                tool.model_dump()
+                if isinstance(tool, JsonSchema)
+                else tool.json_schema()
+            )
+            return json.dumps(schema, indent=4)
+
         if not tools:
             return render_content(self.content)
 
@@ -122,10 +110,29 @@ class SystemMessage:
         if CodeInterpreter in tools:
             content += "\nIf you decide to run python code, assign the result to a variable called `result`."
 
+        if json_tools := self.json_based_tools(tools):
+            content += "\n\nYou have access to the following functions:\n\n"
+            for tool in json_tools:
+                content += f"{render_tool(tool)}\n"
+            content += "\nReturn function calls in JSON format."
+
         # include the original system prompt
         if self.content:
             content += f"\n{self.content}"
         return render_content(content)
+
+    @staticmethod
+    def json_based_tools(tools: Sequence[ToolDefinition]) -> Sequence[ToolDefinition]:
+        """Tools that are defined as JSON schema and invoked with json based tool calling.
+
+        We insert these in the user prompt. The model card states:
+
+        The tool definition is provided in the user prompt, as that is how the model was
+        trained for the built in JSON tool calling. However, it's possible to provide
+        the tool definition in the system prompt as well—and get similar results.
+        Developers must test which way works best for their use case.
+        """
+        return [tool for tool in tools if tool not in BuiltInTools]
 
     @staticmethod
     def system_prompt_tools(tools: Sequence[ToolDefinition]) -> list[type[Tool]]:
