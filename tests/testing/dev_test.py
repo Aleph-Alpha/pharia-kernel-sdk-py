@@ -213,7 +213,7 @@ def test_text_error_response_used_on_json_decode_error(mock_post):
         client.run("complete", {})
 
     # Then the error message is forwarded
-    assert e.value.args[0] == json.dumps(response)
+    assert str(e.value) == '400 Bad Request: {"error": "csi-version"}'
 
 
 @pytest.mark.kernel
@@ -233,4 +233,4 @@ def test_json_error_response_is_used(mock_post):
         client.run("complete", {})
 
     # Then the JSON is decoded in the error message
-    assert e.value.args[0] == response
+    assert str(e.value) == "400 Bad Request: {'error': 'csi-version'}"

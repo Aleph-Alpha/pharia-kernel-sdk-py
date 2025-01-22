@@ -5,6 +5,7 @@ DevCsi can be used for testing Skill code locally against a running Pharia Kerne
 import json
 import os
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import Any, Protocol, cast
 
 import requests
@@ -60,17 +61,16 @@ class HttpClient(CsiClient):
             self.url,
             json={"version": self.VERSION, "function": function, **data},
         )
-        # The kernel gives out nice error messages in case of a version mismatch.
-        # For 400 errors, forward the plain text error message.
-        if response.status_code == 400:
+        # Always forward the error message from the kernel
+        if response.status_code >= 400:
             try:
                 error = response.json()
             except requests.JSONDecodeError:
                 error = response.text
-            raise Exception(error)
+            raise Exception(
+                f"{response.status_code} {HTTPStatus(response.status_code).phrase}: {error}"
+            )
 
-        # do not show error message for all other errors
-        response.raise_for_status()
         return response.json()
 
 
