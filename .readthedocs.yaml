@@ -11,8 +11,8 @@ build:
     python: "3.11"
   jobs:
     post_create_environment:
-    - pip install poetry poetry-plugin-export
-    - poetry export --extras docs --without-hashes > doc-requirements.txt
+    - pip install uv
+    - uv pip freeze > doc-requirements.txt
     post_install:
     - pip install -r doc-requirements.txt
     - pip list

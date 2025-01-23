@@ -1,26 +1,23 @@
 # Quick Start
 
-In this guide, we’ll go through how you can use our Python SDK to build a simple Skill that does a completion request. The full code can be found [here](https://github.com/Aleph-Alpha/haiku-skill-python/tree/main).
+In this guide, we’ll go through how you can use our Python SDK to build a simple Skill that does a completion request.
+The full code can be found [here](https://github.com/Aleph-Alpha/haiku-skill-python/tree/main).
 
 ## 1. Installing the SDK
 
 While we are planning to open source the SDK soon, it is currently distributed via the Aleph Alpha Artifactory PyPI.
-To install it, you need a JFrog account and need to create an access token in the UI. If you are using Poetry, add this to your `pyproject.toml`.
-
-```yaml
-[tool.poetry.dependencies]
-pharia-kernel-sdk-py = { version = "^0.5.0", source = "jfrog" }
-
-[[tool.poetry.source]]
-name = "jfrog"
-url = "https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple"
-priority = "explicit"
-```
-
-Next, set the credentials for poetry to pull the SDK from Jfrog.
+To install it, you need a JFrog account and need to create an access token in the UI.
+We recommend using [uv](https://docs.astral.sh/uv/) to install the SDK. Set these two environment variables:
 
 ```sh
-poetry config http-basic.jfrog $JFROG_USER $JFROG_TOKEN
+export UV_INDEX_JFROG_USERNAME=your-username
+export UV_INDEX_JFROG_PASSWORD=your-password
+```
+
+Then, run the following command to add the SDK as a dependency to your project:
+
+```sh
+uv add --index-url https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple pharia-kernel-sdk-py
 ```
 
 ## 2. Writing a Skill
