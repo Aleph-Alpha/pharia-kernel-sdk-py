@@ -12,6 +12,7 @@ from pharia_skill import (
     CompletionParams,
     CompletionRequest,
     Csi,
+    Document,
     DocumentPath,
     FinishReason,
     IndexPath,
@@ -19,6 +20,7 @@ from pharia_skill import (
     Language,
     Message,
     SearchResult,
+    Text,
 )
 
 
@@ -72,5 +74,15 @@ class StubCsi(Csi):
             )
         ]
 
-    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+    def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
+        return [
+            Document(
+                path=document_path,
+                contents=[Text("dummy-content")],
+                metadata=None,
+            )
+            for document_path in document_paths
+        ]
+
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
         return {}

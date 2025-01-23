@@ -9,14 +9,18 @@ from .csi import (
     CompletionParams,
     CompletionRequest,
     Csi,
+    Document,
     DocumentPath,
     FinishReason,
+    Image,
     IndexPath,
     JsonSerializable,
     Language,
     Message,
+    Modality,
     Role,
     SearchResult,
+    Text,
 )
 from .wit.imports import csi as wit_csi
 from .wit.imports.csi import ChatParams as WitChatParams
@@ -25,11 +29,14 @@ from .wit.imports.csi import ChunkParams as WitChunkParams
 from .wit.imports.csi import Completion as WitCompletion
 from .wit.imports.csi import CompletionParams as WitCompletionParams
 from .wit.imports.csi import CompletionRequest as WitCompletionRequest
+from .wit.imports.csi import Document as WitDocument
 from .wit.imports.csi import DocumentPath as WitDocumentPath
 from .wit.imports.csi import FinishReason as WitFinishReason
 from .wit.imports.csi import IndexPath as WitIndexPath
 from .wit.imports.csi import Language as WitLanguage
 from .wit.imports.csi import Message as WitMessage
+from .wit.imports.csi import Modality as WitModality
+from .wit.imports.csi import Modality_Text as WitText
 from .wit.imports.csi import Role as WitRole
 from .wit.imports.csi import SearchResult as WitSearchResult
 
@@ -140,6 +147,24 @@ def document_path_wit(document_path: DocumentPath) -> WitDocumentPath:
     )
 
 
+def document_contents_from_wit(contents: list[WitModality]) -> list[Modality]:
+    return [
+        Text(content.value) if isinstance(content, WitText) else Image()
+        for content in contents
+    ]
+
+
+def document_metadata_from_wit(metadata: bytes | None) -> JsonSerializable:
+    return cast(JsonSerializable, json.loads(metadata)) if metadata else None
+
+
+def document_from_wit(document: WitDocument) -> Document:
+    metadata = document_metadata_from_wit(document.metadata)
+    contents = document_contents_from_wit(document.contents)
+    path = document_path_from_wit(document.path)
+    return Document(path=path, contents=contents, metadata=metadata)
+
+
 def index_path_wit(index_path: IndexPath) -> WitIndexPath:
     return WitIndexPath(
         namespace=index_path.namespace,
@@ -205,6 +230,13 @@ class WasiCsi(Csi):
             completion_from_wit(wit_completion) for wit_completion in wit_completions
         ]
 
+    def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
+        wit_document_paths = [
+            document_path_wit(document_path) for document_path in document_paths
+        ]
+        wit_documents = wit_csi.documents(wit_document_paths)
+        return [document_from_wit(wit_document) for wit_document in wit_documents]
+
     def search(
         self,
         index_path: IndexPath,
@@ -220,8 +252,7 @@ class WasiCsi(Csi):
             )
         ]
 
-    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
         wit_document_path = document_path_wit(document_path)
-        if not (maybe_metadata := wit_csi.document_metadata(wit_document_path)):
-            return None
-        return cast(JsonSerializable, json.loads(maybe_metadata))
+        metadata = wit_csi.document_metadata(wit_document_path)
+        return document_metadata_from_wit(metadata)

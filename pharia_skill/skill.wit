@@ -1,4 +1,4 @@
-package pharia:skill@0.2.9;
+package pharia:skill@0.2.10;
 
 @since(version = 0.1.0)
 world skill {
@@ -177,6 +177,23 @@ interface csi {
     @since(version = 0.2.9)
     complete-return-special-tokens: func(model: string, prompt: string, params: completion-params) -> completion;
 
-    @unstable(feature=document-metadata)
+    @since(version = 0.2.10)
     document-metadata: func(document-path: document-path) -> option<list<u8>>;
+
+    @since(version = 0.2.10)
+    record document {
+        path: document-path,
+        contents: list<modality>,
+        metadata: option<list<u8>>,
+    }
+
+    @since(version = 0.2.10)
+    variant modality {
+        text(string),
+        /// We don't expose the image contents, as none of the models support multi-modal.
+        image,
+    }
+
+    @since(version = 0.2.10)
+    documents: func(requests: list<document-path>) -> list<document>;
 }

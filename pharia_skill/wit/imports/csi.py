@@ -110,6 +110,26 @@ class SearchResult:
     score: float
 
 
+@dataclass
+class Modality_Text:
+    value: str
+
+
+@dataclass
+class Modality_Image:
+    pass
+
+
+Modality = Union[Modality_Text, Modality_Image]
+
+
+@dataclass
+class Document:
+    path: DocumentPath
+    contents: List[Modality]
+    metadata: Optional[bytes]
+
+
 def complete(model: str, prompt: str, params: CompletionParams) -> Completion:
     raise NotImplementedError
 
@@ -123,7 +143,7 @@ def select_language(text: str, languages: List[Language]) -> Optional[Language]:
     """
     Select the detected language for the provided input based on the list of possible languages.
     If no language matches, None is returned.
-
+    
     text: Text input
     languages: All languages that should be considered during detection.
     """
@@ -139,5 +159,8 @@ def complete_return_special_tokens(model: str, prompt: str, params: CompletionPa
     raise NotImplementedError
 
 def document_metadata(document_path: DocumentPath) -> Optional[bytes]:
+    raise NotImplementedError
+
+def documents(requests: List[DocumentPath]) -> List[Document]:
     raise NotImplementedError
 
