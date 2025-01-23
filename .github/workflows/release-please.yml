@@ -50,9 +50,6 @@ jobs:
         uses: actions/checkout@v4
       - if: ${{ steps.release.outputs.release_created }}
         name: Build and publish to Artifactory PyPI repository
-        uses: JRubics/poetry-publish@v2.0
-        with:
-          repository_name: ${{ env.ARTIFACTORY_PYPI_REPOSITORY }}
-          repository_url: ${{ env.ARTIFACTORY_URL }}/artifactory/api/pypi/${{ env.ARTIFACTORY_PYPI_REPOSITORY }}
-          repository_username: ${{ env.JFROG_ACCESS_TOKEN_SUBJECT }}
-          repository_password: ${{ env.JFROG_ACCESS_TOKEN }}
+        run: |
+          uv build
+          uv publish --publish-url https://alephalpha.jfrog.io/artifactory/api/pypi/pharia-kernel-pypi --username $JFROG_ACCESS_TOKEN_SUBJECT --password $JFROG_ACCESS_TOKEN

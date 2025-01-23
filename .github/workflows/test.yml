@@ -22,39 +22,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Poetry
-        run: pipx install poetry
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "poetry"
+          python-version-file: "pyproject.toml"
       - name: Install dependencies
-        run: poetry install
+        run: uv sync --dev
       - name: Lint
-        run: poetry run ruff check .
+        run: uv run ruff check .
       - name: Format
-        run: poetry run ruff format --diff .
+        run: uv run ruff format --diff .
       - name: Check types
-        run: poetry run mypy --install-types --non-interactive .
+        run: uv run mypy --install-types --non-interactive .
       - name: Pyright
         # for catching method override errors with different parameter names
         # reportIncompatibleMethodOverride, not covered by mypy
-        run: poetry run pyright
+        run: uv run pyright
 
   unit-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Poetry
-        run: pipx install poetry
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "poetry"
+          python-version-file: "pyproject.toml"
       - name: Install dependencies
-        run: poetry install
+        run: uv sync --dev
       - name: Test
-        run: poetry run pytest -m 'not kernel' tests
+        run: uv run pytest -m 'not kernel' tests
 
   kernel-test:
     runs-on: ubuntu-latest
@@ -66,14 +66,14 @@ jobs:
       PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install Poetry
-        run: pipx install poetry
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "poetry"
+          python-version-file: "pyproject.toml"
       - name: Install dependencies
-        run: poetry install
+        run: uv sync --dev
       - uses: ./.github/actions/jfrog
       - name: Set env variable to publish skill
         shell: bash
@@ -81,12 +81,12 @@ jobs:
       - name: Run Pharia Kernel
         run: sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN
       - name: Run kernel tests
-        run: poetry run pytest -m 'kernel'
+        run: uv run pytest -m 'kernel'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
           PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
       - name: Run example tests
-        run: poetry run pytest examples
+        run: uv run pytest examples
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
           PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
@@ -104,29 +104,29 @@ jobs:
       PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install Poetry
-        run: pipx install poetry
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "poetry"
+          python-version-file: "pyproject.toml"
       - name: Install dependencies
-        run: poetry install
+        run: uv sync --dev
       - uses: ./.github/actions/jfrog
       - name: Set env variable to publish skill
         shell: bash
         run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Test skill building
         run: |
-          poetry run pharia-skill build tests.skills.haiku
-          poetry run pharia-skill build tests.skills.search
-          poetry run pharia-skill build tests.skills.failing
+          uv run pharia-skill build tests.skills.haiku
+          uv run pharia-skill build tests.skills.search
+          uv run pharia-skill build tests.skills.failing
       - name: Test skill publishing
-        run: poetry run pharia-skill publish haiku
+        run: uv run pharia-skill publish haiku
       - name: Test skill execution on ubuntu only
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN
-          poetry run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
-          poetry run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
-          poetry run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
