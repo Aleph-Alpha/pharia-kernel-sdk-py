@@ -239,6 +239,58 @@ Used to represent the return type of `document_metadata` which is any valid JSON
 """
 
 
+@dataclass
+class Text:
+    """A text section that is part of a document.
+
+    If the document only contains text, then the contents of the document is a list of
+    length one, where the only element is a `Text`."""
+
+    value: str
+
+
+class Image:
+    """An image that is part of a document.
+
+    At the moment, we do not expose the image contents, as none of the models
+    support multi-modal inputs. We still inform the developer that the document
+    contains an image.
+    """
+
+    pass
+
+
+Modality = Text | Image
+"""A document is made up of subsections of different modalities.
+
+For example, if a document is a long text with an image in the middle, then
+it will be represented by a list of length three, where the first and last
+elements are `Text` and the middle element is `Image`.
+"""
+
+
+@dataclass
+class Document:
+    """A document in the Document Index.
+
+    Attributes:
+        path (DocumentPath): The path that identifies the document.
+        contents (list[Modality]): The contents of the document. Split into sections of different modalities.
+        metadata (JsonSerializable): The (custom) metadata of the document.
+    """
+
+    path: DocumentPath
+    contents: list[Modality]
+    metadata: JsonSerializable
+
+    @property
+    def text(self) -> str:
+        """Concatenate the text contents of the document."""
+        return "\n\n".join(
+            text.value for text in self.contents if isinstance(text, Text)
+        )
+
+
 class Csi(Protocol):
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         """Generates completions given a prompt.
@@ -361,7 +413,29 @@ class Csi(Protocol):
         """
         ...
 
-    def _document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
+    def document(self, document_path: DocumentPath) -> Document:
+        """Fetch a document.
+
+        Parameters:
+            document_path (DocumentPath, required): The document path to get the document from.
+
+        Examples::
+
+            document_path = DocumentPath("f13", "wikipedia-de", "Heidelberg")
+            document = csi.document(document_path)
+            assert document.path == document_path
+        """
+        return self.documents([document_path])[0]
+
+    def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
+        """Fetch multiple documents.
+
+        Parameters:
+            document_paths (list[DocumentPath], required): The document paths to get the documents from.
+        """
+        ...
+
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
         """Return metadata of a document.
 
         Parameters:

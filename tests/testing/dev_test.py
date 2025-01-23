@@ -12,10 +12,12 @@ from pharia_skill import (
     CompletionParams,
     CompletionRequest,
     Csi,
+    Document,
     DocumentPath,
     IndexPath,
     Language,
     Message,
+    Text,
 )
 from pharia_skill.studio import (
     SpanClient,
@@ -191,9 +193,19 @@ def test_multiple_csi_instances_do_not_duplicate_exporters():
 
 @pytest.mark.kernel
 def test_document_metadata(csi: Csi, given_document: DocumentPath):
-    metadata = csi._document_metadata(given_document)
+    metadata = csi.document_metadata(given_document)
     assert isinstance(metadata, list)
     assert metadata[0].get("url") == "https://pharia-kernel.product.pharia.com/"
+
+
+@pytest.mark.kernel
+def test_documents(csi: Csi, given_document: DocumentPath):
+    document = csi.document(given_document)
+    assert isinstance(document, Document)
+    assert document.path == given_document
+    assert len(document.contents) == 1
+    assert isinstance(document.contents[0], Text)
+    assert document.contents[0].value.startswith("You might be wondering")
 
 
 @pytest.mark.kernel

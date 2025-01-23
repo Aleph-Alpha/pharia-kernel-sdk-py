@@ -22,12 +22,15 @@ from pharia_skill import (
     CompletionParams,
     CompletionRequest,
     Csi,
+    Document,
     DocumentPath,
+    Image,
     IndexPath,
     JsonSerializable,
     Language,
     Message,
     SearchResult,
+    Text,
 )
 from pharia_skill.studio import (
     StudioClient,
@@ -238,11 +241,26 @@ class DevCsi(Csi):
             for result in output
         ]
 
-    def _document_metadata(
-        self, document_path: DocumentPath
-    ) -> JsonSerializable | None:
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable | None:
         data = {
             "document_path": asdict(document_path),
         }
         output = self.run("document_metadata", data)
         return cast(JsonSerializable, output)
+
+    def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
+        data = {
+            "requests": [asdict(document_path) for document_path in document_paths],
+        }
+        output = self.run(self.documents.__name__, data)
+        return [
+            Document(
+                path=DocumentPath(**document["path"]),
+                contents=[
+                    Text(content["text"]) if content["modality"] == "text" else Image()
+                    for content in document["contents"]
+                ],
+                metadata=document["metadata"],
+            )
+            for document in output
+        ]
