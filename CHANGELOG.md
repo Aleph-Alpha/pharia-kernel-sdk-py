@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.8...v0.5.9) (2025-01-23)
+
+
+### Features
+
+* document can be requested from csi ([9753b05](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9753b059fd43e0ab8bb46e896b2085b2e9273e00))
+* forward kernel error message for all status codes ([545dd0d](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/545dd0d6006f22bb3d1054d15dafad2419e1bf33))
+* specify schema for tools ([eca847e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/eca847e013bbda6b49380c1302c41e448e0f0eac))
+
+
+### Documentation
+
+* add namespace section to core concepts ([8c8dad1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8c8dad12c54b818537c5ad19e56ca3d0bacf41d9))
+
 ## [0.5.8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.7...v0.5.8) (2025-01-21)
 
 

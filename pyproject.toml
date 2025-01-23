@@ -1,6 +1,6 @@
 [project]
 name = "pharia-kernel-sdk-py"
-version = "0.5.8"
+version = "0.5.9"
 description = ""
 authors = [
     { name = "Peter Barth", email = "peter.barth@aleph-alpha.com" },
