@@ -17,6 +17,7 @@ from pharia_skill import (
     IndexPath,
     Language,
     Message,
+    Role,
     Text,
 )
 from pharia_skill.studio import (
@@ -78,6 +79,8 @@ def test_chat(csi: Csi, model: str):
     messages = [Message.user("Say hello to Bob")]
     result = csi.chat(model, messages, params)
     assert "Bob" in result.message.content
+    assert isinstance(result.message.role, Role)
+    assert result.message.role == Role.Assistant
 
 
 @pytest.mark.kernel
