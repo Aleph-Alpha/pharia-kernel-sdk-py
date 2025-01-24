@@ -139,6 +139,13 @@ class Message:
     def system(cls, content: str) -> "Message":
         return cls(role=Role.System, content=content)
 
+    @classmethod
+    def from_dict(cls, body: dict[str, Any]) -> "Message":
+        # the shell csi does not serialize the roles in lowercase
+        role = Role(body["role"].lower())
+        content = body["content"]
+        return cls(role=role, content=content)
+
 
 @dataclass
 class ChatResponse:
@@ -154,10 +161,9 @@ class ChatResponse:
 
     @staticmethod
     def from_dict(body: dict[str, Any]) -> "ChatResponse":
-        return ChatResponse(
-            message=Message(**body["message"]),
-            finish_reason=FinishReason(body["finish_reason"]),
-        )
+        message = Message.from_dict(body["message"])
+        finish_reason = FinishReason(body["finish_reason"])
+        return ChatResponse(message, finish_reason)
 
 
 @dataclass
