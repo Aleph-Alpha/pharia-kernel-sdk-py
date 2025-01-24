@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.10](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.9...v0.5.10) (2025-01-24)
+
+
+### Bug Fixes
+
+* parse message role when deserializing in dev csi ([46b7c3b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/46b7c3b415284a8fab7cedf0af5b4d809247dc92))
+
 ## [0.5.9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.8...v0.5.9) (2025-01-23)
 
 
