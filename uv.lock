@@ -575,7 +575,7 @@ wheels = [
 
 [[package]]
 name = "pharia-kernel-sdk-py"
-version = "0.5.8"
+version = "0.5.10"
 source = { editable = "." }
 dependencies = [
     { name = "componentize-py" },
@@ -587,14 +587,14 @@ dependencies = [
     { name = "pydantic-core" },
     { name = "python-dotenv" },
     { name = "requests" },
-    { name = "sphinx-design" },
-    { name = "sphinx-rtd-theme" },
 ]
 
 [package.optional-dependencies]
 docs = [
     { name = "myst-parser" },
     { name = "sphinx" },
+    { name = "sphinx-design" },
+    { name = "sphinx-rtd-theme" },
 ]
 
 [package.dev-dependencies]
@@ -621,8 +621,8 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.1,<2" },
     { name = "requests", specifier = ">=2.32.3,<3" },
     { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8.1.3,<9" },
-    { name = "sphinx-design", specifier = ">=0.6.1,<0.7" },
-    { name = "sphinx-rtd-theme", specifier = ">=3.0.2,<4" },
+    { name = "sphinx-design", marker = "extra == 'docs'", specifier = ">=0.6.1,<0.7" },
+    { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=3.0.2,<4" },
 ]
 
 [package.metadata.requires-dev]
