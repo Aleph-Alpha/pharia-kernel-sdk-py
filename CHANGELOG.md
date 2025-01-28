@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.11](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.10...v0.5.11) (2025-01-28)
+
+
+### Features
+
+* support new uuid format for studio project ids ([9ce6fd3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9ce6fd36094c7ffb926e8d73e46ca2039ee12e6e))
+
+
+### Bug Fixes
+
+* do not include sphinx in package dependencies ([e3edc87](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e3edc8793d6c7d534e62b8bb988b80ee610851e4))
+
 ## [0.5.10](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.9...v0.5.10) (2025-01-24)
 
 
