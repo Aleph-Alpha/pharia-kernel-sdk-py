@@ -50,7 +50,7 @@ class StudioClient(SpanClient):
         self._check_connection()
 
         self._project_name = project_name
-        self._project_id: int | None = None
+        self._project_id: str | None = None
 
     @classmethod
     def with_project(cls, project_name: str) -> "StudioClient":
@@ -89,8 +89,8 @@ class StudioClient(SpanClient):
             ) from None
 
     @property
-    def project_id(self) -> int:
-        "the unique project_id for the project_name as assigned by Pharia Studio"
+    def project_id(self) -> str:
+        "The unique project_id for the project_name as assigned by Pharia Studio"
         if self._project_id is None:
             if (project_id := self._get_project(self._project_name)) is None:
                 raise ValueError(
@@ -99,7 +99,7 @@ class StudioClient(SpanClient):
             self._project_id = project_id
         return self._project_id
 
-    def _get_project(self, project: str) -> int | None:
+    def _get_project(self, project: str) -> str | None:
         url = urljoin(self.url, "/api/projects")
         response = requests.get(
             url,
@@ -111,11 +111,11 @@ class StudioClient(SpanClient):
             project_of_interest = next(
                 proj for proj in all_projects if proj["name"] == project
             )
-            return int(project_of_interest["id"])
+            return str(project_of_interest["id"])
         except StopIteration:
             return None
 
-    def create_project(self, project: str, description: Optional[str] = None) -> int:
+    def create_project(self, project: str, description: Optional[str] = None) -> str:
         """Creates a project in Studio.
 
         Projects are uniquely identified by the user provided name.
@@ -139,7 +139,7 @@ class StudioClient(SpanClient):
                 raise ValueError("Project already exists")
             case _:
                 response.raise_for_status()
-        return int(response.text)
+        return response.text
 
     def submit_spans(self, spans: Sequence[StudioSpan]) -> None:
         """Sends the provided spans to Studio as a singular trace.
