@@ -19,6 +19,8 @@ The Kernel provides a focused environment for AI engineers to develop and deploy
 
 - Want to explore the API of the Kernel? Here are our [API Docs](https://pharia-kernel.product.pharia.com/api-docs).
 
+- Have any questions? Try the [FAQ](faq).
+
 ```{toctree}
 :hidden:
 :maxdepth: 2
@@ -28,5 +30,6 @@ quick_start
 core_concepts
 how_to
 agents
+faq
 references
 ``` 
