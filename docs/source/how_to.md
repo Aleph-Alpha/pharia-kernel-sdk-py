@@ -1,6 +1,7 @@
 # How-To
 
-The Kernel SDK provides all the building blocks needed to create sophisticated AI applications.
+The Kernel SDK provides all the building blocks needed to create sophisticated AI applications. 
+If you want to include any dependencies in your Skill, have a look [here](core_concepts#wasm-component)
 
 ## Completion
 
