@@ -98,6 +98,7 @@ class GetGithubReadme(Tool):
 You can provide default values for the arguments and even add a description for each field by using pydantic's `Field` class:
 
 ```python
+from pharia_skill.llama3 import Tool
 from pydantic import Field
 
 class GetGithubReadme(Tool):
@@ -136,7 +137,8 @@ Once you have executed the tool, you can pass the result to the LLM by extending
 You can then trigger another round of chat with the LLM to get the final result:
 
 ```python
-from pharia_skill.llama3 import ChatRequest, UserMessage, skill
+from pharia_skill import Csi, skill
+from pharia_skill.llama3 import ChatRequest, UserMessage, ToolMessage
 
 @skill
 def github_skill(csi: Csi, input: Input) -> Output:
@@ -174,7 +176,10 @@ The [CodeInterpreter](references.rst#pharia_skill.llama3.CodeInterpreter) tool i
 This tool is available in the [llama3 module](references.rst#module-pharia_skill.llama3). Here is an example of how to use it:
 
 ```python
-from pharia_skill.llama3 import CodeInterpreter, ChatRequest, UserMessage, skill
+from pydantic import BaseModel
+from pharia_skill import Csi, skill
+from pharia_skill.llama3 import CodeInterpreter, ChatRequest, UserMessage, ToolMessage
+
 
 class Input(BaseModel):
     question: str
