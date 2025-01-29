@@ -19,7 +19,7 @@ By providing a common interface to these tools, it provides the opportunity for 
 
 ## Namespaces
 
-The Kernel has the concept of namespaces, which are used to group Skills. Namespace are configured by the operator of the Kernel.
+The Kernel has the concept of namespaces, which are used to group Skills. Namespaces are configured by the operator of the Kernel.
 For each namespace, the operator specifies two things:
 
 1. An OCI registry to load Skills from (Skills are not containers. Yet, we still publish them as OCI images to registries)
