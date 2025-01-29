@@ -10,6 +10,13 @@ A Skill has a well-defined schema for input and output. What makes it different 
 
 When this Skill will get executed, and how, is up to the Kernel, which allows the engineer to focus on the business and AI logic of the Skill at hand.
 
+## WASM Component
+
+On a more technical level, when you build your Skill, it is compiled to a [WASM Component](https://component-model.bytecodealliance.org/).
+Under the hood, we use [componentize-py](https://github.com/bytecodealliance/componentize-py?tab=readme-ov-file#known-limitations) to do that.
+`componentize-py` resolves the imports of a Skill module, so any package you import in you Skill will also be included in the Component.
+However, non-native dependencies (e.g. `NumPy` which is written in `C`) only work if the wheels for [WASI targets](https://github.com/benbrandt/wasi-wheels) are available at build-time. For `Pydantic`, our SDK resolves this under the hood for you.
+
 ## CSI
 
 The Cognitive System Interface, or CSI, is the set of functionality that is provided to the user code when it is run within the Kernel environment.
