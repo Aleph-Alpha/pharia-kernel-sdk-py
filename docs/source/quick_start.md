@@ -70,8 +70,9 @@ The `@skill` annotation does not modify the annotated function, which allows the
 The `testing` module provides two implementations of CSI for testing:
 
 - The [DevCsi](references.rst#pharia_skill.testing.DevCsi) can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up. It also supports exporting traces to Pharia Studio.
-- The [StubCsi](references.rst#pharia_skill.testing.DevCsi) can be used as a base class for mock implementation.
+- The [StubCsi](references.rst#pharia_skill.testing.StubCsi) can be used as a base class for mock implementation.
 
+See [core concepts](core_concepts.md#testing) for more information on differences between running Skills in the Kernel and locally.
 To test against the `DevCsi`, we require two more environment variables:
 
 ```sh
