@@ -36,4 +36,4 @@ This allows teams to deploy their Skills in self-service, after a namespace has 
 Permissions for the registry and the namespace configuration could be configured in such a way that only team members can deploy Skills to the namespace.
 In order to make a Skill available in the Kernel two criteria need to be met, the Skill must be deployed as a component to an OCI registry and the Skill must be configured in the namespace configuration.
 
-At Aleph Alpha, you can check out the configured namespaces in the [values.yaml](https://gitlab.aleph-alpha.de/product/p-prod-deployment/-/blob/main/applications/pharia-ai/values.yaml?ref_type=heads#L813) of the deployment. You configure the `pharia-skill` CLI tool with environment variables to point to the correct registry for the namespace you want to deploy to.
+You can check out the configured namespaces in the `values.yaml` of the respective deployment. You configure the `pharia-skill` CLI tool with environment variables to point to the correct registry for the namespace you want to deploy to.
