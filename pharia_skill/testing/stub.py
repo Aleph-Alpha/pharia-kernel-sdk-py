@@ -26,10 +26,33 @@ from pharia_skill import (
 
 class StubCsi(Csi):
     """
-    StubCsi can be used for checking whether Skill code compiles.
+    The `StubCsi` can be used to mock out the CSI for testing purposes.
 
-    This implementation of Cognitive System Interface (CSI) is provides a stub.
-    This can also be used as a base class for mock implementation.
+    You can use this class directly, or inherit from it and load it up with your own expectations.
+    Suppose you want to test a Skill that uses the `chat` method, and want to mock out the response from the LLM
+    to run your tests faster:
+
+    Example::
+
+        from pharia_skill import Csi, skill
+
+        @skill
+        def run(csi: Csi, input: Input) -> Output:
+            system = Message.system("You are a poet who strictly speaks in haikus.")
+            user = Message.user(input.topic)
+            params = ChatParams(max_tokens=64)
+            response = csi.chat("llama-3.1-8b-instruct", [system, user], params)
+            return Output(haiku=response.message.content.strip())
+
+        class CustomMockCsi(StubCsi):
+            def chat(self, model: str, messages: list[Message], params: ChatParams) -> ChatResponse:
+                message = Message.assistant("Whispers in the dark\nEchoes of a fleeting dream\nMeaning lost in space")
+                return ChatResponse(message=message, finish_reason=FinishReason.STOP)
+
+        def test_run():
+            csi = CustomMockCsi()
+            result = run(csi, Input(topic="The meaning of life"))
+            assert result.haiku == "Whispers in the dark\nEchoes of a fleeting dream\nMeaning lost in space"
     """
 
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:

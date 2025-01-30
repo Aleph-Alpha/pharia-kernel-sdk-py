@@ -26,6 +26,17 @@ By providing a common interface to these tools, it provides the opportunity for 
 For example, authentication is not part of the CSI interface, but is handled by the Kernel, which will authenticate all CSI calls with the token provided in the request.
 To make this interface available at development time, the SDK provides a [DevCSI](references.rst#pharia_skill.DevCsi).
 
+### Testing
+
+When Skills are run in the Kernel, the CSI is provided via an Application Binary Interface. This interface is defined via the [WASM Interface Type](https://component-model.bytecodealliance.org/design/wit.html) (WIT) language.
+For development and debugging, Skills can also run in a local Python environment. The CSI which is available to the Skill at runtime can be substituted with a [DevCSI](references.rst#pharia_skill.testing.DevCsi) which is backed by HTTP requests against a running instance of the Kernel.
+Developers can write tests, step through their Python code and inspect the state of variables.
+
+### Tracing
+
+The Kernel automatically traces Skills and all interactions with the CSI (logs are currently not available). When developing Skills, the developer does not need to worry about setting up tracing.
+The Kernel can be configured to export traces to an OpenTelemetry compatible backend. At development time, the [DevCSI](references.rst#pharia_skill.testing.DevCsi) can be configured to export traces to Pharia Studio, where they can be visualized.
+
 ## Namespaces
 
 The Kernel has the concept of namespaces, which are used to group Skills. Namespaces are configured by the operator of the Kernel.
