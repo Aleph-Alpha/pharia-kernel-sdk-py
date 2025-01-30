@@ -1,7 +1,7 @@
 @import url("theme.css");
 
 .wy-nav-content {
-    max-width: 70%;
+    max-width: 90ch;
 }
 
 .wy-nav-side {
@@ -75,4 +75,36 @@
     border-width: 1.2px;
     border-radius: 5px;
     
+}
+
+.wy-nav-side {
+    width: 240px;
+}
+
+.wy-side-scroll {
+    width: 260px;
+}
+
+.wy-menu-vertical {
+    width: 240px;
+}
+
+.wy-side-nav-search {
+    width: 240px;
+}
+
+.wy-nav-content-wrap {
+    margin-left: 240px;
+}
+
+@media screen and (max-width:768px) {
+    .wy-nav-content-wrap {
+      margin-left:0
+    }
+}
+
+@media print {
+    .wy-nav-content-wrap {
+        margin-left: 0;
+    }
 }
