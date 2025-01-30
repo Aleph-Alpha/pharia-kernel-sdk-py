@@ -8,21 +8,25 @@ To this end, this SDK provides some tooling and APIs for skill development.
 You can access the [Documentation](https://aleph-alpha-pharia-kernel-sdk-py.readthedocs-hosted.com/en/latest/index.html)
 with your GitHub account.
 
-## Installing SDK
+## Installing the SDK
 
 While we are planning to open source the SDK soon, it is currently distributed via the Aleph Alpha Artifactory PyPI.
 To install it, you need a JFrog account and need to create an access token in the UI.
-We recommend using [uv](https://docs.astral.sh/uv/) to install the SDK. Set these two environment variables:
+We recommend using [uv](https://docs.astral.sh/uv/) to install the SDK.
+
+To add the SDK as a dependency to an existing project managed by `uv`, first create a `.env` file and set the needed environment variables:
 
 ```sh
-export UV_INDEX_JFROG_USERNAME=your-username
-export UV_INDEX_JFROG_PASSWORD=your-password
+# .env
+UV_INDEX_JFROG_USERNAME=your-username
+UV_INDEX_JFROG_PASSWORD=$JFROG_TOKEN
 ```
 
-Then, run the following command to add the SDK as a dependency to your project:
+Then, add the SDK as a dependency:
 
 ```sh
-uv add --index-url https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple pharia-kernel-sdk-py
+set -a && source .env
+uv add --index jfrog=https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple pharia-kernel-sdk-py
 ```
 
 ## Developing Skills in Python
