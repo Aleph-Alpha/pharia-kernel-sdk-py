@@ -79,10 +79,24 @@ class HttpClient(CsiClient):
 
 class DevCsi(Csi):
     """
-    DevCsi can be used for testing Skill code locally against a running Pharia Kernel.
+    The `DevCsi` can be used for testing Skill code locally against a running Pharia Kernel.
 
     This implementation of Cognitive System Interface (CSI) is backed by a running instance of Pharia Kernel via HTTP.
-    This enables skill developers to run and test skills against the same services that are used by the Pharia Kernel.
+    This enables skill developers to run and test Skills against the same services that are used by the Pharia Kernel.
+
+    Examples::
+
+        # import your skill
+        from haiku import run
+
+        # create a `CSI` instance, optionally with trace export to Studio
+        csi = DevCsi().with_studio("my-project")
+
+        # Run your skill
+        input = Input(topic="The meaning of life")
+        result = run(csi, input)
+
+        assert "42" in result.haiku
 
     The following environment variables are required:
 

@@ -16,12 +16,14 @@ Create a new project and add the SDK as a dependency:
 uv init haiku && cd haiku
 ```
 
-Create a `.env` file and set the needed environment variables:
+Create a `.env` file and set the needed environment variables. The jfrog token is used by two different tools,
+so we set it under two different names:
 
 ```sh
 # .env
+JFROG_TOKEN=your-token
 UV_INDEX_JFROG_USERNAME=your-username
-UV_INDEX_JFROG_PASSWORD=your-password
+UV_INDEX_JFROG_PASSWORD=$JFROG_TOKEN
 ```
 
 Now we can add the SDK as a dependency:
@@ -36,6 +38,7 @@ uv add --index jfrog=https://alephalpha.jfrog.io/artifactory/api/pypi/python/sim
 Now, we are ready to write the skill. Create a file called `haiku.py` and add the following code:
 
 ```python
+# haiku.py
 from pharia_skill import ChatParams, Csi, Message, skill
 from pydantic import BaseModel
 
@@ -69,12 +72,46 @@ The `testing` module provides two implementations of CSI for testing:
 - The [DevCsi](references.rst#pharia_skill.testing.DevCsi) can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up. It also supports exporting traces to Pharia Studio.
 - The [StubCsi](references.rst#pharia_skill.testing.DevCsi) can be used as a base class for mock implementation.
 
+To test against the `DevCsi`, we require two more environment variables:
+
+```sh
+# .env
+PHARIA_AI_TOKEN=
+PHARIA_KERNEL_ADDRESS=
+```
+
+Now, create a `test_haiku.py` file and add the following code:
+
+```python
+# test_haiku.py
+from haiku import run, Input
+from pharia_skill.testing import DevCsi
+
+
+def test_haiku():
+   csi = DevCsi()
+   result = run(csi, Input(topic="Oat milk"))
+   assert "creamy" in result.haiku or "white" in result.haiku
+```
+
+Install pytest:
+
+```sh
+uv add pytest --dev
+```
+
+And run the test:
+
+```sh
+uv run pytest test_haiku.py
+```
+
 ## 4. Building
 
 You now build your skill, which will produce a `haiku.wasm` file:
 
 ```sh
-pharia-skill build haiku
+uv run pharia-skill build haiku
 ```
 
 ## 5. Publishing
@@ -85,6 +122,7 @@ For the `p-prod` instance, we have setup a [playground](https://gitlab.aleph-alp
 Make sure to set the required environment variables:
 
 ```sh
+# .env
 SKILL_REGISTRY_USER=
 SKILL_REGISTRY_TOKEN=
 SKILL_REGISTRY=registry.gitlab.aleph-alpha.de
@@ -94,7 +132,7 @@ SKILL_REPOSITORY=engineering/pharia-kernel-playground/skills
 To publish your skill, run
 
 ```sh
-pharia-skill publish haiku
+uv run pharia-skill publish haiku
 ```
 
 ## 6. Deploying
