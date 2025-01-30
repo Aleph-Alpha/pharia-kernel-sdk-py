@@ -58,7 +58,7 @@ def run(csi: Csi, input: Input) -> Output:
 ```
 
 We first defined the input and output type as Pydantic models. Then, we create our entrypoint by decorating a function with `@skill`.
-This function must stick to the type signature in the example. The [Csi](references.rst#pharia_skill.Csi) which we have defined as the first argument
+This function must stick to the type signature in the example. The [Csi](core_concepts.md#csi) which we have defined as the first argument
 allows to do all the AI specific interactions with the outside world, in our example a completion request.
 
 ## 3. Testing

@@ -19,10 +19,12 @@ However, non-native dependencies (e.g. `NumPy` which is written in `C`) only wor
 
 ## CSI
 
-The Cognitive System Interface, or CSI, is the set of functionality that is provided to the user code when it is run within the Kernel environment.
-So the engineer is able to import and call functions that are provided by the Kernel; functionality related to AI, data, and other services.
+Similar to how an operating system provides functionality to applications, the Cognitive System Interface (CSI) is the set of functions provided to the user code when it is run within the Kernel environment.
+The functionality of the CSI is focussed around the needs of AI methodology, such as LLM inference, vector search, and data access.
 
 By providing a common interface to these tools, it provides the opportunity for the user code to describe the intended interaction and outcome in their code, and the Kernel is able to take care of the complexity of providing it.
+For example, authentication is not part of the CSI interface, but is handled by the Kernel, which will authenticate all CSI calls with the token provided in the request.
+To make this interface available at development time, the SDK provides a [DevCSI](references.rst#pharia_skill.DevCsi).
 
 ## Namespaces
 
@@ -36,4 +38,4 @@ This allows teams to deploy their Skills in self-service, after a namespace has 
 Permissions for the registry and the namespace configuration could be configured in such a way that only team members can deploy Skills to the namespace.
 In order to make a Skill available in the Kernel two criteria need to be met, the Skill must be deployed as a component to an OCI registry and the Skill must be configured in the namespace configuration.
 
-You can check out the configured namespaces in the `values.yaml` of the respective deployment. You configure the `pharia-skill` CLI tool with environment variables to point to the correct registry for the namespace you want to deploy to.
+You can check out `pharia-kernel.namespaces` in the `values.yaml` of the respective deployment. For deployment, configure the `pharia-skill` CLI tool with environment variables to point to the correct registry for the namespace you want to deploy to.
