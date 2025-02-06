@@ -200,9 +200,7 @@ class DevCsi(Csi):
         # we want our external python interface to be compatible with the openai interface
         # and have lowercase role names. Our internal interfaces uses uppercase role names,
         # so we do a conversion here.
-        serialized_messages = [
-            {"role": m.role.title(), "content": m.content} for m in messages
-        ]
+        serialized_messages = [{"role": m.role, "content": m.content} for m in messages]
         data = {
             "model": model,
             "messages": serialized_messages,
