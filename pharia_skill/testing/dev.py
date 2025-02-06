@@ -185,7 +185,7 @@ class DevCsi(Csi):
             "params": asdict(params),
         }
         output = self.run(self.complete.__name__, data)
-        return Completion(**output)
+        return Completion.from_dict(output)
 
     def chunk(self, text: str, params: ChunkParams) -> list[str]:
         data = {
@@ -228,7 +228,7 @@ class DevCsi(Csi):
             "requests": [asdict(request) for request in requests],
         }
         output = self.run(self.complete_all.__name__, data)
-        return [Completion(**completion) for completion in output]
+        return [Completion.from_dict(completion) for completion in output]
 
     def search(
         self,

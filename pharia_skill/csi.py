@@ -76,6 +76,11 @@ class Completion:
     text: str
     finish_reason: FinishReason
 
+    @classmethod
+    def from_dict(cls, body: dict[str, Any]) -> "Completion":
+        finish_reason = FinishReason(body["finish_reason"])
+        return cls(text=body["text"], finish_reason=finish_reason)
+
 
 @dataclass
 class CompletionRequest:
