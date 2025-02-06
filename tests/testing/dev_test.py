@@ -14,6 +14,7 @@ from pharia_skill import (
     Csi,
     Document,
     DocumentPath,
+    FinishReason,
     IndexPath,
     Language,
     Message,
@@ -71,6 +72,7 @@ def test_complete(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
     result = csi.complete(model, "Say hello to Bob", params)
     assert "Bob" in result.text
+    assert isinstance(result.finish_reason, FinishReason)
 
 
 @pytest.mark.kernel
@@ -116,6 +118,7 @@ def test_complete_all(csi: Csi, model: str):
     assert len(result) == 2
     assert "Alice" in result[0].text
     assert "Bob" in result[1].text
+    assert isinstance(result[0].finish_reason, FinishReason)
 
 
 @pytest.mark.kernel
