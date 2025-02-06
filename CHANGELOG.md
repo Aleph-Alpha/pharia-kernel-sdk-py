@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.5.12](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.11...v0.5.12) (2025-02-06)
+
+
+### Bug Fixes
+
+* deserialization of completion dev csi request ([defef86](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/defef86e85d47303f028ac81035796829aa9e4c6))
+* kernel expects lowercase roles ([ae49117](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ae49117e680f25b103fee76761b486da82d76c87))
+
+
+### Documentation
+
+* add copy button to code snippets ([edbec02](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/edbec021d3a1a5fccc6bc4f4c83bc9581d5e6153))
+* add faq section ([4703807](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4703807e2f4a2dcdfaebc942052bd82d8ebd14f7))
+* add missing env variables to quick start ([6912928](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/69129281a6313ad7448d742e5d21edab1c0b600c))
+* add section about dependencies ([57b9ace](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/57b9ace324e493394fc98c8bd2072ecd1275c10d))
+* fix imports in code examples ([1405dbe](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1405dbef62bf2459c9a2ae4360f95e526469d95c))
+* fix install instruction in README ([fe78934](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/fe789346f5b37dc27d96d7776a31aa9d5505ea45))
+* fix installation instructions in quick start ([82db0dd](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/82db0ddc77ec02304a16e09bda737cbc848da92c))
+* give example of stub csi usage ([edd31c1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/edd31c12df3ae18bfc6645f9749d6d54f1bc4579))
+* increase max width so code blocks are rendered on one line ([47604bd](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/47604bdedd1a54d8d6b0bfa7dc21e3b66e0b097c))
+* link core concepts csi ([ecef4b6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ecef4b6da6bdcd64b50aeb1316cd79b4964f8298))
+* make sidebar smaller ([0cc1ef1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0cc1ef1ba0730d7615e1d6adb5c02d814d48f89e))
+* remove link to p-prod values file ([ec10ed5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ec10ed576a3004bed55809d42994e84f0a07d15b))
+* remove skill development section from README ([ee2f0c4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ee2f0c419a0ce29706256959af43d5961f6c2c8e))
+
 ## [0.5.11](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.10...v0.5.11) (2025-01-28)
 
 
