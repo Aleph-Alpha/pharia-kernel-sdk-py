@@ -1,53 +1,61 @@
-from .csi import (
+"""
+This module exposes the Python version of the Cognitive System Interface (CSI) and all related types,
+which Skills use to interact with the Pharia Kernel.
+
+While developers only interact with these types and the CSI protocol, the SDK injects the `wit_csi.WitCsi`
+implementation at runtime, which does a translation step from the Python types we offer in the SDK
+to those in `wit.imports`, which are automatically generated from the WIT world via `componentize-py`.
+"""
+
+from .chunking import ChunkParams, ChunkRequest
+from .csi import Csi
+from .document_index import (
     After,
     AtOrAfter,
     AtOrBefore,
     Before,
-    ChatParams,
-    ChatRequest,
-    ChatResponse,
-    ChunkParams,
-    ChunkRequest,
-    Completion,
-    CompletionParams,
-    CompletionRequest,
-    Csi,
     Cursor,
-    Distribution,
     Document,
     DocumentPath,
     EqualTo,
     FilterCondition,
-    FinishReason,
     GreaterThan,
     GreaterThanOrEqualTo,
     Image,
     IndexPath,
     IsNull,
     JsonSerializable,
-    Language,
     LessThan,
     LessThanOrEqualTo,
-    Logprob,
-    Logprobs,
-    Message,
     MetadataFilter,
     Modality,
-    NoLogprobs,
-    Role,
-    SampledLogprobs,
     SearchFilter,
     SearchRequest,
     SearchResult,
-    SelectLanguageRequest,
     Text,
-    TokenUsage,
-    TopLogprobs,
     WithAll,
     WithOneOf,
     Without,
 )
-from .decorator import skill
+from .inference import (
+    ChatParams,
+    ChatRequest,
+    ChatResponse,
+    Completion,
+    CompletionParams,
+    CompletionRequest,
+    Distribution,
+    FinishReason,
+    Logprob,
+    Logprobs,
+    Message,
+    NoLogprobs,
+    Role,
+    SampledLogprobs,
+    TokenUsage,
+    TopLogprobs,
+)
+from .language import Language, SelectLanguageRequest
 
 __all__ = [
     "After",
@@ -91,7 +99,6 @@ __all__ = [
     "SearchRequest",
     "SearchResult",
     "SelectLanguageRequest",
-    "skill",
     "Text",
     "TokenUsage",
     "TopLogprobs",

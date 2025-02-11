@@ -2,7 +2,7 @@
 Test document search and metadata in WASM
 """
 
-from pydantic import BaseModel, RootModel
+from pydantic import RootModel
 
 from pharia_skill import Csi, Document, IndexPath, skill
 
@@ -13,10 +13,6 @@ class Input(RootModel[str]):
 
 class Output(RootModel[str | None]):
     root: str | None
-
-
-class Metadata(BaseModel):
-    url: str
 
 
 @skill
@@ -32,8 +28,6 @@ def search(csi: Csi, input: Input) -> Output:
     assert document.text.startswith("You might be wondering")
 
     # parse into list of Metadata
-    results = csi.document_metadata(search_results[0].document_path)
-    assert isinstance(results, list)
-    assert results
-    metadata = [Metadata(**result) for result in results]
-    return Output(root=metadata[0].url)
+    result = csi.document_metadata(search_results[0].document_path)
+    assert isinstance(result, dict)
+    return Output(root=result["url"])

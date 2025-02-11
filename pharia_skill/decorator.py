@@ -1,17 +1,17 @@
 import inspect
 import json
 import traceback
-from typing import Any, Callable, Type, TypeVar
+from typing import Callable, Type, TypeVar
 
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel
 
 from .csi import Csi
-from .wasi_csi import WasiCsi
 from .wit import exports
-from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput
+from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput, SkillMetadata
 from .wit.types import Err
+from .wit_csi import WitCsi
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 UserOutput = TypeVar("UserOutput", bound=BaseModel)
@@ -69,16 +69,16 @@ def skill(
             except Exception:
                 raise Err(Error_InvalidInput(traceback.format_exc()))
             try:
-                result = func(WasiCsi(), validated)
+                result = func(WitCsi(), validated)
                 return result.model_dump_json().encode()
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))
 
-        def _output_schema(self) -> dict[str, Any]:
-            return output_model.model_json_schema()
-
-        def _input_schema(self) -> dict[str, Any]:
-            return input_model.model_json_schema()
+        def metadata(self) -> SkillMetadata:
+            description = func.__doc__
+            input_schema = json.dumps(input_model.model_json_schema()).encode()
+            output_schema = json.dumps(output_model.model_json_schema()).encode()
+            return SkillMetadata(description, input_schema, output_schema)
 
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
 

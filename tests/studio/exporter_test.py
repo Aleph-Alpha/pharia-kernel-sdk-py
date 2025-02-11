@@ -14,7 +14,7 @@ from pharia_skill import (
 from pharia_skill.studio import SpanClient, StudioClient, StudioExporter, StudioSpan
 from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.dev import CsiClient
+from pharia_skill.testing.dev.client import CsiClient
 
 
 class SpyClient(SpanClient):
@@ -45,33 +45,36 @@ def haiku(csi: Csi, input: Input) -> Output:
         prompt=input.topic,
         params=CompletionParams(max_tokens=64),
     )
-    result = csi.complete_all([request, request])
+    result = csi.complete_concurrent([request, request])
     return Output(haiku=result[0].text)
 
 
 class StubCsiClient(CsiClient):
     """Use the `DevCsi` without doing any http calls to the Kernel."""
 
-    def run(self, function: str, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
-        completion = {"text": "Hello, world!", "finish_reason": "stop"}
+    def run(self, function: str, data: Any) -> Any:
+        completion = {
+            "text": "Hello, world!",
+            "finish_reason": "stop",
+            "logprobs": [],
+            "usage": {"prompt": 1, "completion": 1},
+        }
         match function:
             case "complete":
-                return completion
-            case "complete_all":
                 return [completion]
             case "search":
-                return []
+                return [[]]
             case _:
                 return {}
 
 
 class SaboteurCsiClient(CsiClient):
-    def run(self, function: str, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
+    def run(self, function: str, data: Any) -> Any:
         match function:
-            case "complete_all":
+            case "complete":
                 raise RuntimeError("Out of cheese")
             case "search":
-                return []
+                return [[]]
             case _:
                 return {}
 
@@ -127,10 +130,13 @@ def test_csi_call_is_traced(stub_dev_csi: DevCsi):
     assert client.spans[0][0].status == SpanStatus.OK
 
     # And the input and output are set as attributes
-    assert "Say hello to Bob" in client.spans[0][0].attributes.input["prompt"]
+    assert (
+        "Say hello to Bob"
+        in client.spans[0][0].attributes.input["requests"][0]["prompt"]
+    )
     output = client.spans[0][0].attributes.output
     assert output is not None
-    assert output["text"] == "Hello, world!"
+    assert output[0]["text"] == "Hello, world!"
 
 
 def test_skill_is_traced(stub_dev_csi: DevCsi):
@@ -143,7 +149,7 @@ def test_skill_is_traced(stub_dev_csi: DevCsi):
     # Then the skill and the completion are traced
     assert len(client.spans) == 1
     assert client.spans[0][0].name == "search"
-    assert client.spans[0][1].name == "complete_all"
+    assert client.spans[0][1].name == "complete"
     assert client.spans[0][2].name == "haiku"
 
     # And the traces are nested
@@ -151,7 +157,7 @@ def test_skill_is_traced(stub_dev_csi: DevCsi):
 
 
 def test_csi_exception_is_traced(saboteur_dev_csi: DevCsi):
-    # Given a csi with a failing complete_all
+    # Given a csi with a failing complete
     client = SpyClient()
     exporter = StudioExporter(client)
     saboteur_dev_csi.set_span_exporter(exporter)
@@ -165,7 +171,7 @@ def test_csi_exception_is_traced(saboteur_dev_csi: DevCsi):
     first, second, third = client.spans[0]
     assert first.name == "search"
     assert first.status == SpanStatus.OK
-    assert second.name == "complete_all"
+    assert second.name == "complete"
     assert second.status == SpanStatus.ERROR
     assert third.name == "haiku"
     assert third.status == SpanStatus.ERROR
