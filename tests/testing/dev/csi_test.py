@@ -1,5 +1,4 @@
 import json
-from dataclasses import asdict
 from typing import Sequence
 from unittest.mock import Mock, patch
 
@@ -10,7 +9,6 @@ from pharia_skill import (
     ChatParams,
     ChunkParams,
     CompletionParams,
-    CompletionRequest,
     Csi,
     Document,
     DocumentPath,
@@ -26,17 +24,13 @@ from pharia_skill.studio import (
     StudioExporter,
     StudioSpan,
 )
-from pharia_skill.testing.dev import DevCsi, HttpClient
+from pharia_skill.testing.dev import DevCsi
+from pharia_skill.testing.dev.client import Client
 
 
 @pytest.fixture(scope="module")
 def csi() -> Csi:
     return DevCsi()
-
-
-@pytest.fixture(scope="module")
-def model() -> str:
-    return "llama-3.1-8b-instruct"
 
 
 @pytest.fixture
@@ -49,22 +43,6 @@ def given_document() -> DocumentPath:
 def given_index() -> IndexPath:
     """The tests suite expects an index `asym-64` in the `test` collection of the `Kernel` index."""
     return IndexPath("Kernel", "test", "asym-64")
-
-
-@pytest.mark.kernel
-def test_http_client_run(model: str):
-    client = HttpClient()
-    params = CompletionParams(max_tokens=1)
-
-    result = client.run(
-        "complete",
-        {
-            "model": model,
-            "prompt": "Say hello to Bob",
-            "params": asdict(params),
-        },
-    )
-    assert result.get("text") is not None
 
 
 @pytest.mark.kernel
@@ -96,29 +74,9 @@ def test_chunk(csi: Csi, model: str):
 @pytest.mark.kernel
 def test_select_language(csi: Csi):
     text = "Ich spreche Deutsch nur ein bisschen."
-    languages = [Language.ENG, Language.DEU]
+    languages = [Language.English, Language.German]
     result = csi.select_language(text, languages)
-    assert result == Language.DEU
-
-
-@pytest.mark.kernel
-def test_complete_all(csi: Csi, model: str):
-    params = CompletionParams(max_tokens=64)
-    request_1 = CompletionRequest(
-        model,
-        "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nSay hello to Alice<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
-        params,
-    )
-    request_2 = CompletionRequest(
-        model,
-        "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nSay hello to Bob<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
-        params,
-    )
-    result = csi.complete_all([request_1, request_2])
-    assert len(result) == 2
-    assert "Alice" in result[0].text
-    assert "Bob" in result[1].text
-    assert isinstance(result[0].finish_reason, FinishReason)
+    assert result == Language.German
 
 
 @pytest.mark.kernel
@@ -200,25 +158,26 @@ def test_multiple_csi_instances_do_not_duplicate_exporters():
 @pytest.mark.kernel
 def test_document_metadata(csi: Csi, given_document: DocumentPath):
     metadata = csi.document_metadata(given_document)
-    assert isinstance(metadata, list)
-    assert metadata[0].get("url") == "https://pharia-kernel.product.pharia.com/"
+    assert isinstance(metadata, dict)
+    assert metadata["url"] == "https://pharia-kernel.product.pharia.com/"
 
 
 @pytest.mark.kernel
 def test_documents(csi: Csi, given_document: DocumentPath):
     document = csi.document(given_document)
+
     assert isinstance(document, Document)
     assert document.path == given_document
     assert len(document.contents) == 1
     assert isinstance(document.contents[0], Text)
-    assert document.contents[0].value.startswith("You might be wondering")
+    assert document.text.startswith("You might be wondering")
 
 
 @pytest.mark.kernel
 @patch("requests.Session.post")
 def test_text_error_response_used_on_json_decode_error(mock_post):
     # Given an http client that returns a 400 error that is not json
-    client = HttpClient()
+    client = Client()
     response = {"error": "csi-version"}
     mock_response = Mock()
     mock_response.status_code = 400
@@ -238,7 +197,7 @@ def test_text_error_response_used_on_json_decode_error(mock_post):
 @patch("requests.Session.post")
 def test_json_error_response_is_used(mock_post):
     # Given a http client that returns a 400 error with a json response
-    client = HttpClient()
+    client = Client()
     response = {"error": "csi-version"}
     mock_response = Mock()
     mock_response.status_code = 400

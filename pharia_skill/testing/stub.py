@@ -2,25 +2,25 @@
 StubCsi can be used for testing without a backing Pharia Kernel instance.
 """
 
-from dataclasses import asdict
-
 from pharia_skill import (
-    ChatParams,
+    ChatRequest,
     ChatResponse,
-    ChunkParams,
+    ChunkRequest,
     Completion,
-    CompletionParams,
     CompletionRequest,
     Csi,
+    Cursor,
     Document,
     DocumentPath,
     FinishReason,
-    IndexPath,
     JsonSerializable,
     Language,
     Message,
+    SearchRequest,
     SearchResult,
+    SelectLanguageRequest,
     Text,
+    TokenUsage,
 )
 
 
@@ -55,46 +55,63 @@ class StubCsi(Csi):
             assert result.haiku == "Whispers in the dark\nEchoes of a fleeting dream\nMeaning lost in space"
     """
 
-    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
-        return Completion(
-            text=prompt,
-            finish_reason=FinishReason.STOP,
-        )
-
-    def chunk(self, text: str, params: ChunkParams) -> list[str]:
-        return [text]
-
-    def chat(
-        self, model: str, messages: list[Message], params: ChatParams
-    ) -> ChatResponse:
-        return ChatResponse(
-            message=Message.assistant(messages[-1].content),
-            finish_reason=FinishReason.STOP,
-        )
-
-    def select_language(self, text: str, languages: list[Language]) -> Language | None:
-        return languages[0] if languages else None
-
-    def complete_all(self, requests: list[CompletionRequest]) -> list[Completion]:
-        return [self.complete(**asdict(request)) for request in requests]
-
-    def search(
-        self,
-        index_path: IndexPath,
-        query: str,
-        max_results: int = 1,
-        min_score: float | None = None,
-    ) -> list[SearchResult]:
+    def complete_concurrent(
+        self, requests: list[CompletionRequest]
+    ) -> list[Completion]:
         return [
-            SearchResult(
-                document_path=DocumentPath(
-                    namespace="dummy-namespace",
-                    collection="dummy-collection",
-                    name="dummy-name",
+            Completion(
+                text=request.prompt,
+                finish_reason=FinishReason.STOP,
+                logprobs=[],
+                usage=TokenUsage(
+                    prompt=len(request.prompt), completion=len(request.prompt)
                 ),
-                content="dummy-content",
-                score=1.0,
             )
+            for request in requests
+        ]
+
+    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
+        return [[request.text] for request in requests]
+
+    def chat_concurrent(self, requests: list[ChatRequest]) -> list[ChatResponse]:
+        return [
+            ChatResponse(
+                message=Message.assistant(request.messages[-1].content),
+                finish_reason=FinishReason.STOP,
+                logprobs=[],
+                usage=TokenUsage(
+                    prompt=len(request.messages[-1].content),
+                    completion=len(request.messages[-1].content),
+                ),
+            )
+            for request in requests
+        ]
+
+    def select_language_concurrent(
+        self, requests: list[SelectLanguageRequest]
+    ) -> list[Language | None]:
+        return [
+            request.languages[0] if request.languages else None for request in requests
+        ]
+
+    def search_concurrent(
+        self, requests: list[SearchRequest]
+    ) -> list[list[SearchResult]]:
+        return [
+            [
+                SearchResult(
+                    document_path=DocumentPath(
+                        namespace="dummy-namespace",
+                        collection="dummy-collection",
+                        name="dummy-name",
+                    ),
+                    content="dummy-content",
+                    score=1.0,
+                    start=Cursor(item=0, position=0),
+                    end=Cursor(item=0, position=0),
+                )
+            ]
+            for _ in requests
         ]
 
     def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
@@ -107,5 +124,7 @@ class StubCsi(Csi):
             for document_path in document_paths
         ]
 
-    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
-        return {}
+    def documents_metadata(
+        self, document_paths: list[DocumentPath]
+    ) -> list[JsonSerializable]:
+        return [{} for _ in document_paths]

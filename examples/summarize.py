@@ -37,16 +37,16 @@ class Output(RootModel[str]):
 # English and German prompts for different intended summary lengths.
 SUMMARIZATION_PROMPTS = {
     SummaryLength.SHORT: {
-        Language.ENG: "Create a concise summary of the following text. Summarize the most important points in 2-3 sentences so that the core content is clear. Avoid unnecessary details.",
-        Language.DEU: "Erstelle eine prägnante Zusammenfassung des folgenden Textes. Fasse das Allerwichtigste in 2-3 Sätzen zusammen, sodass der Kerninhalt klar wird. Vermeide unnötige Details.",
+        Language.English: "Create a concise summary of the following text. Summarize the most important points in 2-3 sentences so that the core content is clear. Avoid unnecessary details.",
+        Language.German: "Erstelle eine prägnante Zusammenfassung des folgenden Textes. Fasse das Allerwichtigste in 2-3 Sätzen zusammen, sodass der Kerninhalt klar wird. Vermeide unnötige Details.",
     },
     SummaryLength.MEDIUM: {
-        Language.ENG: "Create a summary of the following text. Summarize the main points and include details, similar to an abstract. Make sure that the summary is informative and precise.",
-        Language.DEU: "Erstelle eine Zusammenfassung des folgenden Textes. Fasse die Hauptpunkte zusammen und integriere auch Details, ähnlich wie in einem Abstract. Achte darauf, dass die Zusammenfassung informativ und präzise ist.",
+        Language.English: "Create a summary of the following text. Summarize the main points and include details, similar to an abstract. Make sure that the summary is informative and precise.",
+        Language.German: "Erstelle eine Zusammenfassung des folgenden Textes. Fasse die Hauptpunkte zusammen und integriere auch Details, ähnlich wie in einem Abstract. Achte darauf, dass die Zusammenfassung informativ und präzise ist.",
     },
     SummaryLength.LONG: {
-        Language.ENG: "Create a comprehensive summary of the following text. Summarize all relevant information so that no details are missing. The summary should comprise several paragraphs and cover the entire content. Make sure that the summary is logically structured and easy to understand.",
-        Language.DEU: "Erstelle eine umfassende Zusammenfassung des folgenden Textes. Fasse alle relevanten Informationen zusammen, sodass keine Details fehlen. Die Zusammenfassung soll mehrere Paragraphen umfassen und den gesamten Inhalt abdecken. Achte darauf, dass die Zusammenfassung logisch strukturiert und leicht verständlich ist.",
+        Language.English: "Create a comprehensive summary of the following text. Summarize all relevant information so that no details are missing. The summary should comprise several paragraphs and cover the entire content. Make sure that the summary is logically structured and easy to understand.",
+        Language.German: "Erstelle eine umfassende Zusammenfassung des folgenden Textes. Fasse alle relevanten Informationen zusammen, sodass keine Details fehlen. Die Zusammenfassung soll mehrere Paragraphen umfassen und den gesamten Inhalt abdecken. Achte darauf, dass die Zusammenfassung logisch strukturiert und leicht verständlich ist.",
     },
 }
 
@@ -81,8 +81,8 @@ def summarize(csi: Csi, input: Input) -> Output:
     # extract the intended language of the answer out of the question
     language = (
         input.language
-        or csi.select_language(input.text, [Language.ENG, Language.DEU])
-        or Language.ENG
+        or csi.select_language(input.text, [Language.English, Language.German])
+        or Language.English
     )
 
     # get the correct instruction according to the intended length and language
@@ -97,7 +97,7 @@ def summarize(csi: Csi, input: Input) -> Output:
         requests = [instruction.request(chunk) for chunk in csi.chunk(text, params)]
         # and summarize each chunk
         summaries = [
-            completion.text.strip() for completion in csi.complete_all(requests)
+            completion.text.strip() for completion in csi.complete_concurrent(requests)
         ]
         # resulting in a (hopefully) smaller text
         text = "\n".join(summaries)

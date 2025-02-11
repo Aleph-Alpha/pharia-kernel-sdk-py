@@ -1,31 +1,209 @@
-package pharia:skill@0.2.10;
+package pharia:skill@0.3.0;
 
-@since(version = 0.1.0)
+@since(version = 0.3.0)
 world skill {
-    @since(version = 0.1.0)
-    import csi;
-    @since(version = 0.1.0)
+    @since(version = 0.3.0)
+    include csi;
+    @since(version = 0.3.0)
     export skill-handler;
 }
 
-@since(version = 0.1.0)
+@since(version = 0.3.0)
 interface skill-handler {
     /// The set of errors which may be raised by functions in this interface
-    @since(version = 0.1.0)
+    @since(version = 0.3.0)
     variant error {
         internal(string),
         invalid-input(string)
     }
 
-    @since(version = 0.1.0)
+    @since(version = 0.3.0)
     run: func(input: list<u8>) -> result<list<u8>, error>;
+
+    @since(version = 0.3.0)
+    record skill-metadata {
+        description: option<string>,
+        input-schema: list<u8>,
+        output-schema: list<u8>,
+    }
+
+    @since(version = 0.3.0)
+    metadata: func() -> skill-metadata;
 }
 
-// A WASI interface dedicated to interacting with Large Language Models and other AI-related tasks.
-@since(version = 0.1.0)
-interface csi {
+// A WIT world dedicated to interacting with Large Language Models and other AI-related tasks.
+@since(version = 0.3.0)
+world csi {
+    import chunking;
+    import document-index;
+    import inference;
+    import language;
+}
+
+@since(version = 0.3.0)
+interface chunking {
+    /// Chunking parameters
+    @since(version = 0.3.0)
+    record chunk-params {
+        /// The name of the model the chunk is intended to be used for.
+        /// This must be a known model.
+        model: string,
+        /// The maximum number of tokens that should be returned per chunk.
+        max-tokens: u32,
+        /// The amount of allowed overlap between chunks.
+        /// overlap must be less than max-tokens.
+        overlap: u32,
+    }
+
+    @since(version = 0.3.0)
+    record chunk-request {
+        text: string,
+        params: chunk-params,
+    }
+
+    @since(version = 0.3.0)
+    chunk: func(request: list<chunk-request>) -> list<list<string>>;
+}
+
+@since(version = 0.3.0)
+interface document-index {
+    /// Which documents you want to search in, and which type of index should be used
+    @since(version = 0.3.0)
+    record index-path {
+        /// The namespace the collection belongs to
+        namespace: string,
+        /// The collection you want to search in
+        collection: string,
+        /// The search index you want to use for the collection
+        index: string,
+    }
+
+    @since(version = 0.3.0)
+    record document-path {
+        namespace: string,
+        collection: string,
+        name: string,
+    }
+
+    /// A position within a document. The cursor is always inclusive of the current position, in both start and end positions.
+    @since(version = 0.3.0)
+    record text-cursor {
+        /// Index of the item in the document. A document is an array of text and image elements. These elements are referred to as items.
+        item: u32,
+        /// The character position the cursor can be found at within the string.
+        position: u32,
+    }
+
+    /// The result for semantic document search. Part of an array of document names and content of the found documents in the given collection.
+    @since(version = 0.3.0)
+    record search-result {
+        /// The path to a document. A path uniquely identifies a document among all managed documents.
+        document-path: document-path,
+        /// The text of the found section. As we do not support multi-modal, this is always a string.
+        content: string,
+        /// Search score of the found section, where a higher score indicates a closer match.
+        /// Will be between -1 and 1. A score closer to -1 indicates the section opposes the query.
+        /// A score close 0 suggests the section is unrelated to the query.
+        /// A score close to 1 suggests the section is related to the query.
+        /// The score depends on the index configuration, e.g. the score of a section differs for hybrid and non-hybrid indexes.
+        /// For searches on hybrid indexes, the score can exceed the min_score of the query as the min_score only applies to the semantic similarity sub-query.
+        score: f64,
+        start: text-cursor,
+        end: text-cursor,
+    }
+
+    @since(version = 0.3.0)
+    record search-request {
+        index-path: index-path,
+        /// While the Document Index offers a list of multiple modality queries, as we do not support multi-modal search,
+        /// we only support a single text modality query.
+        query: string,
+        /// Maximum number of found documents to return.
+        max-results: u32,
+        /// Filter out results with a cosine similarity score below this value.
+        /// Scores range from -1 to 1. For searches on hybrid indexes, the Document Index applies the min_score to the semantic results before fusion of result sets.
+        /// As fusion re-scores results, returned scores may exceed this value.
+        min-score: option<f64>,
+        /// A filter for search results that restricts the results to those document sections that match the filter criteria.
+        /// The individual conditions of this array are AND-combined (i.e. all conditions must match).
+        /// This can for example be used to restrict the returned sections based on their modality (i.e. image or text), or on their metadata.
+        filters: list<search-filter>
+    }
+
+    @since(version = 0.3.0)
+    search: func(requests: list<search-request>) -> list<list<search-result>>;
+
+    @since(version = 0.3.0)
+    document-metadata: func(requests: list<document-path>) -> list<option<list<u8>>>;
+
+    @since(version = 0.3.0)
+    record document {
+        path: document-path,
+        contents: list<modality>,
+        metadata: option<list<u8>>,
+    }
+
+    /// A logical combination of filter conditions.
+    @since(version = 0.3.0)
+    variant search-filter {
+        /// Logical conjunction of negations, i.e. forms the predicate "(NOT filterCondition1) AND (NOT filterCondition2) AND ..."
+        without(list<metadata-filter>),
+        /// Logical disjunction, i.e. forms the predicate "filterCondition1 OR filterCondition2 OR ..."
+        with-one-of(list<metadata-filter>),
+        /// Logical conjunction, i.e. forms the predicate "filterCondition1 AND filterCondition2 AND ..."
+        with-all(list<metadata-filter>),
+    }
+
+    /// Matches sections whose metadata fields match the given condition. You must specify the field, and can only specify a single condition.
+    @since(version = 0.3.0)
+    record metadata-filter {
+        /// The metadata field on which to filter search results.
+        /// Field names must only contain alphanumeric characters, dashes and underscores.
+        /// Nested fields can be specified using dot notation (e.g. 'a.b').
+        /// Array-valued fields can either use a wildcard specifier (e.g. 'a[].b') or a specific index (e.g. 'a[1].b').
+        /// The maximum length of the field name is 1000 characters.
+        field: string,
+        /// The condition to filter on.
+        condition: metadata-filter-condition
+    }
+
+    @since(version = 0.3.0)
+    variant metadata-filter-condition {
+        greater-than(f64),
+        greater-than-or-equal-to(f64),
+        less-than(f64),
+        less-than-or-equal-to(f64),
+        after(string),
+        at-or-after(string),
+        before(string),
+        at-or-before(string),
+        equal-to(metadata-field-value),
+        /// This condition matches all metadata fields with a value of null.
+        is-null,
+    }
+
+    @since(version = 0.3.0)
+    variant metadata-field-value {
+        string-type(string),
+        integer-type(s64),
+        boolean-type(bool),
+    }
+
+    @since(version = 0.3.0)
+    variant modality {
+        text(string),
+        /// We don't expose the image contents, as none of the models support multi-modal.
+        image,
+    }
+
+    @since(version = 0.3.0)
+    documents: func(requests: list<document-path>) -> list<document>;
+}
+
+@since(version = 0.3.0)
+interface inference {
     /// The reason the model finished generating
-    @since(version = 0.1.0)
+    @since(version = 0.3.0)
     enum finish-reason {
         /// The model hit a natural stopping point or a provided stop sequence
         stop,
@@ -35,18 +213,56 @@ interface csi {
         content-filter,
     }
 
+    @since(version = 0.3.0)
+    record logprob {
+        token: list<u8>,
+        logprob: f64,
+    }
+
+    @since(version = 0.3.0)
+    record distribution {
+        /// Logarithmic probability of the token returned in the completion
+        sampled: logprob,
+        /// Logarithmic probabilities of the most probable tokens, filled if user has set
+        /// variant `logprobs` to `top` in chat or completion request.
+        top: list<logprob>,
+    }
+
+    @since(version = 0.3.0)
+    record token-usage {
+        /// Number of tokens in the prompt
+        prompt: u32,
+        /// Number of tokens in the generated completion
+        completion: u32,
+    }
+
     /// The result of a completion, including the text generated as well as
     /// why the model finished completing.
-    @since(version = 0.1.0)
+    @since(version = 0.3.0)
     record completion {
         /// The text generated by the model
         text: string,
         /// The reason the model finished generating
         finish-reason: finish-reason,
+        /// Contains the logprobs for the sampled and top n tokens, given that
+        /// `completion-request.params.logprobs` has been set to `sampled` or `top`.
+        logprobs: list<distribution>,
+        /// Usage statistics for the completion request.
+        usage: token-usage,
+    }
+
+    @since(version = 0.3.0)
+    variant logprobs {
+        /// Do not return any logprobs
+        no,
+        /// Return only the logprob of the tokens which have actually been sampled into the completion.
+        sampled,
+        /// Request between 0 and 20 tokens
+        top(u8),
     }
 
     /// Completion request parameters
-    @since(version = 0.2.0)
+    @since(version = 0.3.0)
     record completion-params {
         /// The maximum tokens that should be inferred.
         ///
@@ -61,25 +277,40 @@ interface csi {
         top-p: option<f64>,
         /// A list of sequences that, if encountered, the API will stop generating further tokens.
         stop: list<string>,
+        /// Whether to include special tokens like `<|eot_id|>` in the completion
+        return-special-tokens: bool,
+        /// When specified, this number will decrease (or increase) the probability of repeating
+        /// tokens that were mentioned prior in the completion. The penalty is cumulative. The more
+        /// a token is mentioned in the completion, the more its probability will decrease.
+        /// A negative value will increase the likelihood of repeating tokens.
+        frequency-penalty: option<f64>,
+        /// The presence penalty reduces the probability of generating tokens that are already
+        /// present in the generated text respectively prompt. Presence penalty is independent of the
+        /// number of occurrences. Increase the value to reduce the probability of repeating text.
+        presence-penalty: option<f64>,
+        /// Use this to control the logarithmic probabilities you want to have returned. This is useful
+        /// to figure out how likely it had been that this specific token had been sampled.
+        logprobs: logprobs,
     }
 
-    @since(version = 0.2.0)
-    complete: func(model: string, prompt: string, params: completion-params) -> completion;
-
-    @since(version = 0.2.7)
-    enum role {
-        user,
-        assistant,
-        system,
+    /// Completion request parameters
+    @since(version = 0.3.0)
+    record completion-request {
+        model: string,
+        prompt: string,
+        params: completion-params
     }
 
-    @since(version = 0.2.7)
+    @since(version = 0.3.0)
+    complete: func(requests: list<completion-request>) -> list<completion>;
+
+    @since(version = 0.3.0)
     record message {
-        role: role,
+        role: string,
         content: string,
     }
 
-    @since(version = 0.2.7)
+    @since(version = 0.3.0)
     record chat-params {
         /// The maximum tokens that should be inferred.
         ///
@@ -90,110 +321,136 @@ interface csi {
         temperature: option<f64>,
         /// The probability total of next tokens the model will choose from.
         top-p: option<f64>,
+        /// When specified, this number will decrease (or increase) the probability of repeating
+        /// tokens that were mentioned prior in the completion. The penalty is cumulative. The more
+        /// a token is mentioned in the completion, the more its probability will decrease.
+        /// A negative value will increase the likelihood of repeating tokens.
+        frequency-penalty: option<f64>,
+        /// The presence penalty reduces the probability of generating tokens that are already
+        /// present in the generated text respectively prompt. Presence penalty is independent of the
+        /// number of occurrences. Increase the value to reduce the probability of repeating text.
+        presence-penalty: option<f64>,
+        /// Use this to control the logarithmic probabilities you want to have returned. This is useful
+        /// to figure out how likely it had been that this specific token had been sampled.
+        logprobs: logprobs,
     }
 
     /// The result of a chat response, including the message generated as well as
     /// why the model finished completing.
-    @since(version = 0.2.7)
+    @since(version = 0.3.0)
     record chat-response {
         /// The message generated by the model
         message: message,
         /// The reason the model finished generating
         finish-reason: finish-reason,
+        /// Contains the logprobs for the sampled and top n tokens, given that
+        /// `chat-request.params.logprobs` has been set to `sampled` or `top`.
+        logprobs: list<distribution>,
+        /// Usage statistics for the completion request.
+        usage: token-usage,
     }
 
-    @since(version = 0.2.7)
-    chat: func(model: string, messages: list<message>, params: chat-params) -> chat-response;
-
-    /// Chunking parameters
-    @since(version = 0.2.1)
-    record chunk-params {
-        /// The name of the model the chunk is intended to be used for.
-        /// This must be a known model.
+    @since(version = 0.3.0)
+    record chat-request {
         model: string,
-        /// The maximum number of tokens that should be returned per chunk.
-        max-tokens: u32,
+        messages: list<message>,
+        params: chat-params,
     }
 
-    @since(version = 0.2.1)
-    chunk: func(text: string, params: chunk-params) -> list<string>;
+    @since(version = 0.3.0)
+    chat: func(requests: list<chat-request>) -> list<chat-response>;
+}
 
-    /// ISO 639-3
-    @since(version = 0.2.2)
-    enum language {
-        /// English
-        eng,
-        /// German
-        deu,
-    }
-
+@since(version = 0.3.0)
+interface language {
     /// Select the detected language for the provided input based on the list of possible languages.
     /// If no language matches, None is returned.
     ///
     /// text: Text input
     /// languages: All languages that should be considered during detection.
-    @since(version = 0.2.2)
-    select-language: func(text: string, languages: list<language>) -> option<language>;
-
-    /// Completion request parameters
-    @since(version = 0.2.3)
-    record completion-request {
-        model: string,
-        prompt: string,
-        params: completion-params
+    @since(version = 0.3.0)
+    record select-language-request {
+        text: string,
+        languages: list<string>,
     }
 
-    @since(version = 0.2.3)
-    complete-all: func(requests: list<completion-request>) -> list<completion>;
-
-    /// Which documents you want to search in, and which type of index should be used
-    @since(version = 0.2.6)
-    record index-path {
-        /// The namespace the collection belongs to
-         namespace: string,
-        /// The collection you want to search in
-         collection: string,
-        /// The search index you want to use for the collection
-         index: string,
-    }
-
-    @since(version = 0.2.6)
-    record document-path {
-         namespace: string,
-         collection: string,
-         name: string,
-    }
-
-    @since(version = 0.2.6)
-    record search-result {
-         document-path: document-path,
-         content: string,
-         score: f64,
-    }
-
-    @since(version = 0.2.6)
-    search: func(index-path: index-path, query: string, max-results: u32, min-score: option<f64>) -> list<search-result>;
-
-    @since(version = 0.2.9)
-    complete-return-special-tokens: func(model: string, prompt: string, params: completion-params) -> completion;
-
-    @since(version = 0.2.10)
-    document-metadata: func(document-path: document-path) -> option<list<u8>>;
-
-    @since(version = 0.2.10)
-    record document {
-        path: document-path,
-        contents: list<modality>,
-        metadata: option<list<u8>>,
-    }
-
-    @since(version = 0.2.10)
-    variant modality {
-        text(string),
-        /// We don't expose the image contents, as none of the models support multi-modal.
-        image,
-    }
-
-    @since(version = 0.2.10)
-    documents: func(requests: list<document-path>) -> list<document>;
+    /// Select most likely language from a list of supported ISO 639-3language codes.
+    ///
+    /// Afrikaans - "afr",
+    /// Arabic - "ara",
+    /// Azerbaijani - "aze",
+    /// Belarusian - "bel",
+    /// Bengali - "ben",
+    /// Bosnian - "bos",
+    /// Bulgarian - "bul",
+    /// Catalan - "cat",
+    /// Czech - "ces",
+    /// Welsh - "cym",
+    /// Danish - "dan",
+    /// German - "deu",
+    /// Greek - "ell",
+    /// English - "eng",
+    /// Esperanto - "epo",
+    /// Estonian - "est",
+    /// Basque - "eus",
+    /// Persian - "fas",
+    /// Finnish - "fin",
+    /// French - "fra",
+    /// Irish - "gle",
+    /// Gujarati - "guj",
+    /// Hebrew - "heb",
+    /// Hindi - "hin",
+    /// Croatian - "hrv",
+    /// Hungarian - "hun",
+    /// Armenian - "hye",
+    /// Indonesian - "ind",
+    /// Icelandic - "isl",
+    /// Italian - "ita",
+    /// Japanese - "jpn",
+    /// Georgian - "kat",
+    /// Kazakh - "kaz",
+    /// Korean - "kor",
+    /// Latin - "lat",
+    /// Latvian - "lav",
+    /// Lithuanian - "lit",
+    /// Ganda - "lug",
+    /// Marathi - "mar",
+    /// Macedonian - "mkd",
+    /// Mongolian - "mon",
+    /// Maori - "mri",
+    /// Malay - "msa",
+    /// Dutch - "nld",
+    /// Norwegian Nynorsk - "nno",
+    /// Norwegian Bokmål - "nob",
+    /// Punjabi - "pan",
+    /// Polish - "pol",
+    /// Portuguese - "por",
+    /// Romanian - "ron",
+    /// Russian - "rus",
+    /// Slovak - "slk",
+    /// Slovene - "slv",
+    /// Shona - "sna",
+    /// Somali - "som",
+    /// Sotho - "sot",
+    /// Spanish - "spa",
+    /// Serbian - "srp",
+    /// Albanian - "sqi",
+    /// Swahili - "swa",
+    /// Swedish - "swe",
+    /// Tamil - "tam",
+    /// Telugu - "tel",
+    /// Tagalog - "tgl",
+    /// Thai - "tha",
+    /// Tswana - "tsn",
+    /// Tsonga - "tso",
+    /// Turkish - "tur",
+    /// Ukrainian - "ukr",
+    /// Urdu - "urd",
+    /// Vietnamese - "vie",
+    /// Xhosa - "xho",
+    /// Yoruba - "yor",
+    /// Chinese - "zho",
+    /// Zulu - "zul",
+    @since(version = 0.3.0)
+    select-language: func(request: list<select-language-request>) -> list<option<string>>;
 }

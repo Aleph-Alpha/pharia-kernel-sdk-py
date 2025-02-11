@@ -2,7 +2,7 @@ from pharia_skill import CompletionParams, CompletionRequest
 from pharia_skill.testing import StubCsi
 
 
-def test_complete_all():
+def test_complete():
     # given
     params = CompletionParams()
     request_1 = CompletionRequest("model_1", "prompt_1", params)
@@ -10,7 +10,7 @@ def test_complete_all():
 
     # when
     csi = StubCsi()
-    completions = csi.complete_all([request_1, request_2])
+    completions = csi.complete_concurrent([request_1, request_2])
 
     # then
     assert completions[0].text == "prompt_1"

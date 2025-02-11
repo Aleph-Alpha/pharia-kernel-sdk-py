@@ -2,7 +2,7 @@ import datetime as dt
 
 import pytest
 
-from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason
+from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason, TokenUsage
 from pharia_skill.llama3 import (
     ChatRequest,
     Role,
@@ -45,7 +45,12 @@ def test_can_not_chat_twice_without_appending_message():
     # Given a chat request after a chat request
     message = UserMessage("What is the meaning of life?")
     request = ChatRequest(llama, [message])
-    completion = Completion(text="42", finish_reason=FinishReason.STOP)
+    completion = Completion(
+        text="42",
+        finish_reason=FinishReason.STOP,
+        logprobs=[],
+        usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
+    )
     csi = MockCsi(completion)  # type: ignore
 
     request.chat(csi)
@@ -60,7 +65,12 @@ def test_can_chat_twice_when_providing_user_response():
     # Given a chat request after a chat request
     message = UserMessage("What is the meaning of life?")
     request = ChatRequest(llama, [message])
-    completion = Completion(text="42", finish_reason=FinishReason.STOP)
+    completion = Completion(
+        text="42",
+        finish_reason=FinishReason.STOP,
+        logprobs=[],
+        usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
+    )
     csi = MockCsi(completion)  # type: ignore
 
     request.chat(csi)
@@ -119,6 +129,8 @@ def test_tool_response_is_parsed_into_provided_class():
     completion = Completion(
         text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}',
         finish_reason=FinishReason.STOP,
+        logprobs=[],
+        usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
     )
     csi = MockCsi(completion)  #  type: ignore
 
@@ -139,6 +151,8 @@ def test_tool_response_can_be_added_to_prompt():
     completion = Completion(
         text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}',
         finish_reason=FinishReason.STOP,
+        logprobs=[],
+        usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
     )
     csi = MockCsi(completion)  #  type: ignore
 
