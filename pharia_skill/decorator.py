@@ -5,7 +5,12 @@ from typing import Callable, Type, TypeVar
 
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
-from pydantic import BaseModel
+from pydantic import (
+    BaseModel,
+    # For generation of JSON schemas, Pydantic imports the `root_model` module at runtime: https://github.com/pydantic/pydantic/blob/main/pydantic/json_schema.py#L1500
+    # As `componentize-py` resolves imports at build time, we are required to add this import here.
+    RootModel,  # noqa: F401
+)
 
 from .csi import Csi
 from .wit import exports
@@ -62,6 +67,16 @@ def skill(
         "The return type must be a Pydantic model"
     )
 
+    # This code here inside the decorator (but outside of the `class SkillHandler`) is executed at build time.
+    # In version 0.3 of the wit world, we did not account for the fact that the metadata method may return
+    # an error. However, as pydantic does some imports at runtime, we need to take this possibility into account.
+    # By calculating the metadata at build time, we can (in case there is an error) give the user direct feedback,
+    # instead of failing at runtime.
+    description = func.__doc__
+    input_schema = json.dumps(input_model.model_json_schema()).encode()
+    output_schema = json.dumps(output_model.model_json_schema()).encode()
+    metadata = SkillMetadata(description, input_schema, output_schema)
+
     class SkillHandler(exports.SkillHandler):
         def run(self, input: bytes) -> bytes:
             try:
@@ -75,10 +90,7 @@ def skill(
                 raise Err(Error_Internal(traceback.format_exc()))
 
         def metadata(self) -> SkillMetadata:
-            description = func.__doc__
-            input_schema = json.dumps(input_model.model_json_schema()).encode()
-            output_schema = json.dumps(output_model.model_json_schema()).encode()
-            return SkillMetadata(description, input_schema, output_schema)
+            return metadata
 
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
 
