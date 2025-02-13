@@ -130,3 +130,7 @@ jobs:
           uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
+      - name: Test skill metadata on ubuntu only
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          uv run sh -x -e ./scripts/metadata_skill.sh haiku $PHARIA_AI_TOKEN
