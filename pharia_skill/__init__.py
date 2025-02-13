@@ -43,7 +43,7 @@ from .csi import (
     Text,
     TokenUsage,
     TopLogprobs,
-    WithAll,
+    With,
     WithOneOf,
     Without,
 )
@@ -96,6 +96,6 @@ __all__ = [
     "TokenUsage",
     "TopLogprobs",
     "Without",
-    "WithAll",
+    "With",
     "WithOneOf",
 ]

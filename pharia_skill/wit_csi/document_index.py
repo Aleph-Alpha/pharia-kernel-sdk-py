@@ -26,7 +26,7 @@ from ..csi import (
     SearchRequest,
     SearchResult,
     Text,
-    WithAll,
+    With,
     WithOneOf,
     Without,
 )
@@ -150,7 +150,7 @@ def filter_to_wit(filter: SearchFilter) -> WitSearchFilter:
             return WitSearchFilter_WithOneOf(
                 value=[metadata_filter_to_wit(f) for f in value]
             )
-        case WithAll(value):
+        case With(value):
             return WitSearchFilter_WithAll(
                 value=[metadata_filter_to_wit(f) for f in value]
             )
