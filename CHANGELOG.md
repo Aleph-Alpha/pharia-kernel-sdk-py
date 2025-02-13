@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.5.13](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.12...v0.5.13) (2025-02-13)
+
+
+### Features
+
+* support v0_3 wit world in SDK ([ee1db95](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ee1db955fdb533614dc498d916efd79bd0c3746f))
+
+
+### Bug Fixes
+
+* represent token as bytes type and add deserialization logic for dataclass ([ceb2be1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ceb2be1aad273858fa997a64476d8aa6fd79f0f0))
+* require datetimes to be tz-aware, but not necessarily utc ([5b429f4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5b429f4099d04f49603a26469e42d88a65f31960))
+
+
+### Documentation
+
+* minor typos ([a402e96](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a402e96f6d2010aead90fea128c9ef305d9c9cbd))
+
 ## [0.5.12](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.11...v0.5.12) (2025-02-06)
 
 
