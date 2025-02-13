@@ -33,7 +33,7 @@ from .document_index import (
     SearchRequest,
     SearchResult,
     Text,
-    WithAll,
+    With,
     WithOneOf,
     Without,
 )
@@ -103,6 +103,6 @@ __all__ = [
     "TokenUsage",
     "TopLogprobs",
     "Without",
-    "WithAll",
+    "With",
     "WithOneOf",
 ]

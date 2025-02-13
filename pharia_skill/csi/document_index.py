@@ -1,6 +1,8 @@
 import datetime as dt
-from dataclasses import dataclass, field
-from typing import Any, Literal, Sequence
+from dataclasses import asdict, dataclass, field
+from typing import Any, Literal
+
+from pydantic import model_serializer
 
 
 @dataclass
@@ -37,54 +39,87 @@ class IndexPath:
 
 @dataclass
 class GreaterThan:
+    __json_name__ = "greater_than"
+
     value: float
 
 
 @dataclass
 class GreaterThanOrEqualTo:
+    __json_name__ = "greater_than_or_equal_to"
+
     value: float
 
 
 @dataclass
 class LessThan:
+    __json_name__ = "less_than"
+
     value: float
 
 
 @dataclass
 class LessThanOrEqualTo:
+    __json_name__ = "less_than_or_equal_to"
+
     value: float
 
 
 @dataclass
 class After:
+    __json_name__ = "after"
+
     value: dt.datetime
+
+    def __post_init__(self) -> None:
+        assert self.value.tzinfo is not None, "Datetimes must be timezone-aware"
 
 
 @dataclass
 class AtOrAfter:
+    __json_name__ = "at_or_after"
+
     value: dt.datetime
+
+    def __post_init__(self) -> None:
+        assert self.value.tzinfo is not None, "Datetimes must be timezone-aware"
 
 
 @dataclass
 class Before:
+    __json_name__ = "before"
+
     value: dt.datetime
+
+    def __post_init__(self) -> None:
+        assert self.value.tzinfo is not None, "Datetimes must be timezone-aware"
 
 
 @dataclass
 class AtOrBefore:
+    __json_name__ = "at_or_before"
+
     value: dt.datetime
+
+    def __post_init__(self) -> None:
+        assert self.value.tzinfo is not None, "Datetimes must be timezone-aware"
 
 
 @dataclass
 class EqualTo:
+    __json_name__ = "equal_to"
+
     value: str | int | bool
 
 
 @dataclass
 class IsNull:
-    """This condition matches all metadata fields with a value of null."""
+    __json_name__ = "is_null"
 
-    pass
+    value: Literal[True] = True
+
+
+"""This condition matches all metadata fields with a value of null."""
 
 
 FilterCondition = (
@@ -121,6 +156,22 @@ class MetadataFilter:
     field: str
     condition: FilterCondition
 
+    def serialize(self) -> dict[str, Any]:
+        """How to serialize a metadata filter to a dictionary.
+
+        It would be nice to specify this as a `model_serializer` and let pydantic handle
+        the serialization. However, as we are already doing custom serialization on the
+        outside, and this is not a Pydantic model we could call `.model_dump()` on, it
+        seems to be the simplest solution to just implement the serialization manually.
+        """
+
+        return {
+            "metadata": {
+                "field": self.field,
+                self.condition.__json_name__: self.condition.value,
+            }
+        }
+
 
 @dataclass
 class Without:
@@ -131,6 +182,9 @@ class Without:
     """
 
     value: list[MetadataFilter]
+
+    def serialize(self) -> dict[str, list[Any]]:
+        return {"without": [filter.serialize() for filter in self.value]}
 
 
 @dataclass
@@ -143,9 +197,12 @@ class WithOneOf:
 
     value: list[MetadataFilter]
 
+    def serialize(self) -> dict[str, list[Any]]:
+        return {"with_one_of": [filter.serialize() for filter in self.value]}
+
 
 @dataclass
-class WithAll:
+class With:
     """Logical conjunction, i.e. forms the predicate "filterCondition1 AND filterCondition2 AND ..."
 
     Attributes:
@@ -154,8 +211,11 @@ class WithAll:
 
     value: list[MetadataFilter]
 
+    def serialize(self) -> dict[str, list[Any]]:
+        return {"with": [filter.serialize() for filter in self.value]}
 
-SearchFilter = Without | WithOneOf | WithAll
+
+SearchFilter = Without | With | WithOneOf
 """A logical combination of filter conditions."""
 
 
@@ -179,7 +239,17 @@ class SearchRequest:
     query: str
     max_results: int = 1
     min_score: float | None = None
-    filters: Sequence[SearchFilter] = field(default_factory=list)
+    filters: list[SearchFilter] = field(default_factory=list)
+
+    @model_serializer()
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "index_path": asdict(self.index_path),
+            "query": self.query,
+            "max_results": self.max_results,
+            "min_score": self.min_score,
+            "filters": [filter.serialize() for filter in self.filters],
+        }
 
 
 @dataclass

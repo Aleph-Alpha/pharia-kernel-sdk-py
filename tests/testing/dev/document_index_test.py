@@ -10,7 +10,7 @@ from pharia_skill import (
     SearchRequest,
     SearchResult,
     Text,
-    WithAll,
+    With,
     WithOneOf,
 )
 from pharia_skill.testing.dev.document_index import (
@@ -146,15 +146,15 @@ def test_deserialize_document():
 
 def test_serialize_search_request():
     # Given a list of search requests
-    request = SearchRequestSerializer.from_search_requests(
-        [
+    request = SearchRequestSerializer(
+        requests=[
             SearchRequest(
                 index_path=IndexPath(
                     namespace="Kernel", collection="test", index="asym-64"
                 ),
                 query="What is the Kernel?",
-                filters=(
-                    WithAll(
+                filters=[
+                    With(
                         [
                             MetadataFilter(
                                 field="created",
@@ -178,7 +178,7 @@ def test_serialize_search_request():
                             )
                         ]
                     ),
-                ),
+                ],
             )
         ]
     )
@@ -205,7 +205,7 @@ def test_serialize_search_request():
                                 {
                                     "metadata": {
                                         "field": "created",
-                                        "after": "1970-07-01T14:10:11+00:00",
+                                        "after": "1970-07-01T14:10:11Z",
                                     }
                                 }
                             ]
@@ -215,7 +215,7 @@ def test_serialize_search_request():
                                 {
                                     "metadata": {
                                         "field": "created",
-                                        "after": "1970-07-01T14:10:11+00:00",
+                                        "after": "1970-07-01T14:10:11Z",
                                     }
                                 }
                             ]

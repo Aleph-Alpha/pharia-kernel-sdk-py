@@ -119,7 +119,7 @@ class DevCsi(Csi):
     def search_concurrent(
         self, requests: list[SearchRequest]
     ) -> list[list[SearchResult]]:
-        body = SearchRequestSerializer.from_search_requests(requests).model_dump()
+        body = SearchRequestSerializer(requests=requests).model_dump()
         output = self.run("search", body)
         return SearchResultDeserializer(root=output).root
 
