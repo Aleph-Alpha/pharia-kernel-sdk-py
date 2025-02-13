@@ -14,10 +14,10 @@ def test_serialized_roles_are_openai_compatible():
 
 
 def test_logbprob_try_as_utf8():
-    logprob = Logprob(token=[72, 105], logprob=1.0)
+    logprob = Logprob(token=b"Hi", logprob=1.0)
     assert logprob.try_as_utf8() == "Hi"
 
 
 def test_logbprob_try_as_utf8_returns_none_for_invalid_utf8():
-    logprob = Logprob(token=[128], logprob=1.0)
+    logprob = Logprob(token=b"\x80", logprob=1.0)
     assert logprob.try_as_utf8() is None

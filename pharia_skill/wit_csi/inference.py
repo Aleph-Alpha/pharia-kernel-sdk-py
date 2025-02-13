@@ -55,7 +55,7 @@ def chat_request_to_wit(chat_request: ChatRequest) -> WitChatRequest:
 
 
 def logprob_from_wit(logprob: WitLogprob) -> Logprob:
-    return Logprob(token=list(logprob.token), logprob=logprob.logprob)
+    return Logprob(token=logprob.token, logprob=logprob.logprob)
 
 
 def distribution_from_wit(distribution: WitDistribution) -> Distribution:
