@@ -16,7 +16,7 @@ RESPONSE_CODE=$(curl -w '%{http_code}' -s -o output.result \
                 $PHARIA_KERNEL_ADDRESS/v1/skills/dev/$SKILL_NAME/run \
                 -H "Authorization: Bearer $PHARIA_AI_TOKEN" \
                 -H 'Content-Type: application/json' \
-                -d '"Kernel"' )
+                -d '{"root": "Kernel"}' )
 
 cat output.result
 

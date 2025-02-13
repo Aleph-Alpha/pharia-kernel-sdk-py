@@ -2,12 +2,12 @@
 Test document search and metadata in WASM
 """
 
-from pydantic import RootModel
+from pydantic import BaseModel, RootModel
 
 from pharia_skill import Csi, Document, IndexPath, skill
 
 
-class Input(RootModel[str]):
+class Input(BaseModel):
     root: str
 
 
