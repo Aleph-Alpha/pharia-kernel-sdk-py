@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal
 
+from pydantic import field_validator
+
 
 @dataclass
 class TopLogprobs:
@@ -78,8 +80,15 @@ class FinishReason(str, Enum):
 class Logprob:
     """Logarithmic probability of the token returned in the completion."""
 
-    token: list[int]
+    token: bytes
     logprob: float
+
+    @field_validator("token", mode="before")
+    @classmethod
+    def convert_token_to_bytes(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            return bytes(v)
+        return v
 
     def try_as_utf8(self) -> str | None:
         """Try to decode the token as utf-8.
@@ -88,7 +97,7 @@ class Logprob:
         case it does not have a valid utf-8 encoding on its own.
         """
         try:
-            return bytes(self.token).decode("utf-8")
+            return self.token.decode("utf-8")
         except UnicodeDecodeError:
             return None
 

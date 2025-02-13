@@ -69,7 +69,12 @@ def test_deserialize_completion():
             {
                 "text": "Hello",
                 "finish_reason": "stop",
-                "logprobs": [{"sampled": {"token": [], "logprob": 0.0}, "top": []}],
+                "logprobs": [
+                    {
+                        "sampled": {"token": [72, 101, 108, 108, 111], "logprob": 0.0},
+                        "top": [],
+                    }
+                ],
                 "usage": {"prompt": 0, "completion": 0},
             }
         ]
@@ -83,7 +88,7 @@ def test_deserialize_completion():
     assert completion == Completion(
         text="Hello",
         finish_reason=FinishReason.STOP,
-        logprobs=[Distribution(sampled=Logprob(token=[], logprob=0.0), top=[])],
+        logprobs=[Distribution(sampled=Logprob(token=b"Hello", logprob=0.0), top=[])],
         usage=TokenUsage(prompt=0, completion=0),
     )
 
@@ -158,8 +163,8 @@ def test_deserialize_chat():
         usage=TokenUsage(completion=1, prompt=11),
         logprobs=[
             Distribution(
-                sampled=Logprob(token=[72, 101, 108, 108, 111], logprob=-0.06857474),
-                top=[Logprob(token=[72, 101, 108, 108, 111], logprob=-0.06857474)],
+                sampled=Logprob(token=b"Hello", logprob=-0.06857474),
+                top=[Logprob(token=b"Hello", logprob=-0.06857474)],
             )
         ],
     )
