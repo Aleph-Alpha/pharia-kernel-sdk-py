@@ -1,6 +1,6 @@
 # Introduction
 
-Frameworks like `llama-stack` and `langchain` allow for quick prototyping of generative AI applications. However, building production-ready AI applications requires solving different challenges. Companies do not want to compromize on security, testability, traceability, and evaluation of their AI logic.
+Frameworks like `llama-stack` and `langchain` allow for quick prototyping of generative AI applications. However, building production-ready AI applications requires solving different challenges. Companies do not want to compromise on security, testability, traceability, and evaluation of their AI logic.
 
 ## What Problem does the Kernel solve?
 
@@ -36,7 +36,7 @@ Less dependencies mean less maintenance burden to keep dependencies up to date.
 
 AI applications become most useful when they have access to your knowledge base.
 This is also when they become a security risk, as this knowledge must not be exposed to unauthorized persons.
-The Kernel restricts the way that Skills can interact with the outside world. 
+The Kernel restricts the way that Skills can interact with the outside world.
 This allows developers to be creative in their methodology while minimizing the attack surface.
 
 ### Compliance
