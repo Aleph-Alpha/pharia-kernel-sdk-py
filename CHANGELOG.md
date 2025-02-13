@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.13...v0.6.0) (2025-02-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* release 0.6.0
+
+### Features
+
+* release 0.6.0 ([e76647e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e76647ebcb1511f249d56478ff8dbeda331883d4))
+
+
+### Bug Fixes
+
+* import RootModel in decorator to avoid failing runtime import ([cc5d83a](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/cc5d83a64113fa62ffc363036117edb6722d4f2e))
+
 ## [0.5.13](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.12...v0.5.13) (2025-02-13)
 
 
