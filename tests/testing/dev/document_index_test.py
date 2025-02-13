@@ -205,7 +205,7 @@ def test_serialize_search_request():
                                 {
                                     "metadata": {
                                         "field": "created",
-                                        "after": "1970-07-01T14:10:11Z",
+                                        "after": "1970-07-01T14:10:11+00:00",
                                     }
                                 }
                             ]
@@ -215,7 +215,7 @@ def test_serialize_search_request():
                                 {
                                     "metadata": {
                                         "field": "created",
-                                        "after": "1970-07-01T14:10:11Z",
+                                        "after": "1970-07-01T14:10:11+00:00",
                                     }
                                 }
                             ]

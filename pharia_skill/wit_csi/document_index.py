@@ -91,12 +91,12 @@ from ..wit.imports.document_index import TextCursor as WitCursor
 
 
 def to_isostring(datetime: dt.datetime) -> str:
-    """The WIT world handles time in UTC, so we need to convert to ISO 8601 string.
+    """The WIT world represents instants as ISO 8601 strings.
 
-    To ensure we don't violate any expectation of the user, we require specifying the instant as UTC.
+    While the Document Index supports loading from any timezoned string, we do require specifying as timezone.
     """
-    assert datetime.tzinfo == dt.UTC, "Datetimes must be in UTC timezone"
-    return datetime.isoformat().replace("+00:00", "Z")
+    assert datetime.tzinfo is not None, "Datetimes must be timezone-aware"
+    return datetime.isoformat()
 
 
 def value_to_wit(value: str | int | bool) -> WitMetadataFieldValue:
