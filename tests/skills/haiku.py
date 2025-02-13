@@ -2,12 +2,12 @@
 Call into the completion and chat completion interface to test both in WASM
 """
 
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel
 
 from pharia_skill import ChatParams, CompletionParams, Csi, Message, skill
 
 
-class Input(RootModel[str]):
+class Input(BaseModel):
     root: str
 
 
