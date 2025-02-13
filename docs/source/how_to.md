@@ -1,6 +1,6 @@
 # How-To
 
-The Kernel SDK provides all the building blocks needed to create sophisticated AI applications. 
+The Kernel SDK provides all the building blocks needed to create sophisticated AI applications.
 If you want to include any dependencies in your Skill, have a look [here](core_concepts#wasm-component)
 
 ## Completion
@@ -75,14 +75,13 @@ def conversational_search(csi: Csi, input: ChatInterface) -> ChatInterface:
 
 You only need to define the `do_search_lookup` function and augment the incoming messages with some context.
 
-
 ## Function Calling
 
 The [llama3 module](references.rst#module-pharia_skill.llama3), provides support for function calling. It supports both user defined and built-in tools.
 
 ### Tool Definition
 
-You can define a tool by inheriting from the [Tool](references.rst#pharia_skill.llama3.Tool) class, which is a wrapper around a pydantic base model.
+You can define a tool by inheriting from the [Tool](references.rst#pharia_skill.llama3.Tool) class, which is a wrapper around a Pydantic base model.
 
 For example, suppose we want to give our model the ability to get the readme of a github repository. We can define a tool like this:
 
@@ -96,7 +95,7 @@ class GetGithubReadme(Tool):
     repository: str
 ```
 
-You can provide default values for the arguments and even add a description for each field by using pydantic's `Field` class:
+You can provide default values for the arguments and even add a description for each field by using Pydantic's `Field` class:
 
 ```python
 from pharia_skill.llama3 import Tool
