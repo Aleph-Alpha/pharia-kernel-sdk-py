@@ -1,9 +1,9 @@
-import argparse
 import logging
 import os
 import subprocess
 
-from dotenv import load_dotenv
+import typer
+from typing_extensions import Annotated
 
 from .pharia_skill_cli import PhariaSkillCli
 
@@ -71,48 +71,51 @@ def run_componentize_py(skill_module: str, unstable: bool) -> None:
     subprocess.run(command, check=True)
 
 
-def main() -> None:
-    load_dotenv()
+app = typer.Typer()
 
-    parser = argparse.ArgumentParser(description="Pharia Skill CLI Tool")
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    build_parser = subparsers.add_parser("build", help="Build a skill")
-    build_parser.add_argument("skill", help="Python module of the skill to build")
-    build_parser.add_argument(
-        "--unstable",
-        action=argparse.BooleanOptionalAction,
-        help="Enable unstable features for testing. Don't try this at home.",
-        default=False,
-    )
+@app.callback()
+def callback() -> None:
+    """
+    Pharia Skill CLI Tool.
+    """
 
-    publish_parser = subparsers.add_parser("publish", help="Publish a skill")
-    publish_parser.add_argument(
-        "skill",
-        help="Path to the component to publish without the .wasm extension",
-    )
-    publish_parser.add_argument(
-        "--tag",
-        help='default to "latest" if not provided',
-        default="latest",
-    )
 
-    args = parser.parse_args()
+@app.command()
+def build(
+    skill: Annotated[str, typer.Argument(help="Python module of the skill to build")],
+    unstable: Annotated[
+        bool,
+        typer.Option(
+            help="Enable unstable features for testing. Don't try this at home."
+        ),
+    ] = False,
+) -> None:
+    """
+    Build a skill.
+    """
+    setup_wasi_deps()
+    run_componentize_py(skill, unstable)
 
-    try:
-        if args.command == "build":
-            setup_wasi_deps()
-            run_componentize_py(args.skill, args.unstable)
-        elif args.command == "publish":
-            cli = PhariaSkillCli()
-            cli.publish(args.skill, args.tag)
-        else:
-            parser.print_help()
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
-        logger.error(f"Error message: {e.stderr}")
-        exit(e.returncode)
+
+@app.command()
+def publish(
+    skill: Annotated[
+        str,
+        typer.Argument(
+            help="Path to the component to publish without the .wasm extension"
+        ),
+    ],
+    tag: Annotated[
+        str, typer.Option(help='default to "latest" if not provided')
+    ] = "latest",
+) -> None:
+    """
+    Publish a skill.
+    """
+    cli = PhariaSkillCli()
+    cli.publish(skill, tag)
 
 
 if __name__ == "__main__":
-    main()
+    app()

@@ -7,8 +7,9 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.13.0'
+    rev: "v1.13.0"
     hooks:
       - id: mypy
-        additional_dependencies: [pydantic, pytest, opentelemetry-sdk, python-dotenv]
+        additional_dependencies:
+          [pydantic, pytest, opentelemetry-sdk, python-dotenv, typer]
         args: [--install-types, --non-interactive]
