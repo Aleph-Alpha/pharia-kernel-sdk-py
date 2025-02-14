@@ -19,10 +19,11 @@ dependencies = [
     "python-dotenv>=1.0.1,<2",
     "componentize-py>=0.16.0,<0.17",
     "opentelemetry-sdk>=1.28.1,<2",
+    "typer>=0.15.1",
 ]
 
 [project.scripts]
-pharia-skill = "pharia_skill.cli:main"
+pharia-skill = "pharia_skill.cli:app"
 
 [dependency-groups]
 dev = [
