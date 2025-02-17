@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+from typing import Optional
 
 import typer
 from typing_extensions import Annotated
@@ -92,7 +93,10 @@ def callback() -> None:
 
 @app.command()
 def build(
-    skill: Annotated[str, typer.Argument(help="Python module of the skill to build")],
+    skill: Annotated[
+        str,
+        typer.Argument(help="Python module of the skill to build", show_default=False),
+    ],
     unstable: Annotated[
         bool,
         typer.Option(
@@ -111,15 +115,24 @@ def build(
 def publish(
     skill: Annotated[
         str,
-        typer.Argument(help="A path to a Wasm file containing a Skill."),
+        typer.Argument(
+            help="A path to a Wasm file containing a Skill.", show_default=False
+        ),
     ],
+    name: Annotated[
+        Optional[str],
+        typer.Option(
+            help="The name to publish the Skill as. If not provided, it is inferred based on the Wasm filename.",
+            show_default="The filename",
+        ),
+    ] = None,
     tag: Annotated[str, typer.Option(help="An identifier for the Skill.")] = "latest",
 ) -> None:
     """
     Publish a skill.
     """
     cli = PhariaSkillCli()
-    cli.publish(skill, tag)
+    cli.publish(skill, name, tag)
 
 
 if __name__ == "__main__":

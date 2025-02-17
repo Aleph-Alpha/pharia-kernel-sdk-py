@@ -133,7 +133,7 @@ SKILL_REPOSITORY=engineering/pharia-kernel-playground/skills
 To publish your skill, run
 
 ```sh
-uv run pharia-skill publish haiku
+uv run pharia-skill publish haiku.wasm --name custom_name
 ```
 
 ## 6. Deploying
