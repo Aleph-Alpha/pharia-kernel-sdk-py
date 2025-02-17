@@ -45,7 +45,9 @@ class PhariaSkillCli:
     def pharia_skill_version(cls) -> str | None:
         """Version of the currently installed `pharia-skill-cli` binary."""
         result = subprocess.run(
-            [cls.PHARIA_SKILL_CLI_PATH, "--version"], stdout=subprocess.PIPE, text=True
+            [cls.PHARIA_SKILL_CLI_PATH, "--version"],
+            stdout=subprocess.PIPE,
+            text=True,
         )
         if result.returncode != 0:
             return None
@@ -97,7 +99,7 @@ class PhariaSkillCli:
             subprocess.run(["chmod", "+x", "bin/pharia-skill-cli"], check=True)
         logger.info("Pharia skill CLI installed successfully.")
 
-    def publish(self, skill: str, tag: str) -> None:
+    def publish(self, skill: str, name: str | None, tag: str) -> None:
         """Publish a skill to an OCI registry.
 
         Takes a path to a WASM component, wrap it in an OCI image and publish it to an OCI
@@ -138,6 +140,7 @@ class PhariaSkillCli:
             skill_registry_user,
             "-p",
             skill_registry_token,
+            *(["-n", name] if name else []),
             "-t",
             tag,
             skill,
