@@ -79,6 +79,8 @@ def run_componentize_py(skill_module: str, unstable: bool) -> None:
     ]
     logger.info(f"Building WASM component {output_file} from {skill_module} ...")
     subprocess.run(command, check=True)
+    logger.info(f"""To publish, use
+    pharia-skill publish {output_file} --tag [CUSTOM_TAG] --name [CUSTOM_NAME]""")
 
 
 app = typer.Typer()
