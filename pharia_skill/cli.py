@@ -18,14 +18,23 @@ logger = logging.getLogger(__name__)
 
 def setup_wasi_deps() -> None:
     """Download the Pydantic WASI wheels if they are not already present."""
-    if not os.path.exists("wasi_deps"):
+    PYDANTIC_CORE_VERSION = "2.27.2"
+    WASI_DEPS_PATH = "wasi_deps"
+    if os.path.exists(WASI_DEPS_PATH):
+        if not os.path.exists(
+            f"{WASI_DEPS_PATH}/pydantic_core-{PYDANTIC_CORE_VERSION}.dist-info"
+        ):
+            logger.info("Deleting outdated Pydantic Wasi wheels...")
+            subprocess.run(["rm", "-rf", WASI_DEPS_PATH])
+
+    if not os.path.exists(WASI_DEPS_PATH):
         logger.info("Downloading Pydantic Wasi wheels...")
         subprocess.run(
             [
                 "pip3",
                 "install",
                 "--target",
-                "wasi_deps",
+                WASI_DEPS_PATH,
                 "--only-binary",
                 ":all:",
                 "--platform",
@@ -34,7 +43,7 @@ def setup_wasi_deps() -> None:
                 "wasi_0_0_0_wasm32",
                 "--python-version",
                 "3.12",
-                "https://github.com/benbrandt/wasi-wheels/releases/download/pydantic-core/v2.27.2/pydantic_core-2.27.2-cp312-cp312-wasi_0_0_0_wasm32.whl",
+                f"https://github.com/benbrandt/wasi-wheels/releases/download/pydantic-core/v{PYDANTIC_CORE_VERSION}/pydantic_core-{PYDANTIC_CORE_VERSION}-cp312-cp312-wasi_0_0_0_wasm32.whl",
             ],
             check=True,
         )
