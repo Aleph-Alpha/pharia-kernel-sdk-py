@@ -111,13 +111,9 @@ def build(
 def publish(
     skill: Annotated[
         str,
-        typer.Argument(
-            help="Path to the component to publish without the .wasm extension"
-        ),
+        typer.Argument(help="A path to a Wasm file containing a Skill."),
     ],
-    tag: Annotated[
-        str, typer.Option(help='default to "latest" if not provided')
-    ] = "latest",
+    tag: Annotated[str, typer.Option(help="An identifier for the Skill.")] = "latest",
 ) -> None:
     """
     Publish a skill.
