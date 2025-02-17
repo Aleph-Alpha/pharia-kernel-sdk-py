@@ -9,7 +9,7 @@ from .pharia_skill_cli import PhariaSkillCli
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(levelname)s - %(message)s",
+    format="%(message)s",
     handlers=[logging.StreamHandler()],
 )
 
