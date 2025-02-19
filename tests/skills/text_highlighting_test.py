@@ -81,6 +81,37 @@ The international community is abuzz with plans for more focused research and po
     csi = DevCsi()
     output = highlighting(csi, input)
 
+    BOLD = "\033[1m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    ENDC = "\033[0m"
+
+    highlighted_answer = ""
+    previous_position = 0
+    for explanation in output.explanations:
+        highlighted_answer += input_text[previous_position : explanation.start]
+        highlighted_answer += (
+            BOLD + OKBLUE
+            if explanation.relevancy == TextRelevancy.HIGHLY_RELEVANT
+            else OKCYAN
+        )
+        highlighted_answer += input_text[
+            explanation.start : explanation.start + explanation.length
+        ]
+        highlighted_answer += ENDC
+        previous_position = explanation.start + explanation.length
+
+    print(f"""
+Answer:
+    {output.answer}
+
+Reference:
+    {highlighted_answer.replace("\n", " ")}
+
+Legend:
+    {BOLD}{OKBLUE}Highly relevant{ENDC}
+    {OKCYAN}Relevant{ENDC}""")
+
     assert any(
         [
             "extreme conditions"
