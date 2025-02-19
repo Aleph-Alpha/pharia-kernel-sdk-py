@@ -25,11 +25,17 @@ class DocumentPath:
 
 @dataclass
 class TextCursor:
+    """
+    A position within a document. The cursor is always inclusive of the current position, in both start and end positions.
+    """
     item: int
     position: int
 
 @dataclass
 class SearchResult:
+    """
+    The result for semantic document search. Part of an array of document names and content of the found documents in the given collection.
+    """
     document_path: DocumentPath
     content: str
     score: float
@@ -111,6 +117,9 @@ MetadataFilterCondition = Union[MetadataFilterCondition_GreaterThan, MetadataFil
 
 @dataclass
 class MetadataFilter:
+    """
+    Matches sections whose metadata fields match the given condition. You must specify the field, and can only specify a single condition.
+    """
     field: str
     condition: MetadataFilterCondition
 
@@ -131,6 +140,9 @@ class SearchFilter_WithAll:
 
 
 SearchFilter = Union[SearchFilter_Without, SearchFilter_WithOneOf, SearchFilter_WithAll]
+"""
+A logical combination of filter conditions.
+"""
 
 
 @dataclass
