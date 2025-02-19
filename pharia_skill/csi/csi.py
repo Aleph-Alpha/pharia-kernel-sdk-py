@@ -18,6 +18,7 @@ from .inference import (
     CompletionParams,
     CompletionRequest,
     ExplanationRequest,
+    Granularity,
     Message,
     TextScore,
 )
@@ -118,8 +119,14 @@ class Csi(Protocol):
         """
         ...
 
-    def _explain(self, prompt: str, target: str, model: str) -> list[TextScore]:
-        request = ExplanationRequest(prompt, target, model)
+    def _explain(
+        self,
+        prompt: str,
+        target: str,
+        model: str,
+        granularity: Granularity = Granularity.AUTO,
+    ) -> list[TextScore]:
+        request = ExplanationRequest(prompt, target, model, granularity)
         return self._explain_concurrent([request])[0]
 
     def _explain_concurrent(

@@ -5,7 +5,13 @@ Given a question and a fitting text found via Rag, we want to generate an answer
 from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, Csi, skill
-from pharia_skill.csi.inference import Completion, FinishReason, TextScore, TokenUsage
+from pharia_skill.csi.inference import (
+    Completion,
+    FinishReason,
+    Granularity,
+    TextScore,
+    TokenUsage,
+)
 from pharia_skill.testing import StubCsi
 
 
@@ -49,7 +55,13 @@ class TextHighlightingStubCsi(StubCsi):
             usage=TokenUsage(prompt=0, completion=0),
         )
 
-    def _explain(self, prompt: str, target: str, model: str) -> list[TextScore]:
+    def _explain(
+        self,
+        prompt: str,
+        target: str,
+        model: str,
+        granularity: Granularity = Granularity.AUTO,
+    ) -> list[TextScore]:
         return [TextScore(start=0, length=0, score=0.5)]
 
 
