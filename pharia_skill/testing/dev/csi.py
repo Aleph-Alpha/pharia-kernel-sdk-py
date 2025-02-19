@@ -30,6 +30,7 @@ from pharia_skill import (
     SearchResult,
     SelectLanguageRequest,
 )
+from pharia_skill.csi.inference import ExplanationRequest, TextScore
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,
@@ -103,6 +104,11 @@ class DevCsi(Csi):
         body = ChatRequestSerializer(requests=requests).model_dump()
         output = self.run("chat", body)
         return ChatDeserializer(root=output).root
+
+    def _explain_concurrent(
+        self, requests: list[ExplanationRequest]
+    ) -> list[list[TextScore]]:
+        raise NotImplementedError
 
     def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
         body = ChunkRequestSerializer(requests=requests).model_dump()

@@ -264,3 +264,33 @@ class ChatResponse:
         logprobs = [Distribution.from_dict(logprob) for logprob in body["logprobs"]]
         usage = TokenUsage(body["usage"]["prompt"], body["usage"]["completion"])
         return ChatResponse(message, finish_reason, logprobs, usage)
+
+
+@dataclass
+class TextScore:
+    """A range of text with a score indicating how much it influenced the completion.
+
+    Attributes:
+        start (int): The start index of the text segment w.r.t. to characters in the prompt.
+        length (int): Length of the text segment w.r.t. to characters in the prompt.
+        score (float): The score of the text segment, higher means more relevant.
+    """
+
+    start: int
+    length: int
+    score: float
+
+
+@dataclass
+class ExplanationRequest:
+    """Request an explanation for the completion.
+
+    Attributes:
+        prompt (str): The prompt used for the completion.
+        target (str): The completion text.
+        model (str): The model used for the completion.
+    """
+
+    prompt: str
+    target: str
+    model: str

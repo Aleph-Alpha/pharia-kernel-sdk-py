@@ -1,5 +1,7 @@
 import json
 
+from pharia_skill.csi.inference import ExplanationRequest, TextScore
+
 from ..csi import (
     ChatRequest,
     ChatResponse,
@@ -31,6 +33,8 @@ from .inference import (
     chat_response_from_wit,
     completion_from_wit,
     completion_request_to_wit,
+    explanation_request_to_wit,
+    text_score_from_wit,
 )
 from .language import language_from_wit, language_request_to_wit
 
@@ -53,6 +57,15 @@ class WitCsi(Csi):
         wit_requests = [chat_request_to_wit(r) for r in requests]
         responses = wit_inference.chat(wit_requests)
         return [chat_response_from_wit(response) for response in responses]
+
+    def _explain_concurrent(
+        self, requests: list[ExplanationRequest]
+    ) -> list[list[TextScore]]:
+        wit_requests = [explanation_request_to_wit(r) for r in requests]
+        responses = wit_inference.explain(wit_requests)
+        return [
+            [text_score_from_wit(score) for score in scores] for scores in responses
+        ]
 
     def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
         wit_requests = [chunk_request_to_wit(r) for r in requests]

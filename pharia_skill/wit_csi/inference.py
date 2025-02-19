@@ -1,3 +1,5 @@
+from pharia_skill.csi.inference import ExplanationRequest, TextScore
+
 from ..csi import (
     ChatParams,
     ChatRequest,
@@ -143,3 +145,20 @@ def chat_response_from_wit(response: wit.ChatResponse) -> ChatResponse:
         ],
         usage=token_usage_from_wit(response.usage),
     )
+
+
+def explanation_request_to_wit(
+    explanation_request: ExplanationRequest,
+) -> wit.ExplanationRequest:
+    return wit.ExplanationRequest(
+        prompt=explanation_request.prompt,
+        target=explanation_request.target,
+        model=explanation_request.model,
+        # Currently we only use explainability for text highlighting. We currently decide for the
+        # user what the best granularity is.
+        granularity=wit.Granularity.SENTENCE,
+    )
+
+
+def text_score_from_wit(score: wit.TextScore) -> TextScore:
+    return TextScore(start=score.start, length=score.length, score=score.score)

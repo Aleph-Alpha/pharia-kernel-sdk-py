@@ -17,7 +17,9 @@ from .inference import (
     Completion,
     CompletionParams,
     CompletionRequest,
+    ExplanationRequest,
     Message,
+    TextScore,
 )
 from .language import Language, SelectLanguageRequest
 
@@ -116,6 +118,14 @@ class Csi(Protocol):
         """
         ...
 
+    def _explain(self, prompt: str, target: str, model: str) -> list[TextScore]:
+        request = ExplanationRequest(prompt, target, model)
+        return self._explain_concurrent([request])[0]
+
+    def _explain_concurrent(
+        self, requests: list[ExplanationRequest]
+    ) -> list[list[TextScore]]: ...
+
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         """Select the detected language for the provided input based on the list of possible languages.
 
@@ -210,7 +220,7 @@ class Csi(Protocol):
     def documents_metadata(
         self, document_paths: list[DocumentPath]
     ) -> list[JsonSerializable]:
-        """Return metadata of multiple documents.
+        """Metadata of multiple documents.
 
         Parameters:
             document_paths (list[DocumentPath], required): The document paths to get metadata from.

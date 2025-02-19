@@ -22,6 +22,7 @@ from pharia_skill import (
     Text,
     TokenUsage,
 )
+from pharia_skill.csi.inference import ExplanationRequest, TextScore
 
 
 class StubCsi(Csi):
@@ -86,6 +87,11 @@ class StubCsi(Csi):
             )
             for request in requests
         ]
+
+    def _explain_concurrent(
+        self, requests: list[ExplanationRequest]
+    ) -> list[list[TextScore]]:
+        return [[] for _ in requests]
 
     def select_language_concurrent(
         self, requests: list[SelectLanguageRequest]
