@@ -1,4 +1,4 @@
-package pharia:skill@0.3.0;
+package pharia:skill@0.3.1;
 
 @since(version = 0.3.0)
 world skill {
@@ -202,6 +202,49 @@ interface document-index {
 
 @since(version = 0.3.0)
 interface inference {
+    /// Better understand the source of a completion, specifically on how much each section of a prompt impacts each token of the completion.
+    @unstable(feature = explain)
+    explain: func(request: list<explanation-request>) -> list<list<text-score>>;
+
+    /// A score for a text segment.
+    @unstable(feature = explain)
+    record text-score {
+        /// The start index of the text segment w.r.t. to characters in the prompt.
+        start: u32,
+        /// The length of the text segment w.r.t. to characters in the prompt.
+        length: u32,
+        /// The score of the text segment, higher means more relevant.
+        score: f64,
+    }
+
+    /// At which granularity should the target be explained in terms of the prompt.
+    /// If you choose, for example, [`granularity.sentence`] then we report the importance score of each
+    /// sentence in the prompt towards generating the target output.
+    /// The default is [`granularity.auto`] which means we will try to find the granularity that
+    /// brings you closest to around 30 explanations. For large prompts, this would likely
+    /// be sentences. For short prompts this might be individual words or even tokens.
+    @unstable(feature = explain)
+    enum granularity {
+        /// Let the system decide which granularity is most suitable for the given input.
+        auto,
+        word,
+        sentence,
+        paragraph,
+    }
+
+    @unstable(feature = explain)
+    record explanation-request {
+        /// The prompt that typically was the input of a previous completion request
+        prompt: string,
+        /// The target string that should be explained. The influence of individual parts
+        /// of the prompt for generating this target string will be indicated in the response.
+        target: string,
+        /// The model to use for the explanation.
+        model: string,
+        /// The granularity of the explanation.
+        granularity: granularity,
+    }
+
     /// The reason the model finished generating
     @since(version = 0.3.0)
     enum finish-reason {
