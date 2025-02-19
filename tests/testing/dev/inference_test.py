@@ -6,10 +6,13 @@ from pharia_skill import (
     CompletionParams,
     CompletionRequest,
     Distribution,
+    ExplanationRequest,
     FinishReason,
+    Granularity,
     Logprob,
     Message,
     Role,
+    TextScore,
     TokenUsage,
     TopLogprobs,
 )
@@ -18,6 +21,8 @@ from pharia_skill.testing.dev.inference import (
     ChatRequestSerializer,
     CompletionDeserializer,
     CompletionRequestSerializer,
+    ExplanationDeserializer,
+    ExplanationRequestSerializer,
 )
 
 from .conftest import dumps
@@ -168,3 +173,46 @@ def test_deserialize_chat():
             )
         ],
     )
+
+
+def test_serialize_explanation_request():
+    # Given a list of Explanation requests
+    request = ExplanationRequestSerializer(
+        requests=[
+            ExplanationRequest(
+                prompt="my prompt",
+                target="my target",
+                model="my-model",
+                granularity=Granularity.AUTO,
+            )
+        ]
+    )
+
+    # When serializing it
+    serialized = request.model_dump_json()
+
+    # Then it matches
+    assert serialized == dumps(
+        {
+            "requests": [
+                {
+                    "prompt": "my prompt",
+                    "target": "my target",
+                    "model": "my-model",
+                    "granularity": "auto",
+                }
+            ]
+        }
+    )
+
+
+def test_deserialize_explanation():
+    # Given a serialized explanation response
+    serialized = dumps([[{"start": 0, "length": 5, "score": 0.5}]])
+
+    # When deserializing it
+    deserialized = ExplanationDeserializer.model_validate_json(serialized)
+    explanation = deserialized.root
+
+    # Then the explanation is loaded
+    assert explanation == [[TextScore(start=0, length=5, score=0.5)]]

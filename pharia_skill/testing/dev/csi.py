@@ -52,6 +52,8 @@ from .inference import (
     ChatRequestSerializer,
     CompletionDeserializer,
     CompletionRequestSerializer,
+    ExplanationDeserializer,
+    ExplanationRequestSerializer,
 )
 from .language import (
     SelectLanguageDeserializer,
@@ -108,7 +110,9 @@ class DevCsi(Csi):
     def _explain_concurrent(
         self, requests: list[ExplanationRequest]
     ) -> list[list[TextScore]]:
-        raise NotImplementedError
+        body = ExplanationRequestSerializer(requests=requests).model_dump()
+        output = self.run("explain", body)
+        return ExplanationDeserializer(root=output).root
 
     def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
         body = ChunkRequestSerializer(requests=requests).model_dump()
