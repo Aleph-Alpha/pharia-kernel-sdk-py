@@ -19,6 +19,7 @@ from pharia_skill import (
     Role,
     Text,
 )
+from pharia_skill.csi.inference import Granularity
 from pharia_skill.studio import (
     SpanClient,
     StudioExporter,
@@ -61,6 +62,29 @@ def test_chat(csi: Csi, model: str):
     assert "Bob" in result.message.content
     assert isinstance(result.message.role, Role)
     assert result.message.role == Role.Assistant
+
+
+@pytest.mark.kernel
+def test_explain(csi: Csi, model: str):
+    scores = csi._explain(
+        prompt="An apple a day",
+        target=" keeps the doctor away",
+        granularity=Granularity.WORD,
+        model=model,
+    )
+
+    assert len(scores) == 4
+    assert scores[0].start == 0
+    assert scores[0].length == 2
+
+    assert scores[1].start == 3
+    assert scores[1].length == 5
+
+    assert scores[2].start == 9
+    assert scores[2].length == 1
+
+    assert scores[3].start == 11
+    assert scores[3].length == 3
 
 
 @pytest.mark.kernel

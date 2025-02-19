@@ -285,7 +285,7 @@ class Granularity(str, Enum):
     """The granularity of the explanation."""
 
     AUTO = "auto"
-    WORD = "token"
+    WORD = "word"
     SENTENCE = "sentence"
     PARAGRAPH = "paragraph"
 
