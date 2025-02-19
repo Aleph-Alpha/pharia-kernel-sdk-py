@@ -281,6 +281,15 @@ class TextScore:
     score: float
 
 
+class Granularity(str, Enum):
+    """The granularity of the explanation."""
+
+    AUTO = "auto"
+    WORD = "token"
+    SENTENCE = "sentence"
+    PARAGRAPH = "paragraph"
+
+
 @dataclass
 class ExplanationRequest:
     """Request an explanation for the completion.
@@ -289,8 +298,10 @@ class ExplanationRequest:
         prompt (str): The prompt used for the completion.
         target (str): The completion text.
         model (str): The model used for the completion.
+        granularity (Granularity, optional): Controls the length of the ranges which are explained.
     """
 
     prompt: str
     target: str
     model: str
+    granularity: Granularity = Granularity.AUTO
