@@ -15,13 +15,10 @@ from ..csi import (
     SearchResult,
     SelectLanguageRequest,
 )
-from ..wit.imports.chunking import chunk as wit_chunk
-from ..wit.imports.document_index import document_metadata as wit_document_metadata
-from ..wit.imports.document_index import documents as wit_documents
-from ..wit.imports.document_index import search as wit_search
-from ..wit.imports.inference import chat as wit_chat
-from ..wit.imports.inference import complete as wit_complete
-from ..wit.imports.language import select_language as wit_select_language
+from ..wit.imports import chunking as wit_chunking
+from ..wit.imports import document_index as wit_document_index
+from ..wit.imports import inference as wit_inference
+from ..wit.imports import language as wit_language
 from .chunking import chunk_request_to_wit
 from .document_index import (
     document_from_wit,
@@ -49,23 +46,23 @@ class WitCsi(Csi):
         self, requests: list[CompletionRequest]
     ) -> list[Completion]:
         wit_requests = [completion_request_to_wit(r) for r in requests]
-        completions = wit_complete(wit_requests)
+        completions = wit_inference.complete(wit_requests)
         return [completion_from_wit(completion) for completion in completions]
 
     def chat_concurrent(self, requests: list[ChatRequest]) -> list[ChatResponse]:
         wit_requests = [chat_request_to_wit(r) for r in requests]
-        responses = wit_chat(wit_requests)
+        responses = wit_inference.chat(wit_requests)
         return [chat_response_from_wit(response) for response in responses]
 
     def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
         wit_requests = [chunk_request_to_wit(r) for r in requests]
-        return wit_chunk(wit_requests)
+        return wit_chunking.chunk(wit_requests)
 
     def select_language_concurrent(
         self, requests: list[SelectLanguageRequest]
     ) -> list[Language | None]:
         wit_requests = [language_request_to_wit(r) for r in requests]
-        languages = wit_select_language(wit_requests)
+        languages = wit_language.select_language(wit_requests)
         return [
             language_from_wit(lang) if lang is not None else None for lang in languages
         ]
@@ -74,7 +71,7 @@ class WitCsi(Csi):
         self, requests: list[SearchRequest]
     ) -> list[list[SearchResult]]:
         wit_requests = [search_request_to_wit(r) for r in requests]
-        results = wit_search(wit_requests)
+        results = wit_document_index.search(wit_requests)
         return [
             [search_result_from_wit(result) for result in results_per_request]
             for results_per_request in results
@@ -82,12 +79,12 @@ class WitCsi(Csi):
 
     def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
         requests = [document_path_to_wit(path) for path in document_paths]
-        documents = wit_documents(requests)
+        documents = wit_document_index.documents(requests)
         return [document_from_wit(document) for document in documents]
 
     def documents_metadata(
         self, document_paths: list[DocumentPath]
     ) -> list[JsonSerializable]:
         requests = [document_path_to_wit(path) for path in document_paths]
-        metadata = wit_document_metadata(requests)
+        metadata = wit_document_index.document_metadata(requests)
         return [json.loads(metadata) if metadata else None for metadata in metadata]
