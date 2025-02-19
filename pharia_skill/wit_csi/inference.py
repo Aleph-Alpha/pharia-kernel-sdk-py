@@ -1,4 +1,12 @@
-from pharia_skill.csi.inference import ExplanationRequest, Granularity, TextScore
+"""
+As the bindings for explanation are still behind a feature flags, we can not
+require the generated bindings for the corresponging structs (`TextScore`,
+`ExplanationRequest`, and `Granularity`). We therefore can not use these types
+for annotations.
+
+The `type: ignore[no-untyped-def]` annotations can be removed once we stabilize
+the feature and we know that the classes will always be in the bindings.
+"""
 
 from ..csi import (
     ChatParams,
@@ -8,11 +16,14 @@ from ..csi import (
     CompletionParams,
     CompletionRequest,
     Distribution,
+    ExplanationRequest,
     FinishReason,
+    Granularity,
     Logprob,
     Logprobs,
     Message,
     Role,
+    TextScore,
     TokenUsage,
     TopLogprobs,
 )
@@ -147,7 +158,7 @@ def chat_response_from_wit(response: wit.ChatResponse) -> ChatResponse:
     )
 
 
-def granularity_to_wit(granularity: Granularity) -> wit.Granularity:
+def granularity_to_wit(granularity: Granularity):  # type: ignore[no-untyped-def]
     match granularity:
         case Granularity.AUTO:
             return wit.Granularity.AUTO
@@ -159,9 +170,9 @@ def granularity_to_wit(granularity: Granularity) -> wit.Granularity:
             return wit.Granularity.PARAGRAPH
 
 
-def explanation_request_to_wit(
+def explanation_request_to_wit(  # type: ignore[no-untyped-def]
     explanation_request: ExplanationRequest,
-) -> wit.ExplanationRequest:
+):
     return wit.ExplanationRequest(
         prompt=explanation_request.prompt,
         target=explanation_request.target,
@@ -170,5 +181,5 @@ def explanation_request_to_wit(
     )
 
 
-def text_score_from_wit(score: wit.TextScore) -> TextScore:
+def text_score_from_wit(score) -> TextScore:  # type: ignore[no-untyped-def]
     return TextScore(start=score.start, length=score.length, score=score.score)
