@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from pharia_skill import CompletionParams, Csi, skill
 from pharia_skill.csi.inference import (
     Granularity,
+    TextScore,
 )
 from pharia_skill.testing.dev.csi import DevCsi
 
@@ -18,10 +19,22 @@ class Input(BaseModel):
     text: str
 
 
+NORMALIZED_SCORE_HIGHLY_RELEVANT = 0.55
+NORMALIZED_SCORE_RELEVANT = 0.1
+
+
 class TextRelevancy(str, Enum):
-    HIGHLY_RELEVANT = "highly_relevant"  # text score >= 1
-    RELEVANT = "relevant"  # text score > 0
-    IRRELEVANT = "irrelevant"  # text score <= 0
+    HIGHLY_RELEVANT = "highly_relevant"  # normalized score >= 0.55
+    RELEVANT = "relevant"  # normalized score >= 0.1
+    OTHER = "other"
+
+    @classmethod
+    def from_score(cls, score: float) -> "TextRelevancy":
+        if score >= NORMALIZED_SCORE_HIGHLY_RELEVANT:
+            return cls.HIGHLY_RELEVANT
+        if score >= NORMALIZED_SCORE_RELEVANT:
+            return cls.RELEVANT
+        return cls.OTHER
 
 
 class Explanation(BaseModel):
@@ -33,6 +46,23 @@ class Explanation(BaseModel):
 class Output(BaseModel):
     answer: str
     explanations: list[Explanation]
+
+
+def filter_and_clamp(start: int, end: int, scores: list[TextScore]) -> list[TextScore]:
+    """Filter and clamp the text scores for the specified range.
+
+    The text scores that do not overlap with the specified range are filtered out.
+    The ranges of the remaining text scores are clamped and offset to the specified range.
+    """
+    return [
+        TextScore(
+            start=max(score.start, start) - start,
+            length=min(score.start + score.length, end) - max(score.start, start),
+            score=score.score,
+        )
+        for score in scores
+        if score.start < end and score.start + score.length > start
+    ]
 
 
 @skill
@@ -51,22 +81,56 @@ def highlighting(csi: Csi, input: Input) -> Output:
         model=model,
         granularity=Granularity.SENTENCE,
     )
+    filtered_and_clamped_explanations = filter_and_clamp(
+        len(first_prompt), len(first_prompt) + len(input.text), explanations
+    )
     relevant_explanations = [
         Explanation(
-            start=explanation.start - len(first_prompt),
+            start=explanation.start,
             length=explanation.length,
-            relevancy=TextRelevancy.HIGHLY_RELEVANT
-            if explanation.score >= 1
-            else TextRelevancy.RELEVANT,
+            relevancy=TextRelevancy.from_score(explanation.score),
         )
-        for explanation in explanations
+        for explanation in filtered_and_clamped_explanations
         if explanation.score > 0
-        and explanation.start >= len(first_prompt)
-        and explanation.start + explanation.length
-        <= len(first_prompt) + len(input.text)
     ]
 
     return Output(answer=answer, explanations=relevant_explanations)
+
+
+def test_filter_and_clamp():
+    # 0 1 2 | 3 4 5 6 | 7 8 9
+    start = 3
+    end = 7
+    before_range = TextScore(start=0, length=1, score=0.1)
+    start_before_and_end_within_range = TextScore(start=2, length=4, score=0.2)
+    start_before_and_end_on_range = TextScore(start=2, length=5, score=0.3)
+    on_start = TextScore(start=3, length=1, score=0.4)
+    start_on_and_end_on_range = TextScore(start=3, length=4, score=0.5)
+    start_on_and_end_after_range = TextScore(start=3, length=6, score=0.6)
+    start_within_and_end_after_range = TextScore(start=5, length=4, score=0.7)
+    on_end = TextScore(start=6, length=1, score=0.8)
+    after_range = TextScore(start=8, length=2, score=0.9)
+    scores = [
+        before_range,
+        start_before_and_end_within_range,
+        start_before_and_end_on_range,
+        on_start,
+        start_on_and_end_on_range,
+        start_on_and_end_after_range,
+        start_within_and_end_after_range,
+        on_end,
+        after_range,
+    ]
+    processed_scores = filter_and_clamp(start, end, scores)
+    assert processed_scores == [
+        TextScore(start=0, length=3, score=0.2),
+        TextScore(start=0, length=4, score=0.3),
+        TextScore(start=0, length=1, score=0.4),
+        TextScore(start=0, length=4, score=0.5),
+        TextScore(start=0, length=4, score=0.6),
+        TextScore(start=2, length=2, score=0.7),
+        TextScore(start=3, length=1, score=0.8),
+    ]
 
 
 def test_run_text_highlighting_skill():
