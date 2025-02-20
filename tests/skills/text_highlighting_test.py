@@ -7,7 +7,7 @@ from enum import Enum
 import pytest
 from pydantic import BaseModel
 
-from pharia_skill import CompletionParams, Csi, skill
+from pharia_skill import Csi, skill
 from pharia_skill.csi.inference import (
     Granularity,
     TextScore,
@@ -16,8 +16,10 @@ from pharia_skill.testing.dev.csi import DevCsi
 
 
 class Input(BaseModel):
-    question: str
-    texts: list[str]
+    model: str
+    prompt: str
+    raw_completion: str
+    focus_ranges: list[tuple[int, int]]
 
 
 NORMALIZED_SCORE_HIGHLY_RELEVANT = 0.55
@@ -38,107 +40,119 @@ class TextRelevancy(str, Enum):
         return cls.OTHER
 
 
-class ExplanationChunk(BaseModel):
+class Highlight(BaseModel):
     start: int
-    length: int
+    end: int
     relevancy: TextRelevancy
 
 
-class Explanation(BaseModel):
-    chunks: list[ExplanationChunk]
+class Chunk(BaseModel):
+    start: int
+    end: int
+    highlights: list[Highlight]
 
 
 class Output(BaseModel):
-    answer: str
-    explanations: list[Explanation]
+    chunks: list[Chunk]
 
 
-def filter_and_clamp(start: int, end: int, scores: list[TextScore]) -> list[TextScore]:
+class AssociatedExplanations(BaseModel):
+    """The list of text scores associated with the specified range."""
+
+    start: int
+    end: int
+    explanations: list[TextScore]
+
+
+def associate_explanations(
+    start: int, end: int, explanations: list[TextScore]
+) -> AssociatedExplanations:
     """Filter and clamp the text scores for the specified range.
 
     The text scores that do not overlap with the specified range are filtered out.
     The ranges of the remaining text scores are clamped and offset to the specified range.
     """
-    return [
-        TextScore(
-            start=max(score.start, start) - start,
-            length=min(score.start + score.length, end) - max(score.start, start),
-            score=score.score,
-        )
-        for score in scores
-        if score.start < end and score.start + score.length > start
+    relevant_explanations = [
+        explanation
+        for explanation in explanations
+        if explanation.start < end and explanation.start + explanation.length > start
     ]
+    clamped_explanations = [
+        TextScore(
+            start=max(explanation.start, start) - start,
+            length=min(explanation.start + explanation.length, end)
+            - max(explanation.start, start),
+            score=explanation.score,
+        )
+        for explanation in relevant_explanations
+    ]
+    return AssociatedExplanations(
+        start=start, end=end, explanations=clamped_explanations
+    )
 
 
-def normalize(chunks: list[list[TextScore]]) -> list[list[TextScore]]:
-    max_score = max(score.score for chunk in chunks for score in chunk)
+def normalize(
+    chunks: list[AssociatedExplanations],
+) -> list[AssociatedExplanations]:
+    max_score = max(
+        explanation.score for chunk in chunks for explanation in chunk.explanations
+    )
     divider = max(1, max_score)
     return [
-        [
-            TextScore(
-                start=score.start,
-                length=score.length,
-                score=max(score.score / divider, 0),
-            )
-            for score in chunk
-        ]
+        AssociatedExplanations(
+            start=chunk.start,
+            end=chunk.end,
+            explanations=[
+                TextScore(
+                    start=explanation.start,
+                    length=explanation.length,
+                    score=max(explanation.score / divider, 0),
+                )
+                for explanation in chunk.explanations
+            ],
+        )
         for chunk in chunks
     ]
 
 
 @skill
 def highlighting(csi: Csi, input: Input) -> Output:
-    opening_prompt = f"Question: {input.question}\n"
-    input_prompt_prefix = "Text: "
-    input_prompt_suffix = "\n"
-    input_prompts = "".join(
-        [input_prompt_prefix + text + input_prompt_suffix for text in input.texts]
-    )
-    closing_prompt = "Answer:"
-    prompt = opening_prompt + input_prompts + closing_prompt
-    model = "pharia-1-llm-7b-control"
-    params = CompletionParams(max_tokens=64, return_special_tokens=False)
-    completion = csi.complete(model, prompt, params)
-    answer = completion.text
-
     explanations = csi._explain(
-        prompt=prompt,
-        target=answer,
-        model=model,
+        prompt=input.prompt,
+        target=input.raw_completion,
+        model=input.model,
         granularity=Granularity.SENTENCE,
     )
 
-    relevant_chunks = []
-    source_start = len(opening_prompt)
-    for text in input.texts:
-        source_start += len(input_prompt_prefix)
-        filtered_and_clamped_explanations = filter_and_clamp(
-            source_start, source_start + len(text), explanations
-        )
-        source_start += len(text) + len(input_prompt_suffix)
-        relevant_chunks.append(filtered_and_clamped_explanations)
+    associated_explanations = [
+        associate_explanations(range[0], range[1], explanations)
+        for range in input.focus_ranges
+    ]
 
-    normalized_explanations = normalize(relevant_chunks)
-    relevant_explanations = [
-        Explanation(
-            chunks=[
-                ExplanationChunk(
+    normalized_explanations = normalize(associated_explanations)
+
+    chunks = [
+        Chunk(
+            start=sublist.start,
+            end=sublist.end,
+            highlights=[
+                Highlight(
                     start=explanation.start,
-                    length=explanation.length,
+                    end=explanation.start + explanation.length,
                     relevancy=TextRelevancy.from_score(explanation.score),
                 )
-                for explanation in sublist
+                for explanation in sublist.explanations
                 if explanation.score > 0
-            ]
+            ],
         )
         for sublist in normalized_explanations
     ]
 
-    return Output(answer=answer, explanations=relevant_explanations)
+    return Output(chunks=chunks)
 
 
-def test_filter_and_clamp():
-    # 0 1 2 | 3 4 5 6 | 7 8 9
+def test_associate_explanations():
+    # Given a range: 0 1 2 | 3 4 5 6 | 7 8 9
     start = 3
     end = 7
     before_range = TextScore(start=0, length=1, score=0.1)
@@ -161,58 +175,87 @@ def test_filter_and_clamp():
         on_end,
         after_range,
     ]
-    processed_scores = filter_and_clamp(start, end, scores)
-    assert processed_scores == [
-        TextScore(start=0, length=3, score=0.2),
-        TextScore(start=0, length=4, score=0.3),
-        TextScore(start=0, length=1, score=0.4),
-        TextScore(start=0, length=4, score=0.5),
-        TextScore(start=0, length=4, score=0.6),
-        TextScore(start=2, length=2, score=0.7),
-        TextScore(start=3, length=1, score=0.8),
-    ]
+
+    associated_explanations = associate_explanations(start, end, scores)
+
+    assert associated_explanations == AssociatedExplanations(
+        start=start,
+        end=end,
+        explanations=[
+            TextScore(start=0, length=3, score=0.2),
+            TextScore(start=0, length=4, score=0.3),
+            TextScore(start=0, length=1, score=0.4),
+            TextScore(start=0, length=4, score=0.5),
+            TextScore(start=0, length=4, score=0.6),
+            TextScore(start=2, length=2, score=0.7),
+            TextScore(start=3, length=1, score=0.8),
+        ],
+    )
 
 
 def test_normalize():
     score_1 = TextScore(start=1, length=1, score=-1)
     score_2 = TextScore(start=2, length=2, score=0)
-    score_3 = TextScore(start=3, length=3, score=1)
+    score_3 = TextScore(start=3, length=1, score=1)
     score_4 = TextScore(start=4, length=4, score=2)
     score_5 = TextScore(start=5, length=5, score=3)
-
     scores = [
-        [
-            score_1,
-            score_2,
-            score_3,
-        ],
-        [score_4, score_5],
+        AssociatedExplanations(
+            start=1,
+            end=4,
+            explanations=[
+                score_1,
+                score_2,
+                score_3,
+            ],
+        ),
+        AssociatedExplanations(
+            start=4,
+            end=10,
+            explanations=[score_4, score_5],
+        ),
     ]
+
     normalized_scores = normalize(scores)
 
     assert normalized_scores == [
-        [
-            TextScore(start=1, length=1, score=0),
-            TextScore(start=2, length=2, score=0),
-            TextScore(start=3, length=3, score=1 / 3),
-        ],
-        [
-            TextScore(start=4, length=4, score=2 / 3),
-            TextScore(start=5, length=5, score=3 / 3),
-        ],
+        AssociatedExplanations(
+            start=1,
+            end=4,
+            explanations=[
+                TextScore(start=1, length=1, score=0),
+                TextScore(start=2, length=2, score=0),
+                TextScore(start=3, length=1, score=1 / 3),
+            ],
+        ),
+        AssociatedExplanations(
+            start=4,
+            end=10,
+            explanations=[
+                TextScore(start=4, length=4, score=2 / 3),
+                TextScore(start=5, length=5, score=3 / 3),
+            ],
+        ),
     ]
 
 
 @pytest.mark.kernel
 def test_run_text_highlighting_skill():
-    input_text = """Scientists at the European Southern Observatory announced a groundbreaking discovery today: microbial life detected in the water-rich atmosphere of Proxima Centauri b, our closest neighboring exoplanet.
+    prompt = """Question: What is the ecosystem adapted to?
+Text:
+    Scientists at the European Southern Observatory announced a groundbreaking discovery today: microbial life detected in the water-rich atmosphere of Proxima Centauri b, our closest neighboring exoplanet.
 The evidence, drawn from a unique spectral signature of organic compounds, hints at an ecosystem adapted to extreme conditions.
 This finding, while not complex extraterrestrial life, significantly raises the prospects of life's commonality in the universe.
-The international community is abuzz with plans for more focused research and potential interstellar missions."""
-    input_text2 = """Life on Earth is quite ubiquitous across the planet and has adapted over time to almost all the available environments in it, extremophiles and the deep biosphere thrive at even the most hostile ones. As a result, it is inferred that life in other celestial bodies may be equally adaptive. However, the origin of life is unrelated to its ease of adaptation and may have stricter requirements. A celestial body may not have any life on it, even if it were habitable."""
+The international community is abuzz with plans for more focused research and potential interstellar missions.
+Text:
+    Life on Earth is quite ubiquitous across the planet and has adapted over time to almost all the available environments in it, extremophiles and the deep biosphere thrive at even the most hostile ones. As a result, it is inferred that life in other celestial bodies may be equally adaptive. However, the origin of life is unrelated to its ease of adaptation and may have stricter requirements. A celestial body may not have any life on it, even if it were habitable.
+Answer:
+    """
     input = Input(
-        question="What is the ecosystem adapted to?",
-        texts=[input_text, input_text2],
+        prompt=prompt,
+        raw_completion="The ecosystem is adapted to extreme conditions.",
+        model="pharia-1-llm-7b-control",
+        focus_ranges=[(54, 624), (635, 1100)],
     )
     csi = DevCsi()
     output = highlighting(csi, input)
@@ -223,38 +266,35 @@ The international community is abuzz with plans for more focused research and po
     ENDC = "\033[0m"
 
     highlighted_reference = ""
-    previous_position = 0
-
-    for i, explanation in enumerate(output.explanations):
-        current_input_text = input.texts[i]
-        for chunk in explanation.chunks:
-            highlighted_reference += current_input_text[previous_position : chunk.start]
+    for i, chunk in enumerate(output.chunks):
+        highlighted_reference += f"    [{i}]:\n"
+        chunk_text = input.prompt[chunk.start : chunk.end]
+        previous_position = 0
+        for highlight in chunk.highlights:
+            highlighted_reference += chunk_text[previous_position : highlight.start]
             highlighted_reference += (
                 BOLD + BLUE
-                if chunk.relevancy == TextRelevancy.HIGHLY_RELEVANT
-                else (CYAN if chunk.relevancy == TextRelevancy.RELEVANT else "")
+                if highlight.relevancy == TextRelevancy.HIGHLY_RELEVANT
+                else (CYAN if highlight.relevancy == TextRelevancy.RELEVANT else "")
             )
-            highlighted_reference += current_input_text[
-                chunk.start : chunk.start + chunk.length
-            ]
-            highlighted_reference += (
-                "" if chunk.relevancy == TextRelevancy.OTHER else ENDC
-            )
-            previous_position = chunk.start + chunk.length
-        highlighted_reference += current_input_text[previous_position:]
+            highlighted_reference += chunk_text[highlight.start : highlight.end]
+            if highlight.relevancy != TextRelevancy.OTHER:
+                highlighted_reference += ENDC
+            previous_position = highlight.end
+        highlighted_reference += chunk_text[previous_position:]
         highlighted_reference += "\n"
     print(
         """
 Answer:
     {answer}
 
-Reference:
-    {highlighted_reference}
+References:
+{highlighted_reference}
 
 Legend:
     {bold}{blue}Highly relevant{endc}
     {cyan}Relevant{endc}""".format(
-            answer=output.answer,
+            answer=input.raw_completion,
             highlighted_reference=highlighted_reference,
             bold=BOLD,
             blue=BLUE,
@@ -263,14 +303,12 @@ Legend:
         )
     )
 
-    flatten_explanations = [
-        item for sublist in output.explanations for item in sublist.chunks
-    ]
     assert any(
         [
             "extreme conditions"
-            in input_text[explanation.start : explanation.start + explanation.length]
-            for explanation in flatten_explanations
-            if explanation.relevancy is TextRelevancy.HIGHLY_RELEVANT
+            in prompt[chunk.start + highlight.start : chunk.start + highlight.end]
+            for chunk in output.chunks
+            for highlight in chunk.highlights
+            if highlight.relevancy is TextRelevancy.HIGHLY_RELEVANT
         ]
     )
