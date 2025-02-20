@@ -4,6 +4,7 @@ Given a question and a fitting text found via Rag, we want to generate an answer
 
 from enum import Enum
 
+import pytest
 from pydantic import BaseModel
 
 from pharia_skill import CompletionParams, Csi, skill
@@ -133,6 +134,7 @@ def test_filter_and_clamp():
     ]
 
 
+@pytest.mark.kernel
 def test_run_text_highlighting_skill():
     input_text = """Scientists at the European Southern Observatory announced a groundbreaking discovery today: microbial life detected in the water-rich atmosphere of Proxima Centauri b, our closest neighboring exoplanet.
 The evidence, drawn from a unique spectral signature of organic compounds, hints at an ecosystem adapted to extreme conditions.
