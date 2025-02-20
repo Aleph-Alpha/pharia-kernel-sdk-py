@@ -82,35 +82,44 @@ The international community is abuzz with plans for more focused research and po
     output = highlighting(csi, input)
 
     BOLD = "\033[1m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
+    BLUE = "\033[94m"
+    CYAN = "\033[96m"
     ENDC = "\033[0m"
 
-    highlighted_answer = ""
+    highlighted_reference = ""
     previous_position = 0
     for explanation in output.explanations:
-        highlighted_answer += input_text[previous_position : explanation.start]
-        highlighted_answer += (
-            BOLD + OKBLUE
+        highlighted_reference += input_text[previous_position : explanation.start]
+        highlighted_reference += (
+            BOLD + BLUE
             if explanation.relevancy == TextRelevancy.HIGHLY_RELEVANT
-            else OKCYAN
+            else CYAN
         )
-        highlighted_answer += input_text[
+        highlighted_reference += input_text[
             explanation.start : explanation.start + explanation.length
         ]
-        highlighted_answer += ENDC
+        highlighted_reference += ENDC
         previous_position = explanation.start + explanation.length
-
-    print(f"""
+    highlighted_reference = highlighted_reference.replace("\n", " ")
+    print(
+        """
 Answer:
-    {output.answer}
+    {answer}
 
 Reference:
-    {highlighted_answer.replace("\n", " ")}
+    {highlighted_reference}
 
 Legend:
-    {BOLD}{OKBLUE}Highly relevant{ENDC}
-    {OKCYAN}Relevant{ENDC}""")
+    {bold}{blue}Highly relevant{endc}
+    {cyan}Relevant{endc}""".format(
+            answer=output.answer,
+            highlighted_reference=highlighted_reference,
+            bold=BOLD,
+            blue=BLUE,
+            cyan=CYAN,
+            endc=ENDC,
+        )
+    )
 
     assert any(
         [
