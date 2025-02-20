@@ -66,6 +66,19 @@ def filter_and_clamp(start: int, end: int, scores: list[TextScore]) -> list[Text
     ]
 
 
+def normalize(scores: list[TextScore]) -> list[TextScore]:
+    max_score = max(score.score for score in scores)
+    divider = max(1, max_score)
+    return [
+        TextScore(
+            start=score.start,
+            length=score.length,
+            score=max(score.score / divider, 0),
+        )
+        for score in scores
+    ]
+
+
 @skill
 def highlighting(csi: Csi, input: Input) -> Output:
     first_prompt = f"Question: {input.question}\nText: "
@@ -85,13 +98,14 @@ def highlighting(csi: Csi, input: Input) -> Output:
     filtered_and_clamped_explanations = filter_and_clamp(
         len(first_prompt), len(first_prompt) + len(input.text), explanations
     )
+    normalized_explanations = normalize(filtered_and_clamped_explanations)
     relevant_explanations = [
         Explanation(
             start=explanation.start,
             length=explanation.length,
             relevancy=TextRelevancy.from_score(explanation.score),
         )
-        for explanation in filtered_and_clamped_explanations
+        for explanation in normalized_explanations
         if explanation.score > 0
     ]
 
@@ -131,6 +145,25 @@ def test_filter_and_clamp():
         TextScore(start=0, length=4, score=0.6),
         TextScore(start=2, length=2, score=0.7),
         TextScore(start=3, length=1, score=0.8),
+    ]
+
+
+def test_normalize():
+    score_1 = TextScore(start=1, length=1, score=-1)
+    score_2 = TextScore(start=2, length=2, score=0)
+    score_3 = TextScore(start=3, length=3, score=1)
+    score_4 = TextScore(start=4, length=4, score=2)
+    score_5 = TextScore(start=5, length=5, score=3)
+
+    scores = [score_1, score_2, score_3, score_4, score_5]
+    normalized_scores = normalize(scores)
+
+    assert normalized_scores == [
+        TextScore(start=1, length=1, score=0),
+        TextScore(start=2, length=2, score=0),
+        TextScore(start=3, length=3, score=1 / 3),
+        TextScore(start=4, length=4, score=2 / 3),
+        TextScore(start=5, length=5, score=3 / 3),
     ]
 
 
