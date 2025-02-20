@@ -1,5 +1,5 @@
 """
-Given a question and a fitting text found via Rag, we want to generate an answer and highlight the relevant part of the text.
+Given a generated answer for a prompt, we want to highlight the relevant part of the text.
 """
 
 from enum import Enum
@@ -7,19 +7,15 @@ from enum import Enum
 import pytest
 from pydantic import BaseModel
 
-from pharia_skill import Csi, skill
-from pharia_skill.csi.inference import (
-    Granularity,
-    TextScore,
-)
-from pharia_skill.testing.dev.csi import DevCsi
+from pharia_skill import Csi, Granularity, TextScore, skill
+from pharia_skill.testing import DevCsi
 
 
 class Input(BaseModel):
     model: str
     prompt: str
     raw_completion: str
-    focus_ranges: list[tuple[int, int]]
+    source_ranges: list[tuple[int, int]]
 
 
 NORMALIZED_SCORE_HIGHLY_RELEVANT = 0.55
@@ -41,19 +37,35 @@ class TextRelevancy(str, Enum):
 
 
 class Highlight(BaseModel):
+    """A part of the associated source that was significant for the genrated answer.
+
+    Attributes:
+        start      The zero-based index of the first character of this highlight relative to the associated source.
+        end        The zero-based index after the last character of this highlight relative to the associated source.
+        relevancy  The significance of this highlight for the generated answer.
+    """
+
     start: int
     end: int
     relevancy: TextRelevancy
 
 
-class Chunk(BaseModel):
+class Source(BaseModel):
+    """A part of the input prompt. Typically a chunk returned from a knowledge database.
+
+    Attributes:
+        start       The zero-based index of the first character within the input prompt.
+        end         The zero-based index after the last character within the input prompt.
+        highlights  The parts of this chunk that were significant for the generated answer.
+    """
+
     start: int
     end: int
     highlights: list[Highlight]
 
 
 class Output(BaseModel):
-    chunks: list[Chunk]
+    sources: list[Source]
 
 
 class AssociatedExplanations(BaseModel):
@@ -92,26 +104,26 @@ def associate_explanations(
 
 
 def normalize(
-    chunks: list[AssociatedExplanations],
+    sources: list[AssociatedExplanations],
 ) -> list[AssociatedExplanations]:
     max_score = max(
-        explanation.score for chunk in chunks for explanation in chunk.explanations
+        explanation.score for source in sources for explanation in source.explanations
     )
     divider = max(1, max_score)
     return [
         AssociatedExplanations(
-            start=chunk.start,
-            end=chunk.end,
+            start=source.start,
+            end=source.end,
             explanations=[
                 TextScore(
                     start=explanation.start,
                     length=explanation.length,
                     score=max(explanation.score / divider, 0),
                 )
-                for explanation in chunk.explanations
+                for explanation in source.explanations
             ],
         )
-        for chunk in chunks
+        for source in sources
     ]
 
 
@@ -126,13 +138,13 @@ def highlighting(csi: Csi, input: Input) -> Output:
 
     associated_explanations = [
         associate_explanations(range[0], range[1], explanations)
-        for range in input.focus_ranges
+        for range in input.source_ranges
     ]
 
     normalized_explanations = normalize(associated_explanations)
 
-    chunks = [
-        Chunk(
+    sources = [
+        Source(
             start=sublist.start,
             end=sublist.end,
             highlights=[
@@ -148,7 +160,7 @@ def highlighting(csi: Csi, input: Input) -> Output:
         for sublist in normalized_explanations
     ]
 
-    return Output(chunks=chunks)
+    return Output(sources=sources)
 
 
 def test_associate_explanations():
@@ -255,7 +267,7 @@ Answer:
         prompt=prompt,
         raw_completion="The ecosystem is adapted to extreme conditions.",
         model="pharia-1-llm-7b-control",
-        focus_ranges=[(54, 624), (635, 1100)],
+        source_ranges=[(54, 624), (635, 1100)],
     )
     csi = DevCsi()
     output = highlighting(csi, input)
@@ -266,22 +278,22 @@ Answer:
     ENDC = "\033[0m"
 
     highlighted_reference = ""
-    for i, chunk in enumerate(output.chunks):
+    for i, source in enumerate(output.sources):
         highlighted_reference += f"    [{i}]:\n"
-        chunk_text = input.prompt[chunk.start : chunk.end]
+        source_text = input.prompt[source.start : source.end]
         previous_position = 0
-        for highlight in chunk.highlights:
-            highlighted_reference += chunk_text[previous_position : highlight.start]
+        for highlight in source.highlights:
+            highlighted_reference += source_text[previous_position : highlight.start]
             highlighted_reference += (
                 BOLD + BLUE
                 if highlight.relevancy == TextRelevancy.HIGHLY_RELEVANT
                 else (CYAN if highlight.relevancy == TextRelevancy.RELEVANT else "")
             )
-            highlighted_reference += chunk_text[highlight.start : highlight.end]
+            highlighted_reference += source_text[highlight.start : highlight.end]
             if highlight.relevancy != TextRelevancy.OTHER:
                 highlighted_reference += ENDC
             previous_position = highlight.end
-        highlighted_reference += chunk_text[previous_position:]
+        highlighted_reference += source_text[previous_position:]
         highlighted_reference += "\n"
     print(
         """
@@ -306,9 +318,9 @@ Legend:
     assert any(
         [
             "extreme conditions"
-            in prompt[chunk.start + highlight.start : chunk.start + highlight.end]
-            for chunk in output.chunks
-            for highlight in chunk.highlights
+            in prompt[source.start + highlight.start : source.start + highlight.end]
+            for source in output.sources
+            for highlight in source.highlights
             if highlight.relevancy is TextRelevancy.HIGHLY_RELEVANT
         ]
     )
