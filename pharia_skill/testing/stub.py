@@ -88,7 +88,7 @@ class StubCsi(Csi):
             for request in requests
         ]
 
-    def _explain_concurrent(
+    def explain_concurrent(
         self, requests: list[ExplanationRequest]
     ) -> list[list[TextScore]]:
         return [[] for _ in requests]

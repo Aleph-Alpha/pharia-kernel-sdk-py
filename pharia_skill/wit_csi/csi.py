@@ -58,7 +58,7 @@ class WitCsi(Csi):
         responses = wit_inference.chat(wit_requests)
         return [chat_response_from_wit(response) for response in responses]
 
-    def _explain_concurrent(
+    def explain_concurrent(
         self, requests: list[ExplanationRequest]
     ) -> list[list[TextScore]]:
         wit_requests = [explanation_request_to_wit(r) for r in requests]

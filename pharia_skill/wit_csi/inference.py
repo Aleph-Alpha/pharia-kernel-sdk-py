@@ -158,7 +158,7 @@ def chat_response_from_wit(response: wit.ChatResponse) -> ChatResponse:
     )
 
 
-def granularity_to_wit(granularity: Granularity):  # type: ignore[no-untyped-def]
+def granularity_to_wit(granularity: Granularity) -> wit.Granularity:
     match granularity:
         case Granularity.AUTO:
             return wit.Granularity.AUTO
@@ -170,9 +170,9 @@ def granularity_to_wit(granularity: Granularity):  # type: ignore[no-untyped-def
             return wit.Granularity.PARAGRAPH
 
 
-def explanation_request_to_wit(  # type: ignore[no-untyped-def]
+def explanation_request_to_wit(
     explanation_request: ExplanationRequest,
-):
+) -> wit.ExplanationRequest:
     return wit.ExplanationRequest(
         prompt=explanation_request.prompt,
         target=explanation_request.target,
@@ -181,5 +181,5 @@ def explanation_request_to_wit(  # type: ignore[no-untyped-def]
     )
 
 
-def text_score_from_wit(score) -> TextScore:  # type: ignore[no-untyped-def]
+def text_score_from_wit(score: wit.TextScore) -> TextScore:
     return TextScore(start=score.start, length=score.length, score=score.score)
