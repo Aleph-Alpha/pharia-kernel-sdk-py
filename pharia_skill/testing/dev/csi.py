@@ -107,7 +107,7 @@ class DevCsi(Csi):
         output = self.run("chat", body)
         return ChatDeserializer(root=output).root
 
-    def _explain_concurrent(
+    def explain_concurrent(
         self, requests: list[ExplanationRequest]
     ) -> list[list[TextScore]]:
         body = ExplanationRequestSerializer(requests=requests).model_dump()

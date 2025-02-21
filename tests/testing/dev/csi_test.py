@@ -66,7 +66,7 @@ def test_chat(csi: Csi, model: str):
 
 @pytest.mark.kernel
 def test_explain(csi: Csi, model: str):
-    scores = csi._explain(
+    scores = csi.explain(
         prompt="An apple a day",
         target=" keeps the doctor away",
         granularity=Granularity.WORD,

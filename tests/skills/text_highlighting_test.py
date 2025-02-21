@@ -129,7 +129,7 @@ def normalize(
 
 @skill
 def highlighting(csi: Csi, input: Input) -> Output:
-    explanations = csi._explain(
+    explanations = csi.explain(
         prompt=input.prompt,
         target=input.raw_completion,
         model=input.model,

@@ -119,7 +119,7 @@ class Csi(Protocol):
         """
         ...
 
-    def _explain(
+    def explain(
         self,
         prompt: str,
         target: str,
@@ -127,9 +127,9 @@ class Csi(Protocol):
         granularity: Granularity = Granularity.AUTO,
     ) -> list[TextScore]:
         request = ExplanationRequest(prompt, target, model, granularity)
-        return self._explain_concurrent([request])[0]
+        return self.explain_concurrent([request])[0]
 
-    def _explain_concurrent(
+    def explain_concurrent(
         self, requests: list[ExplanationRequest]
     ) -> list[list[TextScore]]: ...
 
