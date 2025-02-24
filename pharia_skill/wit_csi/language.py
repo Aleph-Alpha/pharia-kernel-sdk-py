@@ -3,7 +3,7 @@ from ..wit.imports import language as wit
 
 
 def language_to_wit(language: Language) -> str:
-    return language.name
+    return language.value
 
 
 def language_from_wit(language: str) -> Language:
