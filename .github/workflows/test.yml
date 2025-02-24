@@ -120,6 +120,7 @@ jobs:
         run: |
           uv run pharia-skill build tests.skills.haiku
           uv run pharia-skill build tests.skills.search
+          uv run pharia-skill build tests.skills.language
           uv run pharia-skill build tests.skills.failing
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
@@ -129,6 +130,7 @@ jobs:
           sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_skill.sh language $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
       - name: Test skill metadata on ubuntu only
         if: ${{ matrix.os == 'ubuntu-latest' }}
