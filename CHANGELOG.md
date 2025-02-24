@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.6.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.6.0...v0.6.1) (2025-02-24)
+
+
+### Features
+
+* _explain beta ([de1af34](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/de1af34e98e7eb8f824840b217ef09b7baf3b2e8))
+* add explain wit world and new bindings ([f98a402](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f98a4029486d08b9e059be9b50eb01925000272d))
+* add stable support for explain in csi ([257aab3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/257aab34e653ffa27092896627af4931d4ca3e25))
+* display publish CLI subcommand after successful build ([691a8de](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/691a8dea06255c76bacfea571285186ad0a1c6b0))
+* migrate CLI to Typer ([75601e4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/75601e4ce0311e798a917e51bc2c6e470eb1fa86))
+* remove log level ([a6c8684](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a6c8684ef997b12e4e30a8eb5388b97b453b6b90))
+* support custom name when publishing Skill ([7f076e8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/7f076e84a4a3310aa923c373a4d3e05a8e901b88))
+* update help message for CLI arguments ([ba668ea](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ba668eab00821967b5be84c2da9bc3668ce94450))
+
+
+### Bug Fixes
+
+* avoid using backslash in f-string expression to support older Python versions ([326b9cc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/326b9cc1b07e6bfdcc5b051c4f681ffa93a7ad12))
+* do not use bindings of unstable types ([3b7d394](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3b7d394e0c8258196e8498b0c8d31f17702c8d87))
+* remove outdated Pydantic WASI wheels ([706fa0c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/706fa0ce93bd0a3149e516bc795348efe45d52b5))
+
 ## [0.6.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.5.13...v0.6.0) (2025-02-13)
 
 
