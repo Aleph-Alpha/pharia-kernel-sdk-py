@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.6.1...v0.6.2) (2025-02-24)
+
+
+### Bug Fixes
+
+* use three letter abbreviation for languages ([4b74ee3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4b74ee3121e09f37417ed7295c37c57ffa02bc07))
+
 ## [0.6.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.6.0...v0.6.1) (2025-02-24)
 
 
