@@ -118,10 +118,10 @@ jobs:
         run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Test skill building
         run: |
-          uv run pharia-skill build tests.skills.haiku
-          uv run pharia-skill build tests.skills.search
-          uv run pharia-skill build tests.skills.language
-          uv run pharia-skill build tests.skills.failing
+          uv run pharia-skill build tests.skills.haiku --no-interactive
+          uv run pharia-skill build tests.skills.search --no-interactive
+          uv run pharia-skill build tests.skills.language --no-interactive
+          uv run pharia-skill build tests.skills.failing --no-interactive
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
       - name: Test skill execution on ubuntu only
