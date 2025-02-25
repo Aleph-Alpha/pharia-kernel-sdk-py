@@ -2,11 +2,30 @@ import logging
 import os
 import platform
 import subprocess
+from typing import NamedTuple
 
 import requests
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+
+
+class Registry(NamedTuple):
+    """Where and How do I publish my skill?"""
+
+    user: str
+    token: str
+    registry: str
+    repository: str
+
+    @classmethod
+    def from_env(cls) -> "Registry":
+        return cls(
+            user=os.environ["SKILL_REGISTRY_USER"],
+            token=os.environ["SKILL_REGISTRY_TOKEN"],
+            registry=os.environ["SKILL_REGISTRY"],
+            repository=os.environ["SKILL_REPOSITORY"],
+        )
 
 
 class PhariaSkillCli:
@@ -99,22 +118,15 @@ class PhariaSkillCli:
             subprocess.run(["chmod", "+x", "bin/pharia-skill-cli"], check=True)
         logger.info("Pharia skill CLI installed successfully.")
 
-    def publish(self, skill: str, name: str | None, tag: str) -> None:
+    def publish(
+        self, skill: str, name: str | None, tag: str, registry: Registry
+    ) -> None:
         """Publish a skill to an OCI registry.
 
         Takes a path to a WASM component, wrap it in an OCI image and publish it to an OCI
         registry under the `latest` tag. This does not fully deploy the skill, as an older
         version might still be cached in the Kernel.
         """
-        try:
-            skill_registry_user = os.environ["SKILL_REGISTRY_USER"]
-            skill_registry_token = os.environ["SKILL_REGISTRY_TOKEN"]
-            skill_registry = os.environ["SKILL_REGISTRY"]
-            skill_repository = os.environ["SKILL_REPOSITORY"]
-        except KeyError as e:
-            logger.error(f"Environment variable {e} is not set.")
-            return
-
         # add file extension
         if not skill.endswith(".wasm"):
             skill += ".wasm"
@@ -126,24 +138,20 @@ class PhariaSkillCli:
         if not os.path.exists(skill):
             logger.error(f"No such file: {skill}")
             return
-        logger.info(
-            f"Publishing skill file {skill} to\n{skill_registry}/{skill_repository} ..."
-        )
         command = [
             self.PHARIA_SKILL_CLI_PATH,
             "publish",
             "-R",
-            skill_registry,
+            registry.registry,
             "-r",
-            skill_repository,
+            registry.repository,
             "-u",
-            skill_registry_user,
+            registry.user,
             "-p",
-            skill_registry_token,
+            registry.token,
             *(["-n", name] if name else []),
             "-t",
             tag,
             skill,
         ]
         subprocess.run(command, check=True)
-        logger.info("Skill published successfully.")

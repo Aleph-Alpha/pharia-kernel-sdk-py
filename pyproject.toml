@@ -20,6 +20,7 @@ dependencies = [
     "componentize-py>=0.16.0,<0.17",
     "opentelemetry-sdk>=1.28.1,<2",
     "typer>=0.15.1",
+    "rich>=13.7.0,<14",
 ]
 
 [project.scripts]
