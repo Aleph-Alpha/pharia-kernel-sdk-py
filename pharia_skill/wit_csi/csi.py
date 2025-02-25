@@ -1,5 +1,6 @@
 import json
 
+from pharia_skill.csi.chunking import Chunk
 from pharia_skill.csi.inference import ExplanationRequest, TextScore
 
 from ..csi import (
@@ -21,7 +22,7 @@ from ..wit.imports import chunking as wit_chunking
 from ..wit.imports import document_index as wit_document_index
 from ..wit.imports import inference as wit_inference
 from ..wit.imports import language as wit_language
-from .chunking import chunk_request_to_wit
+from .chunking import chunk_from_wit, chunk_request_to_wit
 from .document_index import (
     document_from_wit,
     document_path_to_wit,
@@ -67,9 +68,10 @@ class WitCsi(Csi):
             [text_score_from_wit(score) for score in scores] for scores in responses
         ]
 
-    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
+    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
         wit_requests = [chunk_request_to_wit(r) for r in requests]
-        return wit_chunking.chunk(wit_requests)
+        responses = wit_chunking.chunk_with_offsets(wit_requests)
+        return [[chunk_from_wit(chunk) for chunk in response] for response in responses]
 
     def select_language_concurrent(
         self, requests: list[SelectLanguageRequest]

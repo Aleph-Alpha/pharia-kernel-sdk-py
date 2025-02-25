@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from .chunking import ChunkParams, ChunkRequest
+from .chunking import Chunk, ChunkParams, ChunkRequest
 from .document_index import (
     Document,
     DocumentPath,
@@ -59,7 +59,7 @@ class Csi(Protocol):
         """
         ...
 
-    def chunk(self, text: str, params: ChunkParams) -> list[str]:
+    def chunk(self, text: str, params: ChunkParams) -> list[Chunk]:
         """Chunks a text into chunks according to params.
 
         Parameters:
@@ -76,7 +76,7 @@ class Csi(Protocol):
         request = ChunkRequest(text, params)
         return self.chunk_concurrent([request])[0]
 
-    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
+    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
         """Chunk a text into chunks concurrently.
 
         Parameters:

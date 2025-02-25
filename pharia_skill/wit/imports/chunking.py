@@ -22,7 +22,22 @@ class ChunkRequest:
     text: str
     params: ChunkParams
 
+@dataclass
+class ChunkWithOffsetRequest:
+    text: str
+    params: ChunkParams
+    character_offsets: bool
+
+@dataclass
+class ChunkWithOffset:
+    text: str
+    byte_offset: int
+    character_offset: Optional[int]
+
 
 def chunk(request: List[ChunkRequest]) -> List[List[str]]:
+    raise NotImplementedError
+
+def chunk_with_offsets(request: List[ChunkWithOffsetRequest]) -> List[List[ChunkWithOffset]]:
     raise NotImplementedError
 
