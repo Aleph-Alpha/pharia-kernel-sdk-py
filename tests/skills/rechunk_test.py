@@ -5,6 +5,7 @@ Given a search result and the full document, expand it to a larger chunk size.
 from pydantic import BaseModel
 
 from pharia_skill import (
+    Chunk,
     ChunkParams,
     Csi,
     Cursor,
@@ -23,7 +24,7 @@ class Input(BaseModel):
 
 
 class Output(BaseModel):
-    chunks: list[str]
+    chunks: list[Chunk]
 
 
 @skill
@@ -34,9 +35,7 @@ def rechunk(csi: Csi, input: Input) -> Output:
     assert isinstance(content, Text)
 
     # expand
-    params = ChunkParams(
-        model="pharia-1-llm-7b-control", max_tokens=20, overlap=0
-    )
+    params = ChunkParams(model="pharia-1-llm-7b-control", max_tokens=20, overlap=0)
     chunks = csi.chunk(content.text, params)
 
     # left out further steps
@@ -51,12 +50,21 @@ def rechunk(csi: Csi, input: Input) -> Output:
 # make sure to leave order in tact
 
 
+def test_filter():
+    def overlap(search_result: SearchResult, chunk: Chunk) -> bool:
+        return (
+            search_result.start.position <= chunk.offset < search_result.end.position
+        ) or (
+            chunk.offset
+            < search_result.start.position
+            <= chunk.offset + len(chunk.text)
+        )
+
+
 def test_expansion():
     # Given a search result with an unknown chunk size and the full document
     document = Document(
-        path=DocumentPath(
-            namespace="Kernel", collection="test", name="kernel/docs"
-        ),
+        path=DocumentPath(namespace="Kernel", collection="test", name="kernel/docs"),
         contents=[
             Text(
                 text="You might be wondering what the Kernel is. At this point, on some level of detail, we are still in the process of figuring it out ourselves. So far, what we know is that it allows you to deploy and execute user-defined code (we call it Skills). These Skills can interact with the world using the Cognitive System Interface (CSI), which is an interface with functionality biased towards the domain of generative AI. The CSI is also the only way these skills can interact with the world. While this may seem restrictive, it facilitates a frictionless deployment experience and ensures security during execution. "
