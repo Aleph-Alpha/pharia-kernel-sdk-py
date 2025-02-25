@@ -52,12 +52,8 @@ def rechunk(csi: Csi, input: Input) -> Output:
 
 def test_filter():
     def overlap(search_result: SearchResult, chunk: Chunk) -> bool:
-        return (
-            search_result.start.position <= chunk.offset < search_result.end.position
-        ) or (
-            chunk.offset
-            < search_result.start.position
-            <= chunk.offset + len(chunk.text)
+        return max(search_result.start.position, chunk.offset) <= min(
+            search_result.end.position, chunk.offset + len(chunk.text)
         )
 
 
