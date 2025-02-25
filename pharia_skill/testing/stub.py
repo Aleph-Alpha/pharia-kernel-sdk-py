@@ -22,6 +22,7 @@ from pharia_skill import (
     Text,
     TokenUsage,
 )
+from pharia_skill.csi.chunking import Chunk
 from pharia_skill.csi.inference import ExplanationRequest, TextScore
 
 
@@ -71,8 +72,8 @@ class StubCsi(Csi):
             for request in requests
         ]
 
-    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
-        return [[request.text] for request in requests]
+    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
+        return [[Chunk(text=request.text, offset=0)] for request in requests]
 
     def chat_concurrent(self, requests: list[ChatRequest]) -> list[ChatResponse]:
         return [

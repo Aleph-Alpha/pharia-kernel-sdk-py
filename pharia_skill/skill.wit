@@ -1,4 +1,4 @@
-package pharia:skill@0.3.1;
+package pharia:skill@0.3.2;
 
 @since(version = 0.3.0)
 world skill {
@@ -63,6 +63,27 @@ interface chunking {
 
     @since(version = 0.3.0)
     chunk: func(request: list<chunk-request>) -> list<list<string>>;
+
+    @unstable(feature = chunk-offsets)
+    record chunk-with-offset-request {
+        text: string,
+        params: chunk-params,
+        /// Byte offsets will always be emitted, but if you work in a language that uses
+        /// characters rather than bytes to index strings, you can ask for character
+        /// offsets. If you do not need them, you should set this to `false` though,
+        /// because it is extra work computing them.
+        character-offsets: bool,
+    }
+
+    @unstable(feature = chunk-offsets)
+    record chunk-with-offset {
+        text: string,
+        byte-offset: u64,
+        character-offset: option<u64>,
+    }
+
+    @unstable(feature = chunk-offsets)
+    chunk-with-offsets: func(request: list<chunk-with-offset-request>) -> list<list<chunk-with-offset>>;
 }
 
 @since(version = 0.3.0)

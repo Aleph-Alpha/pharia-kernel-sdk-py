@@ -30,6 +30,7 @@ from pharia_skill import (
     SearchResult,
     SelectLanguageRequest,
 )
+from pharia_skill.csi.chunking import Chunk
 from pharia_skill.csi.inference import ExplanationRequest, TextScore
 from pharia_skill.studio import (
     StudioClient,
@@ -114,9 +115,9 @@ class DevCsi(Csi):
         output = self.run("explain", body)
         return ExplanationDeserializer(root=output).root
 
-    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[str]]:
+    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
         body = ChunkRequestSerializer(requests=requests).model_dump()
-        output = self.run("chunk", body)
+        output = self.run("chunk_with_offsets", body)
         return ChunkDeserializer(root=output).root
 
     def select_language_concurrent(

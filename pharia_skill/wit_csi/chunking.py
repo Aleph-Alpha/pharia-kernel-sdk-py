@@ -1,4 +1,4 @@
-from ..csi.chunking import ChunkParams, ChunkRequest
+from ..csi.chunking import Chunk, ChunkParams, ChunkRequest
 from ..wit.imports import chunking as wit
 
 
@@ -10,7 +10,17 @@ def chunk_params_to_wit(chunk_params: ChunkParams) -> wit.ChunkParams:
     )
 
 
-def chunk_request_to_wit(chunk_request: ChunkRequest) -> wit.ChunkRequest:
-    return wit.ChunkRequest(
-        text=chunk_request.text, params=chunk_params_to_wit(chunk_request.params)
+def chunk_request_to_wit(
+    chunk_request: ChunkRequest,
+) -> wit.ChunkWithOffsetRequest:
+    return wit.ChunkWithOffsetRequest(
+        text=chunk_request.text,
+        params=chunk_params_to_wit(chunk_request.params),
+        character_offsets=True,
     )
+
+
+def chunk_from_wit(chunk: wit.ChunkWithOffset) -> Chunk:
+    # The character offset is always expected becaused the flag `character_offsets` is enabled
+    assert chunk.character_offset is not None
+    return Chunk(text=chunk.text, offset=chunk.character_offset)

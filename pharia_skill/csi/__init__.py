@@ -7,7 +7,7 @@ implementation at runtime, which does a translation step from the Python types w
 to those in `wit.imports`, which are automatically generated from the WIT world via `componentize-py`.
 """
 
-from .chunking import ChunkParams, ChunkRequest
+from .chunking import Chunk, ChunkParams, ChunkRequest
 from .csi import Csi
 from .document_index import (
     After,
@@ -68,6 +68,7 @@ __all__ = [
     "ChatParams",
     "ChatRequest",
     "ChatResponse",
+    "Chunk",
     "ChunkParams",
     "ChunkRequest",
     "Completion",
