@@ -140,7 +140,19 @@ def publish_skill(skill_path: str, name: Optional[str], tag: str) -> None:
     display_name = name if name else skill_path.replace(".wasm", "")
 
     cli = PhariaSkillCli()
-    registry = Registry.from_env()
+
+    try:
+        registry = Registry.from_env()
+    except KeyError as e:
+        console.print(
+            Panel(
+                f"The environment variable [yellow]{e}[/yellow] is not set.",
+                title="[bold red]Error[/bold red]",
+                border_style="red",
+                padding=(1, 1),
+            )
+        )
+        raise typer.Exit(code=1)
 
     start_time = time.time()
     with Progress(
