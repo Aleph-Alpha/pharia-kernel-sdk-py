@@ -124,6 +124,11 @@ jobs:
           uv run pharia-skill build tests.skills.failing --no-interactive
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
+        env:
+          SKILL_REGISTRY_USER: ${{ env.JFROG_ACCESS_TOKEN_SUBJECT }}
+          SKILL_REGISTRY_TOKEN: ${{ env.JFROG_ACCESS_TOKEN }}
+          SKILL_REGISTRY: alephalpha.jfrog.io
+          SKILL_REPOSITORY: pharia-kernel-images/ci
       - name: Test skill execution on ubuntu only
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
