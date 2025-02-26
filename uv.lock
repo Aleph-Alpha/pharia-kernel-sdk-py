@@ -439,7 +439,7 @@ wheels = [
 
 [[package]]
 name = "pharia-kernel-sdk-py"
-version = "0.6.0"
+version = "0.6.2"
 source = { editable = "." }
 dependencies = [
     { name = "componentize-py" },
@@ -448,6 +448,7 @@ dependencies = [
     { name = "pydantic-core" },
     { name = "python-dotenv" },
     { name = "requests" },
+    { name = "rich" },
     { name = "typer" },
 ]
 
@@ -477,6 +478,7 @@ requires-dist = [
     { name = "pydantic-core", specifier = "==2.27.2" },
     { name = "python-dotenv", specifier = ">=1.0.1,<2" },
     { name = "requests", specifier = ">=2.32.3,<3" },
+    { name = "rich", specifier = ">=13.7.0,<14" },
     { name = "typer", specifier = ">=0.15.1" },
 ]
 
