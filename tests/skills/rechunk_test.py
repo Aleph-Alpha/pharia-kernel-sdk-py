@@ -19,12 +19,37 @@ from pharia_skill.testing import DevCsi
 
 
 class Input(BaseModel):
+    """The skill input
+
+    Attributes:
+        search_result  The search result within the same item in the specified document.
+        document       The original document.
+    """
+
     search_result: SearchResult
     document: Document
 
 
 class Output(BaseModel):
+    """The skill output
+
+    Attributes:
+        chunks  The list of relevant document chunks that overlap with the search results.
+    """
+
     chunks: list[Chunk]
+
+
+def overlap(search_result: SearchResult, chunk: Chunk) -> bool:
+    """Check if the specified chunk overlaps with the search result."""
+    return max(search_result.start.position, chunk.offset) <= min(
+        search_result.end.position, chunk.offset + len(chunk.text)
+    )
+
+
+def filter(search_result: SearchResult, chunks: list[Chunk]) -> list[Chunk]:
+    """Filter for chunks that overlap with the specified search result."""
+    return [chunk for chunk in chunks if overlap(search_result, chunk)]
 
 
 @skill
@@ -38,23 +63,11 @@ def rechunk(csi: Csi, input: Input) -> Output:
     params = ChunkParams(model="pharia-1-llm-7b-control", max_tokens=20, overlap=0)
     chunks = csi.chunk(content.text, params)
 
+    # filter
+    relevant_chunks = filter(input.search_result, chunks)
+
     # left out further steps
-    return Output(chunks=chunks)
-
-
-# Start with a Search Result with old chunk size
-# Retrieve the Document and the corresponding Item
-# Chunk the item with the target (new) chunk size
-# This could be a tokenizer if a different model is used. This means we could end up with more smaller chunks.
-# Check for duplicates (two search results which were close to each other might be in one chunk after expansion).
-# make sure to leave order in tact
-
-
-def test_filter():
-    def overlap(search_result: SearchResult, chunk: Chunk) -> bool:
-        return max(search_result.start.position, chunk.offset) <= min(
-            search_result.end.position, chunk.offset + len(chunk.text)
-        )
+    return Output(chunks=relevant_chunks)
 
 
 def test_expansion():
@@ -87,4 +100,4 @@ def test_expansion():
     output = rechunk(DevCsi(), input)
 
     # Expect the search result to be expanded to the larger chunk size
-    assert len(output.chunks) == 9, output
+    assert len(output.chunks) == 5, output
