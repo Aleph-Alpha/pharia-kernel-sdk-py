@@ -94,7 +94,9 @@ def summarize(csi: Csi, input: Input) -> Output:
     # iterate on the text to summarize
     while True:
         # we chunk the text to summarize
-        requests = [instruction.request(chunk) for chunk in csi.chunk(text, params)]
+        requests = [
+            instruction.request(chunk.text) for chunk in csi.chunk(text, params)
+        ]
         # and summarize each chunk
         summaries = [
             completion.text.strip() for completion in csi.complete_concurrent(requests)
