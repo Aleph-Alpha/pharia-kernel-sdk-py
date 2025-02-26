@@ -37,7 +37,7 @@ class TextRelevancy(str, Enum):
 
 
 class Highlight(BaseModel):
-    """A part of the associated source that was significant for the genrated answer.
+    """A part of the associated source that was significant for the generated answer.
 
     Attributes:
         start      The zero-based index of the first character of this highlight relative to the associated source.
