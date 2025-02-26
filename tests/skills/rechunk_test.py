@@ -2,6 +2,7 @@
 Given a search result and the full document, expand it to a larger chunk size.
 """
 
+import pytest
 from pydantic import BaseModel
 
 from pharia_skill import (
@@ -70,6 +71,7 @@ def rechunk(csi: Csi, input: Input) -> Output:
     return Output(chunks=relevant_chunks)
 
 
+@pytest.mark.kernel
 def test_expansion():
     # Given a search result with an unknown chunk size and the full document
     document = Document(
