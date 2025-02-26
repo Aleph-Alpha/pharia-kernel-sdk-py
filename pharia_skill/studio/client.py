@@ -111,7 +111,7 @@ class StudioClient(SpanClient):
             project_of_interest = next(
                 proj for proj in all_projects if proj["name"] == project
             )
-            return str(project_of_interest["id"])
+            return str(project_of_interest["project_id"])
         except StopIteration:
             return None
 
