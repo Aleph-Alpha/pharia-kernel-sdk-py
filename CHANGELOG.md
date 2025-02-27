@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.6.2...v0.6.3) (2025-02-27)
+
+
+### Features
+
+* add interactive publish to cli ([60ac743](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/60ac743d5cbcbcbbc7e8d1627ed007e0c30fd884))
+* handle error if env vars for skill registry not set ([219f5a1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/219f5a1feaea5ed0000960135a06b7b9acd5c993))
+
+
+### Bug Fixes
+
+* do not import unstable wit params to not break componentize-py build ([00d657d](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/00d657d0e7885f3e581f28bab2edc90c57257ae0))
+* update to use Pharia Studio project ID ([b2e5960](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/b2e596015c8f42139a294524633ffcd455203165))
+
+
+### Documentation
+
+* fix example types ([2aaba03](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2aaba0332dba84f88e3596e2dd05458454a3894b))
+* fix typo ([243fa70](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/243fa70b6747169409ad81f911b0cc18fdb0450d))
+
 ## [0.6.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.6.1...v0.6.2) (2025-02-24)
 
 
