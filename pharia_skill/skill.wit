@@ -1,4 +1,4 @@
-package pharia:skill@0.3.2;
+package pharia:skill@0.3.3;
 
 @since(version = 0.3.0)
 world skill {
@@ -64,7 +64,7 @@ interface chunking {
     @since(version = 0.3.0)
     chunk: func(request: list<chunk-request>) -> list<list<string>>;
 
-    @unstable(feature = chunk-offsets)
+    @since(version = 0.3.3)
     record chunk-with-offset-request {
         text: string,
         params: chunk-params,
@@ -75,14 +75,14 @@ interface chunking {
         character-offsets: bool,
     }
 
-    @unstable(feature = chunk-offsets)
+    @since(version = 0.3.3)
     record chunk-with-offset {
         text: string,
         byte-offset: u64,
         character-offset: option<u64>,
     }
 
-    @unstable(feature = chunk-offsets)
+    @since(version = 0.3.3)
     chunk-with-offsets: func(request: list<chunk-with-offset-request>) -> list<list<chunk-with-offset>>;
 }
 
