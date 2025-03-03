@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.6.3...v0.7.0) (2025-03-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* stabilize new chunking
+
+### Features
+
+* stabilize new chunking ([db0a330](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/db0a330119e24ee596027e0257654c9b0fb9b0b2))
+
 ## [0.6.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.6.2...v0.6.3) (2025-02-27)
 
 
