@@ -1,0 +1,17 @@
+[project]
+name = "oci-publish"
+version = "0.1.0"
+description = "Publish WASM components to an OCI registry"
+readme = "README.md"
+authors = [{ name = "Aleph Alpha", email = "support@aleph-alpha.com" }]
+requires-python = ">=3.11, <4"
+dependencies = []
+
+[tool.maturin]
+module-name = "oci_publish._core"
+python-packages = ["oci_publish"]
+python-source = "src"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"

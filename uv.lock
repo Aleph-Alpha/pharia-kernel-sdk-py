@@ -1,9 +1,16 @@
 version = 1
+revision = 1
 requires-python = ">=3.11, <4"
 resolution-markers = [
     "sys_platform == 'win32'",
     "python_version < '0'",
     "sys_platform != 'win32'",
+]
+
+[manifest]
+members = [
+    "oci-publish",
+    "pharia-kernel-sdk-py",
 ]
 
 [[package]]
@@ -104,7 +111,7 @@ name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a", size = 226593 }
 wheels = [
@@ -389,6 +396,11 @@ wheels = [
 ]
 
 [[package]]
+name = "oci-publish"
+version = "0.1.0"
+source = { editable = "packages/oci-publish" }
+
+[[package]]
 name = "opentelemetry-api"
 version = "1.28.2"
 source = { registry = "https://pypi.org/simple" }
@@ -439,10 +451,11 @@ wheels = [
 
 [[package]]
 name = "pharia-kernel-sdk-py"
-version = "0.6.2"
+version = "0.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "componentize-py" },
+    { name = "oci-publish" },
     { name = "opentelemetry-sdk" },
     { name = "pydantic" },
     { name = "pydantic-core" },
@@ -473,6 +486,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "componentize-py", specifier = ">=0.16.0,<0.17" },
+    { name = "oci-publish", editable = "packages/oci-publish" },
     { name = "opentelemetry-sdk", specifier = ">=1.28.1,<2" },
     { name = "pydantic", specifier = "==2.10.4" },
     { name = "pydantic-core", specifier = "==2.27.2" },

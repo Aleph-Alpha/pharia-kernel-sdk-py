@@ -21,6 +21,7 @@ dependencies = [
     "opentelemetry-sdk>=1.28.1,<2",
     "typer>=0.15.1",
     "rich>=13.7.0,<14",
+    "oci-publish",
 ]
 
 [project.scripts]
@@ -48,6 +49,12 @@ docs = [
 name = "jfrog"
 url = "https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple"
 publish-url = "https://alephalpha.jfrog.io/artifactory/api/pypi/pharia-kernel-pypi"
+
+[tool.uv.workspace]
+members = ["packages/oci-publish"]
+
+[tool.uv.sources]
+oci-publish = { workspace = true }
 
 [tool.hatch.build.targets.sdist]
 include = ["pharia_skill"]

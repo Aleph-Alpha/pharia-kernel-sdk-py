@@ -11,7 +11,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.prompt import Confirm, Prompt
 from typing_extensions import Annotated
 
-from .pharia_skill_cli import PhariaSkillCli, Registry
+from .registry import Registry
 
 logging.basicConfig(
     level=logging.INFO,
@@ -139,8 +139,6 @@ def publish_skill(skill_path: str, name: Optional[str], tag: str) -> None:
 
     display_name = name if name else skill_path.replace(".wasm", "")
 
-    cli = PhariaSkillCli()
-
     try:
         registry = Registry.from_env()
     except KeyError as e:
@@ -163,7 +161,22 @@ def publish_skill(skill_path: str, name: Optional[str], tag: str) -> None:
         transient=True,
     ) as progress:
         task = progress.add_task("", total=None)
-        cli.publish(skill_path, name, tag, registry)
+
+        if not skill_path.endswith(".wasm"):
+            skill_path += ".wasm"
+
+        # allow relative paths
+        if not skill_path.startswith(("/", "./")):
+            skill_path = f"./{skill_path}"
+
+        if not os.path.exists(skill_path):
+            logger.error(f"No such file: {skill_path}")
+            return
+
+        if name is None:
+            name = skill_path.split("/")[-1].replace(".wasm", "")
+
+        registry.publish(skill_path, name, tag)
         progress.update(task, completed=True)
 
     console.print(
