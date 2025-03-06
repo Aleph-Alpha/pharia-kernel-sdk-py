@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.7.0...v0.7.1) (2025-03-06)
+
+
+### Documentation
+
+* state that search and document relate to Document Index ([16779b6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/16779b614de273aec8afeeba50bfad307ed9fe14))
+
 ## [0.7.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.6.3...v0.7.0) (2025-03-03)
 
 
