@@ -169,10 +169,10 @@ class Csi(Protocol):
         min_score: float | None = None,
         filters: list[SearchFilter] | None = None,
     ) -> list[SearchResult]:
-        """Search in a document index.
+        """Search an existing Index in the Document Index.
 
         Parameters:
-            index_path (IndexPath, required): Index path in the document index to access.
+            index_path (IndexPath, required): Index path in the Document Index to access.
             query (str, required): Text to be search for.
             max_results (int, required): Maximal number of results.
             min_score (float, optional, Default NoneNone): Minimal score for result to be included.
@@ -194,8 +194,10 @@ class Csi(Protocol):
         self, requests: list[SearchRequest]
     ) -> list[list[SearchResult]]: ...
 
+    """Execute multiple search requests against the Document Index."""
+
     def document(self, document_path: DocumentPath) -> Document:
-        """Fetch a document.
+        """Fetch a document from the Document Index.
 
         Parameters:
             document_path (DocumentPath, required): The document path to get the document from.
@@ -209,7 +211,7 @@ class Csi(Protocol):
         return self.documents([document_path])[0]
 
     def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
-        """Fetch multiple documents.
+        """Fetch multiple documents from the Document Index.
 
         Parameters:
             document_paths (list[DocumentPath], required): The document paths to get the documents from.
@@ -217,7 +219,7 @@ class Csi(Protocol):
         ...
 
     def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
-        """Return metadata of a document.
+        """Return the metadata of a document in the Document Index.
 
         Parameters:
             document_path (DocumentPath, required): The document path to get metadata from.
@@ -227,7 +229,7 @@ class Csi(Protocol):
     def documents_metadata(
         self, document_paths: list[DocumentPath]
     ) -> list[JsonSerializable]:
-        """Metadata of multiple documents.
+        """Return the metadata of multiple documents in the Document Index.
 
         Parameters:
             document_paths (list[DocumentPath], required): The document paths to get metadata from.
