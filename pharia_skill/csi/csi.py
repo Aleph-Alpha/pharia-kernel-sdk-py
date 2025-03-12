@@ -94,7 +94,7 @@ class Csi(Protocol):
                 Name of model to use.
 
             messages (list[Message], required):
-                List of messages, alternating between messages from user and system.
+                List of messages, alternating between messages from user and assistant.
 
             params (ChatParams, required):
                 Parameters used for the chat.
