@@ -403,7 +403,7 @@ wheels = [
 
 [[package]]
 name = "opentelemetry-sdk"
-version = "1.28.2"
+version = "1.31.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "opentelemetry-api" },
