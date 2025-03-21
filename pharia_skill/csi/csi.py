@@ -15,7 +15,7 @@ from .inference import (
     ChatRequest,
     ChatResponse,
     Completion,
-    CompletionDelta,
+    CompletionAppend,
     CompletionParams,
     CompletionRequest,
     ExplanationRequest,
@@ -32,7 +32,7 @@ class Csi(Protocol):
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
-    ) -> Generator[CompletionDelta, None, StreamReport]:
+    ) -> Generator[CompletionAppend, None, StreamReport]:
         """Streams completions given a prompt.
 
         Parameters:

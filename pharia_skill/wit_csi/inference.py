@@ -1,4 +1,4 @@
-from pharia_skill.csi.inference import CompletionDelta
+from pharia_skill.csi.inference import CompletionAppend
 
 from ..csi import (
     ChatParams,
@@ -60,11 +60,11 @@ def token_usage_from_wit(usage: wit.TokenUsage) -> TokenUsage:
     return TokenUsage(prompt=usage.prompt, completion=usage.completion)
 
 
-def completion_delta_from_wit(delta: wit.CompletionDelta) -> CompletionDelta:
-    return CompletionDelta(
-        text=delta.text,
+def completion_append_from_wit(append: wit.CompletionAppend) -> CompletionAppend:
+    return CompletionAppend(
+        text=append.text,
         logprobs=[
-            distribution_from_wit(distribution) for distribution in delta.logprobs
+            distribution_from_wit(distribution) for distribution in append.logprobs
         ],
     )
 

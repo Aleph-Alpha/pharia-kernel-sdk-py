@@ -136,7 +136,7 @@ class StreamReport:
 
 
 @dataclass
-class CompletionDelta:
+class CompletionAppend:
     """A chunk of a completion returned by a completion stream.
 
     Attributes:
@@ -148,7 +148,7 @@ class CompletionDelta:
     logprobs: list[Distribution]
 
     @classmethod
-    def from_dict(cls, body: dict[str, Any]) -> "CompletionDelta":
+    def from_dict(cls, body: dict[str, Any]) -> "CompletionAppend":
         return cls(
             text=body["text"],
             logprobs=body["logprobs"],

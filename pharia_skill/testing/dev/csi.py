@@ -36,7 +36,7 @@ from pharia_skill import (
 )
 from pharia_skill.csi.chunking import Chunk
 from pharia_skill.csi.inference import (
-    CompletionDelta,
+    CompletionAppend,
     CompletionEvent,
     ExplanationRequest,
     FinishReason,
@@ -111,7 +111,7 @@ class DevCsi(Csi):
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
-    ) -> Generator[CompletionDelta, None, StreamReport]:
+    ) -> Generator[CompletionAppend, None, StreamReport]:
         body = CompletionRequestSerializer(
             model=model, prompt=prompt, params=params
         ).model_dump()
@@ -120,7 +120,7 @@ class DevCsi(Csi):
         for event in events:
             match event.event:
                 case CompletionEvent.DELTA:
-                    yield TypeAdapter(CompletionDelta).validate_json(event.data)
+                    yield TypeAdapter(CompletionAppend).validate_json(event.data)
                 case CompletionEvent.FINISHED:
                     finish_reason = (
                         TypeAdapter(FinishReasonDeserializer)
