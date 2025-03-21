@@ -10,7 +10,7 @@ from .conftest import dumps
 def test_serialize_select_language_request():
     # Given a select language request
     request = SelectLanguageRequestSerializer(
-        requests=[
+        [
             SelectLanguageRequest(
                 languages=[Language.English, Language.German],
                 text="What is the Kernel?",
@@ -21,16 +21,14 @@ def test_serialize_select_language_request():
     # When serializing it
     serialized = request.model_dump_json()
 
-    # Then it nests the structure
+    # Then
     assert serialized == dumps(
-        {
-            "requests": [
-                {
-                    "text": "What is the Kernel?",
-                    "languages": ["eng", "deu"],
-                }
-            ]
-        }
+        [
+            {
+                "text": "What is the Kernel?",
+                "languages": ["eng", "deu"],
+            }
+        ]
     )
 
 

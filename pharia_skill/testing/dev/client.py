@@ -24,10 +24,6 @@ class CsiClient(Protocol):
 class Client(CsiClient):
     """Make requests with a given payload against a running Pharia Kernel."""
 
-    # many functions are not migrated to the new versioning scheme yet and still
-    # referring to WIT package version
-    VERSION = "0.3"
-
     HTTP_CSI_VERSION = "v1"
 
     def __init__(self) -> None:
@@ -36,7 +32,9 @@ class Client(CsiClient):
         The session is stored to allow for re-use of the same connection between tests.
         """
         load_dotenv()
-        self.url = os.environ["PHARIA_KERNEL_ADDRESS"] + "/csi"
+        self.url = (
+            f"""{os.environ["PHARIA_KERNEL_ADDRESS"]}/csi/{self.HTTP_CSI_VERSION}"""
+        )
         token = os.environ["PHARIA_AI_TOKEN"]
         self.session = requests.Session()
         self.session.headers = {
@@ -47,10 +45,11 @@ class Client(CsiClient):
         if hasattr(self, "session"):
             self.session.close()
 
-    def run(self, function: str, data: dict[str, Any]) -> Any:
+    def run(self, function: str, data: Any) -> Any:
+        url = f"{self.url}/{function}"
         response = self.session.post(
-            self.url,
-            json={"version": self.VERSION, "function": function, **data},
+            url,
+            json=data,
         )
         # Always forward the error message from the kernel
         if response.status_code >= 400:
@@ -67,7 +66,7 @@ class Client(CsiClient):
     def stream(
         self, function: str, data: dict[str, Any]
     ) -> Generator[Event, None, None]:
-        url = f"{self.url}/{self.HTTP_CSI_VERSION}/{function}"
+        url = f"{self.url}/{function}"
         headers = {"Accept": "text/event-stream", **self.session.headers}
         response = self.session.post(url, json=data, headers=headers, stream=True)
         # Always forward the error message from the kernel

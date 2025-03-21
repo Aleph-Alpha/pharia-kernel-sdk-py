@@ -1,4 +1,4 @@
-from pydantic import BaseModel, RootModel
+from pydantic import RootModel
 
 from pharia_skill.csi import (
     Document,
@@ -8,23 +8,19 @@ from pharia_skill.csi import (
     SearchResult,
 )
 
-
-class DocumentMetadataSerializer(BaseModel):
-    requests: list[DocumentPath]
+DocumentMetadataSerializer = RootModel[list[DocumentPath]]
 
 
 DocumentMetadataDeserializer = RootModel[list[JsonSerializable | None]]
 
 
-class DocumentSerializer(BaseModel):
-    requests: list[DocumentPath]
+DocumentSerializer = RootModel[list[DocumentPath]]
 
 
 DocumentDeserializer = RootModel[list[Document]]
 
 
-class SearchRequestSerializer(BaseModel):
-    requests: list[SearchRequest]
+SearchRequestSerializer = RootModel[list[SearchRequest]]
 
 
 SearchResultDeserializer = RootModel[list[list[SearchResult]]]

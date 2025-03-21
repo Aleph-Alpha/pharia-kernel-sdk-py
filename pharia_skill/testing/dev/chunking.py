@@ -1,10 +1,8 @@
-from pydantic import BaseModel, RootModel
+from pydantic import RootModel
 
 from pharia_skill.csi import Chunk, ChunkRequest
 
-
-class ChunkRequestSerializer(BaseModel):
-    requests: list[ChunkRequest]
+ChunkRequestSerializer = RootModel[list[ChunkRequest]]
 
 
 ChunkDeserializer = RootModel[list[list[Chunk]]]

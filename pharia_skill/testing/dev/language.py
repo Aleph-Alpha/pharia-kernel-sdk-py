@@ -1,10 +1,8 @@
-from pydantic import BaseModel, RootModel
+from pydantic import RootModel
 
 from pharia_skill.csi import Language, SelectLanguageRequest
 
-
-class SelectLanguageRequestSerializer(BaseModel):
-    requests: list[SelectLanguageRequest]
+SelectLanguageRequestSerializer = RootModel[list[SelectLanguageRequest]]
 
 
 SelectLanguageDeserializer = RootModel[list[Language | None]]

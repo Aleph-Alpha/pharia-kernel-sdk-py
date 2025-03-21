@@ -139,50 +139,50 @@ class DevCsi(Csi):
     def complete_concurrent(
         self, requests: list[CompletionRequest]
     ) -> list[Completion]:
-        body = CompletionRequestListSerializer(requests=requests).model_dump()
+        body = CompletionRequestListSerializer(root=requests).model_dump()
         output = self.run("complete", body)
         return CompletionListDeserializer(root=output).root
 
     def chat_concurrent(self, requests: list[ChatRequest]) -> list[ChatResponse]:
-        body = ChatRequestListSerializer(requests=requests).model_dump()
+        body = ChatRequestListSerializer(root=requests).model_dump()
         output = self.run("chat", body)
         return ChatListDeserializer(root=output).root
 
     def explain_concurrent(
         self, requests: list[ExplanationRequest]
     ) -> list[list[TextScore]]:
-        body = ExplanationRequestListSerializer(requests=requests).model_dump()
+        body = ExplanationRequestListSerializer(root=requests).model_dump()
         output = self.run("explain", body)
         return ExplanationListDeserializer(root=output).root
 
     def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
-        body = ChunkRequestSerializer(requests=requests).model_dump()
+        body = ChunkRequestSerializer(root=requests).model_dump()
         output = self.run("chunk_with_offsets", body)
         return ChunkDeserializer(root=output).root
 
     def select_language_concurrent(
         self, requests: list[SelectLanguageRequest]
     ) -> list[Language | None]:
-        body = SelectLanguageRequestSerializer(requests=requests).model_dump()
+        body = SelectLanguageRequestSerializer(root=requests).model_dump()
         output = self.run("select_language", body)
         return SelectLanguageDeserializer(root=output).root
 
     def search_concurrent(
         self, requests: list[SearchRequest]
     ) -> list[list[SearchResult]]:
-        body = SearchRequestSerializer(requests=requests).model_dump()
+        body = SearchRequestSerializer(root=requests).model_dump()
         output = self.run("search", body)
         return SearchResultDeserializer(root=output).root
 
     def documents_metadata(
         self, document_paths: list[DocumentPath]
     ) -> list[JsonSerializable | None]:
-        body = DocumentMetadataSerializer(requests=document_paths).model_dump()
+        body = DocumentMetadataSerializer(root=document_paths).model_dump()
         output = self.run("document_metadata", body)
         return DocumentMetadataDeserializer(root=output).root
 
     def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
-        body = DocumentSerializer(requests=document_paths).model_dump()
+        body = DocumentSerializer(root=document_paths).model_dump()
         output = self.run("documents", body)
         return DocumentDeserializer(root=output).root
 
