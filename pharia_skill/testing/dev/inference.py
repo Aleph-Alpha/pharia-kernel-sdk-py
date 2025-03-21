@@ -29,22 +29,19 @@ class CompletionRequestSerializer(BaseModel):
     params: CompletionParams
 
 
-class CompletionRequestListSerializer(BaseModel):
-    requests: list[CompletionRequest]
+CompletionRequestListSerializer = RootModel[list[CompletionRequest]]
 
 
 CompletionListDeserializer = RootModel[list[Completion]]
 
 
-class ChatRequestListSerializer(BaseModel):
-    requests: list[ChatRequest]
+ChatRequestListSerializer = RootModel[list[ChatRequest]]
 
 
 ChatListDeserializer = RootModel[list[ChatResponse]]
 
 
-class ExplanationRequestListSerializer(BaseModel):
-    requests: list[ExplanationRequest]
+ExplanationRequestListSerializer = RootModel[list[ExplanationRequest]]
 
 
 ExplanationListDeserializer = RootModel[list[list[TextScore]]]

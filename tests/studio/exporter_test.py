@@ -148,10 +148,7 @@ def test_csi_call_is_traced(stub_dev_csi: DevCsi):
     assert client.spans[0][0].status == SpanStatus.OK
 
     # And the input and output are set as attributes
-    assert (
-        "Say hello to Bob"
-        in client.spans[0][0].attributes.input["requests"][0]["prompt"]
-    )
+    assert "Say hello to Bob" in client.spans[0][0].attributes.input[0]["prompt"]
     output = client.spans[0][0].attributes.output
     assert output is not None
     assert output[0]["text"] == "Hello, world!"

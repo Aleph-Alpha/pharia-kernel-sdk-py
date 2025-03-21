@@ -31,7 +31,7 @@ from .conftest import dumps
 def test_serialize_completion_request():
     # Given a list of completion requests
     request = CompletionRequestListSerializer(
-        requests=[
+        [
             CompletionRequest(
                 "llama-3.1-8b-instruct",
                 "Say hello to Bob",
@@ -43,27 +43,25 @@ def test_serialize_completion_request():
     # When serializing it
     serialized = request.model_dump_json()
 
-    # Then it nests the structure
+    # Then
     assert serialized == dumps(
-        {
-            "requests": [
-                {
-                    "model": "llama-3.1-8b-instruct",
-                    "prompt": "Say hello to Bob",
-                    "params": {
-                        "max_tokens": 64,
-                        "temperature": None,
-                        "top_k": None,
-                        "top_p": None,
-                        "stop": [],
-                        "return_special_tokens": True,
-                        "frequency_penalty": None,
-                        "presence_penalty": None,
-                        "logprobs": "no",
-                    },
-                }
-            ]
-        }
+        [
+            {
+                "model": "llama-3.1-8b-instruct",
+                "prompt": "Say hello to Bob",
+                "params": {
+                    "max_tokens": 64,
+                    "temperature": None,
+                    "top_k": None,
+                    "top_p": None,
+                    "stop": [],
+                    "return_special_tokens": True,
+                    "frequency_penalty": None,
+                    "presence_penalty": None,
+                    "logprobs": "no",
+                },
+            }
+        ]
     )
 
 
@@ -104,7 +102,7 @@ def test_deserialize_completion():
 def test_serialize_chat_request():
     # Given a list of chat requests
     request = ChatRequestListSerializer(
-        requests=[
+        [
             ChatRequest(
                 "llama-3.1-8b-instruct",
                 [Message.user("Hello")],
@@ -116,24 +114,22 @@ def test_serialize_chat_request():
     # When serializing it
     serialized = request.model_dump_json()
 
-    # Then it nests the structure
+    # Then
     assert serialized == dumps(
-        {
-            "requests": [
-                {
-                    "model": "llama-3.1-8b-instruct",
-                    "messages": [{"role": "user", "content": "Hello"}],
-                    "params": {
-                        "max_tokens": 64,
-                        "temperature": None,
-                        "top_p": None,
-                        "frequency_penalty": None,
-                        "presence_penalty": None,
-                        "logprobs": {"top": 10},
-                    },
-                }
-            ]
-        }
+        [
+            {
+                "model": "llama-3.1-8b-instruct",
+                "messages": [{"role": "user", "content": "Hello"}],
+                "params": {
+                    "max_tokens": 64,
+                    "temperature": None,
+                    "top_p": None,
+                    "frequency_penalty": None,
+                    "presence_penalty": None,
+                    "logprobs": {"top": 10},
+                },
+            }
+        ]
     )
 
 
@@ -184,7 +180,7 @@ def test_deserialize_chat():
 def test_serialize_explanation_request():
     # Given a list of Explanation requests
     request = ExplanationRequestListSerializer(
-        requests=[
+        [
             ExplanationRequest(
                 prompt="my prompt",
                 target="my target",
@@ -199,16 +195,14 @@ def test_serialize_explanation_request():
 
     # Then it matches
     assert serialized == dumps(
-        {
-            "requests": [
-                {
-                    "prompt": "my prompt",
-                    "target": "my target",
-                    "model": "my-model",
-                    "granularity": "auto",
-                }
-            ]
-        }
+        [
+            {
+                "prompt": "my prompt",
+                "target": "my target",
+                "model": "my-model",
+                "granularity": "auto",
+            }
+        ]
     )
 
 

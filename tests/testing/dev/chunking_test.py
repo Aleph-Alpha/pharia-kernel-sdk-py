@@ -10,7 +10,7 @@ from .conftest import dumps
 def test_serialize_chunk_request():
     # Given a chunk request
     request = ChunkRequestSerializer(
-        requests=[
+        [
             ChunkRequest(
                 text="Hello, world!",
                 params=ChunkParams(model="llama-3.1-8b-instruct", max_tokens=100),
@@ -23,19 +23,17 @@ def test_serialize_chunk_request():
 
     # Then it nests the structure
     assert serialized == dumps(
-        {
-            "requests": [
-                {
-                    "text": "Hello, world!",
-                    "params": {
-                        "model": "llama-3.1-8b-instruct",
-                        "max_tokens": 100,
-                        "overlap": 0,
-                    },
-                    "character_offsets": True,
-                }
-            ]
-        }
+        [
+            {
+                "text": "Hello, world!",
+                "params": {
+                    "model": "llama-3.1-8b-instruct",
+                    "max_tokens": 100,
+                    "overlap": 0,
+                },
+                "character_offsets": True,
+            }
+        ]
     )
 
 

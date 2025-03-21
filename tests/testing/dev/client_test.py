@@ -13,15 +13,13 @@ def test_http_client_run(model: str):
 
     result = client.run(
         "complete",
-        {
-            "requests": [
-                {
-                    "model": model,
-                    "prompt": "Say hello to Bob",
-                    "params": asdict(params),
-                },
-            ],
-        },
+        [
+            {
+                "model": model,
+                "prompt": "Say hello to Bob",
+                "params": asdict(params),
+            },
+        ],
     )
     assert isinstance(result, list)
     assert result[0].get("text") is not None

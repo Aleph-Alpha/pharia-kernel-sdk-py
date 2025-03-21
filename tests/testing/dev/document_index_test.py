@@ -28,7 +28,7 @@ from .conftest import dumps
 def test_serialize_document_metadata_request():
     # Given a document metadata request
     request = DocumentMetadataSerializer(
-        requests=[
+        [
             DocumentPath(
                 namespace="test",
                 collection="kernel",
@@ -42,15 +42,13 @@ def test_serialize_document_metadata_request():
 
     # Then it nests the structure
     assert serialized == dumps(
-        {
-            "requests": [
-                {
-                    "namespace": "test",
-                    "collection": "kernel",
-                    "name": "docs",
-                }
-            ]
-        }
+        [
+            {
+                "namespace": "test",
+                "collection": "kernel",
+                "name": "docs",
+            }
+        ]
     )
 
 
@@ -79,7 +77,7 @@ def test_deserialize_document_metadata():
 def test_serialize_document_request():
     # Given a document request
     request = DocumentSerializer(
-        requests=[
+        root=[
             DocumentPath(
                 namespace="test",
                 collection="kernel",
@@ -91,17 +89,15 @@ def test_serialize_document_request():
     # When serializing it
     serialized = request.model_dump_json()
 
-    # Then it nests the structure
+    # Then
     assert serialized == dumps(
-        {
-            "requests": [
-                {
-                    "namespace": "test",
-                    "collection": "kernel",
-                    "name": "docs",
-                }
-            ]
-        }
+        [
+            {
+                "namespace": "test",
+                "collection": "kernel",
+                "name": "docs",
+            }
+        ]
     )
 
 
@@ -147,7 +143,7 @@ def test_deserialize_document():
 def test_serialize_search_request():
     # Given a list of search requests
     request = SearchRequestSerializer(
-        requests=[
+        [
             SearchRequest(
                 index_path=IndexPath(
                     namespace="Kernel", collection="test", index="asym-64"
@@ -186,44 +182,42 @@ def test_serialize_search_request():
     # When serializing it
     serialized = request.model_dump_json()
 
-    # Then it nests the structure
+    # Then
     assert serialized == dumps(
-        {
-            "requests": [
-                {
-                    "index_path": {
-                        "namespace": "Kernel",
-                        "collection": "test",
-                        "index": "asym-64",
+        [
+            {
+                "index_path": {
+                    "namespace": "Kernel",
+                    "collection": "test",
+                    "index": "asym-64",
+                },
+                "query": "What is the Kernel?",
+                "max_results": 1,
+                "min_score": None,
+                "filters": [
+                    {
+                        "with": [
+                            {
+                                "metadata": {
+                                    "field": "created",
+                                    "after": "1970-07-01T14:10:11Z",
+                                }
+                            }
+                        ]
                     },
-                    "query": "What is the Kernel?",
-                    "max_results": 1,
-                    "min_score": None,
-                    "filters": [
-                        {
-                            "with": [
-                                {
-                                    "metadata": {
-                                        "field": "created",
-                                        "after": "1970-07-01T14:10:11Z",
-                                    }
+                    {
+                        "with_one_of": [
+                            {
+                                "metadata": {
+                                    "field": "created",
+                                    "after": "1970-07-01T14:10:11Z",
                                 }
-                            ]
-                        },
-                        {
-                            "with_one_of": [
-                                {
-                                    "metadata": {
-                                        "field": "created",
-                                        "after": "1970-07-01T14:10:11Z",
-                                    }
-                                }
-                            ]
-                        },
-                    ],
-                }
-            ]
-        }
+                            }
+                        ]
+                    },
+                ],
+            }
+        ]
     )
 
 
