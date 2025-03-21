@@ -11,5 +11,5 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          [pydantic, pytest, opentelemetry-sdk, python-dotenv, typer]
+          [pydantic, pytest, opentelemetry-sdk, python-dotenv, typer, sseclient-py]
         args: [--install-types, --non-interactive]

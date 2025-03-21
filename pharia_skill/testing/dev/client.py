@@ -79,4 +79,4 @@ class Client(CsiClient):
                 f"{response.status_code} {HTTPStatus(response.status_code).phrase}: {error}"
             )
 
-        return SSEClient(response).events()
+        return SSEClient(response).events()  # type: ignore
