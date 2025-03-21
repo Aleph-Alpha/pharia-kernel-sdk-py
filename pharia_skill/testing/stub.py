@@ -2,11 +2,15 @@
 StubCsi can be used for testing without a backing Pharia Kernel instance.
 """
 
+from typing import Generator
+
 from pharia_skill import (
     ChatRequest,
     ChatResponse,
     ChunkRequest,
     Completion,
+    CompletionDelta,
+    CompletionParams,
     CompletionRequest,
     Csi,
     Cursor,
@@ -19,6 +23,7 @@ from pharia_skill import (
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
+    StreamReport,
     Text,
     TokenUsage,
 )
@@ -56,6 +61,17 @@ class StubCsi(Csi):
             result = run(csi, Input(topic="The meaning of life"))
             assert result.haiku == "Whispers in the dark\nEchoes of a fleeting dream\nMeaning lost in space"
     """
+
+    def completion_stream(
+        self, model: str, prompt: str, params: CompletionParams
+    ) -> Generator[CompletionDelta, None, StreamReport]:
+        for char in prompt:
+            yield CompletionDelta(char, [])
+        usage = TokenUsage(
+            prompt=len(prompt),
+            completion=len(prompt),
+        )
+        return StreamReport(FinishReason.STOP, usage)
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

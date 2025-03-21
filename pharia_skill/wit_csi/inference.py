@@ -1,12 +1,4 @@
-"""
-As the bindings for explanation are still behind a feature flags, we can not
-require the generated bindings for the corresponging structs (`TextScore`,
-`ExplanationRequest`, and `Granularity`). We therefore can not use these types
-for annotations.
-
-The `type: ignore[no-untyped-def]` annotations can be removed once we stabilize
-the feature and we know that the classes will always be in the bindings.
-"""
+from pharia_skill.csi.inference import CompletionDelta
 
 from ..csi import (
     ChatParams,
@@ -66,6 +58,15 @@ def distribution_from_wit(distribution: wit.Distribution) -> Distribution:
 
 def token_usage_from_wit(usage: wit.TokenUsage) -> TokenUsage:
     return TokenUsage(prompt=usage.prompt, completion=usage.completion)
+
+
+def completion_delta_from_wit(delta: wit.CompletionDelta) -> CompletionDelta:
+    return CompletionDelta(
+        text=delta.text,
+        logprobs=[
+            distribution_from_wit(distribution) for distribution in delta.logprobs
+        ],
+    )
 
 
 def completion_from_wit(completion: wit.Completion) -> Completion:

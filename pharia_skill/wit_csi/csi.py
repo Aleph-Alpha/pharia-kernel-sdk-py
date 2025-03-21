@@ -1,13 +1,20 @@
 import json
+from typing import Generator
 
 from pharia_skill.csi.chunking import Chunk
-from pharia_skill.csi.inference import ExplanationRequest, TextScore
+from pharia_skill.csi.inference import (
+    ExplanationRequest,
+    FinishReason,
+    TextScore,
+)
 
 from ..csi import (
     ChatRequest,
     ChatResponse,
     ChunkRequest,
     Completion,
+    CompletionDelta,
+    CompletionParams,
     CompletionRequest,
     Csi,
     Document,
@@ -17,6 +24,7 @@ from ..csi import (
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
+    StreamReport,
 )
 from ..wit.imports import chunking as wit_chunking
 from ..wit.imports import document_index as wit_document_index
@@ -32,10 +40,13 @@ from .document_index import (
 from .inference import (
     chat_request_to_wit,
     chat_response_from_wit,
+    completion_delta_from_wit,
     completion_from_wit,
     completion_request_to_wit,
     explanation_request_to_wit,
+    finish_reason_from_wit,
     text_score_from_wit,
+    token_usage_from_wit,
 )
 from .language import language_from_wit, language_request_to_wit
 
@@ -46,6 +57,23 @@ class WitCsi(Csi):
     Responsible to tranlate between the types we expose in the SDK and the types in the `wit.imports` module,
     which are automatically generated from the WIT world via `componentize-py`.
     """
+
+    def completion_stream(
+        self, model: str, prompt: str, params: CompletionParams
+    ) -> Generator[CompletionDelta, None, StreamReport]:
+        request = completion_request_to_wit(CompletionRequest(model, prompt, params))
+        stream = wit_inference.CompletionStream(request)
+        finish_reason = FinishReason.STOP
+        while (event := stream.next()) is not None:
+            match event:
+                case wit_inference.CompletionEvent_Delta:
+                    yield completion_delta_from_wit(event.value)
+                case wit_inference.CompletionEvent_Finished:
+                    finish_reason = finish_reason_from_wit(event.value)
+                case wit_inference.CompletionEvent_Usage:
+                    usage = token_usage_from_wit(event.value)
+                    return StreamReport(finish_reason, usage)
+        raise Exception("completion_stream completed without receiving token usage")
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]
