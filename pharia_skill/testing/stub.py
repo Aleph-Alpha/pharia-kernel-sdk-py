@@ -9,7 +9,7 @@ from pharia_skill import (
     ChatResponse,
     ChunkRequest,
     Completion,
-    CompletionDelta,
+    CompletionAppend,
     CompletionParams,
     CompletionRequest,
     Csi,
@@ -64,9 +64,9 @@ class StubCsi(Csi):
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
-    ) -> Generator[CompletionDelta, None, StreamReport]:
+    ) -> Generator[CompletionAppend, None, StreamReport]:
         for char in prompt:
-            yield CompletionDelta(char, [])
+            yield CompletionAppend(char, [])
         usage = TokenUsage(
             prompt=len(prompt),
             completion=len(prompt),

@@ -13,7 +13,7 @@ from ..csi import (
     ChatResponse,
     ChunkRequest,
     Completion,
-    CompletionDelta,
+    CompletionAppend,
     CompletionParams,
     CompletionRequest,
     Csi,
@@ -40,7 +40,7 @@ from .document_index import (
 from .inference import (
     chat_request_to_wit,
     chat_response_from_wit,
-    completion_delta_from_wit,
+    completion_append_from_wit,
     completion_from_wit,
     completion_request_to_wit,
     explanation_request_to_wit,
@@ -60,15 +60,15 @@ class WitCsi(Csi):
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
-    ) -> Generator[CompletionDelta, None, StreamReport]:
+    ) -> Generator[CompletionAppend, None, StreamReport]:
         request = completion_request_to_wit(CompletionRequest(model, prompt, params))
         stream = wit_inference.CompletionStream(request)
         finish_reason = FinishReason.STOP
         while (event := stream.next()) is not None:
             match event:
-                case wit_inference.CompletionEvent_Delta:
-                    yield completion_delta_from_wit(event.value)
-                case wit_inference.CompletionEvent_Finished:
+                case wit_inference.CompletionEvent_Append:
+                    yield completion_append_from_wit(event.value)
+                case wit_inference.CompletionEvent_End:
                     finish_reason = finish_reason_from_wit(event.value)
                 case wit_inference.CompletionEvent_Usage:
                     usage = token_usage_from_wit(event.value)
