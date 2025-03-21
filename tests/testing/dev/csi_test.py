@@ -19,7 +19,7 @@ from pharia_skill import (
     Role,
     Text,
 )
-from pharia_skill.csi.inference import Granularity
+from pharia_skill.csi.inference import Granularity, StreamReport
 from pharia_skill.studio import (
     SpanClient,
     StudioExporter,
@@ -44,6 +44,23 @@ def given_document() -> DocumentPath:
 def given_index() -> IndexPath:
     """The tests suite expects an index `asym-64` in the `test` collection of the `Kernel` index."""
     return IndexPath("Kernel", "test", "asym-64")
+
+
+@pytest.mark.kernel
+def test_completion_stream(csi: Csi, model: str):
+    params = CompletionParams(max_tokens=64)
+    events = csi.completion_stream(model, "Say hello to Bob", params)
+
+    assert next(events).text is not None
+    assert next(events).text is not None
+    try:
+        assert next(events)
+    except StopIteration as e:
+        report = e.value
+        assert isinstance(report, StreamReport)
+        assert report.finish_reason == FinishReason.LENGTH
+        assert report.usage.prompt == 4
+        assert report.usage.completion == 64
 
 
 @pytest.mark.kernel

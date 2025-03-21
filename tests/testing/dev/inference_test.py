@@ -17,12 +17,12 @@ from pharia_skill import (
     TopLogprobs,
 )
 from pharia_skill.testing.dev.inference import (
-    ChatDeserializer,
-    ChatRequestSerializer,
-    CompletionDeserializer,
-    CompletionRequestSerializer,
-    ExplanationDeserializer,
-    ExplanationRequestSerializer,
+    ChatListDeserializer,
+    ChatRequestListSerializer,
+    CompletionListDeserializer,
+    CompletionRequestListSerializer,
+    ExplanationListDeserializer,
+    ExplanationRequestListSerializer,
 )
 
 from .conftest import dumps
@@ -30,7 +30,7 @@ from .conftest import dumps
 
 def test_serialize_completion_request():
     # Given a list of completion requests
-    request = CompletionRequestSerializer(
+    request = CompletionRequestListSerializer(
         requests=[
             CompletionRequest(
                 "llama-3.1-8b-instruct",
@@ -76,7 +76,10 @@ def test_deserialize_completion():
                 "finish_reason": "stop",
                 "logprobs": [
                     {
-                        "sampled": {"token": [72, 101, 108, 108, 111], "logprob": 0.0},
+                        "sampled": {
+                            "token": [72, 101, 108, 108, 111],
+                            "logprob": 0.0,
+                        },
                         "top": [],
                     }
                 ],
@@ -86,7 +89,7 @@ def test_deserialize_completion():
     )
 
     # When deserializing it
-    deserialized = CompletionDeserializer.model_validate_json(serialized)
+    deserialized = CompletionListDeserializer.model_validate_json(serialized)
     completion = deserialized.root[0]
 
     # Then the completion is loaded recursively
@@ -100,7 +103,7 @@ def test_deserialize_completion():
 
 def test_serialize_chat_request():
     # Given a list of chat requests
-    request = ChatRequestSerializer(
+    request = ChatRequestListSerializer(
         requests=[
             ChatRequest(
                 "llama-3.1-8b-instruct",
@@ -147,7 +150,10 @@ def test_deserialize_chat():
                             "token": [72, 101, 108, 108, 111],
                         },
                         "top": [
-                            {"logprob": -0.06857474, "token": [72, 101, 108, 108, 111]}
+                            {
+                                "logprob": -0.06857474,
+                                "token": [72, 101, 108, 108, 111],
+                            }
                         ],
                     }
                 ],
@@ -158,7 +164,7 @@ def test_deserialize_chat():
     )
 
     # When deserializing it
-    deserialized = ChatDeserializer.model_validate_json(serialized)
+    deserialized = ChatListDeserializer.model_validate_json(serialized)
     chat = deserialized.root[0]
 
     # Then the chat is loaded recursively
@@ -177,7 +183,7 @@ def test_deserialize_chat():
 
 def test_serialize_explanation_request():
     # Given a list of Explanation requests
-    request = ExplanationRequestSerializer(
+    request = ExplanationRequestListSerializer(
         requests=[
             ExplanationRequest(
                 prompt="my prompt",
@@ -211,7 +217,7 @@ def test_deserialize_explanation():
     serialized = dumps([[{"start": 0, "length": 5, "score": 0.5}]])
 
     # When deserializing it
-    deserialized = ExplanationDeserializer.model_validate_json(serialized)
+    deserialized = ExplanationListDeserializer.model_validate_json(serialized)
     explanation = deserialized.root
 
     # Then the explanation is loaded

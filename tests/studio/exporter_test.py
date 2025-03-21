@@ -1,8 +1,9 @@
-from typing import Any, Sequence
+from typing import Any, Generator, Sequence
 
 import pytest
 from opentelemetry.sdk.trace import ReadableSpan
 from pydantic import BaseModel
+from sseclient import Event
 
 from pharia_skill import (
     CompletionParams,
@@ -11,7 +12,12 @@ from pharia_skill import (
     IndexPath,
     skill,
 )
-from pharia_skill.studio import SpanClient, StudioClient, StudioExporter, StudioSpan
+from pharia_skill.studio import (
+    SpanClient,
+    StudioClient,
+    StudioExporter,
+    StudioSpan,
+)
 from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi
 from pharia_skill.testing.dev.client import CsiClient
@@ -67,6 +73,11 @@ class StubCsiClient(CsiClient):
             case _:
                 return {}
 
+    def stream(
+        self, function: str, data: dict[str, Any]
+    ) -> Generator[Event, None, None]:
+        yield Event()
+
 
 class SaboteurCsiClient(CsiClient):
     def run(self, function: str, data: Any) -> Any:
@@ -77,6 +88,11 @@ class SaboteurCsiClient(CsiClient):
                 return [[]]
             case _:
                 return {}
+
+    def stream(
+        self, function: str, data: dict[str, Any]
+    ) -> Generator[Event, None, None]:
+        raise RuntimeError("Out of cheese")
 
 
 @pytest.fixture
@@ -122,7 +138,9 @@ def test_csi_call_is_traced(stub_dev_csi: DevCsi):
 
     # When running a completion request
     stub_dev_csi.complete(
-        "llama-3.1-8b-instruct", "Say hello to Bob", CompletionParams(max_tokens=64)
+        "llama-3.1-8b-instruct",
+        "Say hello to Bob",
+        CompletionParams(max_tokens=64),
     )
 
     # Then the exporter has received a successful span

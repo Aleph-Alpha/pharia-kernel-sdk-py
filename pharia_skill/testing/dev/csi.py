@@ -9,17 +9,20 @@ uncoupling these interfaces brings two advantages:
 """
 
 import json
-from typing import Any
+from typing import Any, Generator
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace import StatusCode
+from pydantic import TypeAdapter
+from sseclient import Event
 
 from pharia_skill import (
     ChatRequest,
     ChatResponse,
     ChunkRequest,
     Completion,
+    CompletionParams,
     CompletionRequest,
     Csi,
     Document,
@@ -29,9 +32,16 @@ from pharia_skill import (
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
+    StreamReport,
 )
 from pharia_skill.csi.chunking import Chunk
-from pharia_skill.csi.inference import ExplanationRequest, TextScore
+from pharia_skill.csi.inference import (
+    CompletionDelta,
+    CompletionEvent,
+    ExplanationRequest,
+    FinishReason,
+    TextScore,
+)
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,
@@ -49,12 +59,15 @@ from .document_index import (
     SearchResultDeserializer,
 )
 from .inference import (
-    ChatDeserializer,
-    ChatRequestSerializer,
-    CompletionDeserializer,
+    ChatListDeserializer,
+    ChatRequestListSerializer,
+    CompletionListDeserializer,
+    CompletionRequestListSerializer,
     CompletionRequestSerializer,
-    ExplanationDeserializer,
-    ExplanationRequestSerializer,
+    ExplanationListDeserializer,
+    ExplanationRequestListSerializer,
+    FinishReasonDeserializer,
+    TokenUsageDeserializer,
 )
 from .language import (
     SelectLanguageDeserializer,
@@ -96,24 +109,51 @@ class DevCsi(Csi):
     def __init__(self) -> None:
         self.client: CsiClient = Client()
 
+    def completion_stream(
+        self, model: str, prompt: str, params: CompletionParams
+    ) -> Generator[CompletionDelta, None, StreamReport]:
+        body = CompletionRequestSerializer(
+            model=model, prompt=prompt, params=params
+        ).model_dump()
+        events = self.stream("completion_stream", body)
+        finish_reason = FinishReason.STOP
+        for event in events:
+            match event.event:
+                case CompletionEvent.DELTA:
+                    yield TypeAdapter(CompletionDelta).validate_json(event.data)
+                case CompletionEvent.FINISHED:
+                    finish_reason = (
+                        TypeAdapter(FinishReasonDeserializer)
+                        .validate_json(event.data)
+                        .finish_reason
+                    )
+                case CompletionEvent.USAGE:
+                    usage = (
+                        TypeAdapter(TokenUsageDeserializer)
+                        .validate_json(event.data)
+                        .usage
+                    )
+                    return StreamReport(finish_reason, usage)
+        raise Exception("completion_stream completed without receiving token usage")
+
     def complete_concurrent(
         self, requests: list[CompletionRequest]
     ) -> list[Completion]:
-        body = CompletionRequestSerializer(requests=requests).model_dump()
+        body = CompletionRequestListSerializer(requests=requests).model_dump()
         output = self.run("complete", body)
-        return CompletionDeserializer(root=output).root
+        return CompletionListDeserializer(root=output).root
 
     def chat_concurrent(self, requests: list[ChatRequest]) -> list[ChatResponse]:
-        body = ChatRequestSerializer(requests=requests).model_dump()
+        body = ChatRequestListSerializer(requests=requests).model_dump()
         output = self.run("chat", body)
-        return ChatDeserializer(root=output).root
+        return ChatListDeserializer(root=output).root
 
     def explain_concurrent(
         self, requests: list[ExplanationRequest]
     ) -> list[list[TextScore]]:
-        body = ExplanationRequestSerializer(requests=requests).model_dump()
+        body = ExplanationRequestListSerializer(requests=requests).model_dump()
         output = self.run("explain", body)
-        return ExplanationDeserializer(root=output).root
+        return ExplanationListDeserializer(root=output).root
 
     def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
         body = ChunkRequestSerializer(requests=requests).model_dump()
@@ -212,3 +252,18 @@ class DevCsi(Csi):
             span.set_attribute("output", json.dumps(output))
 
         return output
+
+    def stream(
+        self, function: str, data: dict[str, Any]
+    ) -> Generator[Event, None, None]:
+        with trace.get_tracer(__name__).start_as_current_span(function) as span:
+            span.set_attribute("input", json.dumps(data))
+            try:
+                events = self.client.stream(function, data)
+                while (event := next(events)) is not None:
+                    yield event
+                    span.set_attribute("event", json.loads(event.data))
+            except Exception as e:
+                span.set_status(StatusCode.ERROR, str(e))
+                raise e
+            span.set_status(StatusCode.OK)

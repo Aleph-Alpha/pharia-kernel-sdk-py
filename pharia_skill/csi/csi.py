@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Generator, Protocol
 
 from .chunking import Chunk, ChunkParams, ChunkRequest
 from .document_index import (
@@ -15,11 +15,13 @@ from .inference import (
     ChatRequest,
     ChatResponse,
     Completion,
+    CompletionDelta,
     CompletionParams,
     CompletionRequest,
     ExplanationRequest,
     Granularity,
     Message,
+    StreamReport,
     TextScore,
 )
 from .language import Language, SelectLanguageRequest
@@ -27,6 +29,18 @@ from .language import Language, SelectLanguageRequest
 
 class Csi(Protocol):
     """The Cognitive System Interface (CSI) is a protocol that allows skills to interact with the Pharia Kernel."""
+
+    def completion_stream(
+        self, model: str, prompt: str, params: CompletionParams
+    ) -> Generator[CompletionDelta, None, StreamReport]:
+        """Streams completions given a prompt.
+
+        Parameters:
+            model (str, required): Name of model to use.
+            prompt (str, required): The text to be completed.
+            params (CompletionParams, required): Parameters for the requested completion.
+        """
+        ...
 
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         """Generates completions given a prompt.
