@@ -39,8 +39,8 @@ def test_http_client_sse(model: str):
         },
     )
 
-    assert next(events).event == "delta"
-    assert next(events).event == "finished"
+    assert next(events).event == "append"
+    assert next(events).event == "end"
     assert next(events).event == "usage"
     with pytest.raises(StopIteration):
         next(events)

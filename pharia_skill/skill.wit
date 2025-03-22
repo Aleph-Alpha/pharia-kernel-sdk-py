@@ -534,7 +534,7 @@ interface inference {
         message-append(message-append),
         /// The end of a message. It includes the reason for the message end.
         message-end(finish-reason),
-        /// The usage from the generated message.s
+        /// The usage from the generated message
         usage(token-usage),
     }
 

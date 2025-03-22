@@ -21,6 +21,7 @@ from .inference import (
     ExplanationRequest,
     Granularity,
     Message,
+    MessageAppend,
     StreamReport,
     TextScore,
 )
@@ -39,6 +40,23 @@ class Csi(Protocol):
             model (str, required): Name of model to use.
             prompt (str, required): The text to be completed.
             params (CompletionParams, required): Parameters for the requested completion.
+        """
+        ...
+
+    def chat_stream(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> Generator[str | MessageAppend, None, StreamReport]:
+        """Streams chat with a model, where the first item is the role.
+
+        Parameters:
+            model (str, required):
+                Name of model to use.
+
+            messages (list[Message], required):
+                List of messages, alternating between messages from user and assistant.
+
+            params (ChatParams, required):
+                Parameters used for the chat.
         """
         ...
 

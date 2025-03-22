@@ -14,6 +14,7 @@ from ..csi import (
     Logprob,
     Logprobs,
     Message,
+    MessageAppend,
     Role,
     TextScore,
     TokenUsage,
@@ -63,6 +64,15 @@ def token_usage_from_wit(usage: wit.TokenUsage) -> TokenUsage:
 def completion_append_from_wit(append: wit.CompletionAppend) -> CompletionAppend:
     return CompletionAppend(
         text=append.text,
+        logprobs=[
+            distribution_from_wit(distribution) for distribution in append.logprobs
+        ],
+    )
+
+
+def message_append_from_wit(append: wit.MessageAppend) -> MessageAppend:
+    return MessageAppend(
+        content=append.content,
         logprobs=[
             distribution_from_wit(distribution) for distribution in append.logprobs
         ],
