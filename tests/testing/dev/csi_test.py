@@ -19,7 +19,7 @@ from pharia_skill import (
     Role,
     Text,
 )
-from pharia_skill.csi.inference import Granularity, StreamReport
+from pharia_skill.csi.inference import Granularity, MessageAppend, StreamReport
 from pharia_skill.studio import (
     SpanClient,
     StudioExporter,
@@ -61,6 +61,30 @@ def test_completion_stream(csi: Csi, model: str):
         assert report.finish_reason == FinishReason.LENGTH
         assert report.usage.prompt == 4
         assert report.usage.completion == 64
+
+
+@pytest.mark.kernel
+def test_chat_stream(csi: Csi, model: str):
+    params = ChatParams(max_tokens=64)
+    messages = [Message.user("Say hello to Bob")]
+    events = csi.chat_stream(model, messages, params)
+
+    role = next(events)
+    assert isinstance(role, str)
+    assert role == "assistant"
+
+    message = next(events)
+    assert isinstance(message, MessageAppend)
+    assert message.content is not None
+
+    try:
+        assert next(events)
+    except StopIteration as e:
+        report = e.value
+        assert isinstance(report, StreamReport)
+        assert report.finish_reason == FinishReason.STOP
+        assert report.usage.prompt == 14
+        assert report.usage.completion == 9
 
 
 @pytest.mark.kernel

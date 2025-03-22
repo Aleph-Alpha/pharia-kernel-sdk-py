@@ -5,6 +5,7 @@ StubCsi can be used for testing without a backing Pharia Kernel instance.
 from typing import Generator
 
 from pharia_skill import (
+    ChatParams,
     ChatRequest,
     ChatResponse,
     ChunkRequest,
@@ -20,6 +21,7 @@ from pharia_skill import (
     JsonSerializable,
     Language,
     Message,
+    MessageAppend,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
@@ -70,6 +72,19 @@ class StubCsi(Csi):
         usage = TokenUsage(
             prompt=len(prompt),
             completion=len(prompt),
+        )
+        return StreamReport(FinishReason.STOP, usage)
+
+    def chat_stream(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> Generator[str | MessageAppend, None, StreamReport]:
+        content = messages[0].content if messages else "Hello"
+        yield "assistant"
+        for char in content:
+            yield MessageAppend(char, [])
+        usage = TokenUsage(
+            prompt=len(content),
+            completion=len(content),
         )
         return StreamReport(FinishReason.STOP, usage)
 

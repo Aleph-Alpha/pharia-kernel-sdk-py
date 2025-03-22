@@ -18,6 +18,7 @@ from pydantic import TypeAdapter
 from sseclient import Event
 
 from pharia_skill import (
+    ChatParams,
     ChatRequest,
     ChatResponse,
     ChunkRequest,
@@ -29,6 +30,7 @@ from pharia_skill import (
     DocumentPath,
     JsonSerializable,
     Language,
+    MessageAppend,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
@@ -36,10 +38,12 @@ from pharia_skill import (
 )
 from pharia_skill.csi.chunking import Chunk
 from pharia_skill.csi.inference import (
+    ChatEvent,
     CompletionAppend,
     CompletionEvent,
     ExplanationRequest,
     FinishReason,
+    Message,
     TextScore,
 )
 from pharia_skill.studio import (
@@ -61,12 +65,14 @@ from .document_index import (
 from .inference import (
     ChatListDeserializer,
     ChatRequestListSerializer,
+    ChatRequestSerializer,
     CompletionListDeserializer,
     CompletionRequestListSerializer,
     CompletionRequestSerializer,
     ExplanationListDeserializer,
     ExplanationRequestListSerializer,
     FinishReasonDeserializer,
+    RoleDeserializer,
     TokenUsageDeserializer,
 )
 from .language import (
@@ -119,9 +125,9 @@ class DevCsi(Csi):
         finish_reason = FinishReason.STOP
         for event in events:
             match event.event:
-                case CompletionEvent.DELTA:
+                case CompletionEvent.APPEND:
                     yield TypeAdapter(CompletionAppend).validate_json(event.data)
-                case CompletionEvent.FINISHED:
+                case CompletionEvent.END:
                     finish_reason = (
                         TypeAdapter(FinishReasonDeserializer)
                         .validate_json(event.data)
@@ -135,6 +141,35 @@ class DevCsi(Csi):
                     )
                     return StreamReport(finish_reason, usage)
         raise Exception("completion_stream completed without receiving token usage")
+
+    def chat_stream(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> Generator[str | MessageAppend, None, StreamReport]:
+        body = ChatRequestSerializer(
+            model=model, messages=messages, params=params
+        ).model_dump()
+        events = self.stream("chat_stream", body)
+        finish_reason = FinishReason.STOP
+        for event in events:
+            match event.event:
+                case ChatEvent.MESSAGE_BEGIN:
+                    yield (TypeAdapter(RoleDeserializer).validate_json(event.data).role)
+                case ChatEvent.MESSAGE_APPEND:
+                    yield TypeAdapter(MessageAppend).validate_json(event.data)
+                case ChatEvent.MESSAGE_END:
+                    finish_reason = (
+                        TypeAdapter(FinishReasonDeserializer)
+                        .validate_json(event.data)
+                        .finish_reason
+                    )
+                case ChatEvent.USAGE:
+                    usage = (
+                        TypeAdapter(TokenUsageDeserializer)
+                        .validate_json(event.data)
+                        .usage
+                    )
+                    return StreamReport(finish_reason, usage)
+        raise Exception("chat_stream completed without receiving token usage")
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

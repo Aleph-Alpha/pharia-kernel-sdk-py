@@ -9,6 +9,7 @@ from pharia_skill.csi.inference import (
 )
 
 from ..csi import (
+    ChatParams,
     ChatRequest,
     ChatResponse,
     ChunkRequest,
@@ -21,6 +22,8 @@ from ..csi import (
     DocumentPath,
     JsonSerializable,
     Language,
+    Message,
+    MessageAppend,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
@@ -45,6 +48,7 @@ from .inference import (
     completion_request_to_wit,
     explanation_request_to_wit,
     finish_reason_from_wit,
+    message_append_from_wit,
     text_score_from_wit,
     token_usage_from_wit,
 )
@@ -74,6 +78,26 @@ class WitCsi(Csi):
                     usage = token_usage_from_wit(event.value)
                     return StreamReport(finish_reason, usage)
         raise Exception("completion_stream completed without receiving token usage")
+
+    def chat_stream(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> Generator[str | MessageAppend, None, StreamReport]:
+        ChatRequest(model, messages, params)
+        request = chat_request_to_wit(ChatRequest(model, messages, params))
+        stream = wit_inference.ChatStream(request)
+        finish_reason = FinishReason.STOP
+        while (event := stream.next()) is not None:
+            match event:
+                case wit_inference.ChatEvent_MessageBegin:
+                    yield event.value
+                case wit_inference.ChatEvent_MessageAppend:
+                    yield message_append_from_wit(event.value)
+                case wit_inference.ChatEvent_MessageEnd:
+                    finish_reason = finish_reason_from_wit(event.value)
+                case wit_inference.ChatEvent_Usage:
+                    usage = token_usage_from_wit(event.value)
+                    return StreamReport(finish_reason, usage)
+        raise Exception("chat_stream completed without receiving token usage")
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, RootModel
 
 from pharia_skill.csi import (
+    ChatParams,
     ChatRequest,
     ChatResponse,
     Completion,
@@ -10,6 +11,7 @@ from pharia_skill.csi import (
 from pharia_skill.csi.inference import (
     ExplanationRequest,
     FinishReason,
+    Message,
     TextScore,
     TokenUsage,
 )
@@ -27,6 +29,16 @@ class CompletionRequestSerializer(BaseModel):
     model: str
     prompt: str
     params: CompletionParams
+
+
+class ChatRequestSerializer(BaseModel):
+    model: str
+    messages: list[Message]
+    params: ChatParams
+
+
+class RoleDeserializer(BaseModel):
+    role: str
 
 
 CompletionRequestListSerializer = RootModel[list[CompletionRequest]]
