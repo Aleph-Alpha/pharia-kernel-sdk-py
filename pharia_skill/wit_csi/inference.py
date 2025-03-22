@@ -1,3 +1,12 @@
+"""
+As the bindings for streaming are still behind a feature flag, we can not
+require the generated bindings for the corresponding structs (`CompletionAppend`
+and `MessageAppend`). We therefore can not use these types for annotations.
+
+The `type: ignore[no-untyped-def]` annotations can be removed once we stabilize
+the feature and we know that the classes will always be in the bindings.
+"""
+
 from pharia_skill.csi.inference import CompletionAppend
 
 from ..csi import (
@@ -61,7 +70,7 @@ def token_usage_from_wit(usage: wit.TokenUsage) -> TokenUsage:
     return TokenUsage(prompt=usage.prompt, completion=usage.completion)
 
 
-def completion_append_from_wit(append: wit.CompletionAppend) -> CompletionAppend:
+def completion_append_from_wit(append) -> CompletionAppend:  # type: ignore[no-untyped-def]
     return CompletionAppend(
         text=append.text,
         logprobs=[
@@ -70,7 +79,7 @@ def completion_append_from_wit(append: wit.CompletionAppend) -> CompletionAppend
     )
 
 
-def message_append_from_wit(append: wit.MessageAppend) -> MessageAppend:
+def message_append_from_wit(append) -> MessageAppend:  # type: ignore[no-untyped-def]
     return MessageAppend(
         content=append.content,
         logprobs=[
