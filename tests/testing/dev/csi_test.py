@@ -13,13 +13,13 @@ from pharia_skill import (
     Document,
     DocumentPath,
     FinishReason,
+    Granularity,
     IndexPath,
     Language,
     Message,
     Role,
     Text,
 )
-from pharia_skill.csi.inference import Granularity, MessageAppend, StreamReport
 from pharia_skill.studio import (
     SpanClient,
     StudioExporter,
@@ -49,42 +49,60 @@ def given_index() -> IndexPath:
 @pytest.mark.kernel
 def test_completion_stream(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
-    events = csi.completion_stream(model, "Say hello to Bob", params)
+    response = csi.completion_stream(model, "Say hello to Bob", params)
 
-    assert next(events).text is not None
-    assert next(events).text is not None
-    try:
-        assert next(events)
-    except StopIteration as e:
-        report = e.value
-        assert isinstance(report, StreamReport)
-        assert report.finish_reason == FinishReason.LENGTH
-        assert report.usage.prompt == 4
-        assert report.usage.completion == 64
+    stream = response.stream()
+    assert next(stream).text is not None
+    assert next(stream).text is not None
+    assert response.finish_reason() == FinishReason.LENGTH
+    usage = response.usage()
+    assert usage.prompt == 4
+    assert usage.completion == 64
 
 
 @pytest.mark.kernel
 def test_chat_stream(csi: Csi, model: str):
+    params = ChatParams(max_tokens=64, logprobs="sampled")
+    messages = [Message.user("Say hello to Bob")]
+    message = csi.chat_stream(model, messages, params)
+
+    assert message.role == "assistant"
+
+    content = ""
+    logprobs = []
+    for m in message.stream():
+        content += m.content
+        logprobs += m.logprobs
+    assert content == "Hello Bob! How are you today?"
+    assert len(logprobs) == 9
+    assert message.finish_reason() == FinishReason.STOP
+    usage = message.usage()
+    assert usage.prompt == 14
+    assert usage.completion == 9
+
+
+@pytest.mark.kernel
+def test_chat_stream_skip_streaming_message(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
-    events = csi.chat_stream(model, messages, params)
+    message = csi.chat_stream(model, messages, params)
 
-    role = next(events)
-    assert isinstance(role, str)
-    assert role == "assistant"
+    assert message.finish_reason() == FinishReason.STOP
+    usage = message.usage()
+    assert usage.prompt == 14
+    assert usage.completion == 9
 
-    message = next(events)
-    assert isinstance(message, MessageAppend)
-    assert message.content is not None
 
-    try:
-        assert next(events)
-    except StopIteration as e:
-        report = e.value
-        assert isinstance(report, StreamReport)
-        assert report.finish_reason == FinishReason.STOP
-        assert report.usage.prompt == 14
-        assert report.usage.completion == 9
+@pytest.mark.kernel
+def test_chat_stream_after_consumed(csi: Csi, model: str):
+    params = ChatParams(max_tokens=64)
+    messages = [Message.user("Say hello to Bob")]
+    message = csi.chat_stream(model, messages, params)
+
+    assert message.finish_reason() == FinishReason.STOP
+    with pytest.raises(RuntimeError) as excinfo:
+        next(message.stream())
+    assert "The stream has already been consumed" == str(excinfo.value)
 
 
 @pytest.mark.kernel

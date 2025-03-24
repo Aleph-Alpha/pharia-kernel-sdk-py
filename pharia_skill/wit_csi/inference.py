@@ -7,13 +7,12 @@ The `type: ignore[no-untyped-def]` annotations can be removed once we stabilize
 the feature and we know that the classes will always be in the bindings.
 """
 
-from pharia_skill.csi.inference import CompletionAppend
-
 from ..csi import (
     ChatParams,
     ChatRequest,
     ChatResponse,
     Completion,
+    CompletionAppend,
     CompletionParams,
     CompletionRequest,
     Distribution,

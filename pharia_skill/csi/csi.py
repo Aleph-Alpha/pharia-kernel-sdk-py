@@ -1,4 +1,4 @@
-from typing import Generator, Protocol
+from typing import Protocol
 
 from .chunking import Chunk, ChunkParams, ChunkRequest
 from .document_index import (
@@ -14,15 +14,14 @@ from .inference import (
     ChatParams,
     ChatRequest,
     ChatResponse,
+    ChatStreamMessage,
     Completion,
-    CompletionAppend,
     CompletionParams,
     CompletionRequest,
+    CompletionStreamResponse,
     ExplanationRequest,
     Granularity,
     Message,
-    MessageAppend,
-    StreamReport,
     TextScore,
 )
 from .language import Language, SelectLanguageRequest
@@ -33,7 +32,7 @@ class Csi(Protocol):
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
-    ) -> Generator[CompletionAppend, None, StreamReport]:
+    ) -> CompletionStreamResponse:
         """Streams completions given a prompt.
 
         Parameters:
@@ -45,7 +44,7 @@ class Csi(Protocol):
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
-    ) -> Generator[str | MessageAppend, None, StreamReport]:
+    ) -> ChatStreamMessage:
         """Streams chat with a model, where the first item is the role.
 
         Parameters:
