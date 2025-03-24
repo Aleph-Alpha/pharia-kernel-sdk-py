@@ -1,33 +1,37 @@
 import json
-from typing import Generator
-
-from pharia_skill.csi.chunking import Chunk
-from pharia_skill.csi.inference import (
-    ExplanationRequest,
-    FinishReason,
-    TextScore,
-)
+from collections.abc import Generator
 
 from ..csi import (
+    ChatEvent,
+    ChatEvent_MessageAppend,
+    ChatEvent_MessageBegin,
+    ChatEvent_MessageEnd,
+    ChatEvent_Usage,
     ChatParams,
     ChatRequest,
     ChatResponse,
+    ChatStreamMessage,
+    Chunk,
     ChunkRequest,
     Completion,
-    CompletionAppend,
+    CompletionEvent,
+    CompletionEvent_Append,
+    CompletionEvent_End,
+    CompletionEvent_Usage,
     CompletionParams,
     CompletionRequest,
+    CompletionStreamResponse,
     Csi,
     Document,
     DocumentPath,
+    ExplanationRequest,
     JsonSerializable,
     Language,
     Message,
-    MessageAppend,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
-    StreamReport,
+    TextScore,
 )
 from ..wit.imports import chunking as wit_chunking
 from ..wit.imports import document_index as wit_document_index
@@ -64,40 +68,49 @@ class WitCsi(Csi):
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
-    ) -> Generator[CompletionAppend, None, StreamReport]:
+    ) -> CompletionStreamResponse:
         request = completion_request_to_wit(CompletionRequest(model, prompt, params))
         stream = wit_inference.CompletionStream(request)
-        finish_reason = FinishReason.STOP
-        while (event := stream.next()) is not None:
-            match event:
-                case wit_inference.CompletionEvent_Append:
-                    yield completion_append_from_wit(event.value)
-                case wit_inference.CompletionEvent_End:
-                    finish_reason = finish_reason_from_wit(event.value)
-                case wit_inference.CompletionEvent_Usage:
-                    usage = token_usage_from_wit(event.value)
-                    return StreamReport(finish_reason, usage)
-        raise Exception("completion_stream completed without receiving token usage")
+
+        def generator() -> Generator[CompletionEvent, None, None]:
+            while (event := stream.next()) is not None:
+                match event:
+                    case wit_inference.CompletionEvent_Append:
+                        append = completion_append_from_wit(event.value)
+                        yield CompletionEvent_Append(append)
+                    case wit_inference.CompletionEvent_End:
+                        finish_reason = finish_reason_from_wit(event.value)
+                        yield CompletionEvent_End(finish_reason)
+                    case wit_inference.CompletionEvent_Usage:
+                        usage = token_usage_from_wit(event.value)
+                        yield CompletionEvent_Usage(usage)
+
+        return CompletionStreamResponse(generator())
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
-    ) -> Generator[str | MessageAppend, None, StreamReport]:
+    ) -> ChatStreamMessage:
         ChatRequest(model, messages, params)
         request = chat_request_to_wit(ChatRequest(model, messages, params))
         stream = wit_inference.ChatStream(request)
-        finish_reason = FinishReason.STOP
-        while (event := stream.next()) is not None:
-            match event:
-                case wit_inference.ChatEvent_MessageBegin:
-                    yield event.value
-                case wit_inference.ChatEvent_MessageAppend:
-                    yield message_append_from_wit(event.value)
-                case wit_inference.ChatEvent_MessageEnd:
-                    finish_reason = finish_reason_from_wit(event.value)
-                case wit_inference.ChatEvent_Usage:
-                    usage = token_usage_from_wit(event.value)
-                    return StreamReport(finish_reason, usage)
-        raise Exception("chat_stream completed without receiving token usage")
+
+        def generator() -> Generator[ChatEvent, None, None]:
+            while (event := stream.next()) is not None:
+                match event:
+                    case wit_inference.ChatEvent_MessageBegin:
+                        yield ChatEvent_MessageBegin(event.value)
+                    case wit_inference.ChatEvent_MessageAppend:
+                        append = message_append_from_wit(event.value)
+                        yield ChatEvent_MessageAppend(append)
+                    case wit_inference.ChatEvent_MessageEnd:
+                        finish_reason = finish_reason_from_wit(event.value)
+                        yield ChatEvent_MessageEnd(finish_reason)
+                    case wit_inference.ChatEvent_Usage:
+                        usage = token_usage_from_wit(event.value)
+                        yield ChatEvent_Usage(usage)
+                raise ValueError(f"unknown event type: {event.value}")
+
+        return ChatStreamMessage(generator())
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

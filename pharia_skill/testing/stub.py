@@ -2,21 +2,34 @@
 StubCsi can be used for testing without a backing Pharia Kernel instance.
 """
 
-from typing import Generator
+from collections.abc import Generator
 
 from pharia_skill import (
+    ChatEvent,
+    ChatEvent_MessageAppend,
+    ChatEvent_MessageBegin,
+    ChatEvent_MessageEnd,
+    ChatEvent_Usage,
     ChatParams,
     ChatRequest,
     ChatResponse,
+    ChatStreamMessage,
+    Chunk,
     ChunkRequest,
     Completion,
     CompletionAppend,
+    CompletionEvent,
+    CompletionEvent_Append,
+    CompletionEvent_End,
+    CompletionEvent_Usage,
     CompletionParams,
     CompletionRequest,
+    CompletionStreamResponse,
     Csi,
     Cursor,
     Document,
     DocumentPath,
+    ExplanationRequest,
     FinishReason,
     JsonSerializable,
     Language,
@@ -25,12 +38,10 @@ from pharia_skill import (
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
-    StreamReport,
     Text,
+    TextScore,
     TokenUsage,
 )
-from pharia_skill.csi.chunking import Chunk
-from pharia_skill.csi.inference import ExplanationRequest, TextScore
 
 
 class StubCsi(Csi):
@@ -66,27 +77,33 @@ class StubCsi(Csi):
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
-    ) -> Generator[CompletionAppend, None, StreamReport]:
-        for char in prompt:
-            yield CompletionAppend(char, [])
-        usage = TokenUsage(
-            prompt=len(prompt),
-            completion=len(prompt),
-        )
-        return StreamReport(FinishReason.STOP, usage)
+    ) -> CompletionStreamResponse:
+        def generator() -> Generator[CompletionEvent, None, None]:
+            for char in prompt:
+                append = CompletionAppend(char, [])
+                yield CompletionEvent_Append(append)
+            yield CompletionEvent_End(FinishReason.STOP)
+            usage = TokenUsage(len(prompt), len(prompt))
+            yield CompletionEvent_Usage(usage)
+
+        return CompletionStreamResponse(generator())
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
-    ) -> Generator[str | MessageAppend, None, StreamReport]:
-        content = messages[0].content if messages else "Hello"
-        yield "assistant"
-        for char in content:
-            yield MessageAppend(char, [])
-        usage = TokenUsage(
-            prompt=len(content),
-            completion=len(content),
-        )
-        return StreamReport(FinishReason.STOP, usage)
+    ) -> ChatStreamMessage:
+        def generator() -> Generator[ChatEvent, None, None]:
+            total_usage = 0
+            if messages:
+                yield ChatEvent_MessageBegin(messages[0].role)
+                content = messages[0].content
+                total_usage += len(content)
+                append = MessageAppend(content, [])
+                yield ChatEvent_MessageAppend(append)
+            yield ChatEvent_MessageEnd(FinishReason.STOP)
+            usage = TokenUsage(total_usage, total_usage)
+            yield ChatEvent_Usage(usage)
+
+        return ChatStreamMessage(generator())
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

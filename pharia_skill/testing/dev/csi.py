@@ -9,41 +9,35 @@ uncoupling these interfaces brings two advantages:
 """
 
 import json
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace import StatusCode
-from pydantic import TypeAdapter
 from sseclient import Event
 
 from pharia_skill import (
     ChatParams,
     ChatRequest,
     ChatResponse,
+    ChatStreamMessage,
+    Chunk,
     ChunkRequest,
     Completion,
     CompletionParams,
     CompletionRequest,
+    CompletionStreamResponse,
     Csi,
     Document,
     DocumentPath,
+    ExplanationRequest,
     JsonSerializable,
     Language,
-    MessageAppend,
+    Message,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
-    StreamReport,
-)
-from pharia_skill.csi.chunking import Chunk
-from pharia_skill.csi.inference import (
-    ChatEvent,
-    CompletionAppend,
-    CompletionEvent,
-    ExplanationRequest,
-    FinishReason,
-    Message,
     TextScore,
 )
 from pharia_skill.studio import (
@@ -71,9 +65,8 @@ from .inference import (
     CompletionRequestSerializer,
     ExplanationListDeserializer,
     ExplanationRequestListSerializer,
-    FinishReasonDeserializer,
-    RoleDeserializer,
-    TokenUsageDeserializer,
+    chat_event_from_sse,
+    completion_event_from_sse,
 )
 from .language import (
     SelectLanguageDeserializer,
@@ -117,59 +110,23 @@ class DevCsi(Csi):
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
-    ) -> Generator[CompletionAppend, None, StreamReport]:
+    ) -> CompletionStreamResponse:
         body = CompletionRequestSerializer(
             model=model, prompt=prompt, params=params
         ).model_dump()
         events = self.stream("completion_stream", body)
-        finish_reason = FinishReason.STOP
-        for event in events:
-            match event.event:
-                case CompletionEvent.APPEND:
-                    yield TypeAdapter(CompletionAppend).validate_json(event.data)
-                case CompletionEvent.END:
-                    finish_reason = (
-                        TypeAdapter(FinishReasonDeserializer)
-                        .validate_json(event.data)
-                        .finish_reason
-                    )
-                case CompletionEvent.USAGE:
-                    usage = (
-                        TypeAdapter(TokenUsageDeserializer)
-                        .validate_json(event.data)
-                        .usage
-                    )
-                    return StreamReport(finish_reason, usage)
-        raise Exception("completion_stream completed without receiving token usage")
+        return CompletionStreamResponse(
+            (completion_event_from_sse(event) for event in events)
+        )
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
-    ) -> Generator[str | MessageAppend, None, StreamReport]:
+    ) -> ChatStreamMessage:
         body = ChatRequestSerializer(
             model=model, messages=messages, params=params
         ).model_dump()
         events = self.stream("chat_stream", body)
-        finish_reason = FinishReason.STOP
-        for event in events:
-            match event.event:
-                case ChatEvent.MESSAGE_BEGIN:
-                    yield (TypeAdapter(RoleDeserializer).validate_json(event.data).role)
-                case ChatEvent.MESSAGE_APPEND:
-                    yield TypeAdapter(MessageAppend).validate_json(event.data)
-                case ChatEvent.MESSAGE_END:
-                    finish_reason = (
-                        TypeAdapter(FinishReasonDeserializer)
-                        .validate_json(event.data)
-                        .finish_reason
-                    )
-                case ChatEvent.USAGE:
-                    usage = (
-                        TypeAdapter(TokenUsageDeserializer)
-                        .validate_json(event.data)
-                        .usage
-                    )
-                    return StreamReport(finish_reason, usage)
-        raise Exception("chat_stream completed without receiving token usage")
+        return ChatStreamMessage((chat_event_from_sse(event) for event in events))
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]
