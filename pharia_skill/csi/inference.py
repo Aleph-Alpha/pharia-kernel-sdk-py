@@ -217,31 +217,11 @@ class CompletionStreamResponse:
 
 
 @dataclass
-class ChatEvent_MessageBegin:
+class MessageBegin:
     role: str
 
 
-@dataclass
-class ChatEvent_MessageAppend:
-    append: MessageAppend
-
-
-@dataclass
-class ChatEvent_MessageEnd:
-    finish_reason: FinishReason
-
-
-@dataclass
-class ChatEvent_Usage:
-    usage: TokenUsage
-
-
-ChatEvent = (
-    ChatEvent_MessageBegin
-    | ChatEvent_MessageAppend
-    | ChatEvent_MessageEnd
-    | ChatEvent_Usage
-)
+ChatEvent = MessageBegin | MessageAppend | FinishReason | TokenUsage
 
 
 class ChatStreamMessage:
@@ -264,7 +244,7 @@ class ChatStreamMessage:
     def __init__(self, events: Generator[ChatEvent, None, None]):
         self._events = events
         first_event = next(self._events)
-        if not isinstance(first_event, ChatEvent_MessageBegin):
+        if not isinstance(first_event, MessageBegin):
             raise ValueError("Invalid event stream")
         self.role = first_event.role
 
@@ -296,14 +276,14 @@ class ChatStreamMessage:
         while True:
             event = next(self._events)
             match event:
-                case ChatEvent_MessageBegin():
+                case MessageBegin():
                     raise ValueError("Invalid event stream")
-                case ChatEvent_MessageAppend(append):
-                    yield append
-                case ChatEvent_MessageEnd(finish_reason):
-                    self._finish_reason = finish_reason
-                case ChatEvent_Usage(usage):
-                    self._usage = usage
+                case MessageAppend():
+                    yield event
+                case FinishReason():
+                    self._finish_reason = event
+                case TokenUsage():
+                    self._usage = event
                     break
 
 

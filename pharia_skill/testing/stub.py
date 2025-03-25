@@ -6,10 +6,6 @@ from collections.abc import Generator
 
 from pharia_skill import (
     ChatEvent,
-    ChatEvent_MessageAppend,
-    ChatEvent_MessageBegin,
-    ChatEvent_MessageEnd,
-    ChatEvent_Usage,
     ChatParams,
     ChatRequest,
     ChatResponse,
@@ -32,6 +28,7 @@ from pharia_skill import (
     Language,
     Message,
     MessageAppend,
+    MessageBegin,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
@@ -89,14 +86,12 @@ class StubCsi(Csi):
         def generator() -> Generator[ChatEvent, None, None]:
             total_usage = 0
             if messages:
-                yield ChatEvent_MessageBegin(messages[0].role)
+                yield MessageBegin(messages[0].role)
                 content = messages[0].content
                 total_usage += len(content)
-                append = MessageAppend(content, [])
-                yield ChatEvent_MessageAppend(append)
-            yield ChatEvent_MessageEnd(FinishReason.STOP)
-            usage = TokenUsage(total_usage, total_usage)
-            yield ChatEvent_Usage(usage)
+                yield MessageAppend(content, [])
+            yield FinishReason.STOP
+            yield TokenUsage(total_usage, total_usage)
 
         return ChatStreamMessage(generator())
 
