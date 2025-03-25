@@ -14,6 +14,8 @@ from pharia_skill import (
     Granularity,
     Logprob,
     Message,
+    MessageAppend,
+    MessageBegin,
     Role,
     TextScore,
     TokenUsage,
@@ -26,6 +28,7 @@ from pharia_skill.testing.dev.inference import (
     CompletionRequestListSerializer,
     ExplanationListDeserializer,
     ExplanationRequestListSerializer,
+    chat_event_from_sse,
     completion_event_from_sse,
 )
 
@@ -255,4 +258,52 @@ def test_deserialize_completion_usage_from_sse():
     deserialized = completion_event_from_sse(event)
 
     # Then the completion event is loaded
+    assert deserialized == TokenUsage(prompt=1, completion=1)
+
+
+def test_deserialize_chat_message_begin_from_sse():
+    # Given a chat event message begin
+    payload = {"role": "user"}
+    event = Event(event="message_begin", data=dumps(payload))  # type: ignore
+
+    # When deserializing it
+    deserialized = chat_event_from_sse(event)
+
+    # Then the chat event is loaded
+    assert deserialized == MessageBegin(role=Role.User)
+
+
+def test_deserialize_chat_message_append_from_sse():
+    # Given a chat event message append
+    payload = {"content": "Hello", "logprobs": []}
+    event = Event(event="message_append", data=dumps(payload))  # type: ignore
+
+    # When deserializing it
+    deserialized = chat_event_from_sse(event)
+
+    # Then the chat event is loaded
+    assert deserialized == MessageAppend(content="Hello", logprobs=[])
+
+
+def test_deserialize_chat_message_end_from_sse():
+    # Given a chat event message end
+    payload = {"finish_reason": "stop"}
+    event = Event(event="message_end", data=dumps(payload))  # type: ignore
+
+    # When deserializing it
+    deserialized = chat_event_from_sse(event)
+
+    # Then the chat event is loaded
+    assert deserialized == FinishReason.STOP
+
+
+def test_deserialize_chat_usage_from_sse():
+    # Given a chat event usage
+    payload = {"usage": {"prompt": 1, "completion": 1}}
+    event = Event(event="usage", data=dumps(payload))  # type: ignore
+
+    # When deserializing it
+    deserialized = chat_event_from_sse(event)
+
+    # Then the chat event is loaded
     assert deserialized == TokenUsage(prompt=1, completion=1)
