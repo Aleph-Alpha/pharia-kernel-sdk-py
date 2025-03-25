@@ -164,22 +164,7 @@ class MessageAppend:
         )
 
 
-@dataclass
-class CompletionEvent_Append:
-    append: CompletionAppend
-
-
-@dataclass
-class CompletionEvent_End:
-    finish_reason: FinishReason
-
-
-@dataclass
-class CompletionEvent_Usage:
-    usage: TokenUsage
-
-
-CompletionEvent = CompletionEvent_Append | CompletionEvent_End | CompletionEvent_Usage
+CompletionEvent = CompletionAppend | FinishReason | TokenUsage
 
 
 class CompletionStreamResponse:
@@ -222,12 +207,12 @@ class CompletionStreamResponse:
             raise RuntimeError("The stream has already been consumed")
         for event in self._events:
             match event:
-                case CompletionEvent_Append(append):
-                    yield append
-                case CompletionEvent_End(finish_reason):
-                    self._finish_reason = finish_reason
-                case CompletionEvent_Usage(usage):
-                    self._usage = usage
+                case CompletionAppend():
+                    yield event
+                case FinishReason():
+                    self._finish_reason = event
+                case TokenUsage():
+                    self._usage = event
                     break
 
 

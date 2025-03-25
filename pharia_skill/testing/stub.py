@@ -19,9 +19,6 @@ from pharia_skill import (
     Completion,
     CompletionAppend,
     CompletionEvent,
-    CompletionEvent_Append,
-    CompletionEvent_End,
-    CompletionEvent_Usage,
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
@@ -80,11 +77,9 @@ class StubCsi(Csi):
     ) -> CompletionStreamResponse:
         def generator() -> Generator[CompletionEvent, None, None]:
             for char in prompt:
-                append = CompletionAppend(char, [])
-                yield CompletionEvent_Append(append)
-            yield CompletionEvent_End(FinishReason.STOP)
-            usage = TokenUsage(len(prompt), len(prompt))
-            yield CompletionEvent_Usage(usage)
+                yield CompletionAppend(char, [])
+            yield FinishReason.STOP
+            yield TokenUsage(len(prompt), len(prompt))
 
         return CompletionStreamResponse(generator())
 
