@@ -21,7 +21,7 @@ from pharia_skill import (
     ChatParams,
     ChatRequest,
     ChatResponse,
-    ChatStreamMessage,
+    ChatStreamResponse,
     Chunk,
     ChunkRequest,
     Completion,
@@ -124,12 +124,12 @@ class DevCsi(Csi):
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
-    ) -> ChatStreamMessage:
+    ) -> ChatStreamResponse:
         body = ChatRequestSerializer(
             model=model, messages=messages, params=params
         ).model_dump()
         events = self.stream("chat_stream", body)
-        return ChatStreamMessage((chat_event_from_sse(event) for event in events))
+        return ChatStreamResponse((chat_event_from_sse(event) for event in events))
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

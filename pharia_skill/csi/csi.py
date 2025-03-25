@@ -14,7 +14,7 @@ from .inference import (
     ChatParams,
     ChatRequest,
     ChatResponse,
-    ChatStreamMessage,
+    ChatStreamResponse,
     Completion,
     CompletionParams,
     CompletionRequest,
@@ -44,7 +44,7 @@ class Csi(Protocol):
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
-    ) -> ChatStreamMessage:
+    ) -> ChatStreamResponse:
         """Streams chat with a model, where the first item is the role.
 
         Parameters:
