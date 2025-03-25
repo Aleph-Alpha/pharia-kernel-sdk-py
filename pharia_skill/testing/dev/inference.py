@@ -63,31 +63,27 @@ def completion_event_from_sse(event: Event) -> csi_CompletionEvent:
         case CompletionEvent.APPEND:
             return TypeAdapter(CompletionAppend).validate_json(event.data)
         case CompletionEvent.END:
-            return (
-                TypeAdapter(FinishReasonDeserializer)
-                .validate_json(event.data)
-                .finish_reason
-            )
+            return FinishReasonDeserializer.model_validate_json(
+                event.data
+            ).finish_reason
         case CompletionEvent.USAGE:
-            return TypeAdapter(TokenUsageDeserializer).validate_json(event.data).usage
+            return TokenUsageDeserializer.model_validate_json(event.data).usage
     raise ValueError(f"unknown event type: {event.event}")
 
 
 def chat_event_from_sse(event: Event) -> csi_ChatEvent:
     match event.event:
         case ChatEvent.MESSAGE_BEGIN:
-            role = TypeAdapter(RoleDeserializer).validate_json(event.data).role
+            role = RoleDeserializer.model_validate_json(event.data).role
             return MessageBegin(role)
         case ChatEvent.MESSAGE_APPEND:
             return TypeAdapter(MessageAppend).validate_json(event.data)
         case ChatEvent.MESSAGE_END:
-            return (
-                TypeAdapter(FinishReasonDeserializer)
-                .validate_json(event.data)
-                .finish_reason
-            )
+            return FinishReasonDeserializer.model_validate_json(
+                event.data
+            ).finish_reason
         case ChatEvent.USAGE:
-            return TypeAdapter(TokenUsageDeserializer).validate_json(event.data).usage
+            return TokenUsageDeserializer.model_validate_json(event.data).usage
     raise ValueError(f"unknown event type: {event.event}")
 
 
