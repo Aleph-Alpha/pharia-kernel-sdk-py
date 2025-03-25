@@ -42,7 +42,7 @@ class PhariaSkillCli:
     """
 
     # Expected version of the `pharia-skill-cli` binary
-    PHARIA_SKILL_CLI_VERSION = "0.4.3"
+    PHARIA_SKILL_CLI_VERSION = "0.4.4"
 
     PHARIA_SKILL_CLI_PATH = (
         "bin/pharia-skill-cli"
