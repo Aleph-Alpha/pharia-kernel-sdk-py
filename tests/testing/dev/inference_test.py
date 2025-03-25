@@ -1,8 +1,11 @@
+from sseclient import Event
+
 from pharia_skill import (
     ChatParams,
     ChatRequest,
     ChatResponse,
     Completion,
+    CompletionAppend,
     CompletionParams,
     CompletionRequest,
     Distribution,
@@ -23,6 +26,7 @@ from pharia_skill.testing.dev.inference import (
     CompletionRequestListSerializer,
     ExplanationListDeserializer,
     ExplanationRequestListSerializer,
+    completion_event_from_sse,
 )
 
 from .conftest import dumps
@@ -216,3 +220,39 @@ def test_deserialize_explanation():
 
     # Then the explanation is loaded
     assert explanation == [[TextScore(start=0, length=5, score=0.5)]]
+
+
+def test_deserialize_completion_append_from_sse():
+    # Given a completion event append
+    payload = {"text": "Hello", "logprobs": []}
+    event = Event(event="append", data=dumps(payload))  # type: ignore
+
+    # When deserializing it
+    deserialized = completion_event_from_sse(event)
+
+    # Then the completion event is loaded
+    assert deserialized == CompletionAppend(text="Hello", logprobs=[])
+
+
+def test_deserialize_completion_end_from_sse():
+    # Given a completion event end
+    payload = {"finish_reason": "stop"}
+    event = Event(event="end", data=dumps(payload))  # type: ignore
+
+    # When deserializing it
+    deserialized = completion_event_from_sse(event)
+
+    # Then the completion event is loaded
+    assert deserialized == FinishReason.STOP
+
+
+def test_deserialize_completion_usage_from_sse():
+    # Given a completion event usage
+    payload = {"usage": {"prompt": 1, "completion": 1}}
+    event = Event(event="usage", data=dumps(payload))  # type: ignore
+
+    # When deserializing it
+    deserialized = completion_event_from_sse(event)
+
+    # Then the completion event is loaded
+    assert deserialized == TokenUsage(prompt=1, completion=1)
