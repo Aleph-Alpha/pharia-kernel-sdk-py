@@ -5,10 +5,6 @@ from sseclient import Event
 
 from pharia_skill.csi.inference import ChatEvent as csi_ChatEvent
 from pharia_skill.csi.inference import (
-    ChatEvent_MessageAppend,
-    ChatEvent_MessageBegin,
-    ChatEvent_MessageEnd,
-    ChatEvent_Usage,
     ChatParams,
     ChatRequest,
     ChatResponse,
@@ -20,6 +16,7 @@ from pharia_skill.csi.inference import (
     FinishReason,
     Message,
     MessageAppend,
+    MessageBegin,
     TextScore,
     TokenUsage,
 )
@@ -83,20 +80,17 @@ def chat_event_from_sse(event: Event) -> csi_ChatEvent:
     match event.event:
         case ChatEvent.MESSAGE_BEGIN:
             role = TypeAdapter(RoleDeserializer).validate_json(event.data).role
-            return ChatEvent_MessageBegin(role)
+            return MessageBegin(role)
         case ChatEvent.MESSAGE_APPEND:
-            append = TypeAdapter(MessageAppend).validate_json(event.data)
-            return ChatEvent_MessageAppend(append)
+            return TypeAdapter(MessageAppend).validate_json(event.data)
         case ChatEvent.MESSAGE_END:
-            finish_reason = (
+            return (
                 TypeAdapter(FinishReasonDeserializer)
                 .validate_json(event.data)
                 .finish_reason
             )
-            return ChatEvent_MessageEnd(finish_reason)
         case ChatEvent.USAGE:
-            usage = TypeAdapter(TokenUsageDeserializer).validate_json(event.data).usage
-            return ChatEvent_Usage(usage)
+            return TypeAdapter(TokenUsageDeserializer).validate_json(event.data).usage
     raise ValueError(f"unknown event type: {event.event}")
 
 

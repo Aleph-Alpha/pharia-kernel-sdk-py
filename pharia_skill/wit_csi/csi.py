@@ -3,10 +3,6 @@ from collections.abc import Generator
 
 from ..csi import (
     ChatEvent,
-    ChatEvent_MessageAppend,
-    ChatEvent_MessageBegin,
-    ChatEvent_MessageEnd,
-    ChatEvent_Usage,
     ChatParams,
     ChatRequest,
     ChatResponse,
@@ -25,6 +21,7 @@ from ..csi import (
     JsonSerializable,
     Language,
     Message,
+    MessageBegin,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
@@ -91,17 +88,14 @@ class WitCsi(Csi):
         def generator() -> Generator[ChatEvent, None, None]:
             while (event := stream.next()) is not None:
                 match event:
-                    case wit_inference.ChatEvent_MessageBegin:
-                        yield ChatEvent_MessageBegin(event.value)
+                    case wit_inference.ChatEvent_MessageBegin():
+                        yield MessageBegin(event.value)
                     case wit_inference.ChatEvent_MessageAppend:
-                        append = message_append_from_wit(event.value)
-                        yield ChatEvent_MessageAppend(append)
+                        yield message_append_from_wit(event.value)
                     case wit_inference.ChatEvent_MessageEnd:
-                        finish_reason = finish_reason_from_wit(event.value)
-                        yield ChatEvent_MessageEnd(finish_reason)
+                        yield finish_reason_from_wit(event.value)
                     case wit_inference.ChatEvent_Usage:
-                        usage = token_usage_from_wit(event.value)
-                        yield ChatEvent_Usage(usage)
+                        yield token_usage_from_wit(event.value)
                 raise ValueError(f"unknown event type: {event.value}")
 
         return ChatStreamMessage(generator())
