@@ -98,7 +98,7 @@ class PhariaSkillCli:
                 raise Exception(f"Unsupported operating system: {platform.system()}")
 
     @classmethod
-    def download_pharia_skill(cls, dir: Path):
+    def download_pharia_skill(cls, dir: Path) -> None:
         """Download the pharia-skill binary from the JFrog repository."""
         logger.info(
             f"Downloading pharia-skill-cli version {cls.PHARIA_SKILL_CLI_VERSION} for {cls.architecture()}"
