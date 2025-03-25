@@ -15,9 +15,6 @@ from ..csi import (
     ChunkRequest,
     Completion,
     CompletionEvent,
-    CompletionEvent_Append,
-    CompletionEvent_End,
-    CompletionEvent_Usage,
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
@@ -76,14 +73,11 @@ class WitCsi(Csi):
             while (event := stream.next()) is not None:
                 match event:
                     case wit_inference.CompletionEvent_Append:
-                        append = completion_append_from_wit(event.value)
-                        yield CompletionEvent_Append(append)
+                        yield completion_append_from_wit(event.value)
                     case wit_inference.CompletionEvent_End:
-                        finish_reason = finish_reason_from_wit(event.value)
-                        yield CompletionEvent_End(finish_reason)
+                        yield finish_reason_from_wit(event.value)
                     case wit_inference.CompletionEvent_Usage:
-                        usage = token_usage_from_wit(event.value)
-                        yield CompletionEvent_Usage(usage)
+                        yield token_usage_from_wit(event.value)
 
         return CompletionStreamResponse(generator())
 

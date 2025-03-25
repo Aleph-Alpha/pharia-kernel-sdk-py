@@ -14,9 +14,6 @@ from pharia_skill.csi.inference import (
     ChatResponse,
     Completion,
     CompletionAppend,
-    CompletionEvent_Append,
-    CompletionEvent_End,
-    CompletionEvent_Usage,
     CompletionParams,
     CompletionRequest,
     ExplanationRequest,
@@ -68,17 +65,17 @@ def completion_event_from_sse(event: Event) -> csi_CompletionEvent:
     match event.event:
         case CompletionEvent.APPEND:
             append = TypeAdapter(CompletionAppend).validate_json(event.data)
-            return CompletionEvent_Append(append)
+            return append
         case CompletionEvent.END:
             finish_reason = (
                 TypeAdapter(FinishReasonDeserializer)
                 .validate_json(event.data)
                 .finish_reason
             )
-            return CompletionEvent_End(finish_reason)
+            return finish_reason
         case CompletionEvent.USAGE:
             usage = TypeAdapter(TokenUsageDeserializer).validate_json(event.data).usage
-            return CompletionEvent_Usage(usage)
+            return usage
     raise ValueError(f"unknown event type: {event.event}")
 
 
