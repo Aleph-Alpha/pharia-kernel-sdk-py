@@ -1,3 +1,6 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 import pytest
 
 from pharia_skill.pharia_skill_cli import PhariaSkillCli
@@ -5,8 +8,10 @@ from pharia_skill.pharia_skill_cli import PhariaSkillCli
 
 @pytest.mark.kernel
 def test_download_pharia_skill():
-    response = PhariaSkillCli.download_pharia_skill()
-    assert response is not None
+    tempdir = TemporaryDirectory()
+    dir = Path(tempdir.name)
+    PhariaSkillCli.download_pharia_skill(dir)
+    assert (dir / "pharia-skill-cli").exists()
 
 
 @pytest.mark.kernel
