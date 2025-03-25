@@ -61,18 +61,15 @@ class ChatEvent(str, Enum):
 def completion_event_from_sse(event: Event) -> csi_CompletionEvent:
     match event.event:
         case CompletionEvent.APPEND:
-            append = TypeAdapter(CompletionAppend).validate_json(event.data)
-            return append
+            return TypeAdapter(CompletionAppend).validate_json(event.data)
         case CompletionEvent.END:
-            finish_reason = (
+            return (
                 TypeAdapter(FinishReasonDeserializer)
                 .validate_json(event.data)
                 .finish_reason
             )
-            return finish_reason
         case CompletionEvent.USAGE:
-            usage = TypeAdapter(TokenUsageDeserializer).validate_json(event.data).usage
-            return usage
+            return TypeAdapter(TokenUsageDeserializer).validate_json(event.data).usage
     raise ValueError(f"unknown event type: {event.event}")
 
 
