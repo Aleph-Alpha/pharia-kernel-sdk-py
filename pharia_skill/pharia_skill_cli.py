@@ -121,7 +121,7 @@ class PhariaSkillCli:
                 assert file
                 with open(dir / "pharia-skill-cli", "wb") as f:
                     f.write(file.read())
-                subprocess.run(["chmod", "+x", "bin/pharia-skill-cli"], check=True)
+                subprocess.run(["chmod", "+x", dir / "pharia-skill-cli"], check=True)
 
             case "x86_64-pc-windows-msvc":
                 url = f"https://github.com/Aleph-Alpha/pharia-skill-cli/releases/download/v{cls.PHARIA_SKILL_CLI_VERSION}/{filename}.zip"
