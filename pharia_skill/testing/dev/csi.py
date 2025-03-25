@@ -115,6 +115,9 @@ class DevCsi(Csi):
             model=model, prompt=prompt, params=params
         ).model_dump()
         events = self.stream("completion_stream", body)
+
+        # Transforming the events does not consume the iterator
+        # See https://peps.python.org/pep-0289/ for Generator Expressions
         return CompletionStreamResponse(
             (completion_event_from_sse(event) for event in events)
         )
