@@ -9,7 +9,7 @@ from pharia_skill import (
     ChatParams,
     ChatRequest,
     ChatResponse,
-    ChatStreamMessage,
+    ChatStreamResponse,
     Chunk,
     ChunkRequest,
     Completion,
@@ -82,7 +82,7 @@ class StubCsi(Csi):
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
-    ) -> ChatStreamMessage:
+    ) -> ChatStreamResponse:
         def generator() -> Generator[ChatEvent, None, None]:
             total_usage = 0
             if messages:
@@ -93,7 +93,7 @@ class StubCsi(Csi):
             yield FinishReason.STOP
             yield TokenUsage(total_usage, total_usage)
 
-        return ChatStreamMessage(generator())
+        return ChatStreamResponse(generator())
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

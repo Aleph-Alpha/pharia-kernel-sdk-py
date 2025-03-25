@@ -224,7 +224,7 @@ class MessageBegin:
 ChatEvent = MessageBegin | MessageAppend | FinishReason | TokenUsage
 
 
-class ChatStreamMessage:
+class ChatStreamResponse:
     """The details of a chat stream.
 
     The message can be streamed by calling `stream()`.

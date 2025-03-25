@@ -6,7 +6,7 @@ from ..csi import (
     ChatParams,
     ChatRequest,
     ChatResponse,
-    ChatStreamMessage,
+    ChatStreamResponse,
     Chunk,
     ChunkRequest,
     Completion,
@@ -80,7 +80,7 @@ class WitCsi(Csi):
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
-    ) -> ChatStreamMessage:
+    ) -> ChatStreamResponse:
         ChatRequest(model, messages, params)
         request = chat_request_to_wit(ChatRequest(model, messages, params))
         stream = wit_inference.ChatStream(request)
@@ -98,7 +98,7 @@ class WitCsi(Csi):
                         yield token_usage_from_wit(event.value)
                 raise ValueError(f"unknown event type: {event.value}")
 
-        return ChatStreamMessage(generator())
+        return ChatStreamResponse(generator())
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]
