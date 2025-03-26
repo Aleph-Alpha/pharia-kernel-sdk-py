@@ -4,9 +4,9 @@ There is a few concepts which arise when talking about the Kernel
 
 ## Skill
 
-The first of these primitives is a Skill. A Skill is a user-defined function that follows the request/response pattern: It takes some input, and returns some output.
+A Skill is the fundamental building block within the Kernel, encapsulating a discrete unit of business or AI logic. It is a is a user-defined stateless function that adheres to strict input/output schemas defined using Pydantic models. This ensures type safety, validation, and clear documentation of the Skill’s contract.
 
-A Skill has a well-defined schema for input and output. What makes it different from a normal Serverless or FaaS (Function as a Service) function is that because it is being run in the context of the Kernel, it will have access to the Cognitive System Interface (CSI), to be defined below.
+Unlike traditional serverless or FaaS (Function as a Service) functions, Skills are designed to operate within the Kernel’s orchestration layer. They interact with the broader system through the Cognitive System Interface (CSI) defined below, which exposes AI-native capabilities like LLM inference, vector search, and authenticated data access. This abstraction allows Skills to focus purely on business logic while delegating infrastructure concerns to the Kernel.
 
 When this Skill will get executed, and how, is up to the Kernel, which allows the engineer to focus on the business and AI logic of the Skill at hand.
 
