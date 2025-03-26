@@ -10,6 +10,8 @@ the feature and we know that the classes will always be in the bindings.
 from types import TracebackType
 from typing import Self
 
+from pharia_skill.csi.inference import ChatEvent, ChatStreamResponse, MessageBegin
+
 from ..bindings.imports import inference as wit
 from ..csi import (
     ChatParams,
@@ -59,6 +61,36 @@ class WitCompletionStreamResponse(CompletionStreamResponse):
             case wit.CompletionEvent_End(value):
                 return finish_reason_from_wit(value)
             case wit.CompletionEvent_Usage(value):
+                return token_usage_from_wit(value)
+            case _:
+                return None
+
+
+class WitChatStreamResponse(ChatStreamResponse):
+    def __init__(self, stream: wit.ChatStream):
+        self._stream = stream
+
+    def __enter__(self) -> Self:
+        self._stream.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> bool | None:
+        return self._stream.__exit__(exc_type, exc_value, traceback)
+
+    def next(self) -> ChatEvent | None:
+        match self._stream.next():
+            case wit.ChatEvent_MessageBegin(value):
+                return MessageBegin(value)
+            case wit.ChatEvent_MessageAppend(value):
+                return message_append_from_wit(value)
+            case wit.ChatEvent_MessageEnd(value):
+                return finish_reason_from_wit(value)
+            case wit.ChatEvent_Usage(value):
                 return token_usage_from_wit(value)
             case _:
                 return None

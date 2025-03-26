@@ -1,12 +1,10 @@
 import json
-from collections.abc import Generator
 
 from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index
 from ..bindings.imports import inference as wit_inference
 from ..bindings.imports import language as wit_language
 from ..csi import (
-    ChatEvent,
     ChatParams,
     ChatRequest,
     ChatResponse,
@@ -24,7 +22,6 @@ from ..csi import (
     JsonSerializable,
     Language,
     Message,
-    MessageBegin,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
@@ -38,16 +35,14 @@ from .document_index import (
     search_result_from_wit,
 )
 from .inference import (
+    WitChatStreamResponse,
     WitCompletionStreamResponse,
     chat_request_to_wit,
     chat_response_from_wit,
     completion_from_wit,
     completion_request_to_wit,
     explanation_request_to_wit,
-    finish_reason_from_wit,
-    message_append_from_wit,
     text_score_from_wit,
-    token_usage_from_wit,
 )
 from .language import language_from_wit, language_request_to_wit
 
@@ -69,24 +64,9 @@ class WitCsi(Csi):
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
-        ChatRequest(model, messages, params)
         request = chat_request_to_wit(ChatRequest(model, messages, params))
         stream = wit_inference.ChatStream(request)
-
-        def generator() -> Generator[ChatEvent, None, None]:
-            while (event := stream.next()) is not None:
-                match event:
-                    case wit_inference.ChatEvent_MessageBegin():
-                        yield MessageBegin(event.value)
-                    case wit_inference.ChatEvent_MessageAppend:
-                        yield message_append_from_wit(event.value)
-                    case wit_inference.ChatEvent_MessageEnd:
-                        yield finish_reason_from_wit(event.value)
-                    case wit_inference.ChatEvent_Usage:
-                        yield token_usage_from_wit(event.value)
-                raise ValueError(f"unknown event type: {event.value}")
-
-        return ChatStreamResponse(generator())
+        return WitChatStreamResponse(stream)
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]
