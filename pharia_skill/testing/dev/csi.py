@@ -63,10 +63,10 @@ from .inference import (
     CompletionListDeserializer,
     CompletionRequestListSerializer,
     CompletionRequestSerializer,
+    DevChatStreamResponse,
     DevCompletionStreamResponse,
     ExplanationListDeserializer,
     ExplanationRequestListSerializer,
-    chat_event_from_sse,
 )
 from .language import (
     SelectLanguageDeserializer,
@@ -124,7 +124,7 @@ class DevCsi(Csi):
             model=model, messages=messages, params=params
         ).model_dump()
         events = self.stream("chat_stream", body)
-        return ChatStreamResponse((chat_event_from_sse(event) for event in events))
+        return DevChatStreamResponse(events)
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

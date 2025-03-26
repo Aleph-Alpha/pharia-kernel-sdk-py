@@ -170,10 +170,17 @@ CompletionEvent = CompletionAppend | FinishReason | TokenUsage
 
 
 class CompletionStreamResponse(ABC):
-    """The details of a completion stream.
+    """Abstract base class for streaming completion responses.
 
-    The completion can be streamed by calling `stream()`.
-    If `finish_reason()` or `usage()` has been called, the stream is consumed.
+    This class provides the core functionality for streaming completion from a model.
+    Concrete implementations only need to implement the `next()` method to provide
+    the next event in the stream, and optionally override `__enter__` and `__exit__`
+    methods for proper resource management.
+
+    The `__enter__` and `__exit__` methods are particularly important for implementations
+    that need to manage external resources. For example, in the `WitCsi` implementation,
+    these methods ensure that resources are properly released when the stream is no longer
+    needed.
     """
 
     _finish_reason: FinishReason | None = None
@@ -243,8 +250,18 @@ class MessageBegin:
 ChatEvent = MessageBegin | MessageAppend | FinishReason | TokenUsage
 
 
-class ChatStreamResponse:
-    """The details of a chat stream.
+class ChatStreamResponse(ABC):
+    """Abstract base class for streaming chat responses.
+
+    This class provides the core functionality for streaming chat from a model.
+    Concrete implementations only need to implement the `next()` method to provide
+    the next event in the stream, and optionally override `__enter__` and `__exit__`
+    methods for proper resource management.
+
+    The `__enter__` and `__exit__` methods are particularly important for implementations
+    that need to manage external resources. For example, in the `WitCsi` implementation,
+    these methods ensure that resources are properly released when the stream is no longer
+    needed.
 
     The message can be streamed by calling `stream()`.
     If `finish_reason()` or `usage()` has been called, the stream is consumed.
@@ -256,13 +273,29 @@ class ChatStreamResponse:
 
     role: str
 
-    _events: Generator[ChatEvent, None, None]
     _finish_reason: FinishReason | None = None
     _usage: TokenUsage | None = None
 
-    def __init__(self, events: Generator[ChatEvent, None, None]):
-        self._events = events
-        first_event = next(self._events)
+    def __enter__(self) -> Self:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> bool | None:
+        """Exit the context manager and ensure resources are properly cleaned up."""
+        pass
+
+    @abstractmethod
+    def next(self) -> ChatEvent | None:
+        """Get the next chat event."""
+        ...
+
+    def __init__(self) -> None:
+        first_event = self.next()
         if not isinstance(first_event, MessageBegin):
             raise ValueError("Invalid event stream")
         self.role = first_event.role
@@ -291,9 +324,7 @@ class ChatStreamResponse:
     def stream(self) -> Generator[MessageAppend, None, None]:
         if self._usage:
             raise RuntimeError("The stream has already been consumed")
-        # we call `next()` here as the generator has already been called once in the constructor
-        while True:
-            event = next(self._events)
+        while (event := self.next()) is not None:
             match event:
                 case MessageBegin():
                     raise ValueError("Invalid event stream")

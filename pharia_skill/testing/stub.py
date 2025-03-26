@@ -77,10 +77,7 @@ class StubCsi(Csi):
                 self._stream = stream
 
             def next(self) -> CompletionEvent | None:
-                try:
-                    return next(self._stream)
-                except StopIteration:
-                    return None
+                return next(self._stream, None)
 
         def generator() -> Generator[CompletionEvent, None, None]:
             for char in prompt:
@@ -93,6 +90,13 @@ class StubCsi(Csi):
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
+        class StubChatStreamResponse(ChatStreamResponse):
+            def __init__(self, stream: Generator[ChatEvent, None, None]):
+                self._stream = stream
+
+            def next(self) -> ChatEvent | None:
+                return next(self._stream, None)
+
         def generator() -> Generator[ChatEvent, None, None]:
             total_usage = 0
             if messages:
@@ -103,7 +107,7 @@ class StubCsi(Csi):
             yield FinishReason.STOP
             yield TokenUsage(total_usage, total_usage)
 
-        return ChatStreamResponse(generator())
+        return StubChatStreamResponse(generator())
 
     def complete_concurrent(
         self, requests: list[CompletionRequest]

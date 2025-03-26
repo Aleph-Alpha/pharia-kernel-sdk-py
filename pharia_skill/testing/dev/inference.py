@@ -8,6 +8,7 @@ from pharia_skill.csi.inference import (
     ChatParams,
     ChatRequest,
     ChatResponse,
+    ChatStreamResponse,
     Completion,
     CompletionAppend,
     CompletionEvent,
@@ -29,12 +30,9 @@ class DevCompletionStreamResponse(CompletionStreamResponse):
         self._stream = stream
 
     def next(self) -> CompletionEvent | None:
-        try:
-            event = next(self._stream)
+        if event := next(self._stream, None):
             return completion_event_from_sse(event)
-
-        except StopIteration:
-            return None
+        return None
 
 
 def completion_event_from_sse(event: Event) -> CompletionEvent:
@@ -48,6 +46,16 @@ def completion_event_from_sse(event: Event) -> CompletionEvent:
         case "usage":
             return TokenUsageDeserializer.model_validate_json(event.data).usage
     raise ValueError(f"unknown event type: {event.event}")
+
+
+class DevChatStreamResponse(ChatStreamResponse):
+    def __init__(self, stream: Generator[Event, None, None]):
+        self._stream = stream
+
+    def next(self) -> ChatEvent | None:
+        if event := next(self._stream, None):
+            return chat_event_from_sse(event)
+        return None
 
 
 def chat_event_from_sse(event: Event) -> ChatEvent:
