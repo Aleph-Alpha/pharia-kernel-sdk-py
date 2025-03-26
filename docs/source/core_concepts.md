@@ -23,8 +23,8 @@ Similar to how an operating system provides functionality to applications, the C
 The functionality of the CSI is focussed around the needs of AI methodology, such as LLM inference, vector search, and data access.
 
 By providing a common interface to these tools, it provides the opportunity for the user code to describe the intended interaction and outcome in their code, and the Kernel is able to take care of the complexity of providing it.
-For example, authentication is not part of the CSI interface, but is handled by the Kernel, which will authenticate all CSI calls with the token provided in the request.
-To make this interface available at development time, the SDK provides a [DevCSI](references.rst#pharia_skill.DevCsi).
+For example, authentication is not part of the [CSI](https://aleph-alpha-pharia-kernel-sdk-py.readthedocs-hosted.com/en/stable/references.html#pharia_skill.Csi) interface, but is handled by the Kernel, which will authenticate all CSI calls with the token provided in the request.
+To make this interface available at development time, the SDK provides a [DevCSI](references.rst#pharia_skill.testing.DevCsi).
 
 ### Testing
 
