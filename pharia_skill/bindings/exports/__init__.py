@@ -6,7 +6,21 @@ from abc import abstractmethod
 import weakref
 
 from ..types import Result, Ok, Err, Some
+from ..imports import streaming_output
 from ..exports import skill_handler
+
+class MessageStream(Protocol):
+
+    @abstractmethod
+    def run(self, input: bytes, output: streaming_output.StreamOutput) -> None:
+        """
+        Run the skill. Output is streamed out of the stream-output resource.
+        The skill is allowed to also terminate early with an error.
+        
+        Raises: `bindings.types.Err(bindings.imports.message_stream.Error)`
+        """
+        raise NotImplementedError
+
 
 class SkillHandler(Protocol):
 
