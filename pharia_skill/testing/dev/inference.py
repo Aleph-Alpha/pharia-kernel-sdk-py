@@ -1,3 +1,5 @@
+from collections.abc import Generator
+
 from pydantic import BaseModel, RootModel, TypeAdapter
 from sseclient import Event
 
@@ -11,6 +13,7 @@ from pharia_skill.csi.inference import (
     CompletionEvent,
     CompletionParams,
     CompletionRequest,
+    CompletionStreamResponse,
     ExplanationRequest,
     FinishReason,
     Message,
@@ -19,6 +22,19 @@ from pharia_skill.csi.inference import (
     TextScore,
     TokenUsage,
 )
+
+
+class DevCompletionStreamResponse(CompletionStreamResponse):
+    def __init__(self, stream: Generator[Event, None, None]):
+        self._stream = stream
+
+    def next(self) -> CompletionEvent | None:
+        try:
+            event = next(self._stream)
+            return completion_event_from_sse(event)
+
+        except StopIteration:
+            return None
 
 
 def completion_event_from_sse(event: Event) -> CompletionEvent:

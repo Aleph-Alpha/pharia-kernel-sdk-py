@@ -63,10 +63,10 @@ from .inference import (
     CompletionListDeserializer,
     CompletionRequestListSerializer,
     CompletionRequestSerializer,
+    DevCompletionStreamResponse,
     ExplanationListDeserializer,
     ExplanationRequestListSerializer,
     chat_event_from_sse,
-    completion_event_from_sse,
 )
 from .language import (
     SelectLanguageDeserializer,
@@ -115,12 +115,7 @@ class DevCsi(Csi):
             model=model, prompt=prompt, params=params
         ).model_dump()
         events = self.stream("completion_stream", body)
-
-        # Transforming the events does not consume the iterator
-        # See https://peps.python.org/pep-0289/ for Generator Expressions
-        return CompletionStreamResponse(
-            (completion_event_from_sse(event) for event in events)
-        )
+        return DevCompletionStreamResponse(events)
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
@@ -255,7 +250,7 @@ class DevCsi(Csi):
             span.set_attribute("input", json.dumps(data))
             try:
                 events = self.client.stream(function, data)
-                while (event := next(events)) is not None:
+                for event in events:
                     yield event
                     span.set_attribute("event", json.loads(event.data))
             except Exception as e:

@@ -3,11 +3,13 @@ This module exposes the interfaces for skills to interact with the Pharia Kernel
 via the Cognitive System Interface (CSI).
 """
 
+from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Generator
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Literal
+from types import TracebackType
+from typing import Any, Literal, Self
 
 from pydantic import field_validator
 
@@ -167,19 +169,33 @@ class MessageAppend:
 CompletionEvent = CompletionAppend | FinishReason | TokenUsage
 
 
-class CompletionStreamResponse:
+class CompletionStreamResponse(ABC):
     """The details of a completion stream.
 
     The completion can be streamed by calling `stream()`.
     If `finish_reason()` or `usage()` has been called, the stream is consumed.
     """
 
-    _events: Generator[CompletionEvent, None, None]
     _finish_reason: FinishReason | None = None
     _usage: TokenUsage | None = None
 
-    def __init__(self, events: Generator[CompletionEvent, None, None]):
-        self._events = events
+    def __enter__(self) -> Self:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> bool | None:
+        """Exit the context manager and ensure resources are properly cleaned up."""
+        pass
+
+    @abstractmethod
+    def next(self) -> CompletionEvent | None:
+        """Get the next completion event."""
+        ...
 
     def finish_reason(self) -> FinishReason:
         """The reason the model finished generating."""
@@ -203,9 +219,11 @@ class CompletionStreamResponse:
             raise ValueError("Invalid event stream")
 
     def stream(self) -> Generator[CompletionAppend, None, None]:
+        """Stream completion chunks."""
+
         if self._usage:
             raise RuntimeError("The stream has already been consumed")
-        for event in self._events:
+        while (event := self.next()) is not None:
             match event:
                 case CompletionAppend():
                     yield event
@@ -213,7 +231,8 @@ class CompletionStreamResponse:
                     self._finish_reason = event
                 case TokenUsage():
                     self._usage = event
-                    break
+                case _:
+                    raise ValueError("Invalid event")
 
 
 @dataclass
