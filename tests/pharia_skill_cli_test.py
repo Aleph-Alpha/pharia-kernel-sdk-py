@@ -10,8 +10,16 @@ from pharia_skill.pharia_skill_cli import PhariaSkillCli
 def test_download_pharia_skill():
     tempdir = TemporaryDirectory()
     dir = Path(tempdir.name)
-    PhariaSkillCli.download_pharia_skill(dir)
+    PhariaSkillCli.download_unix_tar(dir)
     assert (dir / "pharia-skill-cli").exists()
+
+
+@pytest.mark.kernel
+def test_download_pharia_skill_windows():
+    tempdir = TemporaryDirectory()
+    dir = Path(tempdir.name)
+    PhariaSkillCli.download_windows_zip(dir)
+    assert (dir / "pharia-skill-cli.exe").exists()
 
 
 @pytest.mark.kernel

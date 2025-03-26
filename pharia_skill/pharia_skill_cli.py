@@ -57,7 +57,7 @@ class PhariaSkillCli:
     @classmethod
     def update_if_needed(cls) -> None:
         if not os.path.exists(cls.PHARIA_SKILL_CLI_PATH) or not cls.is_up_to_date():
-            cls.download_and_install()
+            cls.download_pharia_skill()
             assert cls.is_up_to_date()
 
     @classmethod
@@ -79,10 +79,6 @@ class PhariaSkillCli:
         return result.stdout.strip().split(" ")[-1]
 
     @classmethod
-    def download_and_install(cls) -> None:
-        cls.install_pharia_skill()
-
-    @classmethod
     def architecture(cls) -> str:
         match platform.system():
             case "Darwin":
@@ -98,50 +94,55 @@ class PhariaSkillCli:
                 raise Exception(f"Unsupported operating system: {platform.system()}")
 
     @classmethod
-    def download_pharia_skill(cls, dir: Path) -> None:
-        """Download the pharia-skill binary from the JFrog repository."""
+    def download_pharia_skill(cls) -> None:
         logger.info(
             f"Downloading pharia-skill-cli version {cls.PHARIA_SKILL_CLI_VERSION} for {cls.architecture()}"
         )
-        filename = f"pharia-skill-cli-{cls.architecture()}"
+        os.makedirs("bin", exist_ok=True)
+        for file in os.listdir("bin"):
+            os.remove(os.path.join("bin", file))
+
         match cls.architecture():
             case (
                 "aarch64-apple-darwin"
                 | "x86_64-apple-darwin"
                 | "x86_64-unknown-linux-gnu"
             ):
-                url = f"https://github.com/Aleph-Alpha/pharia-skill-cli/releases/download/v{cls.PHARIA_SKILL_CLI_VERSION}/{filename}.tar.xz"
-                response = requests.get(url)
-                if response.status_code != 200:
-                    raise Exception(f"{response.status_code}: {response.text}")
-
-                file = tarfile.open(fileobj=io.BytesIO(response.content)).extractfile(
-                    filename + "/pharia-skill-cli"
-                )
-                assert file
-                with open(dir / "pharia-skill-cli", "wb") as f:
-                    f.write(file.read())
-                subprocess.run(["chmod", "+x", dir / "pharia-skill-cli"], check=True)
-
+                cls.download_unix_tar(Path("bin"))
             case "x86_64-pc-windows-msvc":
-                url = f"https://github.com/Aleph-Alpha/pharia-skill-cli/releases/download/v{cls.PHARIA_SKILL_CLI_VERSION}/{filename}.zip"
-                response = requests.get(url)
-                if response.status_code != 200:
-                    raise Exception(f"{response.status_code}: {response.text}")
-
-                zipfile.ZipFile(io.BytesIO(response.content)).extract(
-                    "pharia-skill-cli.exe", path=dir
-                )
+                cls.download_windows_zip(Path("bin"))
             case _:
                 raise Exception(f"Unsupported architecture: {cls.architecture()}")
 
-    @classmethod
-    def install_pharia_skill(cls) -> None:
-        os.makedirs("bin", exist_ok=True)
-        for file in os.listdir("bin"):
-            os.remove(os.path.join("bin", file))
-        cls.download_pharia_skill(Path("bin"))
         logger.info("Pharia skill CLI installed successfully.")
+
+    @classmethod
+    def download_unix_tar(cls, dir: Path) -> None:
+        filename = f"pharia-skill-cli-{cls.architecture()}"
+        url = f"https://github.com/Aleph-Alpha/pharia-skill-cli/releases/download/v{cls.PHARIA_SKILL_CLI_VERSION}/{filename}.tar.xz"
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise Exception(f"{response.status_code}: {response.text}")
+
+        file = tarfile.open(fileobj=io.BytesIO(response.content)).extractfile(
+            filename + "/pharia-skill-cli"
+        )
+        assert file
+        with open(dir / "pharia-skill-cli", "wb") as f:
+            f.write(file.read())
+        subprocess.run(["chmod", "+x", dir / "pharia-skill-cli"], check=True)
+
+    @classmethod
+    def download_windows_zip(cls, dir: Path) -> None:
+        url = f"https://github.com/Aleph-Alpha/pharia-skill-cli/releases/download/v{cls.PHARIA_SKILL_CLI_VERSION}/pharia-skill-cli-x86_64-pc-windows-msvc.zip"
+        print(url)
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise Exception(f"{response.status_code}: {response.text}")
+
+        zipfile.ZipFile(io.BytesIO(response.content)).extract(
+            "pharia-skill-cli.exe", path=dir
+        )
 
     def publish(
         self, skill: str, name: str | None, tag: str, registry: Registry
