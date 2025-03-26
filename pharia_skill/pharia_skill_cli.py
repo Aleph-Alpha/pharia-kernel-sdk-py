@@ -127,7 +127,7 @@ class PhariaSkillCli:
         file = tarfile.open(fileobj=io.BytesIO(response.content)).extractfile(
             filename + "/pharia-skill-cli"
         )
-        assert file
+        assert file, "pharia-skill-cli not found in archive"
         with open(dir / "pharia-skill-cli", "wb") as f:
             f.write(file.read())
         subprocess.run(["chmod", "+x", dir / "pharia-skill-cli"], check=True)
