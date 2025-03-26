@@ -12,10 +12,14 @@ from pydantic import (
     RootModel,  # noqa: F401
 )
 
+from .bindings import exports
+from .bindings.exports.skill_handler import (
+    Error_Internal,
+    Error_InvalidInput,
+    SkillMetadata,
+)
+from .bindings.types import Err
 from .csi import Csi
-from .wit import exports
-from .wit.exports.skill_handler import Error_Internal, Error_InvalidInput, SkillMetadata
-from .wit.types import Err
 from .wit_csi import WitCsi
 
 UserInput = TypeVar("UserInput", bound=BaseModel)

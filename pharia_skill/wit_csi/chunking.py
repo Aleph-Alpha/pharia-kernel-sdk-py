@@ -1,5 +1,5 @@
+from ..bindings.imports import chunking as wit
 from ..csi.chunking import Chunk, ChunkParams, ChunkRequest
-from ..wit.imports import chunking as wit
 
 
 def chunk_params_to_wit(chunk_params: ChunkParams) -> wit.ChunkParams:

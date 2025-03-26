@@ -7,6 +7,7 @@ The `type: ignore[no-untyped-def]` annotations can be removed once we stabilize
 the feature and we know that the classes will always be in the bindings.
 """
 
+from ..bindings.imports import inference as wit
 from ..csi import (
     ChatParams,
     ChatRequest,
@@ -28,7 +29,6 @@ from ..csi import (
     TokenUsage,
     TopLogprobs,
 )
-from ..wit.imports import inference as wit
 
 
 def chat_params_to_wit(chat_params: ChatParams) -> wit.ChatParams:
