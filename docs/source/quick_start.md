@@ -21,9 +21,8 @@ so we set it under two different names:
 
 ```sh
 # .env
-JFROG_TOKEN=your-token
 UV_INDEX_JFROG_USERNAME=your-username
-UV_INDEX_JFROG_PASSWORD=$JFROG_TOKEN
+UV_INDEX_JFROG_PASSWORD=your-token
 ```
 
 Now we can add the SDK as a dependency:

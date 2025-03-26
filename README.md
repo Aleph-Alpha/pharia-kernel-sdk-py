@@ -19,7 +19,7 @@ To add the SDK as a dependency to an existing project managed by `uv`, first cre
 ```sh
 # .env
 UV_INDEX_JFROG_USERNAME=your-username
-UV_INDEX_JFROG_PASSWORD=$JFROG_TOKEN
+UV_INDEX_JFROG_PASSWORD=your-token
 ```
 
 Then, add the SDK as a dependency:
