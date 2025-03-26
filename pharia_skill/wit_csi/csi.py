@@ -64,6 +64,11 @@ class WitCsi(Csi):
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         request = completion_request_to_wit(CompletionRequest(model, prompt, params))
+
+        # We do not call __exit__ on the `CompletionStream` generator.
+        # This means the stream resource lives longer than it should,
+        # and only gets dropped once a skill is finished.
+        # We proabably want to change this.
         stream = wit_inference.CompletionStream(request)
 
         def generator() -> Generator[CompletionEvent, None, None]:
