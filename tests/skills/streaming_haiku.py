@@ -1,12 +1,17 @@
+import inspect
+import traceback
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Callable, Generic, Protocol, Self, TypeVar
+from typing import Callable, Generic, Protocol, Self, Type, TypeVar
 
 from pydantic import BaseModel
 
 from pharia_skill import ChatParams, Csi, Message
+from pharia_skill.bindings import exports
 from pharia_skill.bindings.imports import streaming_output as wit
+from pharia_skill.bindings.types import Err
 from pharia_skill.csi.inference import FinishReason
+from pharia_skill.wit_csi.csi import WitCsi
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 Payload = TypeVar("Payload", bound=BaseModel)
@@ -42,15 +47,15 @@ def message_item_to_wit(item: MessageItem[Payload]) -> wit.MessageItem:
             return wit.MessageItem_MessageEnd(value=data)
 
 
-class Output(Protocol):
+class Response(Protocol):
     """Write messages to the output stream."""
 
     def write(self, item: MessageItem[Payload]) -> None: ...
 
 
-class WitOutput(Output):
-    def __init__(self):
-        self.inner = wit.StreamOutput()
+class WitResponse(Response):
+    def __init__(self, output: wit.StreamOutput):
+        self.inner = output
 
     def __enter__(self) -> Self:
         self.inner.__enter__()
@@ -70,15 +75,44 @@ class WitOutput(Output):
 
 
 def message_stream(
-    func: Callable[[Csi, Output, UserInput], None],
-) -> Callable[[Csi, Output, UserInput], None]:
+    func: Callable[[Csi, Response, UserInput], None],
+) -> Callable[[Csi, Response, UserInput], None]:
     """Decorate a function to write messages to the output stream."""
 
-    # class MessageStreamHandler(exports.MessageStreamHandler):
-    #     def run(self, input: bytes) -> bytes:
-    #         with WitOutput() as output:
-    #             return func(WitCsi(), output, input)
+    from pharia_skill.bindings.exports.message_stream import (
+        Error_Internal,
+        Error_InvalidInput,
+    )
 
+    signature = list(inspect.signature(func).parameters.values())
+    assert len(signature) == 3, (
+        "Message Stream Skills must have exactly three arguments."
+    )
+
+    input_model: Type[UserInput] = signature[2].annotation
+    assert issubclass(input_model, BaseModel), (
+        "The third argument must be a Pydantic model"
+    )
+
+    assert func.__annotations__.get("return") is None, (
+        "The function must not return anything"
+    )
+
+    # TODO: validate the message end_payload
+
+    class MessageStream(exports.MessageStream):
+        def run(self, input: bytes, output: wit.StreamOutput) -> None:
+            try:
+                validated = input_model.model_validate_json(input)
+            except Exception:
+                raise Err(Error_InvalidInput(traceback.format_exc()))
+            try:
+                with WitResponse(output) as response:
+                    func(WitCsi(), response, validated)
+            except Exception:
+                raise Err(Error_Internal(traceback.format_exc()))
+
+    func.__globals__["MessageStream"] = MessageStream
     return func
 
 
@@ -91,13 +125,15 @@ class SkillOutput(BaseModel):
 
 
 @message_stream
-def haiku_stream(csi: Csi, output: Output, input: Input) -> None:
+def haiku_stream(csi: Csi, response: Response, input: Input) -> None:
     with csi.chat_stream(
         model="llama-3.1-8b-instruct",
         messages=[Message.user(input.topic)],
         params=ChatParams(),
-    ) as response:
-        output.write(MessageBegin(response.role))
-        for event in response.stream():
-            output.write(MessageAppend(event.content))
-        output.write(MessageEnd(SkillOutput(finish_reason=response.finish_reason())))
+    ) as chat_response:
+        response.write(MessageBegin(chat_response.role))
+        for event in chat_response.stream():
+            response.write(MessageAppend(event.content))
+        response.write(
+            MessageEnd(SkillOutput(finish_reason=chat_response.finish_reason()))
+        )
