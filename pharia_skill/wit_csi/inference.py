@@ -7,6 +7,9 @@ The `type: ignore[no-untyped-def]` annotations can be removed once we stabilize
 the feature and we know that the classes will always be in the bindings.
 """
 
+from types import TracebackType
+from typing import Self
+
 from ..bindings.imports import inference as wit
 from ..csi import (
     ChatParams,
@@ -14,8 +17,10 @@ from ..csi import (
     ChatResponse,
     Completion,
     CompletionAppend,
+    CompletionEvent,
     CompletionParams,
     CompletionRequest,
+    CompletionStreamResponse,
     Distribution,
     ExplanationRequest,
     FinishReason,
@@ -29,6 +34,34 @@ from ..csi import (
     TokenUsage,
     TopLogprobs,
 )
+
+
+class WitCompletionStreamResponse(CompletionStreamResponse):
+    def __init__(self, stream: wit.CompletionStream):
+        self._stream = stream
+
+    def __enter__(self) -> Self:
+        self._stream.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> bool | None:
+        return self._stream.__exit__(exc_type, exc_value, traceback)
+
+    def next(self) -> CompletionEvent | None:
+        match self._stream.next():
+            case wit.CompletionEvent_Append(value):
+                return completion_append_from_wit(value)
+            case wit.CompletionEvent_End(value):
+                return finish_reason_from_wit(value)
+            case wit.CompletionEvent_Usage(value):
+                return token_usage_from_wit(value)
+            case _:
+                return None
 
 
 def chat_params_to_wit(chat_params: ChatParams) -> wit.ChatParams:

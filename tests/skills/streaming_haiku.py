@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Callable, Protocol, Self, TypeVar
+from typing import Callable, Generic, Protocol, Self, TypeVar
 
 from pydantic import BaseModel
 
 from pharia_skill import ChatParams, Csi, Message
-from pharia_skill.bindings import exports
 from pharia_skill.bindings.imports import streaming_output as wit
-from pharia_skill.wit_csi import WitCsi
+from pharia_skill.csi.inference import FinishReason
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 Payload = TypeVar("Payload", bound=BaseModel)
@@ -24,14 +23,14 @@ class MessageAppend:
 
 
 @dataclass
-class MessageEnd[Payload]:
+class MessageEnd(Generic[Payload]):
     payload: Payload | None
 
 
 MessageItem = MessageBegin | MessageAppend | MessageEnd[Payload]
 
 
-def message_item_to_wit(item: MessageItem) -> wit.MessageItem:
+def message_item_to_wit(item: MessageItem[Payload]) -> wit.MessageItem:
     match item:
         case MessageBegin():
             attributes = wit.BeginAttributes(role=item.role)
@@ -39,13 +38,14 @@ def message_item_to_wit(item: MessageItem) -> wit.MessageItem:
         case MessageAppend():
             return wit.MessageItem_MessageAppend(value=item.text)
         case MessageEnd():
-            return wit.MessageItem_MessageEnd(value=item.payload)
+            data = item.payload.model_dump_json().encode() if item.payload else None
+            return wit.MessageItem_MessageEnd(value=data)
 
 
 class Output(Protocol):
     """Write messages to the output stream."""
 
-    def write(self, item: MessageItem) -> None: ...
+    def write(self, item: MessageItem[Payload]) -> None: ...
 
 
 class WitOutput(Output):
@@ -62,9 +62,9 @@ class WitOutput(Output):
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> bool | None:
-        self.inner.__exit__(exc_type, exc_value, traceback)
+        return self.inner.__exit__(exc_type, exc_value, traceback)
 
-    def write(self, item: MessageItem) -> None:
+    def write(self, item: MessageItem[Payload]) -> None:
         message_item = message_item_to_wit(item)
         self.inner.write(message_item)
 
@@ -86,6 +86,10 @@ class Input(BaseModel):
     topic: str
 
 
+class SkillOutput(BaseModel):
+    finish_reason: FinishReason
+
+
 @message_stream
 def haiku_stream(csi: Csi, output: Output, input: Input) -> None:
     response = csi.chat_stream(
@@ -96,4 +100,4 @@ def haiku_stream(csi: Csi, output: Output, input: Input) -> None:
     output.write(MessageBegin(response.role))
     for event in response.stream():
         output.write(MessageAppend(event.content))
-    output.write(MessageEnd(response.finish_reason))
+    output.write(MessageEnd(SkillOutput(finish_reason=response.finish_reason())))

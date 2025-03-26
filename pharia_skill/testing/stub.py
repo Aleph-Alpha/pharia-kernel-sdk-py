@@ -72,13 +72,23 @@ class StubCsi(Csi):
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
+        class StubCompletionStreamResponse(CompletionStreamResponse):
+            def __init__(self, stream: Generator[CompletionEvent, None, None]):
+                self._stream = stream
+
+            def next(self) -> CompletionEvent | None:
+                try:
+                    return next(self._stream)
+                except StopIteration:
+                    return None
+
         def generator() -> Generator[CompletionEvent, None, None]:
             for char in prompt:
                 yield CompletionAppend(char, [])
             yield FinishReason.STOP
             yield TokenUsage(len(prompt), len(prompt))
 
-        return CompletionStreamResponse(generator())
+        return StubCompletionStreamResponse(generator())
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams

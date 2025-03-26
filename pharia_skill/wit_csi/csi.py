@@ -14,7 +14,6 @@ from ..csi import (
     Chunk,
     ChunkRequest,
     Completion,
-    CompletionEvent,
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
@@ -39,9 +38,9 @@ from .document_index import (
     search_result_from_wit,
 )
 from .inference import (
+    WitCompletionStreamResponse,
     chat_request_to_wit,
     chat_response_from_wit,
-    completion_append_from_wit,
     completion_from_wit,
     completion_request_to_wit,
     explanation_request_to_wit,
@@ -64,24 +63,8 @@ class WitCsi(Csi):
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         request = completion_request_to_wit(CompletionRequest(model, prompt, params))
-
-        # We do not call __exit__ on the `CompletionStream` generator.
-        # This means the stream resource lives longer than it should,
-        # and only gets dropped once a skill is finished.
-        # We proabably want to change this.
         stream = wit_inference.CompletionStream(request)
-
-        def generator() -> Generator[CompletionEvent, None, None]:
-            while (event := stream.next()) is not None:
-                match event:
-                    case wit_inference.CompletionEvent_Append:
-                        yield completion_append_from_wit(event.value)
-                    case wit_inference.CompletionEvent_End:
-                        yield finish_reason_from_wit(event.value)
-                    case wit_inference.CompletionEvent_Usage:
-                        yield token_usage_from_wit(event.value)
-
-        return CompletionStreamResponse(generator())
+        return WitCompletionStreamResponse(stream)
 
     def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
