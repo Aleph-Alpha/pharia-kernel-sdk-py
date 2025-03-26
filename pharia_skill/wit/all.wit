@@ -1,0 +1,9 @@
+/// A world that includes all other worlds that a developer might want to use.
+/// This allows us to generate bindings for multiple worlds that go into the same directory.
+/// This world does not exist in the Kernel runtime itself, only in the SDK.
+world skill-all {
+    include skill;
+
+    @unstable(feature = streaming)
+    include message-stream-skill;
+}

@@ -13,11 +13,6 @@ from pydantic import (
 )
 
 from .bindings import exports
-from .bindings.exports.skill_handler import (
-    Error_Internal,
-    Error_InvalidInput,
-    SkillMetadata,
-)
 from .bindings.types import Err
 from .csi import Csi
 from .wit_csi import WitCsi
@@ -55,6 +50,16 @@ def skill(
             response = csi.chat("llama-3.1-8b-instruct", [system, user], params)
             return Output(haiku=response.message.content.strip())
     """
+    # The import is inside the decorator to ensure the imports only run when the decorator is used.
+    # This is because we can only import them when targeting the `skill` world.
+    # Suppose we target the `message-stream` world and have the imports in this module at the top-level,
+    # then we will get a build error when the decorator module is imported somewhere.
+    from .bindings.exports.skill_handler import (
+        Error_Internal,
+        Error_InvalidInput,
+        SkillMetadata,
+    )
+
     signature = list(inspect.signature(func).parameters.values())
     assert len(signature) == 2, "Skills must have exactly two arguments."
 
