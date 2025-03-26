@@ -1,5 +1,5 @@
+from ..bindings.imports import language as wit
 from ..csi import Language, SelectLanguageRequest
-from ..wit.imports import language as wit
 
 
 def language_to_wit(language: Language) -> str:

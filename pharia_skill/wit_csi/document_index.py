@@ -2,6 +2,7 @@ import datetime as dt
 import json
 from typing import cast
 
+from ..bindings.imports import document_index as wit
 from ..csi import (
     After,
     AtOrAfter,
@@ -30,7 +31,6 @@ from ..csi import (
     WithOneOf,
     Without,
 )
-from ..wit.imports import document_index as wit
 
 
 def to_isostring(datetime: dt.datetime) -> str:

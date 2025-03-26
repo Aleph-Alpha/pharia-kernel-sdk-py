@@ -64,5 +64,5 @@ build-backend = "hatchling.build"
 markers = ["kernel: marks tests that requires Pharia Kernel"]
 
 [tool.ruff]
-exclude = ["pharia_skill/wit"]
+exclude = ["pharia_skill/bindings"]
 lint.extend-select = ["I"]

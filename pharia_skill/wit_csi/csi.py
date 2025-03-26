@@ -1,6 +1,10 @@
 import json
 from collections.abc import Generator
 
+from ..bindings.imports import chunking as wit_chunking
+from ..bindings.imports import document_index as wit_document_index
+from ..bindings.imports import inference as wit_inference
+from ..bindings.imports import language as wit_language
 from ..csi import (
     ChatEvent,
     ChatParams,
@@ -27,10 +31,6 @@ from ..csi import (
     SelectLanguageRequest,
     TextScore,
 )
-from ..wit.imports import chunking as wit_chunking
-from ..wit.imports import document_index as wit_document_index
-from ..wit.imports import inference as wit_inference
-from ..wit.imports import language as wit_language
 from .chunking import chunk_from_wit, chunk_request_to_wit
 from .document_index import (
     document_from_wit,
