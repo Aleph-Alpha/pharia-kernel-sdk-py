@@ -3,6 +3,11 @@
 In this guide, we’ll go through how you can use our Python SDK to build a simple Skill that does a completion request.
 The full code can be found [here](https://github.com/Aleph-Alpha/haiku-skill-python/tree/main).
 
+**Prerequisites**
+- **Python 3.11** or later ([Download Python](https://www.python.org/downloads/))
+- **UV** - Python package installer ([Install UV](https://github.com/astral-sh/uv))
+
+
 ## 1. Installing the SDK
 
 While we are planning to open source the SDK soon, it is currently distributed via the Aleph Alpha Artifactory PyPI.
