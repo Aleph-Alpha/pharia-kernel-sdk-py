@@ -62,6 +62,7 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 markers = ["kernel: marks tests that requires Pharia Kernel"]
+testpaths = ["tests"]
 
 [tool.ruff]
 exclude = ["pharia_skill/bindings"]
