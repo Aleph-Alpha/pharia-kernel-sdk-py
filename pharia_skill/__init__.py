@@ -51,7 +51,7 @@ from .csi import (
     WithOneOf,
     Without,
 )
-from .decorator import skill
+from .skill import skill
 
 __all__ = [
     "After",
