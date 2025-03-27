@@ -1,11 +1,11 @@
 #!/bin/bash
 
-JFROG_USER=$1
-JFROG_TOKEN=$2
+GITHUB_USER=$1
+GITHUB_TOKEN=$2
 
-podman login alephalpha.jfrog.io/pharia-kernel-images -u $JFROG_USER -p $JFROG_TOKEN
-podman pull alephalpha.jfrog.io/pharia-kernel-images/pharia-kernel:latest
-podman tag alephalpha.jfrog.io/pharia-kernel-images/pharia-kernel:latest pharia-kernel
+podman login ghcr.io -u $GITHUB_USER -p $GITHUB_TOKEN
+podman pull ghcr.io/aleph-alpha/pharia-kernel/pharia-kernel:latest
+podman tag ghcr.io/aleph-alpha/pharia-kernel/pharia-kernel:latest pharia-kernel
 
 mkdir -p skills
 
