@@ -126,7 +126,7 @@ class SkillOutput(BaseModel):
 
 @message_stream
 def haiku_stream(csi: Csi, response: Response, input: Input) -> None:
-    with csi.chat_stream(
+    with csi._chat_stream(
         model="llama-3.1-8b-instruct",
         messages=[Message.user(input.topic)],
         params=ChatParams(),

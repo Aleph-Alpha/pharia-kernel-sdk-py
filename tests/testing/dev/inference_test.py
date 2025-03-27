@@ -5,7 +5,6 @@ from pharia_skill import (
     ChatRequest,
     ChatResponse,
     Completion,
-    CompletionAppend,
     CompletionParams,
     CompletionRequest,
     Distribution,
@@ -14,13 +13,12 @@ from pharia_skill import (
     Granularity,
     Logprob,
     Message,
-    MessageAppend,
-    MessageBegin,
     Role,
     TextScore,
     TokenUsage,
     TopLogprobs,
 )
+from pharia_skill.csi.inference import CompletionAppend, MessageAppend, MessageBegin
 from pharia_skill.testing.dev.inference import (
     ChatListDeserializer,
     ChatRequestListSerializer,

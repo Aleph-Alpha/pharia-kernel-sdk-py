@@ -5,19 +5,14 @@ StubCsi can be used for testing without a backing Pharia Kernel instance.
 from collections.abc import Generator
 
 from pharia_skill import (
-    ChatEvent,
     ChatParams,
     ChatRequest,
     ChatResponse,
-    ChatStreamResponse,
     Chunk,
     ChunkRequest,
     Completion,
-    CompletionAppend,
-    CompletionEvent,
     CompletionParams,
     CompletionRequest,
-    CompletionStreamResponse,
     Csi,
     Cursor,
     Document,
@@ -27,14 +22,21 @@ from pharia_skill import (
     JsonSerializable,
     Language,
     Message,
-    MessageAppend,
-    MessageBegin,
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
     Text,
     TextScore,
     TokenUsage,
+)
+from pharia_skill.csi.inference import (
+    ChatEvent,
+    ChatStreamResponse,
+    CompletionAppend,
+    CompletionEvent,
+    CompletionStreamResponse,
+    MessageAppend,
+    MessageBegin,
 )
 
 
@@ -69,7 +71,7 @@ class StubCsi(Csi):
             assert result.haiku == "Whispers in the dark\nEchoes of a fleeting dream\nMeaning lost in space"
     """
 
-    def completion_stream(
+    def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         class StubCompletionStreamResponse(CompletionStreamResponse):
@@ -87,7 +89,7 @@ class StubCsi(Csi):
 
         return StubCompletionStreamResponse(generator())
 
-    def chat_stream(
+    def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         class StubChatStreamResponse(ChatStreamResponse):

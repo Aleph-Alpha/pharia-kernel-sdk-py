@@ -21,13 +21,11 @@ from pharia_skill import (
     ChatParams,
     ChatRequest,
     ChatResponse,
-    ChatStreamResponse,
     Chunk,
     ChunkRequest,
     Completion,
     CompletionParams,
     CompletionRequest,
-    CompletionStreamResponse,
     Csi,
     Document,
     DocumentPath,
@@ -40,6 +38,7 @@ from pharia_skill import (
     SelectLanguageRequest,
     TextScore,
 )
+from pharia_skill.csi.inference import ChatStreamResponse, CompletionStreamResponse
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,
@@ -108,7 +107,7 @@ class DevCsi(Csi):
     def __init__(self) -> None:
         self.client: CsiClient = Client()
 
-    def completion_stream(
+    def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         body = CompletionRequestSerializer(
@@ -117,7 +116,7 @@ class DevCsi(Csi):
         events = self.stream("completion_stream", body)
         return DevCompletionStreamResponse(events)
 
-    def chat_stream(
+    def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         body = ChatRequestSerializer(
