@@ -45,6 +45,8 @@ def completion_event_from_sse(event: Event) -> CompletionEvent:
             ).finish_reason
         case "usage":
             return TokenUsageDeserializer.model_validate_json(event.data).usage
+        case "error":
+            raise ValueError(event.data)
     raise ValueError(f"unknown event type: {event.event}")
 
 
@@ -72,6 +74,8 @@ def chat_event_from_sse(event: Event) -> ChatEvent:
             ).finish_reason
         case "usage":
             return TokenUsageDeserializer.model_validate_json(event.data).usage
+        case "error":
+            raise ValueError(event.data)
     raise ValueError(f"unknown event type: {event.event}")
 
 
