@@ -45,11 +45,6 @@ docs = [
     "sphinx-copybutton>=0.5.2",
 ]
 
-[[tool.uv.index]]
-name = "jfrog"
-url = "https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple"
-publish-url = "https://alephalpha.jfrog.io/artifactory/api/pypi/pharia-kernel-pypi"
-
 [tool.hatch.build.targets.sdist]
 include = ["pharia_skill"]
 
