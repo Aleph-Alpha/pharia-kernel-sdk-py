@@ -439,7 +439,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pharia-kernel-sdk-py"
+name = "pharia-skill"
 version = "0.7.1"
 source = { editable = "." }
 dependencies = [
