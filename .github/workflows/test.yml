@@ -58,6 +58,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      packages: read
     env:
       PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
@@ -91,6 +92,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      packages: write
     env:
       PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
