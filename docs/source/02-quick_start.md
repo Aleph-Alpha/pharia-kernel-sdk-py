@@ -4,6 +4,7 @@ In this guide, we’ll go through how you can use our Python SDK to build a simp
 The full code can be found [here](https://github.com/Aleph-Alpha/haiku-skill-python/tree/main).
 
 **Prerequisites**
+
 - **Python 3.11** or later ([Download Python](https://www.python.org/downloads/))
 - **UV** - Python package installer ([Install UV](https://github.com/astral-sh/uv))
 
@@ -54,7 +55,7 @@ def run(csi: Csi, input: Input) -> Output:
 ```
 
 We first defined the input and output type as Pydantic models. Then, we create our entrypoint by decorating a function with `@skill`.
-This function must stick to the type signature in the example. The [Csi](core_concepts.md#csi) which we have defined as the first argument
+This function must stick to the type signature in the example. The [Csi](03-core_concepts.md#csi) which we have defined as the first argument
 allows to do all the AI specific interactions with the outside world, in our example a completion request.
 
 ## 3. Testing
@@ -62,10 +63,10 @@ allows to do all the AI specific interactions with the outside world, in our exa
 The `@skill` annotation does not modify the annotated function, which allows the test code to inject different variants of CSI.
 The `testing` module provides two implementations of CSI for testing:
 
-- The [DevCsi](references.rst#pharia_skill.testing.DevCsi) can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up. It also supports exporting traces to Pharia Studio.
-- The [StubCsi](references.rst#pharia_skill.testing.StubCsi) can be used as a base class for mock implementation.
+- The [DevCsi](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) can be used for testing Skill code locally against a running Pharia Kernel. See the docstring for how to set it up. It also supports exporting traces to Pharia Studio.
+- The [StubCsi](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.StubCsi) can be used as a base class for mock implementation.
 
-See [core concepts](core_concepts.md#testing) for more information on differences between running Skills in the Kernel and locally.
+See [core concepts](03-core_concepts.md#testing) for more information on differences between running Skills in the Kernel and locally.
 To test against the `DevCsi`, we require two more environment variables:
 
 ```sh

@@ -1,7 +1,7 @@
 # How-To
 
 The Kernel SDK provides all the building blocks needed to create sophisticated AI applications.
-If you want to include any dependencies in your Skill, have a look [here](core_concepts#wasm-component)
+If you want to include any dependencies in your Skill, have a look [here](03-core_concepts.md#wasm-component)
 
 ## Completion
 
@@ -66,7 +66,7 @@ class ChatInterface(BaseModel):
 @skill
 def conversational_search(csi: Csi, input: ChatInterface) -> ChatInterface:
     # Alter the input message in any way to apply your own flavour
-    # You could add a search lookup to allow conversational search, or just 
+    # You could add a search lookup to allow conversational search, or just
     # prepend a custom system prompt
     input = do_search_lookup(input)
     output = csi.chat("llama-3.1-8b-instruct", input.messages)
@@ -77,11 +77,11 @@ You only need to define the `do_search_lookup` function and augment the incoming
 
 ## Function Calling
 
-The [llama3 module](references.rst#module-pharia_skill.llama3), provides support for function calling. It supports both user defined and built-in tools.
+The [llama3 module](https://pharia-skill.readthedocs.io/en/latest/references.html#module-pharia_skill.llama3), provides support for function calling. It supports both user defined and built-in tools.
 
 ### Tool Definition
 
-You can define a tool by inheriting from the [Tool](references.rst#pharia_skill.llama3.Tool) class, which is a wrapper around a Pydantic base model.
+You can define a tool by inheriting from the [Tool](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.Tool) class, which is a wrapper around a Pydantic base model.
 
 For example, suppose we want to give our model the ability to get the readme of a github repository. We can define a tool like this:
 
@@ -114,7 +114,7 @@ The name of the tools is the `snake_case` version of the class name and the doc 
 
 ### Tool Usage
 
-You can pass all available tools to the LLM by using the `tools` argument of the [ChatRequest](references.rst#pharia_skill.llama3.ChatRequest) class.
+You can pass all available tools to the LLM by using the `tools` argument of the [ChatRequest](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.ChatRequest) class.
 
 ```python
 from pharia_skill.llama3 import ChatRequest, UserMessage
@@ -127,12 +127,12 @@ request = ChatRequest(
 )
 ```
 
-If the model decides to use a tool, it will reply with an [AssistantMessage](references.rst#pharia_skill.llama3.AssistantMessage) containing the tool call.
-A [ToolCall](references.rst#pharia_skill.llama3.ToolCall) consists of the name of the tool and the parameters to pass to it. If you have provided the tool definition
+If the model decides to use a tool, it will reply with an [AssistantMessage](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.AssistantMessage) containing the tool call.
+A [ToolCall](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.ToolCall) consists of the name of the tool and the parameters to pass to it. If you have provided the tool definition
 as a Pydantic model, then the parameters field will be an instance of the model. In this way, you get a type-safe way to pass parameters to your tools.
 
 Now, it is upon you to execute the tool call.
-Once you have executed the tool, you can pass the result to the LLM by extending the [ChatRequest](references.rst#pharia_skill.llama3.ChatRequest.extend) with a [ToolMessage](references.rst#pharia_skill.llama3.ToolMessage).
+Once you have executed the tool, you can pass the result to the LLM by extending the [ChatRequest](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.ChatRequest.extend) with a [ToolMessage](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.ToolMessage).
 
 You can then trigger another round of chat with the LLM to get the final result:
 
@@ -168,12 +168,12 @@ def github_skill(csi: Csi, input: Input) -> Output:
 ```
 
 Note that outbound http requests are currently not supported in the Kernel. This means tools that need to make http requests can only
-be executed in a local environment with the [DevCsi](references.rst#pharia_skill.testing.DevCsi) class and not be deployed to the Kernel.
+be executed in a local environment with the [DevCsi](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) class and not be deployed to the Kernel.
 
 ## Code Interpreter
 
-The [CodeInterpreter](references.rst#pharia_skill.llama3.CodeInterpreter) tool is a built-in tool that allows the LLM to execute python code.
-This tool is available in the [llama3 module](references.rst#module-pharia_skill.llama3). Here is an example of how to use it:
+The [CodeInterpreter](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.CodeInterpreter) tool is a built-in tool that allows the LLM to execute python code.
+This tool is available in the [llama3 module](https://pharia-skill.readthedocs.io/en/latest/references.html#module-pharia_skill.llama3). Here is an example of how to use it:
 
 ```python
 from pydantic import BaseModel

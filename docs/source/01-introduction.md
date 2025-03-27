@@ -14,7 +14,7 @@ This is the problem the Kernel solves. By providing a unified runtime environmen
 
 - Unifies foundational components (authentication, tracing, scaling) into a single runtime environment
 - Simplifies deployment using OCI registries & modern CI/CD practices
-- Allows developers to focus on the methodology development of the business logic**
+- Allows developers to focus on the methodology development of the business logic
 
 ## USPs - From Prototype to Production in One Secure Platform
 
@@ -22,9 +22,9 @@ As outlined above, it is fairly easy to put together PoC AI Skills. However, suc
 
 The Kernel redefines production-grade AI deployment by allowing for rapid prototyping & their immediate transformation into secure, scalable, and maintainable AI Skills. Making it the system of choice for deploying hundreds of AI Skills in a secure, scalable and maintainable way
 
-| Seconds to Production | Seamless PhariaAI Integration | Built-in Security & Compliance |
-|----------------------------|-----------------------------|-----------------------------------|
-| Auto-Scaling Resources | Agent-Ready Infrastructure | Minimal Dependency Maintenance |
+| Seconds to Production  | Seamless PhariaAI Integration | Built-in Security & Compliance |
+| ---------------------- | ----------------------------- | ------------------------------ |
+| Auto-Scaling Resources | Agent-Ready Infrastructure    | Minimal Dependency Maintenance |
 
 ### 1. Speed of Deployment
 
@@ -67,7 +67,8 @@ The Kernel integrates tightly into the PhariaAI stack. Traces can be viewed in P
 The Kernel makes it easy to retrieve descriptions and metadata like input and output schema for Skills.
 
 ### 9. Agent Ready
-The more autonomy and control will be given to AI Skills, the more important it becomes that they run in a constrained environment in which every interaction with the outside world can be traced and maintained. 
+
+The more autonomy and control will be given to AI Skills, the more important it becomes that they run in a constrained environment in which every interaction with the outside world can be traced and maintained.
 
 For this the Kernel already provides foundational building-blocks for AI agent readiness:
 

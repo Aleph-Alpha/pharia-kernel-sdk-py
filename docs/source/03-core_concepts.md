@@ -23,19 +23,19 @@ Similar to how an operating system provides functionality to applications, the C
 The functionality of the CSI is focussed around the needs of AI methodology, such as LLM inference, vector search, and data access.
 
 By providing a common interface to these tools, it provides the opportunity for the user code to describe the intended interaction and outcome in their code, and the Kernel is able to take care of the complexity of providing it.
-For example, authentication is not part of the [CSI](https://aleph-alpha-pharia-kernel-sdk-py.readthedocs-hosted.com/en/stable/references.html#pharia_skill.Csi) interface, but is handled by the Kernel, which will authenticate all CSI calls with the token provided in the request.
-To make this interface available at development time, the SDK provides a [DevCSI](references.rst#pharia_skill.testing.DevCsi).
+For example, authentication is not part of the [CSI](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.Csi) interface, but is handled by the Kernel, which will authenticate all CSI calls with the token provided in the request.
+To make this interface available at development time, the SDK provides a [DevCSI](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi).
 
 ### Testing
 
 When Skills are run in the Kernel, the CSI is provided via an Application Binary Interface. This interface is defined via the [WASM Interface Type](https://component-model.bytecodealliance.org/design/wit.html) (WIT) language.
-For development and debugging, Skills can also run in a local Python environment. The CSI which is available to the Skill at runtime can be substituted with a [DevCSI](references.rst#pharia_skill.testing.DevCsi) which is backed by HTTP requests against a running instance of the Kernel.
+For development and debugging, Skills can also run in a local Python environment. The CSI which is available to the Skill at runtime can be substituted with a [DevCSI](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) which is backed by HTTP requests against a running instance of the Kernel.
 Developers can write tests, step through their Python code and inspect the state of variables.
 
 ### Tracing
 
 The Kernel automatically traces Skills and all interactions with the CSI (logs are currently not available). When developing Skills, the developer does not need to worry about setting up tracing.
-The Kernel can be configured to export traces to an OpenTelemetry compatible backend. At development time, the [DevCSI](references.rst#pharia_skill.testing.DevCsi) can be configured to export traces to Pharia Studio, where they can be visualized.
+The Kernel can be configured to export traces to an OpenTelemetry compatible backend. At development time, the [DevCSI](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) can be configured to export traces to Pharia Studio, where they can be visualized.
 
 ## Namespaces
 
