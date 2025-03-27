@@ -1,3 +1,5 @@
+import importlib
+import inspect
 import logging
 import os
 import subprocess
@@ -65,6 +67,35 @@ class ModuleError(Exception):
     pass
 
 
+def inspect_wit_world(module_path: str) -> str:
+    """Determine the world that a Skill should be build against.
+
+    The SDK supports multiple wit worlds (e.g. `skill` and `message-stream-skill`).
+    Each decorator targets a particular world.
+
+    This function inspects a module, looking for one of the exported classes
+    to determine which world the Skill should be build against.
+    """
+    if contains_class(module_path, "SkillHandler"):
+        return "skill"
+    elif contains_class(module_path, "MessageStream"):
+        return "message-stream-skill"
+    else:
+        raise ValueError(
+            f"Unable to find a Skill in {module_path}. "
+            "Did you add the @skill or @message_stream decorator to the Skill function?"
+        )
+
+
+def contains_class(module_path: str, class_name: str) -> bool:
+    """Check if a class named `class_name` exists in the given module."""
+    module = importlib.import_module(module_path)
+    return any(
+        name == class_name and inspect.isclass(value)
+        for name, value in vars(module).items()
+    )
+
+
 def run_componentize_py(skill_module: str, output_file: str, unstable: bool) -> str:
     """Build the skill to a WASM component using componentize-py.
 
@@ -76,11 +107,12 @@ def run_componentize_py(skill_module: str, output_file: str, unstable: bool) -> 
     """
     setup_wasi_deps()
     args = ["--all-features"] if unstable else []
+    world = inspect_wit_world(skill_module)
     command = [
         "componentize-py",
         *args,
         "-w",
-        "skill",
+        world,
         "componentize",
         skill_module,
         "-o",
