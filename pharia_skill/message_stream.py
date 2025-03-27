@@ -1,8 +1,6 @@
 import inspect
 import traceback
-from dataclasses import dataclass
-from types import TracebackType
-from typing import Callable, Generic, Protocol, Self, Type, TypeVar
+from typing import Callable, Type, TypeVar
 
 from pydantic import BaseModel
 
@@ -10,67 +8,11 @@ from pharia_skill import Csi
 from pharia_skill.bindings import exports
 from pharia_skill.bindings.imports import streaming_output as wit
 from pharia_skill.bindings.types import Err
+from pharia_skill.csi.streaming_output import Response
 from pharia_skill.wit_csi.csi import WitCsi
+from pharia_skill.wit_csi.streaming_output import WitResponse
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
-Payload = TypeVar("Payload", bound=BaseModel)
-
-
-@dataclass
-class MessageBegin:
-    role: str | None
-
-
-@dataclass
-class MessageAppend:
-    text: str
-
-
-@dataclass
-class MessageEnd(Generic[Payload]):
-    payload: Payload | None
-
-
-MessageItem = MessageBegin | MessageAppend | MessageEnd[Payload]
-
-
-def message_item_to_wit(item: MessageItem[Payload]) -> wit.MessageItem:
-    match item:
-        case MessageBegin():
-            attributes = wit.BeginAttributes(role=item.role)
-            return wit.MessageItem_MessageBegin(value=attributes)
-        case MessageAppend():
-            return wit.MessageItem_MessageAppend(value=item.text)
-        case MessageEnd():
-            data = item.payload.model_dump_json().encode() if item.payload else None
-            return wit.MessageItem_MessageEnd(value=data)
-
-
-class Response(Protocol):
-    """Write messages to the output stream."""
-
-    def write(self, item: MessageItem[Payload]) -> None: ...
-
-
-class WitResponse(Response):
-    def __init__(self, output: wit.StreamOutput):
-        self.inner = output
-
-    def __enter__(self) -> Self:
-        self.inner.__enter__()
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> bool | None:
-        return self.inner.__exit__(exc_type, exc_value, traceback)
-
-    def write(self, item: MessageItem[Payload]) -> None:
-        message_item = message_item_to_wit(item)
-        self.inner.write(message_item)
 
 
 def message_stream(
