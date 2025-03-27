@@ -23,3 +23,9 @@ componentize-py -w skill componentize examples.haiku -o ./skills/haiku.wasm -p .
 ```
 
 Then you can run `pharia-kernel` in the development directory.
+
+## Unstable Features
+
+When generating bindings for unstable features, we must not use these bindings in the library until they are stabilized.
+Otherwise, we will break builds that do not have the `unstable` flag.
+One example is that type annotations of unstable records in the `wit_csi` module must be put in parenthesis.
