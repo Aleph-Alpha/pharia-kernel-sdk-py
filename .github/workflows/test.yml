@@ -14,11 +14,6 @@ permissions:
   contents: read
   id-token: write
 
-env:
-  ARTIFACTORY_URL: "https://alephalpha.jfrog.io"
-  JFROG_ACCESS_TOKEN_SUBJECT: ${{ secrets.JFROG_ACCESS_TOKEN_SUBJECT }}
-  JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -64,7 +59,6 @@ jobs:
       contents: read
       id-token: write
     env:
-      ARTIFACTORY_URL: https://alephalpha.jfrog.io
       PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -76,11 +70,8 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: uv sync --dev
-      - name: Set env variable to publish skill
-        shell: bash
-        run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Run Pharia Kernel
-        run: sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN
+        run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }}
       - name: Run kernel tests
         run: uv run pytest -m 'kernel'
         env:
@@ -101,7 +92,6 @@ jobs:
       contents: read
       id-token: write
     env:
-      ARTIFACTORY_URL: https://alephalpha.jfrog.io
       PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -113,9 +103,6 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: uv sync --dev
-      - name: Set env variable to publish skill
-        shell: bash
-        run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
       - name: Test skill building
         run: |
           uv run pharia-skill build tests.skills.haiku --no-interactive
@@ -125,14 +112,14 @@ jobs:
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
         env:
-          SKILL_REGISTRY_USER: ${{ env.JFROG_ACCESS_TOKEN_SUBJECT }}
-          SKILL_REGISTRY_TOKEN: ${{ env.JFROG_ACCESS_TOKEN }}
-          SKILL_REGISTRY: alephalpha.jfrog.io
-          SKILL_REPOSITORY: pharia-kernel-images/ci
+          SKILL_REGISTRY_USER: ${{ github.actor }}
+          SKILL_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKILL_REGISTRY: ghcr.io
+          SKILL_REPOSITORY: aleph-alpha/pharia-kernel-sdk-py/skills
       - name: Test skill execution on ubuntu only
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          sh -x -e ./scripts/run_kernel.sh $JFROG_ACCESS_TOKEN_SUBJECT $JFROG_ACCESS_TOKEN
+          sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }}
           uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh language $PHARIA_AI_TOKEN
