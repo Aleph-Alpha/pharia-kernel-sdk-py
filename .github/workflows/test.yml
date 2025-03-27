@@ -111,6 +111,7 @@ jobs:
           uv run pharia-skill build tests.skills.search --no-interactive
           uv run pharia-skill build tests.skills.language --no-interactive
           uv run pharia-skill build tests.skills.failing --no-interactive
+          uv run pharia-skill build tests.skills.streaming_haiku --no-interactive --unstable
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
         env:
@@ -125,6 +126,7 @@ jobs:
           uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh language $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_streaming_skill.sh streaming_haiku $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
       - name: Test skill metadata on ubuntu only
         if: ${{ matrix.os == 'ubuntu-latest' }}
