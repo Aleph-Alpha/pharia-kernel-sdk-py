@@ -39,7 +39,7 @@ from ..csi import (
 
 
 class WitCompletionStreamResponse(CompletionStreamResponse):
-    def __init__(self, stream: wit.CompletionStream):
+    def __init__(self, stream: "wit.CompletionStream"):
         self._stream = stream
 
     def __enter__(self) -> Self:
@@ -67,7 +67,7 @@ class WitCompletionStreamResponse(CompletionStreamResponse):
 
 
 class WitChatStreamResponse(ChatStreamResponse):
-    def __init__(self, stream: wit.ChatStream):
+    def __init__(self, stream: "wit.ChatStream"):
         self._stream = stream
 
     def __enter__(self) -> Self:
