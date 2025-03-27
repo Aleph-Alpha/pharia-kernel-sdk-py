@@ -24,6 +24,12 @@ dependencies = [
     "sseclient-py>=1.8.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Aleph-Alpha/pharia-kernel-sdk-py"
+Documentation = "https://pharia-skill.readthedocs.io"
+Repository = "https://github.com/Aleph-Alpha/pharia-kernel-sdk-py"
+Changelog = "https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/blob/main/CHANGELOG.md"
+
 [project.scripts]
 pharia-skill = "pharia_skill.cli:app"
 
