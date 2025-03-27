@@ -10,23 +10,12 @@ with your GitHub account.
 
 ## Installing the SDK
 
-While we are planning to open source the SDK soon, it is currently distributed via the Aleph Alpha Artifactory PyPI.
-To install it, you need a JFrog account and need to create an access token in the UI.
-We recommend using [uv](https://docs.astral.sh/uv/) to install the SDK.
-
-To add the SDK as a dependency to an existing project managed by `uv`, first create a `.env` file and set the needed environment variables:
+The SDK is published on PyPi.
+We recommend using [uv](https://docs.astral.sh/uv/) to manage Python dependencies.
+To add the SDK as a dependency to an existing project managed by `uv`, run
 
 ```sh
-# .env
-UV_INDEX_JFROG_USERNAME=your-username
-UV_INDEX_JFROG_PASSWORD=your-token
-```
-
-Then, add the SDK as a dependency:
-
-```sh
-set -a && source .env
-uv add --index jfrog=https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple pharia-kernel-sdk-py
+uv add pharia-skill
 ```
 
 ## Contributing
