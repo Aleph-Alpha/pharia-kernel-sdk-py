@@ -7,34 +7,23 @@ The full code can be found [here](https://github.com/Aleph-Alpha/haiku-skill-pyt
 - **Python 3.11** or later ([Download Python](https://www.python.org/downloads/))
 - **UV** - Python package installer ([Install UV](https://github.com/astral-sh/uv))
 
-
 ## 1. Installing the SDK
 
-While we are planning to open source the SDK soon, it is currently distributed via the Aleph Alpha Artifactory PyPI.
-To install it, you need a JFrog account and need to create an access token in the UI.
-We recommend using [uv](https://docs.astral.sh/uv/) to install the SDK.
+The SDK is published on PyPi.
+We recommend using [uv](https://docs.astral.sh/uv/) to manage Python dependencies.
+To add the SDK as a dependency to an existing project managed by `uv`, run
 
 We will create an example `haiku` skill, but you can use any name you want for your project.
-Create a new project and add the SDK as a dependency:
+Create a new project
 
 ```sh
 uv init haiku && cd haiku
 ```
 
-Create a `.env` file and set the needed environment variables. The jfrog token is used by two different tools,
-so we set it under two different names:
+and add the SDK as a dependency:
 
 ```sh
-# .env
-UV_INDEX_JFROG_USERNAME=your-username
-UV_INDEX_JFROG_PASSWORD=your-token
-```
-
-Now we can add the SDK as a dependency:
-
-```sh
-set -a && source .env
-uv add --index jfrog=https://alephalpha.jfrog.io/artifactory/api/pypi/python/simple pharia-kernel-sdk-py
+uv add pharia-skill
 ```
 
 ## 2. Writing a Skill
