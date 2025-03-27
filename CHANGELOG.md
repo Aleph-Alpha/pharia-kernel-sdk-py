@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.8.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.7.1...v0.8.0) (2025-03-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* update package name from pharia-kernel-sdk-py to pharia-skill
+
+### Features
+
+* add chat_stream CSI function ([60afd5e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/60afd5ea42a57f67f56dc903962d99b8b8623e79))
+* add completion_stream CSI function ([134c953](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/134c9539f892820d1dacaffd1ca3cbea43dd4cc6))
+* implement ChatStreamResponse as context manager ([38ef434](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/38ef434f276fcebb7cc156f853a26b0276c8506c))
+* implement CompletionStreamResponse as context manager ([8a168cc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8a168cc0138229ccbdf70dd8703ada1b7a8990cc))
+* include event data in error case ([e124881](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e124881a58e4abb5fb8a9f14df45b9c34df1b5b7))
+* streamline streaming interface for completion and chat ([9e59394](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9e59394387365a5f49657ddc2406454d11c9a97a))
+* update package name from pharia-kernel-sdk-py to pharia-skill ([f0a6250](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f0a625068b86579e826d0e422118d7559b2388ac))
+* update pharia-skill-cli to use GitHub releases ([0f52bbf](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0f52bbfdd1d8f8d0d52333166b3a17f023e97f0f))
+
+
+### Bug Fixes
+
+* avoid using bindings for unstable types ([cc16098](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/cc160986f1afb3b49e7f3a03ab011285ff74742d))
+* call super init on chat stream to poll first message ([2ae9f60](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2ae9f6066507082ee2b2b30a08cfb733feb2d2e8))
+* chmod on wrong file ([6739d33](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/6739d33bab5c9cc45db857fe4561cecc1dc68cfd))
+* do not use unstable feature in signatures ([4316900](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4316900539ff8cb29106d757cdc12a6bdac8f4a9))
+
+
+### Documentation
+
+* add apache-2.0 license ([61a126f](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/61a126f61c0ed9cabf292ca47a95acca663363c4))
+* add comment about decorator usage pattern ([7b7f062](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/7b7f0625dec3a7bddeb3a99d3cd3fcaf7797a7c9))
+* add links for registry ([29d83e7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/29d83e7d74d675169f1d8941d661f6daa01265d8))
+* add prerequisites to quick_start ([9fb42c0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9fb42c0b4d72bc60f79f3f283bcfa325f1f6f6c9))
+* cleanup invocation docs ([a3a710f](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a3a710f14fa503be8950e26e988ea583d248fcba))
+* Fix broken link ([8748292](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8748292b128134b93f625c5074af2e800861ab22))
+* improve core_concepts description of Skill ([21bc122](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/21bc122848fd65a75bfab270c89076f053f41284))
+* pull in changes from other public docs ([c7cea97](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c7cea974fed8e077cbf233f6b1f354ee1a9f64b7))
+* refactor introduction and USP narrative ([3798d20](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3798d203c950f675f1a86a359a6a48c3bcbfc3ea))
+* reference generator expression ([80c5c1e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/80c5c1e757d386d87ca89155e24345acec476de3))
+* remove jfrog installation references ([7cf8530](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/7cf853033651437d344bb62e6c16e55ca62d3dec))
+* remove jfrog token env variable ([0542d0e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0542d0eb8d8ab18b0c374dd31493bfa7e6b4c386))
+* specify frozen flag when syncing dependencies ([4d55715](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4d55715f7e881905f0a42018e1ce017cad99d842))
+* specify usage of unstable features in glue code ([1f7eecd](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1f7eecdb44750a676f753b15e21317737f6b0476))
+* typo ([47f5fc8](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/47f5fc88a98699255daa0ae4e9211e2d7963e969))
+* typo ([cc44517](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/cc445174b459e5176d798c83aaa6f259d1a7581e))
+
 ## [0.7.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.7.0...v0.7.1) (2025-03-06)
 
 
