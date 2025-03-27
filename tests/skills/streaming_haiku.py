@@ -117,7 +117,7 @@ def message_stream(
 
 
 class Input(BaseModel):
-    topic: str
+    root: str
 
 
 class SkillOutput(BaseModel):
@@ -128,7 +128,10 @@ class SkillOutput(BaseModel):
 def haiku_stream(csi: Csi, response: Response, input: Input) -> None:
     with csi._chat_stream(
         model="llama-3.1-8b-instruct",
-        messages=[Message.user(input.topic)],
+        messages=[
+            Message.system("You are a poet who strictly speask in haikus."),
+            Message.user(input.root),
+        ],
         params=ChatParams(),
     ) as chat_response:
         response.write(MessageBegin(chat_response.role))
