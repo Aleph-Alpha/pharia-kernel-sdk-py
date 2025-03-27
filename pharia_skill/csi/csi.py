@@ -30,7 +30,7 @@ from .language import Language, SelectLanguageRequest
 class Csi(Protocol):
     """The Cognitive System Interface (CSI) is a protocol that allows skills to interact with the Pharia Kernel."""
 
-    def completion_stream(
+    def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         """Streams completions given a prompt.
@@ -42,7 +42,7 @@ class Csi(Protocol):
         """
         ...
 
-    def chat_stream(
+    def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         """Streams chat with a model, where the first item is the role.

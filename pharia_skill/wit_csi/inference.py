@@ -10,7 +10,15 @@ the feature and we know that the classes will always be in the bindings.
 from types import TracebackType
 from typing import Self
 
-from pharia_skill.csi.inference import ChatEvent, ChatStreamResponse, MessageBegin
+from pharia_skill.csi.inference import (
+    ChatEvent,
+    ChatStreamResponse,
+    CompletionAppend,
+    CompletionEvent,
+    CompletionStreamResponse,
+    MessageAppend,
+    MessageBegin,
+)
 
 from ..bindings.imports import inference as wit
 from ..csi import (
@@ -18,11 +26,8 @@ from ..csi import (
     ChatRequest,
     ChatResponse,
     Completion,
-    CompletionAppend,
-    CompletionEvent,
     CompletionParams,
     CompletionRequest,
-    CompletionStreamResponse,
     Distribution,
     ExplanationRequest,
     FinishReason,
@@ -30,7 +35,6 @@ from ..csi import (
     Logprob,
     Logprobs,
     Message,
-    MessageAppend,
     Role,
     TextScore,
     TokenUsage,

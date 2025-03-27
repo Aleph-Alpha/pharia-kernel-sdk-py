@@ -1,5 +1,7 @@
 import json
 
+from pharia_skill.csi.inference import ChatStreamResponse, CompletionStreamResponse
+
 from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index
 from ..bindings.imports import inference as wit_inference
@@ -8,13 +10,11 @@ from ..csi import (
     ChatParams,
     ChatRequest,
     ChatResponse,
-    ChatStreamResponse,
     Chunk,
     ChunkRequest,
     Completion,
     CompletionParams,
     CompletionRequest,
-    CompletionStreamResponse,
     Csi,
     Document,
     DocumentPath,
@@ -54,14 +54,14 @@ class WitCsi(Csi):
     which are automatically generated from the WIT world via `componentize-py`.
     """
 
-    def completion_stream(
+    def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         request = completion_request_to_wit(CompletionRequest(model, prompt, params))
         stream = wit_inference.CompletionStream(request)
         return WitCompletionStreamResponse(stream)
 
-    def chat_stream(
+    def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         request = chat_request_to_wit(ChatRequest(model, messages, params))
