@@ -11,7 +11,7 @@ from types import FunctionType, MethodType
 project = "pharia-kernel"
 copyright = "2025, Aleph Alpha"
 author = "Aleph Alpha"
-version = importlib.metadata.version("pharia-kernel-sdk-py")
+version = importlib.metadata.version("pharia-skill")
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
