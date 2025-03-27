@@ -1,14 +1,14 @@
 [project]
 name = "pharia-skill"
 version = "0.7.1"
-description = ""
+description = "SDK for building Python skills for Pharia Kernel"
+license = "Apache-2.0"
 authors = [
-    { name = "Peter Barth", email = "peter.barth@aleph-alpha.com" },
     { name = "Markus Klein", email = "markus.klein@aleph-alpha.com" },
     { name = "Benjamin Brandt", email = "benjamin.brandt@aleph-alpha.com" },
-    { name = "Daniel Tscherwinka", email = "daniel.tscherwinka@aleph-alpha.com" },
     { name = "Moritz Althaus", email = "moritz.althaus@aleph-alpha.com" },
     { name = "Jia Ho Lee", email = "jiaho.lee@aleph-alpha.com" },
+    { name = "Lars Rass", email = "lars.rass@aleph-alpha.com" },
 ]
 requires-python = "~=3.11"
 readme = "README.md"
