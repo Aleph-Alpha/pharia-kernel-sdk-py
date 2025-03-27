@@ -16,6 +16,8 @@ permissions:
 
 env:
   ARTIFACTORY_URL: "https://alephalpha.jfrog.io"
+  JFROG_ACCESS_TOKEN_SUBJECT: ${{ secrets.JFROG_ACCESS_TOKEN_SUBJECT }}
+  JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
 jobs:
   lint:
@@ -74,7 +76,6 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: uv sync --dev
-      - uses: ./.github/actions/jfrog
       - name: Set env variable to publish skill
         shell: bash
         run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
@@ -112,7 +113,6 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: uv sync --dev
-      - uses: ./.github/actions/jfrog
       - name: Set env variable to publish skill
         shell: bash
         run: echo "JFROG_TOKEN=$JFROG_ACCESS_TOKEN" >> $GITHUB_ENV
