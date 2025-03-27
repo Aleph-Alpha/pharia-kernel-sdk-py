@@ -4,14 +4,14 @@ SKILL_NAME=$1
 PHARIA_AI_TOKEN=$2
 PHARIA_KERNEL_ADDRESS=${3-http://127.0.0.1:8081}
 
-echo "Copying built skill..."
+echo "Copying built Skill..."
 mkdir -p skills
 cp $SKILL_NAME.wasm skills/$SKILL_NAME.wasm
 
-echo "Waiting for skill to be available..."
+echo "Waiting for Skill to be available..."
 sleep 1
 
-echo "Executing skill..."
+echo "Executing Skill..."
 RESPONSE_CODE=$(curl -w '%{http_code}' -s -o output.result \
                 $PHARIA_KERNEL_ADDRESS/v1/skills/dev/$SKILL_NAME/run \
                 -H "Authorization: Bearer $PHARIA_AI_TOKEN" \
