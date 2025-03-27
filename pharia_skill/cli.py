@@ -50,7 +50,11 @@ def setup_wasi_deps() -> None:
                 "wasi_0_0_0_wasm32",
                 "--python-version",
                 "3.12",
-                f"https://github.com/benbrandt/wasi-wheels/releases/download/pydantic-core/v{PYDANTIC_CORE_VERSION}/pydantic_core-{PYDANTIC_CORE_VERSION}-cp312-cp312-wasi_0_0_0_wasm32.whl",
+                "--index-url",
+                "https://benbrandt.github.io/wasi-wheels/",
+                "--extra-index-url",
+                "https://pypi.org/simple",
+                f"pydantic-core=={PYDANTIC_CORE_VERSION}",
             ],
             check=True,
         )
