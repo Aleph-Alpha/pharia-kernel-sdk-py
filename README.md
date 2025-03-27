@@ -16,24 +16,3 @@ To add the SDK as a dependency to an existing project managed by `uv`, run
 ```sh
 uv add pharia-skill
 ```
-
-## Contributing
-
-Install the dependencies with
-
-```shell
-uv sync --dev --frozen
-```
-
-We use [pre-commit](https://pre-commit.com/) to check that code is formatted, linted and type checked. You can initialize by simply typing
-
-```shell
-pre-commit
-pre-commit install
-```
-
-Verify that it is running with
-
-```shell
-pre-commit run --all-files
-```
