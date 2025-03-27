@@ -93,6 +93,7 @@ class StubCsi(Csi):
         class StubChatStreamResponse(ChatStreamResponse):
             def __init__(self, stream: Generator[ChatEvent, None, None]):
                 self._stream = stream
+                super().__init__()
 
             def next(self) -> ChatEvent | None:
                 return next(self._stream, None)

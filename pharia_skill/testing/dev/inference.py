@@ -51,6 +51,7 @@ def completion_event_from_sse(event: Event) -> CompletionEvent:
 class DevChatStreamResponse(ChatStreamResponse):
     def __init__(self, stream: Generator[Event, None, None]):
         self._stream = stream
+        super().__init__()
 
     def next(self) -> ChatEvent | None:
         if event := next(self._stream, None):
