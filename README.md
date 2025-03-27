@@ -5,8 +5,7 @@ Then, the skill is deployed to an [instance of Pharia Kernel](https://pharia-ker
 where it can be invoked on demand.
 To this end, this SDK provides some tooling and APIs for skill development.
 
-You can access the [Documentation](https://aleph-alpha-pharia-kernel-sdk-py.readthedocs-hosted.com/en/latest/index.html)
-with your GitHub account.
+You can access the [Documentation](https://pharia-skill.readthedocs.io) on readthedocs.
 
 ## Installing the SDK
 

@@ -25,11 +25,11 @@ The Kernel provides a focused environment for AI engineers to develop and deploy
 :hidden:
 :maxdepth: 2
 
-introduction
-quick_start
-core_concepts
-how_to
-agents
-faq
+01-introduction
+02-quick_start
+03-core_concepts
+04-how_to
+05-llm_code_execution
+06-faq
 references
 ```
