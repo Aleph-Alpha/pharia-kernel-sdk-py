@@ -440,7 +440,7 @@ wheels = [
 
 [[package]]
 name = "pharia-skill"
-version = "0.7.1"
+version = "0.8.0"
 source = { editable = "." }
 dependencies = [
     { name = "componentize-py" },
@@ -474,15 +474,15 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "componentize-py", specifier = "==0.16.0" },
-    { name = "opentelemetry-sdk", specifier = "==1.31.1" },
-    { name = "pydantic", specifier = "==2.10.4" },
+    { name = "componentize-py", specifier = ">=0.16.0,<0.17" },
+    { name = "opentelemetry-sdk", specifier = ">=1.28.1,<2" },
+    { name = "pydantic", specifier = "==2.10.6" },
     { name = "pydantic-core", specifier = "==2.27.2" },
     { name = "python-dotenv", specifier = ">=1.0.1,<2" },
-    { name = "requests", specifier = "==2.32.3" },
-    { name = "rich", specifier = "==13.9.4" },
-    { name = "sseclient-py", specifier = "==1.8.0" },
-    { name = "typer", specifier = "==0.15.2" },
+    { name = "requests", specifier = ">=2.32.3,<3" },
+    { name = "rich", specifier = ">=13.7.0,<14" },
+    { name = "sseclient-py", specifier = ">=1.8.0" },
+    { name = "typer", specifier = ">=0.15.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -539,16 +539,16 @@ wheels = [
 
 [[package]]
 name = "pydantic"
-version = "2.10.4"
+version = "2.10.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
     { name = "pydantic-core" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/7e/fb60e6fee04d0ef8f15e4e01ff187a196fa976eb0f0ab524af4599e5754c/pydantic-2.10.4.tar.gz", hash = "sha256:82f12e9723da6de4fe2ba888b5971157b3be7ad914267dea8f05f82b28254f06", size = 762094 }
+sdist = { url = "https://files.pythonhosted.org/packages/b7/ae/d5220c5c52b158b1de7ca89fc5edb72f304a70a4c540c84c8844bf4008de/pydantic-2.10.6.tar.gz", hash = "sha256:ca5daa827cce33de7a42be142548b0096bf05a7e7b365aebfa5f8eeec7128236", size = 761681 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/26/3e1bbe954fde7ee22a6e7d31582c642aad9e84ffe4b5fb61e63b87cd326f/pydantic-2.10.4-py3-none-any.whl", hash = "sha256:597e135ea68be3a37552fb524bc7d0d66dcf93d395acd93a00682f1efcb8ee3d", size = 431765 },
+    { url = "https://files.pythonhosted.org/packages/f4/3c/8cc1cc84deffa6e25d2d0c688ebb80635dfdbf1dbea3e30c541c8cf4d860/pydantic-2.10.6-py3-none-any.whl", hash = "sha256:427d664bf0b8a2b34ff5dd0f5a18df00591adcee7198fbd71981054cef37b584", size = 431696 },
 ]
 
 [[package]]
