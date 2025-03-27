@@ -8,3 +8,8 @@ updates:
     target-branch: "main"
     ignore:
       - dependency-name: "pydantic*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
