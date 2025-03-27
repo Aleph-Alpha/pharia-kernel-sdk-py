@@ -25,4 +25,4 @@ jobs:
         name: Build and publish to Artifactory PyPI repository
         run: |
           uv build
-          uv publish --trusted-publishing automatic
+          uv publish
