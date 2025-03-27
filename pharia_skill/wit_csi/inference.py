@@ -69,6 +69,7 @@ class WitCompletionStreamResponse(CompletionStreamResponse):
 class WitChatStreamResponse(ChatStreamResponse):
     def __init__(self, stream: "wit.ChatStream"):
         self._stream = stream
+        super().__init__()
 
     def __enter__(self) -> Self:
         self._stream.__enter__()
