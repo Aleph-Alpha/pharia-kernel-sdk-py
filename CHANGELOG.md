@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.8.0...v0.8.1) (2025-03-27)
+
+
+### Documentation
+
+* merge documentation for contributing ([3c6c9c1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3c6c9c139de2cc60daccb8575584c97494b659e4))
+
 ## [0.8.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.7.1...v0.8.0) (2025-03-27)
 
 
