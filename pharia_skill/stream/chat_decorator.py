@@ -5,7 +5,6 @@ from typing import Any, Callable, Generator, TypeVar
 from pydantic import BaseModel
 
 from pharia_skill import Csi
-from pharia_skill.stream.message_stream_decorator import message_stream
 from pharia_skill.csi.inference import (
     ChatEvent,
     FinishReason,
@@ -13,6 +12,7 @@ from pharia_skill.csi.inference import (
     MessageBegin,
     TokenUsage,
 )
+from pharia_skill.stream.message_stream_decorator import message_stream
 from pharia_skill.stream.writer import MessageWriter
 
 Input = TypeVar("Input", bound=BaseModel)
@@ -44,7 +44,7 @@ def chat(
             ]
             params = ChatParams()
             with csi.chat_stream(model, messages, params) as response:
-                yield from response.stream()
+                yield from response.message()
 
             return HaikuOutput(anything="anything")
     """
@@ -82,7 +82,7 @@ def to_message_stream(
                     writer.begin_message(role)
                 case MessageAppend(content):
                     writer.append_to_message(content)
-                case FinishReason(), TokenUsage():
+                case FinishReason() | TokenUsage():
                     # This decorator is opinionated: If you use it, you "simply" want to stream a single completion.
                     # The caller does not get to see the token usage or the finish reason.
                     pass

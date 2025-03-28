@@ -6,8 +6,9 @@ from pydantic import BaseModel
 from pharia_skill import ChatParams, Csi, Message, message_stream
 from pharia_skill.csi.inference import (
     ChatEvent,
+    Role,
 )
-from pharia_skill.stream import MessageAppend, MessageEnd
+from pharia_skill.stream import MessageAppend, MessageBegin, MessageEnd
 from pharia_skill.stream.chat_decorator import GeneratorWrapper, to_message_stream
 from pharia_skill.testing import MessageRecorder, StubCsi
 
@@ -64,7 +65,7 @@ def test_haiku_stream_with_return():
         ]
         params = ChatParams()
         with csi.chat_stream(model, messages, params) as response:
-            yield from response.stream()
+            yield from response.message()
 
         return HaikuOutput(anything="anything")
 
@@ -78,6 +79,7 @@ def test_haiku_stream_with_return():
 
     # And the messages are recorded
     assert writer.items == [
+        MessageBegin(role=Role.System),
         MessageAppend(
             text="You are a poet who strictly speaks in haikus.",
         ),

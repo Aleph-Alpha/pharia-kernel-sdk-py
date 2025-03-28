@@ -263,7 +263,7 @@ class ChatStreamResponse(ABC):
     these methods ensure that resources are properly released when the stream is no longer
     needed.
 
-    The message can be streamed by calling `stream()`.
+    The content of the message can be streamed by calling `message_content()`.
     If `finish_reason()` or `usage()` has been called, the stream is consumed.
 
 
@@ -317,11 +317,24 @@ class ChatStreamResponse(ABC):
         return self._usage
 
     def _consume_stream(self) -> None:
-        deque(self.stream(), maxlen=0)
+        deque(self.message_content(), maxlen=0)
         if self._finish_reason is None or self._usage is None:
             raise ValueError("Invalid event stream")
 
-    def stream(self) -> Generator[MessageAppend, None, None]:
+    def message(self) -> Generator[ChatEvent, None, None]:
+        """Stream the complete message
+
+        Use this with the @chat decorator to forward all details of the message."""
+        yield MessageBegin(self.role)
+        yield from self.message_content()
+        yield self.finish_reason()
+        yield self.usage()
+
+    def message_content(self) -> Generator[MessageAppend, None, None]:
+        """Stream the content of the message.
+
+        This does not include the role, the finish reason and usage.
+        """
         if self._usage:
             raise RuntimeError("The stream has already been consumed")
         while (event := self.next()) is not None:
