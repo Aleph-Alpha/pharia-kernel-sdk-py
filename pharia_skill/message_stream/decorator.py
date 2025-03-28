@@ -24,7 +24,7 @@ def message_stream(
 
     Example::
 
-        from pharia_skill import Csi, ChatParams, Message, message_stream, Response, MessageBegin, MessageAppend, MessageEnd
+        from pharia_skill import Csi, ChatParams, Message, message_stream, MessageWriter
         from pydantic import BaseModel
         from pharia_skill.csi.inference import FinishReason
 
@@ -35,20 +35,18 @@ def message_stream(
             finish_reason: FinishReason
 
         @message_stream
-        def haiku_stream(csi: Csi, response: Response[SkillOutput], input: Input) -> None:
-            with csi.chat_stream(
-                model="llama-3.1-8b-instruct",
-                messages=[
-                    Message.system("You are a poet who strictly speaks in haikus."),
-                    Message.user(input.topic),
-                ],
-                params=ChatParams(),
-            ) as chat_response:
-                response.write(MessageBegin(role=chat_response.role))
-                response.write(MessageAppend(chat_response.message.content))
+        def haiku_stream(csi: Csi, writer: MessageWriter[SkillOutput], input: Input) -> None:
+            model = "llama-3.1-8b-instruct"
+            messages = [
+                Message.system("You are a poet who strictly speaks in haikus."),
+                Message.user(input.topic),
+            ]
+            params = ChatParams()
+            with csi.chat_stream(model, messages, params) as chat_response:
+                writer.begin_message()
                 for event in chat_response.stream():
-                    response.write(MessageAppend(event.content))
-                response.write(MessageEnd(payload=SkillOutput(finish_reason=chat_response.finish_reason())))
+                    writer.append_to_message(event.content)
+                writer.end_message(SkillOutput(finish_reason=chat_response.finish_reason()))
     """
     # The import is inside the decorator to ensure the imports only run when the decorator is interpreted.
     # This is because we can only import them when targeting the `message-stream-skill` world.
