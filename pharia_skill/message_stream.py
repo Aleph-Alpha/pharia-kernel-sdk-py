@@ -39,7 +39,9 @@ def message_stream(
         "The function must not return anything"
     )
 
-    # TODO: validate the message end_payload
+    # We don't require the schema of the end payload in the function definition.
+    # The only use case for this would be to know the metadata of the end payload.
+    # Since we don't do metadata for streaming skills at the moment, it is not needed.
 
     class MessageStream(exports.MessageStream):
         def run(self, input: bytes, output: wit.StreamOutput) -> None:
@@ -52,6 +54,10 @@ def message_stream(
                     func(WitCsi(), response, validated)
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))
+
+    assert "MessageStream" not in func.__globals__, (
+        "`@message_stream` can only be used once."
+    )
 
     func.__globals__["MessageStream"] = MessageStream
     return func
