@@ -93,7 +93,7 @@ def message_stream(
                 raise Err(Error_Internal(traceback.format_exc()))
 
     assert "MessageStream" not in func.__globals__, (
-        "`@message_stream` can only be used once."
+        "Make sure to decorate with either `@chat` or `@message_stream` once."
     )
 
     func.__globals__["MessageStream"] = MessageStream
