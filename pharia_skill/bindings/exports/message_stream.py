@@ -1,7 +1,3 @@
-"""
-For some reason cannot enable unstable here
-@unstable(feature = streaming)
-"""
 from typing import TypeVar, Generic, Union, Optional, Protocol, Tuple, List, Any, Self
 from types import TracebackType
 from enum import Flag, Enum, auto
