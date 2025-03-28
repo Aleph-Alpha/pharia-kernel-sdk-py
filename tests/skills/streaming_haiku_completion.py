@@ -3,11 +3,8 @@ from pydantic import BaseModel, RootModel
 from pharia_skill import CompletionParams, Csi
 from pharia_skill.csi.inference import FinishReason
 from pharia_skill.message_stream import message_stream
-from pharia_skill.message_stream.response import (
-    MessageAppend,
-    MessageBegin,
-    MessageEnd,
-    Response,
+from pharia_skill.message_stream.writer import (
+    MessageWriter,
 )
 
 
@@ -20,15 +17,12 @@ class SkillOutput(BaseModel):
 
 
 @message_stream
-def haiku_stream(csi: Csi, response: Response[SkillOutput], input: Input) -> None:
-    with csi.completion_stream(
-        model="llama-3.1-8b-instruct",
-        prompt=f"Generate a haiku about {input.root}",
-        params=CompletionParams(),
-    ) as completion_response:
-        response.write(MessageBegin(None))
-        for event in completion_response.stream():
-            response.write(MessageAppend(event.text))
-        response.write(
-            MessageEnd(SkillOutput(finish_reason=completion_response.finish_reason()))
-        )
+def haiku_stream(csi: Csi, writer: MessageWriter[SkillOutput], input: Input) -> None:
+    model = "llama-3.1-8b-instruct"
+    prompt = f"Generate a haiku about {input.root}"
+    params = CompletionParams()
+    with csi.completion_stream(model, prompt, params) as response:
+        writer.begin_message()
+        for event in response.stream():
+            writer.append_to_message(event.text)
+        writer.end_message(SkillOutput(finish_reason=response.finish_reason()))

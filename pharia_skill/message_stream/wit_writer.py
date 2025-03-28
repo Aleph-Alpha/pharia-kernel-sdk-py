@@ -9,13 +9,13 @@ from typing import Self
 
 from pharia_skill.bindings.imports import streaming_output as wit
 
-from .response import (
+from .writer import (
     MessageAppend,
     MessageBegin,
     MessageEnd,
     MessageItem,
     Payload,
-    Response,
+    MessageWriter,
 )
 
 
@@ -31,7 +31,7 @@ def message_item_to_wit(item: MessageItem[Payload]) -> wit.MessageItem:
             return wit.MessageItem_MessageEnd(value=data)
 
 
-class WitResponse(Response[Payload]):
+class WitMessageWriter(MessageWriter[Payload]):
     def __init__(self, output: wit.StreamOutput):
         self.inner = output
 

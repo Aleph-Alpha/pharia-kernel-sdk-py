@@ -4,11 +4,8 @@ from pydantic.root_model import RootModel
 from pharia_skill import ChatParams, Csi, Message
 from pharia_skill.csi.inference import FinishReason
 from pharia_skill.message_stream import message_stream
-from pharia_skill.message_stream.response import (
-    MessageAppend,
-    MessageBegin,
-    MessageEnd,
-    Response,
+from pharia_skill.message_stream.writer import (
+    MessageWriter,
 )
 
 
@@ -21,18 +18,15 @@ class SkillOutput(BaseModel):
 
 
 @message_stream
-def haiku_stream(csi: Csi, response: Response[SkillOutput], input: Input) -> None:
-    with csi.chat_stream(
-        model="llama-3.1-8b-instruct",
-        messages=[
-            Message.system("You are a poet who strictly speaks in haikus."),
-            Message.user(input.root),
-        ],
-        params=ChatParams(),
-    ) as chat_response:
-        response.write(MessageBegin(chat_response.role))
-        for event in chat_response.stream():
-            response.write(MessageAppend(event.content))
-        response.write(
-            MessageEnd(SkillOutput(finish_reason=chat_response.finish_reason()))
-        )
+def haiku_stream(csi: Csi, writer: MessageWriter[SkillOutput], input: Input) -> None:
+    model = "llama-3.1-8b-instruct"
+    messages = [
+        Message.system("You are a poet who strictly speaks in haikus."),
+        Message.user(input.root),
+    ]
+    params = ChatParams()
+    with csi.chat_stream(model, messages, params) as response:
+        writer.begin_message(response.role)
+        for event in response.stream():
+            writer.append_to_message(event.content)
+        writer.end_message(SkillOutput(finish_reason=response.finish_reason()))

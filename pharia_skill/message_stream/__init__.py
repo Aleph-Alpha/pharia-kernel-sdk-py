@@ -1,11 +1,17 @@
 from .decorator import message_stream
-from .response import MessageAppend, MessageBegin, MessageEnd, MessageItem, Response
+from .writer import (
+    MessageAppend,
+    MessageBegin,
+    MessageEnd,
+    MessageItem,
+    MessageWriter,
+)
 
 __all__ = [
     "message_stream",
     "MessageBegin",
     "MessageAppend",
     "MessageEnd",
-    "Response",
+    "MessageWriter",
     "MessageItem",
 ]

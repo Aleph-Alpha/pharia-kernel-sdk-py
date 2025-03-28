@@ -2,14 +2,14 @@ from pydantic import BaseModel
 
 from pharia_skill import Csi
 from pharia_skill.message_stream import message_stream
-from pharia_skill.message_stream.response import (
+from pharia_skill.message_stream.writer import (
     MessageAppend,
     MessageBegin,
     MessageEnd,
-    Response,
+    MessageWriter,
 )
 from pharia_skill.testing import StubCsi
-from pharia_skill.testing.dev.streaming_output import DevResponse
+from pharia_skill.testing.dev.streaming_output import MessageRecorder
 
 
 def test_dev_response_can_be_used_to_test_skill_output():
@@ -18,18 +18,18 @@ def test_dev_response_can_be_used_to_test_skill_output():
         topic: str
 
     @message_stream
-    def my_skill(csi: Csi, response: Response[None], input: Input) -> None:
-        response.write(MessageBegin(role="assistant"))
-        response.write(MessageAppend(text="The meaning of life"))
-        response.write(MessageEnd(payload=None))
+    def my_skill(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
+        writer.begin_message("assistant")
+        writer.append_to_message("The meaning of life")
+        writer.end_message(payload=None)
 
     # When invoking it with the DevResponse
     csi = StubCsi()
-    response = DevResponse[None]()
-    my_skill(csi, response, Input(topic="The meaning of life"))
+    writer = MessageRecorder[None]()
+    my_skill(csi, writer, Input(topic="The meaning of life"))
 
     # Then the items can be read from the DevResponse
-    assert response.items == [
+    assert writer.items == [
         MessageBegin(role="assistant"),
         MessageAppend(text="The meaning of life"),
         MessageEnd(payload=None),

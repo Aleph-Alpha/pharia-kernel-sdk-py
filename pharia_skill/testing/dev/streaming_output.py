@@ -1,26 +1,26 @@
-from pharia_skill.message_stream.response import MessageItem, Payload, Response
+from pharia_skill.message_stream.writer import MessageItem, MessageWriter, Payload
 
 
-class DevResponse(Response[Payload]):
-    """A response that can be passed into a `message_stream` skill at testing time.
+class MessageRecorder(MessageWriter[Payload]):
+    """A message writer that can be passed into a `message_stream` skill at testing time.
 
     It allows to inspect the output that a skill produces.
 
     Example::
 
         from pharia_skill import Csi, message_stream, MessageAppend, MessageBegin, MessageEnd
-        from pharia_skill.testing import Response, DevResponse
+        from pharia_skill.testing import MessageWriter, MessageRecorder
 
         @message_stream
-        def my_skill(csi: Csi, response: DevResponse, input: Input) -> None:
+        def my_skill(csi: Csi, writer: MessageWriter, input: Input) -> None:
             ...
 
         def test_my_skill():
             csi = DevCsi()
-            response = DevResponse()
+            writer = MessageRecorder()
             input = Input(topic="The meaning of life")
-            my_skill(csi, response, input)
-            assert response.items == [
+            my_skill(csi, writer, input)
+            assert writer.items == [
                 MessageBegin(role="assistant"),
                 MessageAppend(text="The meaning of life"),
                 MessageEnd(payload=None),

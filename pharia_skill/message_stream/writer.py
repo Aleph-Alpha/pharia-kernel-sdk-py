@@ -24,7 +24,16 @@ class MessageEnd(Generic[Payload]):
 MessageItem = MessageBegin | MessageAppend | MessageEnd[Payload]
 
 
-class Response(Protocol, Generic[Payload]):
+class MessageWriter(Protocol, Generic[Payload]):
     """Write messages to the output stream."""
 
     def write(self, item: MessageItem[Payload]) -> None: ...
+
+    def begin_message(self, role: str | None = None) -> None:
+        self.write(MessageBegin(role))
+
+    def append_to_message(self, text: str) -> None:
+        self.write(MessageAppend(text))
+
+    def end_message(self, payload: Payload | None = None) -> None:
+        self.write(MessageEnd(payload))

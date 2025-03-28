@@ -56,7 +56,7 @@ from .message_stream import (
     MessageBegin,
     MessageEnd,
     MessageItem,
-    Response,
+    MessageWriter,
     message_stream,
 )
 from .skill import skill
@@ -106,7 +106,7 @@ __all__ = [
     "Modality",
     "NoLogprobs",
     "Role",
-    "Response",
+    "MessageWriter",
     "SampledLogprobs",
     "SearchFilter",
     "SearchRequest",
