@@ -32,6 +32,7 @@ def message_stream(
         from pharia_skill import Csi, ChatParams, Message, message_stream, Response, MessageBegin, MessageAppend, MessageEnd
         from pydantic import BaseModel
         from pharia_skill.csi.inference import FinishReason
+
         class Input(BaseModel):
             topic: str
 

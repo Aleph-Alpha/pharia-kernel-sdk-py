@@ -71,7 +71,7 @@ class StubCsi(Csi):
             assert result.haiku == "Whispers in the dark\nEchoes of a fleeting dream\nMeaning lost in space"
     """
 
-    def _completion_stream(
+    def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         class StubCompletionStreamResponse(CompletionStreamResponse):
@@ -89,7 +89,7 @@ class StubCsi(Csi):
 
         return StubCompletionStreamResponse(generator())
 
-    def _chat_stream(
+    def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         class StubChatStreamResponse(ChatStreamResponse):

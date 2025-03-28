@@ -49,7 +49,7 @@ def given_index() -> IndexPath:
 @pytest.mark.kernel
 def test_completion_stream(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
-    response = csi._completion_stream(model, "Say hello to Bob", params)
+    response = csi.completion_stream(model, "Say hello to Bob", params)
 
     stream = response.stream()
     assert next(stream).text is not None
@@ -64,7 +64,7 @@ def test_completion_stream(csi: Csi, model: str):
 def test_chat_stream(csi: Csi, model: str):
     params = ChatParams(max_tokens=64, logprobs="sampled")
     messages = [Message.user("Say hello to Bob")]
-    message = csi._chat_stream(model, messages, params)
+    message = csi.chat_stream(model, messages, params)
 
     assert message.role == "assistant"
 
@@ -85,7 +85,7 @@ def test_chat_stream(csi: Csi, model: str):
 def test_chat_stream_skip_streaming_message(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
-    message = csi._chat_stream(model, messages, params)
+    message = csi.chat_stream(model, messages, params)
 
     assert message.finish_reason() == FinishReason.STOP
     usage = message.usage()
@@ -97,7 +97,7 @@ def test_chat_stream_skip_streaming_message(csi: Csi, model: str):
 def test_chat_stream_after_consumed(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
-    message = csi._chat_stream(model, messages, params)
+    message = csi.chat_stream(model, messages, params)
 
     assert message.finish_reason() == FinishReason.STOP
     with pytest.raises(RuntimeError) as excinfo:

@@ -19,6 +19,7 @@ class Output(BaseModel):
 
 @skill
 def haiku(csi: Csi, input: Input) -> Output:
+    """We do a completion and chat request in the same skill to test both."""
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
     You are a poet who strictly speaks in haikus.<|eot_id|><|start_header_id|>user<|end_header_id|>
