@@ -48,7 +48,15 @@ def chat(
 
             return HaikuOutput(anything="anything")
     """
-    message_stream(to_message_stream(func))
+    decorated = message_stream(to_message_stream(func))
+
+    assert "MessageStream" not in func.__globals__, (
+        "Make sure to decorate with either `@chat` or `@message_stream` once."
+    )
+
+    func.__globals__["MessageStream"] = decorated.__globals__["MessageStream"]
+    del decorated.__globals__["MessageStream"]
+
     return func
 
 

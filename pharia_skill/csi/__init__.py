@@ -38,6 +38,7 @@ from .document_index import (
     Without,
 )
 from .inference import (
+    ChatEvent,
     ChatParams,
     ChatRequest,
     ChatResponse,
@@ -65,6 +66,7 @@ __all__ = [
     "AtOrAfter",
     "AtOrBefore",
     "Before",
+    "ChatEvent",
     "ChatParams",
     "ChatRequest",
     "ChatResponse",
