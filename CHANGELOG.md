@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.11.0...v0.11.1) (2025-03-28)
+
+
+### Features
+
+* store content for completion and chat stream ([761d341](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/761d341a6e13d6c4ce928bf7f3be415efb6539a5))
+
 ## [0.11.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.10.0...v0.11.0) (2025-03-28)
 
 
