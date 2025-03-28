@@ -5,14 +5,14 @@ from typing import Callable, Type, TypeVar
 from pydantic import BaseModel
 
 from pharia_skill import Csi
-from pharia_skill.message_stream.response import Payload, Response
+from pharia_skill.message_stream.writer import MessageWriter, Payload
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 
 
 def message_stream(
-    func: Callable[[Csi, Response[Payload], UserInput], None],
-) -> Callable[[Csi, Response[Payload], UserInput], None]:
+    func: Callable[[Csi, MessageWriter[Payload], UserInput], None],
+) -> Callable[[Csi, MessageWriter[Payload], UserInput], None]:
     """Turn a function with a specific signature into a (streaming) skill that can be deployed on Pharia Kernel.
 
     By using the response object, a Skill decorated with `@message_stream` can return intermediate results
@@ -61,7 +61,7 @@ def message_stream(
     )
     from pharia_skill.bindings.imports import streaming_output as wit
     from pharia_skill.bindings.types import Err
-    from pharia_skill.message_stream.wit_response import WitResponse
+    from pharia_skill.message_stream.wit_writer import WitMessageWriter
     from pharia_skill.wit_csi.csi import WitCsi
 
     signature = list(inspect.signature(func).parameters.values())
@@ -89,8 +89,8 @@ def message_stream(
             except Exception:
                 raise Err(Error_InvalidInput(traceback.format_exc()))
             try:
-                with WitResponse[Payload](output) as response:
-                    func(WitCsi(), response, validated)
+                with WitMessageWriter[Payload](output) as writer:
+                    func(WitCsi(), writer, validated)
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))
 

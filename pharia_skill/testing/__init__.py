@@ -8,7 +8,7 @@ The CSI which is available to the Skill at runtime can be substituted with a Dev
 Developers can write tests, step through their Python code and inspect the state of variables.
 """
 
-from .dev import DevCsi, DevResponse
+from .dev import DevCsi, MessageRecorder
 from .stub import StubCsi
 
-__all__ = ["StubCsi", "DevCsi", "DevResponse"]
+__all__ = ["StubCsi", "DevCsi", "MessageRecorder"]
