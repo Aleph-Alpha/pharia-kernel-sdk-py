@@ -20,7 +20,7 @@ class SkillOutput(BaseModel):
 def haiku_stream(csi: Csi, writer: MessageWriter[SkillOutput], input: Input) -> None:
     model = "llama-3.1-8b-instruct"
     prompt = f"Generate a haiku about {input.root}"
-    params = CompletionParams()
+    params = CompletionParams(max_tokens=50)
     with csi.completion_stream(model, prompt, params) as response:
         writer.begin_message()
         for event in response.stream():
