@@ -1,7 +1,5 @@
 """
 Provided host types for supporting running streaming skills.
-For some reason cannot enable unstable here
-@unstable(feature = streaming)
 """
 from typing import TypeVar, Generic, Union, Optional, Protocol, Tuple, List, Any, Self
 from types import TracebackType
@@ -37,10 +35,6 @@ class MessageItem_MessageEnd:
 
 
 MessageItem = Union[MessageItem_MessageBegin, MessageItem_MessageAppend, MessageItem_MessageEnd]
-"""
-For some reason cannot enable unstable here
-@unstable(feature = streaming)
-"""
 
 
 class StreamOutput:

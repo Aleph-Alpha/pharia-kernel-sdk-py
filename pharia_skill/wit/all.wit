@@ -3,7 +3,5 @@
 /// This world does not exist in the Kernel runtime itself, only in the SDK.
 world skill-all {
     include skill;
-
-    @unstable(feature = streaming)
     include message-stream-skill;
 }
