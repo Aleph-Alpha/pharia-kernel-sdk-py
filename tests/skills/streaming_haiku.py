@@ -2,13 +2,13 @@ from pydantic import BaseModel
 
 from pharia_skill import ChatParams, Csi, Message
 from pharia_skill.csi.inference import FinishReason
-from pharia_skill.csi.streaming_output import (
+from pharia_skill.message_stream import message_stream
+from pharia_skill.message_stream.response import (
     MessageAppend,
     MessageBegin,
     MessageEnd,
     Response,
 )
-from pharia_skill.message_stream import message_stream
 
 
 class Input(BaseModel):

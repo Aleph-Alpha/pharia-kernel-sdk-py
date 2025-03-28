@@ -8,9 +8,9 @@ from pharia_skill import Csi
 from pharia_skill.bindings import exports
 from pharia_skill.bindings.imports import streaming_output as wit
 from pharia_skill.bindings.types import Err
-from pharia_skill.csi.streaming_output import Response
+from pharia_skill.message_stream.response import Response
+from pharia_skill.message_stream.wit_response import WitResponse
 from pharia_skill.wit_csi.csi import WitCsi
-from pharia_skill.wit_csi.streaming_output import WitResponse
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 
