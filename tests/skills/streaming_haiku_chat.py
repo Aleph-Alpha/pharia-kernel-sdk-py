@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from pydantic.root_model import RootModel
 
 from pharia_skill import ChatParams, Csi, Message
 from pharia_skill.csi.inference import FinishReason
@@ -11,7 +12,7 @@ from pharia_skill.message_stream.response import (
 )
 
 
-class Input(BaseModel):
+class Input(RootModel[str]):
     root: str
 
 

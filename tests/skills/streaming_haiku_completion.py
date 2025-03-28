@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from pharia_skill import CompletionParams, Csi
 from pharia_skill.csi.inference import FinishReason
@@ -11,7 +11,7 @@ from pharia_skill.message_stream.response import (
 )
 
 
-class Input(BaseModel):
+class Input(RootModel[str]):
     root: str
 
 

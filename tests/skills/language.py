@@ -2,12 +2,12 @@
 Call into the language detection interface to test it in WASM
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from pharia_skill import Csi, Language, skill
 
 
-class Input(BaseModel):
+class Input(RootModel[str]):
     root: str
 
 
