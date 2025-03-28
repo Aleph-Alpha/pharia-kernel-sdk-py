@@ -107,7 +107,7 @@ class DevCsi(Csi):
     def __init__(self) -> None:
         self.client: CsiClient = Client()
 
-    def _completion_stream(
+    def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         body = CompletionRequestSerializer(
@@ -116,7 +116,7 @@ class DevCsi(Csi):
         events = self.stream("completion_stream", body)
         return DevCompletionStreamResponse(events)
 
-    def _chat_stream(
+    def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         body = ChatRequestSerializer(

@@ -8,7 +8,7 @@ class DevResponse(Response[Payload]):
 
     Example::
 
-        from pharia_skill import Csi, message_stream
+        from pharia_skill import Csi, message_stream, MessageAppend, MessageBegin, MessageEnd
         from pharia_skill.testing import Response, DevResponse
 
         @message_stream

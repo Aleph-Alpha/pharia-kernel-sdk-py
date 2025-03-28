@@ -51,6 +51,14 @@ from .csi import (
     WithOneOf,
     Without,
 )
+from .message_stream import (
+    MessageAppend,
+    MessageBegin,
+    MessageEnd,
+    MessageItem,
+    Response,
+    message_stream,
+)
 from .skill import skill
 
 __all__ = [
@@ -88,11 +96,17 @@ __all__ = [
     "Logprob",
     "Logprobs",
     "Message",
+    "MessageAppend",
+    "MessageBegin",
+    "MessageEnd",
+    "MessageItem",
+    "message_stream",
     "MetadataFilter",
     "FilterCondition",
     "Modality",
     "NoLogprobs",
     "Role",
+    "Response",
     "SampledLogprobs",
     "SearchFilter",
     "SearchRequest",

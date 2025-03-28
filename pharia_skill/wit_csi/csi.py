@@ -54,14 +54,14 @@ class WitCsi(Csi):
     which are automatically generated from the WIT world via `componentize-py`.
     """
 
-    def _completion_stream(
+    def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         request = completion_request_to_wit(CompletionRequest(model, prompt, params))
         stream = wit_inference.CompletionStream(request)
         return WitCompletionStreamResponse(stream)
 
-    def _chat_stream(
+    def chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         request = chat_request_to_wit(ChatRequest(model, messages, params))
