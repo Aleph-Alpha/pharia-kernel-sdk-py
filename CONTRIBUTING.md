@@ -28,7 +28,7 @@ Generate the bindings of the Skill WIT world:
 ```shell
 cd pharia_skill
 rm -rf bindings
-componentize-py -d wit -w skill bindings --world-module bindings .
+componentize-py -d wit -w skill-all bindings --world-module bindings .
 cd ..
 ```
 
@@ -37,7 +37,7 @@ cd ..
 To generate bindings with all unstable feature, replace the third command with
 
 ```shell
-componentize-py --all-features -d wit -w skill bindings --world-module bindings .
+componentize-py --all-features -d wit -w skill-all bindings --world-module bindings .
 ```
 
 When generating bindings for unstable features, we must not use these bindings in the library until they are stabilized.
