@@ -2,10 +2,10 @@ import inspect
 from types import GeneratorType
 from typing import Any, Callable, Generator, TypeVar
 
-import pytest
 from pydantic import BaseModel
 
-from pharia_skill import ChatParams, Csi, Message, message_stream
+from pharia_skill import Csi
+from pharia_skill.stream.message_stream_decorator import message_stream
 from pharia_skill.csi.inference import (
     ChatEvent,
     FinishReason,
@@ -13,10 +13,7 @@ from pharia_skill.csi.inference import (
     MessageBegin,
     TokenUsage,
 )
-from pharia_skill.stream import MessageAppend as WriterMessageAppend
-from pharia_skill.stream import MessageEnd as WriterMessageEnd
 from pharia_skill.stream.writer import MessageWriter
-from pharia_skill.testing import MessageRecorder, StubCsi
 
 Input = TypeVar("Input", bound=BaseModel)
 Output = TypeVar("Output", bound=BaseModel)
@@ -112,82 +109,6 @@ class GeneratorWrapper:
             raise ValueError
         self.gen = gen
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         self.value = yield from self.gen
         return self.value
-
-
-def test_generator_wrapper_stores_return_value():
-    # given a generator that yields and returns
-    def gen() -> Generator[int, None, int]:
-        yield 1
-        return 2
-
-    # when we wrap it
-    wrapper = GeneratorWrapper(gen())
-
-    # Then we can iterate over the wrapper
-    assert list(wrapper) == [1]
-
-    assert wrapper.value == 2
-
-
-def test_generator_wrapper_without_return_value():
-    # given a generator that yields
-    def gen() -> Generator[int, None, None]:
-        yield 1
-
-    wrapper = GeneratorWrapper(gen())
-    assert list(wrapper) == [1]
-    assert wrapper.value is None
-
-
-def test_generator_wrapper_with_no_yield():
-    # given a generator that yields
-    def gen() -> int:
-        return 2
-
-    with pytest.raises(ValueError):
-        GeneratorWrapper(gen())  # type: ignore
-
-
-def test_haiku_stream_with_return():
-    # Given a function written against the chat skill interface
-    class HaikuInput(BaseModel):
-        topic: str
-
-    class HaikuOutput(BaseModel):
-        anything: str
-
-    def haiku_stream_with_return(
-        csi: Csi, input: HaikuInput
-    ) -> Generator[ChatEvent, None, HaikuOutput]:
-        model = "llama-3.1-8b-instruct"
-        messages = [
-            Message.system("You are a poet who strictly speaks in haikus."),
-            Message.user(input.topic),
-        ]
-        params = ChatParams()
-        with csi.chat_stream(model, messages, params) as response:
-            yield from response.stream()
-
-        return HaikuOutput(anything="anything")
-
-    # When transforming it to a message stream skill
-    skill = message_stream(to_message_stream(haiku_stream_with_return))
-
-    # Then it can be invoked with the MessageWriter and StubCsi
-    csi = StubCsi()
-    writer = MessageRecorder[HaikuOutput]()
-    skill(csi, writer, HaikuInput(topic="The meaning of life"))
-
-    # And the messages are recorded
-    assert writer.items == [
-        WriterMessageAppend(
-            text="You are a poet who strictly speaks in haikus.",
-        ),
-        WriterMessageAppend(
-            text="The meaning of life",
-        ),
-        WriterMessageEnd(payload=HaikuOutput(anything="anything")),
-    ]
