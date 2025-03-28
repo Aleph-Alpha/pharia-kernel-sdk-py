@@ -22,6 +22,16 @@ RESPONSE_CODE=$(curl -w '%{http_code}' -s -o output.result \
 cat output.result
 
 if [ "$RESPONSE_CODE" = "200" ]; then
+    # assert that there is at least one "event: message" in the output
+    if [ $(grep -c "event: message" output.result) -eq 0 ]; then
+        echo "expected at least one event: message"
+        exit 1
+    fi
+    # assert that there is no error event
+    if [ $(grep -c "event: error" output.result) -ne 0 ]; then
+        echo "unexpected error event: $(grep -c "event: error" output.result)"
+        exit 1
+    fi
     exit 0
 else
     echo "unexpected response code: RESPONSE_CODE='$RESPONSE_CODE'"
