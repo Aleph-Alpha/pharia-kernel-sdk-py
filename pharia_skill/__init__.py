@@ -58,6 +58,7 @@ from .stream import (
     MessageEnd,
     MessageItem,
     MessageWriter,
+    chat,
     message_stream,
 )
 
@@ -66,6 +67,7 @@ __all__ = [
     "AtOrAfter",
     "AtOrBefore",
     "Before",
+    "chat",
     "ChatParams",
     "ChatRequest",
     "ChatResponse",
