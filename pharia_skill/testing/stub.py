@@ -102,9 +102,9 @@ class StubCsi(Csi):
 
         def generator() -> Generator[ChatEvent, None, None]:
             total_usage = 0
-            if messages:
-                yield MessageBegin(messages[0].role)
-                content = messages[0].content
+            yield MessageBegin(messages[0].role)
+            for message in messages:
+                content = message.content
                 total_usage += len(content)
                 yield MessageAppend(content, [])
             yield FinishReason.STOP
