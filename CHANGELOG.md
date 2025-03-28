@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.10.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.9.0...v0.10.0) (2025-03-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename interface to MessageWriter
+
+### Features
+
+* rename interface to MessageWriter ([f401ddc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f401ddc68bcf1bda48011ffe4ae54fbe01733b83))
+
+
+### Documentation
+
+* add example for message stream skill ([88afe54](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/88afe54387689da62c6ef96c7fa8ee8ee6ff601f))
+
 ## [0.9.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.8.1...v0.9.0) (2025-03-28)
 
 
