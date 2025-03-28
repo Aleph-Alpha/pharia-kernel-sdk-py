@@ -20,7 +20,7 @@ class SkillOutput(BaseModel):
 
 
 @message_stream
-def haiku_stream(csi: Csi, response: Response, input: Input) -> None:
+def haiku_stream(csi: Csi, response: Response[None], input: Input) -> None:
     with csi._chat_stream(
         model="llama-3.1-8b-instruct",
         messages=[
@@ -32,6 +32,4 @@ def haiku_stream(csi: Csi, response: Response, input: Input) -> None:
         response.write(MessageBegin(chat_response.role))
         for event in chat_response.stream():
             response.write(MessageAppend(event.content))
-        response.write(
-            MessageEnd(SkillOutput(finish_reason=chat_response.finish_reason()))
-        )
+        response.write(MessageEnd(None))

@@ -8,7 +8,7 @@ from pharia_skill import Csi
 from pharia_skill.bindings import exports
 from pharia_skill.bindings.imports import streaming_output as wit
 from pharia_skill.bindings.types import Err
-from pharia_skill.message_stream.response import Response
+from pharia_skill.message_stream.response import Payload, Response
 from pharia_skill.message_stream.wit_response import WitResponse
 from pharia_skill.wit_csi.csi import WitCsi
 
@@ -16,8 +16,8 @@ UserInput = TypeVar("UserInput", bound=BaseModel)
 
 
 def message_stream(
-    func: Callable[[Csi, Response, UserInput], None],
-) -> Callable[[Csi, Response, UserInput], None]:
+    func: Callable[[Csi, Response[Payload], UserInput], None],
+) -> Callable[[Csi, Response[Payload], UserInput], None]:
     """Turn a function with a specific signature into a (streaming) skill that can be deployed on Pharia Kernel.
 
     By using the response object, a Skill decorated with `@message_stream` can return intermediate results
@@ -31,13 +31,15 @@ def message_stream(
 
         from pharia_skill import Csi, ChatParams, Message, message_stream, Response, MessageBegin, MessageAppend, MessageEnd
         from pydantic import BaseModel
-
+        from pharia_skill.csi.inference import FinishReason
         class Input(BaseModel):
             topic: str
 
+        class SkillOutput(BaseModel):
+            finish_reason: FinishReason
 
         @message_stream
-        def haiku_stream(csi: Csi, response: Response, input: Input) -> None:
+        def haiku_stream(csi: Csi, response: Response[SkillOutput], input: Input) -> None:
             with csi.chat_stream(
                 model="llama-3.1-8b-instruct",
                 messages=[
@@ -50,7 +52,7 @@ def message_stream(
                 response.write(MessageAppend(chat_response.message.content))
                 for event in chat_response.stream():
                     response.write(MessageAppend(event.content))
-                response.write(MessageEnd(payload=None))
+                response.write(MessageEnd(payload=SkillOutput(finish_reason=chat_response.finish_reason())))
     """
     # The import is inside the decorator to ensure the imports only run when the decorator is interpreted.
     # This is because we can only import them when targeting the `message-stream-skill` world.
@@ -86,7 +88,7 @@ def message_stream(
             except Exception:
                 raise Err(Error_InvalidInput(traceback.format_exc()))
             try:
-                with WitResponse(output) as response:
+                with WitResponse[Payload](output) as response:
                     func(WitCsi(), response, validated)
             except Exception:
                 raise Err(Error_Internal(traceback.format_exc()))

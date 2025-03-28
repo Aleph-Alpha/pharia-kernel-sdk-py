@@ -1,9 +1,7 @@
-from typing import Any
-
 from pharia_skill.message_stream.response import MessageItem, Payload, Response
 
 
-class DevResponse(Response):
+class DevResponse(Response[Payload]):
     """A response that can be passed into a `message_stream` skill at testing time.
 
     It allows to inspect the output that a skill produces.
@@ -30,7 +28,7 @@ class DevResponse(Response):
     """
 
     def __init__(self) -> None:
-        self.items: list[Any] = []
+        self.items: list[MessageItem[Payload]] = []
 
     def write(self, item: MessageItem[Payload]) -> None:
         self.items.append(item)

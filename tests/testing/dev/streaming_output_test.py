@@ -18,14 +18,14 @@ def test_dev_response_can_be_used_to_test_skill_output():
         topic: str
 
     @message_stream
-    def my_skill(csi: Csi, response: Response, input: Input) -> None:
+    def my_skill(csi: Csi, response: Response[None], input: Input) -> None:
         response.write(MessageBegin(role="assistant"))
         response.write(MessageAppend(text="The meaning of life"))
         response.write(MessageEnd(payload=None))
 
     # When invoking it with the DevResponse
     csi = StubCsi()
-    response = DevResponse()
+    response = DevResponse[None]()
     my_skill(csi, response, Input(topic="The meaning of life"))
 
     # Then the items can be read from the DevResponse

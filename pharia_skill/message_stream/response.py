@@ -3,7 +3,7 @@ from typing import Generic, Protocol, TypeVar
 
 from pydantic import BaseModel
 
-Payload = TypeVar("Payload", bound=BaseModel)
+Payload = TypeVar("Payload", bound=BaseModel | None)
 
 
 @dataclass
@@ -24,7 +24,7 @@ class MessageEnd(Generic[Payload]):
 MessageItem = MessageBegin | MessageAppend | MessageEnd[Payload]
 
 
-class Response(Protocol):
+class Response(Protocol, Generic[Payload]):
     """Write messages to the output stream."""
 
     def write(self, item: MessageItem[Payload]) -> None: ...
