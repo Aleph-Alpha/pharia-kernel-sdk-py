@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.9.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.8.1...v0.9.0) (2025-03-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* move decorator to skill module
+
+### Features
+
+* add DevResponse to test stream skill output ([22676e5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/22676e50e05b117d5e0b2a5207c97c7f24f3ab81))
+* dynamically calculate wit world when building component ([c4f0e44](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c4f0e4475a5f5ce44c9c2c0dc9863880a48344dc))
+* make response generic over payload ([8c9e0dd](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8c9e0dd77daea0154da7f66a85455f37be05fe6b))
+* make sure message stream decorator is used only once ([c773550](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c7735506326484fef87b196603192694934d44bf))
+* stabilize streaming ([701b8db](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/701b8dbd98deab0c80160a73153d68d6cc42f70f))
+* upgrade to pharia:skill@0.3.6 ([5da7d21](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5da7d2115a447afa377ea07042db8cd51bc35afd))
+
+
+### Bug Fixes
+
+* only import bindings for message-stream-skill inside message_stream decorator ([62ee9da](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/62ee9daa003c933ad7049b9fe6c5ad6a24054744))
+* target new 'message-stream' endpoint ([32fd184](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/32fd1841a00856c9c3800f5ea383e736f5658b93))
+
+
+### Documentation
+
+* generate bindings for all wit worlds ([0cefa2f](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0cefa2ffba9740eb77c3f3bb79fd4d1927e17ad5))
+* specify code example in message stream docstring ([8442b49](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8442b49f5881da434f5d50d08cdd549f97221e7f))
+* specify why bindings imports are inside decorator ([7406e2c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/7406e2c475cf94f4136a9cbff36718eb4e25e167))
+
+
+### Code Refactoring
+
+* move decorator to skill module ([f011b21](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f011b2192aeef22cf16ea68c2828baf5e77138e1))
+
 ## [0.8.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.8.0...v0.8.1) (2025-03-27)
 
 
