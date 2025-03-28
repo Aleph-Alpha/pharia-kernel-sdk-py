@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 
 from pharia_skill import Csi
-from pharia_skill.csi.streaming_output import (
+from pharia_skill.message_stream import message_stream
+from pharia_skill.message_stream.response import (
     MessageAppend,
     MessageBegin,
     MessageEnd,
     Response,
 )
-from pharia_skill.message_stream import message_stream
 from pharia_skill.testing import StubCsi
 from pharia_skill.testing.dev.streaming_output import DevResponse
 

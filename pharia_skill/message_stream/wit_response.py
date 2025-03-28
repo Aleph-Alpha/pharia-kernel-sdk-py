@@ -2,7 +2,7 @@ from types import TracebackType
 from typing import Self
 
 from ..bindings.imports import streaming_output as wit
-from ..csi.streaming_output import (
+from .response import (
     MessageAppend,
     MessageBegin,
     MessageEnd,

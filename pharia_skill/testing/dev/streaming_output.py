@@ -1,6 +1,6 @@
 from typing import Any
 
-from pharia_skill.csi.streaming_output import MessageItem, Payload, Response
+from pharia_skill.message_stream.response import MessageItem, Payload, Response
 
 
 class DevResponse(Response):
