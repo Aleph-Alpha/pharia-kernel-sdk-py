@@ -5,12 +5,7 @@ from typing import Callable, Type, TypeVar
 from pydantic import BaseModel
 
 from pharia_skill import Csi
-from pharia_skill.bindings import exports
-from pharia_skill.bindings.imports import streaming_output as wit
-from pharia_skill.bindings.types import Err
 from pharia_skill.message_stream.response import Payload, Response
-from pharia_skill.message_stream.wit_response import WitResponse
-from pharia_skill.wit_csi.csi import WitCsi
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 
@@ -59,10 +54,15 @@ def message_stream(
     # This is because we can only import them when targeting the `message-stream-skill` world.
     # If we target the `skill` world with a component and have the imports for the `message-stream-skill` world
     # in this module at the top-level, we will get a build error in case this module is in the module graph.
+    from pharia_skill.bindings import exports
     from pharia_skill.bindings.exports.message_stream import (
         Error_Internal,
         Error_InvalidInput,
     )
+    from pharia_skill.bindings.imports import streaming_output as wit
+    from pharia_skill.bindings.types import Err
+    from pharia_skill.message_stream.wit_response import WitResponse
+    from pharia_skill.wit_csi.csi import WitCsi
 
     signature = list(inspect.signature(func).parameters.values())
     assert len(signature) == 3, (
