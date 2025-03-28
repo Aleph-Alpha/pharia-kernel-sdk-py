@@ -14,17 +14,17 @@ from .response import (
 
 def message_item_to_wit(item: MessageItem[Payload]) -> wit.MessageItem:
     match item:
-        case MessageBegin():
-            attributes = wit.BeginAttributes(role=item.role)
+        case MessageBegin(role):
+            attributes = wit.BeginAttributes(role=role)
             return wit.MessageItem_MessageBegin(value=attributes)
-        case MessageAppend():
-            return wit.MessageItem_MessageAppend(value=item.text)
-        case MessageEnd():
-            data = item.payload.model_dump_json().encode() if item.payload else None
+        case MessageAppend(text):
+            return wit.MessageItem_MessageAppend(value=text)
+        case MessageEnd(payload):
+            data = payload.model_dump_json().encode() if payload is not None else None
             return wit.MessageItem_MessageEnd(value=data)
 
 
-class WitResponse(Response):
+class WitResponse(Response[Payload]):
     def __init__(self, output: wit.StreamOutput):
         self.inner = output
 
