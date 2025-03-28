@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.11.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.10.0...v0.11.0) (2025-03-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* add method for ChatStreamResponse to stream the full message
+
+### Features
+
+* add `chat` decorator ([fd08351](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/fd083510c2f3c90657dc9f69d509c1f7f4bb1818))
+* add method for ChatStreamResponse to stream the full message ([be98a8c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/be98a8c5bc64d3af9c9c2439de42761c2929a401))
+
+
+### Bug Fixes
+
+* inject MessageStream into the correct scope ([0bec317](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0bec3175327e53c709228abada08af68e6680cc1))
+* mask traceback if publish failed ([410c28d](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/410c28de2e98f59a36419841ad1528de9f2b20b7))
+* set max tokens to limit execution duration ([f0e505e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f0e505e2ed081dd59beb33b9de2606b2dcc99ecf))
+* use root model for chat skill to be compliant with test script ([2133690](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2133690cc0bdf9aa14030425b1f6a6933c2ef670))
+* verify input_model is a type before checking subclass ([05e0ee3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/05e0ee3d1d68adbf12c24a97b037a903c057f32a))
+
+
+### Documentation
+
+* add example for using `chat` decorator ([2e4cc4a](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2e4cc4a437295fc3e3499fe2eae3b69110d29d5f))
+* update code example to new methods class names ([ca2767b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ca2767bb3caf8a23e0693ac1a576ef9671a92c86))
+
 ## [0.10.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.9.0...v0.10.0) (2025-03-28)
 
 
