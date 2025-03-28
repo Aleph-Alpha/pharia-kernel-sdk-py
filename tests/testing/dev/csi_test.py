@@ -49,12 +49,16 @@ def given_index() -> IndexPath:
 
 @pytest.mark.kernel
 def test_completion_stream(csi: Csi, model: str):
-    params = CompletionParams(max_tokens=64)
+    params = CompletionParams(max_tokens=64, logprobs="sampled")
     response = csi.completion_stream(model, "Say hello to Bob", params)
 
     stream = response.stream()
-    assert next(stream).text is not None
-    assert next(stream).text is not None
+    first_chunk = next(stream).text
+    assert first_chunk is not None
+    second_chunk = next(stream).text
+    assert second_chunk is not None
+    assert first_chunk + second_chunk == response.text()
+    assert len(response.logprobs()) == 64
     assert response.finish_reason() == FinishReason.LENGTH
     usage = response.usage()
     assert usage.prompt == 4
@@ -74,8 +78,8 @@ def test_chat_stream(csi: Csi, model: str):
     for m in message.message_content():
         content += m.content
         logprobs += m.logprobs
-    assert content == "Hello Bob! How are you today?"
-    assert len(logprobs) == 9
+    assert content == message.content()
+    assert len(logprobs) == len(message.logprobs())
     assert message.finish_reason() == FinishReason.STOP
     usage = message.usage()
     assert usage.prompt == 14
@@ -97,10 +101,12 @@ def test_chat_stream_full_message(csi: Csi, model: str):
 
 @pytest.mark.kernel
 def test_chat_stream_skip_streaming_message(csi: Csi, model: str):
-    params = ChatParams(max_tokens=64)
+    params = ChatParams(max_tokens=64, logprobs="sampled")
     messages = [Message.user("Say hello to Bob")]
     message = csi.chat_stream(model, messages, params)
 
+    assert message.content() == "Hello Bob! How are you today?"
+    assert len(message.logprobs()) == 27
     assert message.finish_reason() == FinishReason.STOP
     usage = message.usage()
     assert usage.prompt == 14
