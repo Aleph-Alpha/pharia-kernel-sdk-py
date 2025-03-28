@@ -1,7 +1,14 @@
+"""
+This module references bindings which can only be resolved if targeting the `message-stream-skill` world.
+
+Having this module in the import graph when targeting the `skill` world will lead to a build error.
+"""
+
 from types import TracebackType
 from typing import Self
 
-from ..bindings.imports import streaming_output as wit
+from pharia_skill.bindings.imports import streaming_output as wit
+
 from .response import (
     MessageAppend,
     MessageBegin,
