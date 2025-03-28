@@ -18,8 +18,19 @@ UserInput = TypeVar("UserInput", bound=BaseModel)
 def message_stream(
     func: Callable[[Csi, Response, UserInput], None],
 ) -> Callable[[Csi, Response, UserInput], None]:
-    """Decorate a function to write messages to the output stream."""
+    """Turn a function with a specific signature into a (streaming) skill that can be deployed on Pharia Kernel.
 
+    By using the response object, a Skill decorated with `@message_stream` can return intermediate results
+    that are streamed to the caller.
+
+    The decorated function must be typed. It must have exactly three arguments. The first argument
+    must be of type `Csi`. The second argument must be a `Response` object. The third argument
+    must be a Pydantic model. The function must not return anything.
+    """
+    # The import is inside the decorator to ensure the imports only run when the decorator is interpreted.
+    # This is because we can only import them when targeting the `message-stream-skill` world.
+    # If we target the `skill` world with a component and have the imports for the `message-stream-skill` world
+    # in this module at the top-level, we will get a build error in case this module is in the module graph.
     from pharia_skill.bindings.exports.message_stream import (
         Error_Internal,
         Error_InvalidInput,
