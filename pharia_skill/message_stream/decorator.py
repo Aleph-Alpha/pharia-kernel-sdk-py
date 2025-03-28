@@ -70,8 +70,8 @@ def message_stream(
     )
 
     input_model: Type[UserInput] = signature[2].annotation
-    assert issubclass(input_model, BaseModel), (
-        "The third argument must be a Pydantic model"
+    assert isinstance(input_model, type) and issubclass(input_model, BaseModel), (
+        "The third argument must be a Pydantic model, found: " + str(input_model)
     )
 
     assert func.__annotations__.get("return") is None, (
