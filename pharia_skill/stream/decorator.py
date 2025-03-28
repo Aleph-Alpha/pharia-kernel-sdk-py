@@ -5,7 +5,7 @@ from typing import Callable, Type, TypeVar
 from pydantic import BaseModel
 
 from pharia_skill import Csi
-from pharia_skill.message_stream.writer import MessageWriter, Payload
+from pharia_skill.stream.writer import MessageWriter, Payload
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 
@@ -59,7 +59,7 @@ def message_stream(
     )
     from pharia_skill.bindings.imports import streaming_output as wit
     from pharia_skill.bindings.types import Err
-    from pharia_skill.message_stream.wit_writer import WitMessageWriter
+    from pharia_skill.stream.wit_writer import WitMessageWriter
     from pharia_skill.wit_csi.csi import WitCsi
 
     signature = list(inspect.signature(func).parameters.values())
