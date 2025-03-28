@@ -26,6 +26,31 @@ def message_stream(
     The decorated function must be typed. It must have exactly three arguments. The first argument
     must be of type `Csi`. The second argument must be a `Response` object. The third argument
     must be a Pydantic model. The function must not return anything.
+
+    Example::
+
+        from pharia_skill import Csi, ChatParams, Message, message_stream, Response, MessageBegin, MessageAppend, MessageEnd
+        from pydantic import BaseModel
+
+        class Input(BaseModel):
+            topic: str
+
+
+        @message_stream
+        def haiku_stream(csi: Csi, response: Response, input: Input) -> None:
+            with csi.chat_stream(
+                model="llama-3.1-8b-instruct",
+                messages=[
+                    Message.system("You are a poet who strictly speaks in haikus."),
+                    Message.user(input.topic),
+                ],
+                params=ChatParams(),
+            ) as chat_response:
+                response.write(MessageBegin(role=chat_response.role))
+                response.write(MessageAppend(chat_response.message.content))
+                for event in chat_response.stream():
+                    response.write(MessageAppend(event.content))
+                response.write(MessageEnd(payload=None))
     """
     # The import is inside the decorator to ensure the imports only run when the decorator is interpreted.
     # This is because we can only import them when targeting the `message-stream-skill` world.
