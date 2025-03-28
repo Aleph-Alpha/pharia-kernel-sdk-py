@@ -13,9 +13,9 @@ from pharia_skill.csi.inference import (
     MessageBegin,
     TokenUsage,
 )
-from pharia_skill.message_stream import MessageAppend as WriterMessageAppend
-from pharia_skill.message_stream import MessageEnd as WriterMessageEnd
-from pharia_skill.message_stream.writer import MessageWriter
+from pharia_skill.stream import MessageAppend as WriterMessageAppend
+from pharia_skill.stream import MessageEnd as WriterMessageEnd
+from pharia_skill.stream.writer import MessageWriter
 from pharia_skill.testing import MessageRecorder, StubCsi
 
 Input = TypeVar("Input", bound=BaseModel)

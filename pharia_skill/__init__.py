@@ -51,7 +51,8 @@ from .csi import (
     WithOneOf,
     Without,
 )
-from .message_stream import (
+from .skill import skill
+from .stream import (
     MessageAppend,
     MessageBegin,
     MessageEnd,
@@ -59,7 +60,6 @@ from .message_stream import (
     MessageWriter,
     message_stream,
 )
-from .skill import skill
 
 __all__ = [
     "After",

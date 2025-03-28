@@ -3,8 +3,8 @@ from pydantic.root_model import RootModel
 
 from pharia_skill import ChatParams, Csi, Message
 from pharia_skill.csi.inference import FinishReason
-from pharia_skill.message_stream import message_stream
-from pharia_skill.message_stream.writer import (
+from pharia_skill.stream import message_stream
+from pharia_skill.stream.writer import (
     MessageWriter,
 )
 
