@@ -3,6 +3,7 @@ import logging
 import os
 import platform
 import subprocess
+import sys
 import tarfile
 import zipfile
 from pathlib import Path
@@ -163,7 +164,8 @@ class PhariaSkillCli:
 
         if not os.path.exists(skill):
             logger.error(f"No such file: {skill}")
-            return
+            sys.exit(1)
+
         command = [
             self.PHARIA_SKILL_CLI_PATH,
             "publish",
@@ -180,4 +182,8 @@ class PhariaSkillCli:
             tag,
             skill,
         ]
-        subprocess.run(command, check=True)
+
+        try:
+            subprocess.run(command, check=True)
+        except subprocess.CalledProcessError:
+            sys.exit(1)
