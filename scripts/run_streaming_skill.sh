@@ -13,7 +13,7 @@ sleep 1
 
 echo "Executing Skill..."
 RESPONSE_CODE=$(curl -w '%{http_code}' -s -o output.result \
-                $PHARIA_KERNEL_ADDRESS/v1/skills/dev/$SKILL_NAME/stream \
+                $PHARIA_KERNEL_ADDRESS/v1/skills/dev/$SKILL_NAME/message-stream \
                 -H "Authorization: Bearer $PHARIA_AI_TOKEN" \
                 -H 'Content-Type: application/json' \
                 -d '{"root": "Kernel"}' )
