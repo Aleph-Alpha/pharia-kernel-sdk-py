@@ -50,10 +50,10 @@ def skill(
             response = csi.chat("llama-3.1-8b-instruct", [system, user], params)
             return Output(haiku=response.message.content.strip())
     """
-    # The import is inside the decorator to ensure the imports only run when the decorator is used.
+    # The import is inside the decorator to ensure the imports only run when the decorator is interpreted.
     # This is because we can only import them when targeting the `skill` world.
-    # Suppose we target the `message-stream` world and have the imports in this module at the top-level,
-    # then we will get a build error when the decorator module is imported somewhere.
+    # If we target the `message-stream-skill` world with a component and have the imports for the `skill` world
+    # in this module at the top-level, we will get a build error in case this module is in the module graph.
     from .bindings.exports.skill_handler import (
         Error_Internal,
         Error_InvalidInput,
