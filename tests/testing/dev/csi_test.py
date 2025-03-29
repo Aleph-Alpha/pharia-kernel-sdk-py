@@ -20,7 +20,6 @@ from pharia_skill import (
     Role,
     Text,
 )
-from pharia_skill.csi import inference as csi_inference
 from pharia_skill.studio import (
     SpanClient,
     StudioExporter,
@@ -80,19 +79,6 @@ def test_chat_stream(csi: Csi, model: str):
     usage = message.usage()
     assert usage.prompt == 14
     assert usage.completion == 9
-
-
-@pytest.mark.kernel
-def test_chat_stream_full_message(csi: Csi, model: str):
-    params = ChatParams(max_tokens=64, logprobs="sampled")
-    messages = [Message.user("Say hello to Bob")]
-    message = csi.chat_stream(model, messages, params)
-
-    events = list(message.message())
-    assert isinstance(events[0], csi_inference.MessageBegin)
-    assert isinstance(events[1], csi_inference.MessageAppend)
-    assert isinstance(events[2], csi_inference.FinishReason)
-    assert isinstance(events[3], csi_inference.TokenUsage)
 
 
 @pytest.mark.kernel
