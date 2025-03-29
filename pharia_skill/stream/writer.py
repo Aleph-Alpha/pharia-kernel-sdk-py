@@ -1,7 +1,10 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, Protocol, TypeVar
 
 from pydantic import BaseModel
+
+from pharia_skill.csi.inference import ChatStreamResponse, CompletionStreamResponse
 
 Payload = TypeVar("Payload", bound=BaseModel | None)
 
@@ -37,3 +40,34 @@ class MessageWriter(Protocol, Generic[Payload]):
 
     def end_message(self, payload: Payload | None = None) -> None:
         self.write(MessageEnd(payload))
+
+    R = TypeVar("R", CompletionStreamResponse, ChatStreamResponse)
+
+    def forward_response(
+        self, response: R, payload: Callable[[R], Payload] | Payload | None = None
+    ) -> None:
+        match response:
+            case CompletionStreamResponse():
+                self._forward_completion(response)
+            case ChatStreamResponse():
+                self._forward_chat(response)
+
+    def _forward_completion(
+        self,
+        response: CompletionStreamResponse,
+        payload: Callable[[CompletionStreamResponse], Payload] | Payload | None = None,
+    ) -> None:
+        self.begin_message()
+        for append in response.stream():
+            self.append_to_message(append.text)
+        self.end_message(payload(response) if callable(payload) else payload)
+
+    def _forward_chat(
+        self,
+        response: ChatStreamResponse,
+        payload: Callable[[ChatStreamResponse], Payload] | Payload | None = None,
+    ) -> None:
+        self.begin_message(response.role)
+        for append in response.message_content():
+            self.append_to_message(append.content)
+        self.end_message(payload(response) if callable(payload) else payload)

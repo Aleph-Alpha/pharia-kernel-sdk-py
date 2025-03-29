@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from pharia_skill import (
     ChatParams,
     Csi,
-    FinishReason,
     Message,
     MessageWriter,
     message_stream,
@@ -15,7 +14,7 @@ class Input(BaseModel):
 
 
 class SkillOutput(BaseModel):
-    finish_reason: FinishReason
+    content: str
 
 
 @message_stream
@@ -27,7 +26,10 @@ def haiku_stream(csi: Csi, writer: MessageWriter[SkillOutput], input: Input) -> 
         Message.user(input.topic),
     ]
     params = ChatParams()
+    content = ""
     with csi.chat_stream(model, messages, params) as response:
-        writer.forward_response(
-            response, lambda r: SkillOutput(finish_reason=r.finish_reason())
-        )
+        writer.begin_message(response.role)
+        for event in response.message_content():
+            content += event.content
+            writer.append_to_message(event.content)
+    writer.end_message(SkillOutput(content=content))
