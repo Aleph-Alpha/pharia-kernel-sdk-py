@@ -42,11 +42,11 @@ def message_stream(
                 Message.user(input.topic),
             ]
             params = ChatParams()
-            with csi.chat_stream(model, messages, params) as chat_response:
+            with csi.chat_stream(model, messages, params) as response:
                 writer.begin_message()
-                for event in chat_response.stream():
+                for event in response.stream():
                     writer.append_to_message(event.content)
-                writer.end_message(SkillOutput(finish_reason=chat_response.finish_reason()))
+                writer.end_message(SkillOutput(finish_reason=response.finish_reason()))
     """
     # The import is inside the decorator to ensure the imports only run when the decorator is interpreted.
     # This is because we can only import them when targeting the `message-stream-skill` world.
