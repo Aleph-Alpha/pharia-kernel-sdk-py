@@ -68,6 +68,6 @@ class MessageWriter(Protocol, Generic[Payload]):
         payload: Callable[[ChatStreamResponse], Payload] | Payload | None = None,
     ) -> None:
         self.begin_message(response.role)
-        for append in response.message_content():
+        for append in response.stream():
             self.append_to_message(append.content)
         self.end_message(payload(response) if callable(payload) else payload)
