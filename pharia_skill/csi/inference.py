@@ -321,13 +321,6 @@ class ChatStreamResponse(ABC):
         if self._finish_reason is None or self._usage is None:
             raise ValueError("Invalid event stream")
 
-    def message(self) -> Generator[ChatEvent, None, None]:
-        """Stream the complete message."""
-        yield MessageBegin(self.role)
-        yield from self.stream()
-        yield self.finish_reason()
-        yield self.usage()
-
     def stream(self) -> Generator[MessageAppend, None, None]:
         """Stream the content of the message.
 
