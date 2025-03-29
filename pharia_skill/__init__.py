@@ -52,23 +52,21 @@ from .csi import (
     WithOneOf,
     Without,
 )
-from .skill import skill
-from .stream import (
+from .message_stream import (
     MessageAppend,
     MessageBegin,
     MessageEnd,
     MessageItem,
     MessageWriter,
-    chat,
     message_stream,
 )
+from .skill import skill
 
 __all__ = [
     "After",
     "AtOrAfter",
     "AtOrBefore",
     "Before",
-    "chat",
     "ChatEvent",
     "ChatParams",
     "ChatRequest",

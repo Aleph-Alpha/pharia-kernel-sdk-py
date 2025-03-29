@@ -2,8 +2,8 @@ from pydantic import BaseModel, RootModel
 
 from pharia_skill import CompletionParams, Csi
 from pharia_skill.csi.inference import FinishReason
-from pharia_skill.stream import message_stream
-from pharia_skill.stream.writer import (
+from pharia_skill.message_stream import message_stream
+from pharia_skill.message_stream.writer import (
     MessageWriter,
 )
 
