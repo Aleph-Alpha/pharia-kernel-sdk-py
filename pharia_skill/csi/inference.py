@@ -183,8 +183,6 @@ class CompletionStreamResponse(ABC):
     needed.
     """
 
-    _text: str = ""
-    _logprobs: list[Distribution] = []
     _finish_reason: FinishReason | None = None
     _usage: TokenUsage | None = None
 
@@ -205,20 +203,6 @@ class CompletionStreamResponse(ABC):
     def next(self) -> CompletionEvent | None:
         """Get the next completion event."""
         ...
-
-    def text(self) -> str:
-        """The completion text."""
-
-        if self._usage is None:
-            self._consume_stream()
-        return self._text
-
-    def logprobs(self) -> list[Distribution]:
-        """The log probabilities for all tokens in the completion."""
-
-        if self._usage is None:
-            self._consume_stream()
-        return self._logprobs
 
     def finish_reason(self) -> FinishReason:
         """The reason the model finished generating."""
@@ -249,8 +233,6 @@ class CompletionStreamResponse(ABC):
         while (event := self.next()) is not None:
             match event:
                 case CompletionAppend():
-                    self._text += event.text
-                    self._logprobs += event.logprobs
                     yield event
                 case FinishReason():
                     self._finish_reason = event
@@ -281,7 +263,7 @@ class ChatStreamResponse(ABC):
     these methods ensure that resources are properly released when the stream is no longer
     needed.
 
-    The content of the message can be streamed by calling `message_content()`.
+    The content of the message can be streamed by calling `stream()`.
     If `finish_reason()` or `usage()` has been called, the stream is consumed.
 
 
@@ -291,8 +273,6 @@ class ChatStreamResponse(ABC):
 
     role: str
 
-    _content: str = ""
-    _logprobs: list[Distribution] = []
     _finish_reason: FinishReason | None = None
     _usage: TokenUsage | None = None
 
@@ -320,20 +300,6 @@ class ChatStreamResponse(ABC):
             raise ValueError("Invalid event stream")
         self.role = first_event.role
 
-    def content(self) -> str:
-        """The message content."""
-
-        if self._usage is None:
-            self._consume_stream()
-        return self._content
-
-    def logprobs(self) -> list[Distribution]:
-        """The log probabilities for all tokens in the message content."""
-
-        if self._usage is None:
-            self._consume_stream()
-        return self._logprobs
-
     def finish_reason(self) -> FinishReason:
         """The reason the model finished generating."""
 
@@ -351,18 +317,18 @@ class ChatStreamResponse(ABC):
         return self._usage
 
     def _consume_stream(self) -> None:
-        deque(self.message_content(), maxlen=0)
+        deque(self.stream(), maxlen=0)
         if self._finish_reason is None or self._usage is None:
             raise ValueError("Invalid event stream")
 
     def message(self) -> Generator[ChatEvent, None, None]:
         """Stream the complete message."""
         yield MessageBegin(self.role)
-        yield from self.message_content()
+        yield from self.stream()
         yield self.finish_reason()
         yield self.usage()
 
-    def message_content(self) -> Generator[MessageAppend, None, None]:
+    def stream(self) -> Generator[MessageAppend, None, None]:
         """Stream the content of the message.
 
         This does not include the role, the finish reason and usage.
@@ -374,8 +340,6 @@ class ChatStreamResponse(ABC):
                 case MessageBegin():
                     raise ValueError("Invalid event stream")
                 case MessageAppend():
-                    self._content += event.content
-                    self._logprobs += event.logprobs
                     yield event
                 case FinishReason():
                     self._finish_reason = event
