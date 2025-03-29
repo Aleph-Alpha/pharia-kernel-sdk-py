@@ -356,9 +356,7 @@ class ChatStreamResponse(ABC):
             raise ValueError("Invalid event stream")
 
     def message(self) -> Generator[ChatEvent, None, None]:
-        """Stream the complete message
-
-        Use this with the @chat decorator to forward all details of the message."""
+        """Stream the complete message."""
         yield MessageBegin(self.role)
         yield from self.message_content()
         yield self.finish_reason()
