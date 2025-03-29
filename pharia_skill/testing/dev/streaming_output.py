@@ -1,4 +1,4 @@
-from pharia_skill.stream.writer import MessageItem, MessageWriter, Payload
+from pharia_skill.message_stream.writer import MessageItem, MessageWriter, Payload
 
 
 class MessageRecorder(MessageWriter[Payload]):

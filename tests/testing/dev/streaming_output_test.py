@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
 from pharia_skill import Csi
-from pharia_skill.stream import message_stream
-from pharia_skill.stream.writer import (
+from pharia_skill.message_stream import message_stream
+from pharia_skill.message_stream.writer import (
     MessageAppend,
     MessageBegin,
     MessageEnd,
