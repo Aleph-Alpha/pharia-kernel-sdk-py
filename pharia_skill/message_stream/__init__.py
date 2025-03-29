@@ -1,5 +1,4 @@
-from .chat_decorator import chat
-from .message_stream_decorator import message_stream
+from .decorator import message_stream
 from .writer import (
     MessageAppend,
     MessageBegin,
@@ -9,11 +8,10 @@ from .writer import (
 )
 
 __all__ = [
-    "chat",
     "message_stream",
-    "MessageBegin",
     "MessageAppend",
+    "MessageBegin",
     "MessageEnd",
-    "MessageWriter",
     "MessageItem",
+    "MessageWriter",
 ]

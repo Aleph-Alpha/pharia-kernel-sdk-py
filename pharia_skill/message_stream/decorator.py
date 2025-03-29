@@ -5,7 +5,7 @@ from typing import Callable, Type, TypeVar
 from pydantic import BaseModel
 
 from pharia_skill import Csi
-from pharia_skill.stream.writer import MessageWriter, Payload
+from pharia_skill.message_stream.writer import MessageWriter, Payload
 
 UserInput = TypeVar("UserInput", bound=BaseModel)
 
@@ -42,11 +42,11 @@ def message_stream(
                 Message.user(input.topic),
             ]
             params = ChatParams()
-            with csi.chat_stream(model, messages, params) as chat_response:
+            with csi.chat_stream(model, messages, params) as response:
                 writer.begin_message()
-                for event in chat_response.stream():
+                for event in response.stream():
                     writer.append_to_message(event.content)
-                writer.end_message(SkillOutput(finish_reason=chat_response.finish_reason()))
+                writer.end_message(SkillOutput(finish_reason=response.finish_reason()))
     """
     # The import is inside the decorator to ensure the imports only run when the decorator is interpreted.
     # This is because we can only import them when targeting the `message-stream-skill` world.
@@ -59,7 +59,7 @@ def message_stream(
     )
     from pharia_skill.bindings.imports import streaming_output as wit
     from pharia_skill.bindings.types import Err
-    from pharia_skill.stream.wit_writer import WitMessageWriter
+    from pharia_skill.message_stream.wit_writer import WitMessageWriter
     from pharia_skill.wit_csi.csi import WitCsi
 
     signature = list(inspect.signature(func).parameters.values())
@@ -93,7 +93,7 @@ def message_stream(
                 raise Err(Error_Internal(traceback.format_exc()))
 
     assert "MessageStream" not in func.__globals__, (
-        "Make sure to decorate with either `@chat` or `@message_stream` once."
+        "Make sure to decorate with `@message_stream` only once."
     )
 
     func.__globals__["MessageStream"] = MessageStream
