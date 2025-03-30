@@ -102,7 +102,7 @@ class StubCsi(Csi):
 
         def generator() -> Generator[ChatEvent, None, None]:
             total_usage = 0
-            yield MessageBegin(messages[0].role)
+            yield MessageBegin("assistant")
             for message in messages:
                 content = message.content
                 total_usage += len(content)

@@ -1,4 +1,4 @@
 from .csi import DevCsi
-from .streaming_output import MessageRecorder
+from .streaming_output import MessageRecorder, RecordedMessage
 
-__all__ = ["DevCsi", "MessageRecorder"]
+__all__ = ["DevCsi", "MessageRecorder", "RecordedMessage"]
