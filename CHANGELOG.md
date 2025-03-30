@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.12.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.11.2...v0.12.0) (2025-03-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove the interface to stream ChatEvent directly
+* remove accumulation of stream content
+* remove `chat` decorator
+
+### Features
+
+* remove `chat` decorator ([3693864](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/36938647fa36885b02bcef2ffdb3c8537cf1ad94))
+* remove accumulation of stream content ([8f3e47b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8f3e47b4ba5919a2268b1509d278978f8bd99f48))
+* remove the interface to stream ChatEvent directly ([20aa8f3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/20aa8f3e4968b2d5c000ee5cd65301043877acba))
+
 ## [0.11.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.11.1...v0.11.2) (2025-03-30)
 
 
