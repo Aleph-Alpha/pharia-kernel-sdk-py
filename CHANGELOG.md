@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.11.1...v0.11.2) (2025-03-30)
+
+
+### Features
+
+* allow MessageWriter to consume response stream directly ([e392fa5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e392fa519cf2c65cf62203ba7468a77592073225))
+
 ## [0.11.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.11.0...v0.11.1) (2025-03-28)
 
 
