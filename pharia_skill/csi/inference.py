@@ -297,7 +297,7 @@ class ChatStreamResponse(ABC):
     def __init__(self) -> None:
         first_event = self.next()
         if not isinstance(first_event, MessageBegin):
-            raise ValueError("Invalid event stream")
+            raise ValueError(f"Invalid first stream event: {first_event}")
         self.role = first_event.role
 
     def finish_reason(self) -> FinishReason:
