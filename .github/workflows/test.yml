@@ -111,8 +111,8 @@ jobs:
           uv run pharia-skill build tests.skills.search --no-interactive
           uv run pharia-skill build tests.skills.language --no-interactive
           uv run pharia-skill build tests.skills.failing --no-interactive
-          uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive --message-stream
-          uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive --message-stream
+          uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive --skill-type message-stream-skill
+          uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive --skill-type message-stream-skill
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
         env:

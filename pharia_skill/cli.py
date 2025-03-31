@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import time
+from enum import Enum
 from typing import Optional
 
 import typer
@@ -81,8 +82,13 @@ class IsSkill(BuildError):
         self.message = message
 
 
+class SkillType(str, Enum):
+    SKILL = "skill"
+    MESSAGE_STREAM_SKILL = "message-stream-skill"
+
+
 def run_componentize_py(
-    skill_module: str, output_file: str, unstable: bool, message_stream: bool
+    skill_module: str, output_file: str, unstable: bool, skill_type: SkillType
 ) -> str:
     """Build the skill to a WASM component using componentize-py.
 
@@ -94,12 +100,11 @@ def run_componentize_py(
     """
     setup_wasi_deps()
     args = ["--all-features"] if unstable else []
-    world = "message-stream-skill" if message_stream else "skill"
     command = [
         "componentize-py",
         *args,
         "-w",
-        world,
+        skill_type.value,
         "componentize",
         skill_module,
         "-o",
@@ -266,13 +271,13 @@ def build(
             show_default=True,
         ),
     ] = True,
-    message_stream: Annotated[
-        bool,
+    skill_type: Annotated[
+        SkillType,
         typer.Option(
-            help="Do you want to build a streaming skill? Set this to true if you have used the @message_stream decorator.",
-            show_default=False,
+            help="The type of skill to build.",
+            show_default=True,
         ),
-    ] = False,
+    ] = SkillType.SKILL,
 ) -> None:
     """
     [bold blue]Build[/bold blue] a skill.
@@ -310,14 +315,12 @@ def build(
     ) as progress:
         task = progress.add_task("", total=None)
         try:
-            wasm_file = run_componentize_py(
-                skill, output_file, unstable, message_stream
-            )
+            wasm_file = run_componentize_py(skill, output_file, unstable, skill_type)
             progress.update(task, completed=True)
         except IsMessageStream:
             console.print(
                 Panel(
-                    "It seems you are trying to build a Skill with the @message_stream decorator.\nPlease ensure to provide the --message-stream flag in the build command.",
+                    "It seems you are trying to build a Skill with the @message_stream decorator.\nPlease ensure to set the --skill-type flag to [green]message-stream-skill[/green].",
                     title="[bold red]Error[/bold red]",
                 )
             )
@@ -325,7 +328,7 @@ def build(
         except IsSkill:
             console.print(
                 Panel(
-                    "It seems you are trying to build a Skill decorated with the @skill decorator.\nPlease ensure not to set the --message-stream flag in the build command.",
+                    "It seems you are trying to build a Skill decorated with the @skill decorator.\nPlease ensure to set the --skill-type flag to [green]skill[/green].",
                     title="[bold red]Error[/bold red]",
                 )
             )
