@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.13.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.12.0...v0.13.0) (2025-03-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* do not inspect skill module, user needs to indicate if building a streaming skill
+
+### Features
+
+* add convenience messages method on message recorder ([ca4ccdf](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ca4ccdfb798109b650b0102cdb962e37a79cf665))
+* specify skill type as enum ([c94e197](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c94e1973feba8a448086fb0f2e26f6ad15373afb))
+
+
+### Bug Fixes
+
+* do not inspect skill module, user needs to indicate if building a streaming skill ([61d0cd6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/61d0cd64c0fe77f57e57efc3527ad2ef214afabc))
+* forward payload to other methods ([a9ad4fc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a9ad4fc14e184c902b60344e9150d8ca069e3745))
+
 ## [0.12.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.11.2...v0.12.0) (2025-03-30)
 
 
