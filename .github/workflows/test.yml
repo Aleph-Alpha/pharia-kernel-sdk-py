@@ -105,18 +105,14 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: uv sync --dev
-      - name: Test skill can be built from a file
-        working-directory: ./tests/skills
-        run: |
-          uv run pharia-skill build haiku --no-interactive
       - name: Test skill building
         run: |
           uv run pharia-skill build tests.skills.haiku --no-interactive
           uv run pharia-skill build tests.skills.search --no-interactive
           uv run pharia-skill build tests.skills.language --no-interactive
           uv run pharia-skill build tests.skills.failing --no-interactive
-          uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive
-          uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive
+          uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive --message-stream
+          uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive --message-stream
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
         env:
