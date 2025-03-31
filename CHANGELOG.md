@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.13.0...v0.13.1) (2025-03-31)
+
+
+### Documentation
+
+* specify authorization header for running Skill ([14bb963](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/14bb963dba9ae63c067c122425f3d370f27f55f6))
+
 ## [0.13.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.12.0...v0.13.0) (2025-03-31)
 
 
