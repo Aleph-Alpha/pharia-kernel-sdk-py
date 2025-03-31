@@ -1,5 +1,3 @@
-import importlib
-import inspect
 import logging
 import os
 import subprocess
@@ -63,44 +61,29 @@ def setup_wasi_deps() -> None:
 
 
 class BuildError(Exception):
+    """Any error encountered trying to build the Skill as a WASM component."""
+
     def __init__(self, message: str):
         self.message = message
 
 
-class ModuleError(Exception):
-    pass
+class IsMessageStream(BuildError):
+    """Skill needs to be built against the `message-stream-skill` world."""
+
+    def __init__(self, message: str):
+        self.message = message
 
 
-def inspect_wit_world(module_path: str) -> str:
-    """Determine the world that a Skill should be build against.
+class IsSkill(BuildError):
+    """Skill is not build against the `skill` world."""
 
-    The SDK supports multiple wit worlds (e.g. `skill` and `message-stream-skill`).
-    Each decorator targets a particular world.
-
-    This function inspects a module, looking for one of the exported classes
-    to determine which world the Skill should be build against.
-    """
-    if contains_class(module_path, "SkillHandler"):
-        return "skill"
-    elif contains_class(module_path, "MessageStream"):
-        return "message-stream-skill"
-    else:
-        raise ValueError(
-            f"Unable to find a Skill in {module_path}. "
-            "Did you add the @skill or @message_stream decorator to the Skill function?"
-        )
+    def __init__(self, message: str):
+        self.message = message
 
 
-def contains_class(module_path: str, class_name: str) -> bool:
-    """Check if a class named `class_name` exists in the given module."""
-    module = importlib.import_module(module_path)
-    return any(
-        name == class_name and inspect.isclass(value)
-        for name, value in vars(module).items()
-    )
-
-
-def run_componentize_py(skill_module: str, output_file: str, unstable: bool) -> str:
+def run_componentize_py(
+    skill_module: str, output_file: str, unstable: bool, message_stream: bool
+) -> str:
     """Build the skill to a WASM component using componentize-py.
 
     The call to componentize-py targets the `skill` wit world and adds the downloaded
@@ -111,7 +94,7 @@ def run_componentize_py(skill_module: str, output_file: str, unstable: bool) -> 
     """
     setup_wasi_deps()
     args = ["--all-features"] if unstable else []
-    world = inspect_wit_world(skill_module)
+    world = "message-stream-skill" if message_stream else "skill"
     command = [
         "componentize-py",
         *args,
@@ -136,6 +119,10 @@ def run_componentize_py(skill_module: str, output_file: str, unstable: bool) -> 
             text=True,
         )
     except subprocess.CalledProcessError as e:
+        if "message_stream" in e.stderr:
+            raise IsMessageStream(e.stderr)
+        if "skill_handler" in e.stderr:
+            raise IsSkill(e.stderr)
         raise BuildError(e.stderr)
 
     return output_file
@@ -279,6 +266,13 @@ def build(
             show_default=True,
         ),
     ] = True,
+    message_stream: Annotated[
+        bool,
+        typer.Option(
+            help="Do you want to build a streaming skill? Set this to true if you have used the @message_stream decorator.",
+            show_default=False,
+        ),
+    ] = False,
 ) -> None:
     """
     [bold blue]Build[/bold blue] a skill.
@@ -315,9 +309,27 @@ def build(
         transient=True,
     ) as progress:
         task = progress.add_task("", total=None)
-        wasm_file = run_componentize_py(skill, output_file, unstable)
-        progress.update(task, completed=True)
-
+        try:
+            wasm_file = run_componentize_py(
+                skill, output_file, unstable, message_stream
+            )
+            progress.update(task, completed=True)
+        except IsMessageStream:
+            console.print(
+                Panel(
+                    "It seems you are trying to build a Skill with the @message_stream decorator.\nPlease ensure to provide the --message-stream flag in the build command.",
+                    title="[bold red]Error[/bold red]",
+                )
+            )
+            raise typer.Exit(code=1)
+        except IsSkill:
+            console.print(
+                Panel(
+                    "It seems you are trying to build a Skill decorated with the @skill decorator.\nPlease ensure not to set the --message-stream flag in the build command.",
+                    title="[bold red]Error[/bold red]",
+                )
+            )
+            raise typer.Exit(code=1)
     if wasm_file and interactive:
         display_publish_suggestion(wasm_file)
         prompt_for_publish(wasm_file)
