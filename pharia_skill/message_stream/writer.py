@@ -41,21 +41,21 @@ class MessageWriter(Protocol, Generic[Payload]):
     def end_message(self, payload: Payload | None = None) -> None:
         self.write(MessageEnd(payload))
 
-    R = TypeVar("R", CompletionStreamResponse, ChatStreamResponse)
-
     def forward_response(
-        self, response: R, payload: Callable[[R], Payload] | Payload | None = None
+        self,
+        response: CompletionStreamResponse | ChatStreamResponse,
+        payload: Callable[..., Payload] | Payload | None = None,
     ) -> None:
         match response:
             case CompletionStreamResponse():
-                self._forward_completion(response)
+                self._forward_completion(response, payload)
             case ChatStreamResponse():
-                self._forward_chat(response)
+                self._forward_chat(response, payload)
 
     def _forward_completion(
         self,
         response: CompletionStreamResponse,
-        payload: Callable[[CompletionStreamResponse], Payload] | Payload | None = None,
+        payload: Callable[..., Payload] | Payload | None = None,
     ) -> None:
         self.begin_message()
         for append in response.stream():
@@ -65,7 +65,7 @@ class MessageWriter(Protocol, Generic[Payload]):
     def _forward_chat(
         self,
         response: ChatStreamResponse,
-        payload: Callable[[ChatStreamResponse], Payload] | Payload | None = None,
+        payload: Callable[..., Payload] | Payload | None = None,
     ) -> None:
         self.begin_message(response.role)
         for append in response.stream():
