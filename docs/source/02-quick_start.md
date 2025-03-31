@@ -151,9 +151,8 @@ Here's an example using curl:
 
 ```sh
 curl 'https://pharia-kernel.yourpharia.domain/v1/skills/{namespace}/{name}/run' \
-  		--request POST \
-  		--header 'Content-Type: application/json' \
-  		--data '{
- 		 "topic": "Some text to be a haiku"
-		}'
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header "Authorization: Bearer $PHARIA_AI_TOKEN" \
+  --data '{"topic": "Some text to be a haiku"}'
 ```
