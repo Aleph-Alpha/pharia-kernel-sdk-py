@@ -1,7 +1,10 @@
 import inspect
+import json
 import traceback
 from typing import Callable, Type, TypeVar
 
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel
 
 from pharia_skill import Csi
@@ -96,5 +99,15 @@ def message_stream(
         "Make sure to decorate with `@message_stream` only once."
     )
 
+    def trace_message_stream(
+        csi: Csi, writer: MessageWriter[Payload], input: UserInput
+    ) -> None:
+        with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
+            span.set_attribute("input", json.dumps(input.model_dump()))
+            func(csi, writer, input)
+            span.set_status(Status(StatusCode.OK))
+            return
+
     func.__globals__["MessageStream"] = MessageStream
-    return func
+    trace_message_stream.__globals__["MessageStream"] = MessageStream
+    return trace_message_stream

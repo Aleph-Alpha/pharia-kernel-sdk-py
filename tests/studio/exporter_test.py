@@ -9,8 +9,11 @@ from pharia_skill import (
     CompletionRequest,
     Csi,
     IndexPath,
+    message_stream,
     skill,
 )
+from pharia_skill.csi.inference import ChatParams, Message
+from pharia_skill.message_stream.writer import MessageWriter
 from pharia_skill.studio import (
     SpanClient,
     StudioClient,
@@ -18,7 +21,7 @@ from pharia_skill.studio import (
     StudioSpan,
 )
 from pharia_skill.studio.span import SpanStatus
-from pharia_skill.testing import DevCsi
+from pharia_skill.testing import DevCsi, MessageRecorder
 from pharia_skill.testing.dev.client import CsiClient, Event
 
 
@@ -57,6 +60,9 @@ def haiku(csi: Csi, input: Input) -> Output:
 class StubCsiClient(CsiClient):
     """Use the `DevCsi` without doing any http calls to the Kernel."""
 
+    def __init__(self) -> None:
+        self.events: list[Event] = []
+
     def run(self, function: str, data: Any) -> Any:
         completion = {
             "text": "Hello, world!",
@@ -75,7 +81,7 @@ class StubCsiClient(CsiClient):
     def stream(
         self, function: str, data: dict[str, Any]
     ) -> Generator[Event, None, None]:
-        yield Event(event="usage", data={"usage": {"prompt": 1, "completion": 1}})
+        yield from self.events
 
 
 class SaboteurCsiClient(CsiClient):
@@ -127,6 +133,49 @@ def test_trace_upload_studio_does_not_raise(stub_dev_csi: DevCsi):
 
     # Then no error is raised when running the skill
     StudioClient("kernel-test").submit_spans(client.spans[0])
+
+
+@message_stream
+def haiku_stream(csi: Csi, writer: MessageWriter[Output], input: Input) -> None:
+    """Do a chat stream and forward the response."""
+    result = csi.chat_stream(
+        "llama-3.1-8b-instruct", [Message.user(input.topic)], ChatParams()
+    )
+    writer.forward_response(result)
+
+
+def test_message_stream_is_traced(stub_dev_csi: DevCsi):
+    # Given a csi which always streams these events
+    events = [
+        Event(event="message_begin", data={"role": "assistant"}),
+        Event(
+            event="message_append", data={"content": "Hello, world!", "logprobs": []}
+        ),
+        Event(event="message_end", data={"finish_reason": "stop"}),
+    ]
+    stub_dev_csi.client.events = events  # type: ignore
+
+    # And given a spy client on the Studio exporter
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    stub_dev_csi.set_span_exporter(exporter)
+
+    # When running a message stream Skill
+    haiku_stream(stub_dev_csi, MessageRecorder(), Input(topic="oat milk"))
+
+    # Then we have received one trace with two spans
+    assert len(client.spans) == 1
+    assert len(client.spans[0]) == 2
+
+    chat_span = client.spans[0][0]
+    assert chat_span.name == "chat_stream"
+    assert chat_span.status == SpanStatus.OK
+
+    haiku_span = client.spans[0][1]
+    assert haiku_span.name == "haiku_stream"
+    assert haiku_span.status == SpanStatus.OK
+
+    assert chat_span.parent_id == haiku_span.context.span_id
 
 
 def test_csi_call_is_traced(stub_dev_csi: DevCsi):
