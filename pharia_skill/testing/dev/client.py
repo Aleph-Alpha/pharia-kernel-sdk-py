@@ -123,12 +123,15 @@ class KernelStreamDeserializer:
             # Kernel events always have this format:
             # event: <event>
             # data: <data>
+            if "\n" not in text:
+                raise ValueError(f"Unexpected event format: {text}")
             first_line, remaining = text.split("\n", 1)
-            prefix, event = first_line.split(": ", 1)
-            if prefix != "event":
-                raise ValueError(f"Unexpected event prefix: {prefix}")
+            if not first_line.startswith("event: "):
+                raise ValueError(f"Unexpected event prefix: {first_line}")
 
-            prefix, data = remaining.split(": ", 1)
-            if prefix != "data":
-                raise ValueError(f"Unexpected data prefix: {prefix}")
+            event = first_line.split("event: ", 1)[1]
+            if not remaining.startswith("data: "):
+                raise ValueError(f"Unexpected data prefix: {remaining}")
+
+            data = remaining.split("data: ", 1)[1]
             yield Event(event=event, data=json.loads(data))
