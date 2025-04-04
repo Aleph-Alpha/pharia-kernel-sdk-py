@@ -5,13 +5,19 @@ By separating the client from the `DevCsi`, we can better test the serialization
 and other functionality of the `DevCsi` without making HTTP requests.
 """
 
+import json
 import os
 from http import HTTPStatus
 from typing import Any, Generator, Protocol
 
 import requests
 from dotenv import load_dotenv
-from sseclient import Event, SSEClient
+from pydantic import BaseModel
+
+
+class Event(BaseModel):
+    event: str
+    data: dict[str, Any]
 
 
 class CsiClient(Protocol):
@@ -79,4 +85,48 @@ class Client(CsiClient):
                 f"{response.status_code} {HTTPStatus(response.status_code).phrase}: {error}"
             )
 
-        return SSEClient(response).events()  # type: ignore
+        return KernelStreamDeserializer(response).events()
+
+
+class KernelStreamDeserializer:
+    SSE_DATA_PREFIX = "data: "
+
+    def __init__(self, response: requests.Response) -> None:
+        self.response = response
+
+    def _read(self) -> Generator[bytes, None, None]:
+        """Read the incoming event source stream and yield event chunks.
+
+        Unfortunately it is possible for some servers to decide to break an
+        event into multiple HTTP chunks in the response. It is thus necessary
+        to correctly stitch together consecutive response chunks and find the
+        SSE delimiter (empty new line) to yield full, correct event chunks."""
+        data = b""
+        for chunk in self.response:
+            for line in chunk.splitlines(True):
+                data += line
+                if data.endswith((b"\r\r", b"\n\n", b"\r\n\r\n")):
+                    yield data
+                    data = b""
+        if data:
+            yield data
+
+    def events(self) -> Generator[Event, None, None]:
+        """Yield events from the kernel stream.
+
+        This method does not raise on error events, but rather deserializes them and
+        leaves it to the caller to raise an exception.
+        """
+        for stream_item in self._read():
+            text = stream_item.decode().strip()
+            if not text:
+                continue
+
+            # Kernel events always have this format:
+            # event: <event>
+            # data: <data>
+            first_line, remaining = text.split("\n", 1)
+            _, event = first_line.split(": ", 1)
+
+            _, data = remaining.split(": ", 1)
+            yield Event(event=event, data=json.loads(data))

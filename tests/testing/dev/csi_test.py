@@ -257,6 +257,24 @@ def test_documents(csi: Csi, given_document: DocumentPath):
 
 
 @pytest.mark.kernel
+def test_stream_error_event_is_raised():
+    # Given a completion request against a non-existing model
+    csi = DevCsi()
+    params = CompletionParams(max_tokens=64)
+    stream = csi.completion_stream("non-existing-model", "Say hello to Bob", params)
+
+    # When calling next
+    with pytest.raises(ValueError) as e:
+        stream.next()
+
+    # Then an error with a good error message is raised
+    assert (
+        str(e.value)
+        == 'HTTP request failed with status code 404. Body:\n{"error":"Model not found","code":"UNKNOWN_MODEL"}'
+    )
+
+
+@pytest.mark.kernel
 @patch("requests.Session.post")
 def test_text_error_response_used_on_json_decode_error(mock_post):
     # Given an http client that returns a 400 error that is not json
