@@ -163,8 +163,7 @@ skills = [
 
 ## 7. Invoking via API
 
-Once your skill is deployed, you can test it by making an API call to the Pharia Kernel. You can reference the OpenAPI documentation at `https://pharia-kernel.yourpharia.domain/api-docs` to construct your request.
-Here's an example using curl:
+Once your skill is deployed, you can test it by making an API call to the Pharia Kernel. You can reference the OpenAPI documentation at `https://pharia-kernel.yourpharia.domain/api-docs` to construct your request. You need to provide the name of the `namespace` that you have previously deployed your Skill to. If unsure, check with your operator. Here's an example using curl:
 
 ```sh
 curl 'https://pharia-kernel.yourpharia.domain/v1/skills/{namespace}/{name}/run' \
