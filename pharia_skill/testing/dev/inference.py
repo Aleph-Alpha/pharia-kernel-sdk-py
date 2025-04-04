@@ -1,7 +1,6 @@
 from collections.abc import Generator
 
 from pydantic import BaseModel, RootModel, TypeAdapter
-from sseclient import Event
 
 from pharia_skill.csi.inference import (
     ChatEvent,
@@ -23,6 +22,7 @@ from pharia_skill.csi.inference import (
     TextScore,
     TokenUsage,
 )
+from pharia_skill.testing.dev.client import Event
 
 
 class DevCompletionStreamResponse(CompletionStreamResponse):
@@ -38,16 +38,13 @@ class DevCompletionStreamResponse(CompletionStreamResponse):
 def completion_event_from_sse(event: Event) -> CompletionEvent:
     match event.event:
         case "append":
-            return TypeAdapter(CompletionAppend).validate_json(event.data)
+            return TypeAdapter(CompletionAppend).validate_python(event.data)
         case "end":
-            return FinishReasonDeserializer.model_validate_json(
-                event.data
-            ).finish_reason
+            return FinishReasonDeserializer.model_validate(event.data).finish_reason
         case "usage":
-            return TokenUsageDeserializer.model_validate_json(event.data).usage
-        case "error":
-            raise ValueError(event.data)
-    raise ValueError(f"unknown event type: {event.event}")
+            return TokenUsageDeserializer.model_validate(event.data).usage
+        case _:
+            raise ValueError(f"Unexpected event type: {event.event}")
 
 
 class DevChatStreamResponse(ChatStreamResponse):
@@ -64,19 +61,16 @@ class DevChatStreamResponse(ChatStreamResponse):
 def chat_event_from_sse(event: Event) -> ChatEvent:
     match event.event:
         case "message_begin":
-            role = RoleDeserializer.model_validate_json(event.data).role
+            role = RoleDeserializer.model_validate(event.data).role
             return MessageBegin(role)
         case "message_append":
-            return TypeAdapter(MessageAppend).validate_json(event.data)
+            return TypeAdapter(MessageAppend).validate_python(event.data)
         case "message_end":
-            return FinishReasonDeserializer.model_validate_json(
-                event.data
-            ).finish_reason
+            return FinishReasonDeserializer.model_validate(event.data).finish_reason
         case "usage":
-            return TokenUsageDeserializer.model_validate_json(event.data).usage
-        case "error":
-            raise ValueError(event.data)
-    raise ValueError(f"unknown event type: {event.event}")
+            return TokenUsageDeserializer.model_validate(event.data).usage
+        case _:
+            raise ValueError(f"Unexpected event: {event}")
 
 
 class FinishReasonDeserializer(BaseModel):

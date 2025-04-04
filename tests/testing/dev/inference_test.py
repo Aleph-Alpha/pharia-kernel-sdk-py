@@ -1,4 +1,4 @@
-from sseclient import Event
+import pytest
 
 from pharia_skill import (
     ChatParams,
@@ -19,6 +19,7 @@ from pharia_skill import (
     TopLogprobs,
 )
 from pharia_skill.csi.inference import CompletionAppend, MessageAppend, MessageBegin
+from pharia_skill.testing.dev.client import Event
 from pharia_skill.testing.dev.inference import (
     ChatListDeserializer,
     ChatRequestListSerializer,
@@ -226,7 +227,7 @@ def test_deserialize_explanation():
 def test_deserialize_completion_append_from_sse():
     # Given a completion event append
     payload = {"text": "Hello", "logprobs": []}
-    event = Event(event="append", data=dumps(payload))  # type: ignore
+    event = Event(event="append", data=payload)
 
     # When deserializing it
     deserialized = completion_event_from_sse(event)
@@ -238,7 +239,7 @@ def test_deserialize_completion_append_from_sse():
 def test_deserialize_completion_end_from_sse():
     # Given a completion event end
     payload = {"finish_reason": "stop"}
-    event = Event(event="end", data=dumps(payload))  # type: ignore
+    event = Event(event="end", data=payload)
 
     # When deserializing it
     deserialized = completion_event_from_sse(event)
@@ -250,7 +251,7 @@ def test_deserialize_completion_end_from_sse():
 def test_deserialize_completion_usage_from_sse():
     # Given a completion event usage
     payload = {"usage": {"prompt": 1, "completion": 1}}
-    event = Event(event="usage", data=dumps(payload))  # type: ignore
+    event = Event(event="usage", data=payload)
 
     # When deserializing it
     deserialized = completion_event_from_sse(event)
@@ -262,7 +263,7 @@ def test_deserialize_completion_usage_from_sse():
 def test_deserialize_chat_message_begin_from_sse():
     # Given a chat event message begin
     payload = {"role": "user"}
-    event = Event(event="message_begin", data=dumps(payload))  # type: ignore
+    event = Event(event="message_begin", data=payload)
 
     # When deserializing it
     deserialized = chat_event_from_sse(event)
@@ -274,7 +275,7 @@ def test_deserialize_chat_message_begin_from_sse():
 def test_deserialize_chat_message_append_from_sse():
     # Given a chat event message append
     payload = {"content": "Hello", "logprobs": []}
-    event = Event(event="message_append", data=dumps(payload))  # type: ignore
+    event = Event(event="message_append", data=payload)
 
     # When deserializing it
     deserialized = chat_event_from_sse(event)
@@ -286,7 +287,7 @@ def test_deserialize_chat_message_append_from_sse():
 def test_deserialize_chat_message_end_from_sse():
     # Given a chat event message end
     payload = {"finish_reason": "stop"}
-    event = Event(event="message_end", data=dumps(payload))  # type: ignore
+    event = Event(event="message_end", data=payload)
 
     # When deserializing it
     deserialized = chat_event_from_sse(event)
@@ -298,10 +299,25 @@ def test_deserialize_chat_message_end_from_sse():
 def test_deserialize_chat_usage_from_sse():
     # Given a chat event usage
     payload = {"usage": {"prompt": 1, "completion": 1}}
-    event = Event(event="usage", data=dumps(payload))  # type: ignore
+    event = Event(event="usage", data=payload)
 
     # When deserializing it
     deserialized = chat_event_from_sse(event)
 
     # Then the chat event is loaded
     assert deserialized == TokenUsage(prompt=1, completion=1)
+
+
+def test_error_event_raises_error_with_good_message():
+    # Given an error event
+    payload = {
+        "message": "Sorry, We could not find the skill you requested in its namespace."
+    }
+    event = Event(event="error", data=payload)
+
+    # When deserializing it
+    with pytest.raises(ValueError) as e:
+        chat_event_from_sse(event)
+
+    # Then the error message is as expected
+    assert str(e.value).startswith("Unexpected event:")

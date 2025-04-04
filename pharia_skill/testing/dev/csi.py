@@ -15,7 +15,6 @@ from typing import Any
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace import StatusCode
-from sseclient import Event
 
 from pharia_skill import (
     ChatParams,
@@ -46,7 +45,7 @@ from pharia_skill.studio import (
 )
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
-from .client import Client, CsiClient
+from .client import Client, CsiClient, Event
 from .document_index import (
     DocumentDeserializer,
     DocumentMetadataDeserializer,
@@ -250,8 +249,10 @@ class DevCsi(Csi):
             try:
                 events = self.client.stream(function, data)
                 for event in events:
+                    if event.event == "error":
+                        raise ValueError(event.data["message"])
                     yield event
-                    span.set_attribute("event", json.loads(event.data))
+                    span.set_attribute("event", json.dumps(event.data))
             except Exception as e:
                 span.set_status(StatusCode.ERROR, str(e))
                 raise e

@@ -3,7 +3,6 @@ from typing import Any, Generator, Sequence
 import pytest
 from opentelemetry.sdk.trace import ReadableSpan
 from pydantic import BaseModel
-from sseclient import Event
 
 from pharia_skill import (
     CompletionParams,
@@ -20,7 +19,7 @@ from pharia_skill.studio import (
 )
 from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi
-from pharia_skill.testing.dev.client import CsiClient
+from pharia_skill.testing.dev.client import CsiClient, Event
 
 
 class SpyClient(SpanClient):
@@ -76,7 +75,7 @@ class StubCsiClient(CsiClient):
     def stream(
         self, function: str, data: dict[str, Any]
     ) -> Generator[Event, None, None]:
-        yield Event()
+        yield Event(event="usage", data={"usage": {"prompt": 1, "completion": 1}})
 
 
 class SaboteurCsiClient(CsiClient):
