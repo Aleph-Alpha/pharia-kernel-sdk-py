@@ -126,12 +126,13 @@ class KernelStreamDeserializer:
             if "\n" not in text:
                 raise ValueError(f"Unexpected event format: {text}")
             first_line, remaining = text.split("\n", 1)
+
             if not first_line.startswith("event: "):
                 raise ValueError(f"Unexpected event prefix: {first_line}")
-
             event = first_line.split("event: ", 1)[1]
+
             if not remaining.startswith("data: "):
                 raise ValueError(f"Unexpected data prefix: {remaining}")
-
             data = remaining.split("data: ", 1)[1]
+
             yield Event(event=event, data=json.loads(data))
