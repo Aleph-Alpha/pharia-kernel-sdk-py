@@ -223,6 +223,7 @@ class CompletionStreamResponse(ABC):
     needed.
     """
 
+    _text: str = ""
     _finish_reason: FinishReason | None = None
     _usage: TokenUsage | None = None
 
@@ -244,6 +245,17 @@ class CompletionStreamResponse(ABC):
         """Get the next completion event."""
         ...
 
+    def text(self) -> str:
+        """The text of the completion.
+
+        Consumes the stream. Most likely, you only want to use this method in test code.
+        If you use it in your Skill code, you will not be able to stream the response
+        and a normal completion request should be used instead.
+        """
+        if not self._text:
+            self._consume_stream()
+        return self._text
+
     def finish_reason(self) -> FinishReason:
         """The reason the model finished generating."""
 
@@ -263,7 +275,9 @@ class CompletionStreamResponse(ABC):
     def _consume_stream(self) -> None:
         deque(self.stream(), maxlen=0)
         if self._finish_reason is None or self._usage is None:
-            raise ValueError("Invalid event stream")
+            raise ValueError(
+                "Invalid event stream: must contain both finish reason and usage"
+            )
 
     def stream(self) -> Generator[CompletionAppend, None, None]:
         """Stream completion chunks."""
@@ -273,6 +287,7 @@ class CompletionStreamResponse(ABC):
         while (event := self.next()) is not None:
             match event:
                 case CompletionAppend():
+                    self._text += event.text
                     yield event
                 case FinishReason():
                     self._finish_reason = event

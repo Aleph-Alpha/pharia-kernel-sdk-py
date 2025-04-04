@@ -3,6 +3,9 @@ from pydantic import BaseModel
 from pharia_skill.csi.inference import (
     ChatEvent,
     ChatStreamResponse,
+    CompletionAppend,
+    CompletionEvent,
+    CompletionStreamResponse,
     FinishReason,
     Logprob,
     Message,
@@ -63,3 +66,33 @@ def test_chat_stream_response_can_be_converted_to_message():
     # The the message is as expected
     assert message.role == "assistant"
     assert message.content == "Hello, world!"
+
+
+class MockCompletionStreamResponse(CompletionStreamResponse):
+    def __init__(self, events: list[CompletionEvent]):
+        self.events = events
+        self.index = 0
+        super().__init__()
+
+    def next(self) -> CompletionEvent | None:
+        if self.index < len(self.events):
+            event = self.events[self.index]
+            self.index += 1
+            return event
+        return None
+
+
+def test_completion_stream_can_be_converted_to_message():
+    events: list[CompletionEvent] = [
+        CompletionAppend(text="Hello, ", logprobs=[]),
+        CompletionAppend(text="world!", logprobs=[]),
+        FinishReason.STOP,
+        TokenUsage(prompt=1, completion=1),
+    ]
+    stream = MockCompletionStreamResponse(events)
+
+    # When the stream is converted to the content
+    content = stream.text()
+
+    # Then the content contains the expected text
+    assert content == "Hello, world!"
