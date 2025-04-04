@@ -72,10 +72,10 @@ To test against the `DevCsi`, we require two more environment variables:
 ```sh
 # .env
 
-# The address of the PhariaKernel instance you are using, e.g. https://pharia-kernel.{your-pharia-domain}
+# The address of the PhariaKernel instance you are using, e.g. https://pharia-kernel.your-pharia.domain (replace the `your-pharia.domain` part in all examples)
 PHARIA_KERNEL_ADDRESS=
 
-# A token to authenticate against PhariaAI, can be retrieved from the PhariaStudio frontend (https://pharia-studio.{your-pharia-domain})
+# A token to authenticate against PhariaAI, can be retrieved from the PhariaStudio frontend (https://pharia-studio.your-pharia.domain)
 PHARIA_AI_TOKEN=
 ```
 
