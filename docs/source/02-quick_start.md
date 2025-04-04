@@ -150,8 +150,8 @@ uv run pharia-skill publish haiku.wasm --name custom_name
 ## 6. Deploying
 
 To know which Skills to serve, the Kernel watches a list of configured namespaces. These can be `toml` files hosted on a server.
-If deploying to the [playground](https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground) , simply update the `namespace.toml` file
-in the GitLab UI and add your skill:
+Check with your operator where this configuration file for the namespace that you deployed to in the previous step is hosted.
+Then, update the configuration file and add your Skill:
 
 ```toml
 # namespace.toml
