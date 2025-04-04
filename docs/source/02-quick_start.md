@@ -71,8 +71,12 @@ To test against the `DevCsi`, we require two more environment variables:
 
 ```sh
 # .env
-PHARIA_AI_TOKEN=
+
+# The address of the PhariaKernel instance you are using, e.g. https://pharia-kernel.your-pharia.domain (replace the `your-pharia.domain` part in all examples)
 PHARIA_KERNEL_ADDRESS=
+
+# A token to authenticate against PhariaAI, can be retrieved from the PhariaStudio frontend (https://pharia-studio.your-pharia.domain)
+PHARIA_AI_TOKEN=
 ```
 
 Now, create a `test_haiku.py` file and add the following code:
@@ -103,11 +107,13 @@ uv run pytest test_haiku.py
 
 ## 4. Building
 
-You now build your skill, which will produce a `haiku.wasm` file:
+You now build your skill, which will produce a `haiku.wasm` file on your machine:
 
 ```sh
-uv run pharia-skill build haiku
+uv run pharia-skill build haiku --no-interactive
 ```
+
+Note that by omitting the `--no-interactive` flag, you will get prompted if you also want to publish the Skill.
 
 ## 5. Publishing
 
@@ -118,10 +124,21 @@ Make sure to set the required environment variables:
 
 ```sh
 # .env
+
+# The Kernel supports arbiratry OCI registries to deploy skills to. See https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#namespaces for more details.
+# If you are unsure what value to set here, check with the operator of your PhariaAI instance what registries your Kernel is configured with.
+# E.g. registry.gitlab.{your-domain} for a gitlab registry, but could also be a GitHub or any other registry that is configured in your Kernel.
+SKILL_REGISTRY=
+
+# The repository you want to deploy your skill to.
+# E.g. engineering/your-team/skills
+SKILL_REPOSITORY=
+
+# The `pharia-skill` cli tool uses basic auth to authenticate against the skill registry.
+# In case you are using a token as a password, the value of `SKILL_REGISTRY_USER` can be anything, e.g. `dummy`.
 SKILL_REGISTRY_USER=
+# A token that has read and write access to the registry you want to publish your Skill to.
 SKILL_REGISTRY_TOKEN=
-SKILL_REGISTRY=registry.gitlab.aleph-alpha.de
-SKILL_REPOSITORY=engineering/pharia-kernel-playground/skills
 ```
 
 To publish your skill, run
@@ -133,8 +150,8 @@ uv run pharia-skill publish haiku.wasm --name custom_name
 ## 6. Deploying
 
 To know which Skills to serve, the Kernel watches a list of configured namespaces. These can be `toml` files hosted on a server.
-If deploying to the [playground](https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground) , simply update the `namespace.toml` file
-in the GitLab UI and add your skill:
+Check with your operator where this configuration file for the namespace that you deployed to in the previous step is hosted.
+Then, update the configuration file and add your Skill:
 
 ```toml
 # namespace.toml
@@ -146,8 +163,7 @@ skills = [
 
 ## 7. Invoking via API
 
-Once your skill is deployed, you can test it by making an API call to the Pharia Kernel. You can reference the OpenAPI documentation at `https://pharia-kernel.yourpharia.domain/api-docs` to construct your request.
-Here's an example using curl:
+Once your skill is deployed, you can test it by making an API call to the Pharia Kernel. You can reference the OpenAPI documentation at `https://pharia-kernel.yourpharia.domain/api-docs` to construct your request. You need to provide the name of the `namespace` that you have previously deployed your Skill to. If unsure, check with your operator. Here's an example using curl:
 
 ```sh
 curl 'https://pharia-kernel.yourpharia.domain/v1/skills/{namespace}/{name}/run' \
