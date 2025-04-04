@@ -89,8 +89,6 @@ class Client(CsiClient):
 
 
 class KernelStreamDeserializer:
-    SSE_DATA_PREFIX = "data: "
-
     def __init__(self, response: requests.Response) -> None:
         self.response = response
 
@@ -126,7 +124,11 @@ class KernelStreamDeserializer:
             # event: <event>
             # data: <data>
             first_line, remaining = text.split("\n", 1)
-            _, event = first_line.split(": ", 1)
+            prefix, event = first_line.split(": ", 1)
+            if prefix != "event":
+                raise ValueError(f"Unexpected event prefix: {prefix}")
 
-            _, data = remaining.split(": ", 1)
+            prefix, data = remaining.split(": ", 1)
+            if prefix != "data":
+                raise ValueError(f"Unexpected data prefix: {prefix}")
             yield Event(event=event, data=json.loads(data))
