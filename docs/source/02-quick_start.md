@@ -107,13 +107,13 @@ uv run pytest test_haiku.py
 
 ## 4. Building
 
-You now build your skill, which will produce a `haiku.wasm` file:
+You now build your skill, which will produce a `haiku.wasm` file on your machine:
 
 ```sh
-uv run pharia-skill build haiku
+uv run pharia-skill build haiku --no-interactive
 ```
 
-Note that you can also
+Note that by omitting the `--no-interactive` flag, you will get prompted if you also want to publish the Skill.
 
 ## 5. Publishing
 
