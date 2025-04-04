@@ -71,8 +71,10 @@ To test against the `DevCsi`, we require two more environment variables:
 
 ```sh
 # .env
+# The address of the PhariaKernel instance you are using, e.g. https://pharia-kernel.{your-pharia-domain}
+PHARIA_KERNEL_ADDRESS=https://pharia-kernel.product.pharia.com
+# A token to authenticate against PhariaAI, can be retrieved from the PhariaStudio frontend (https://pharia-studio.{your-pharia-domain})
 PHARIA_AI_TOKEN=
-PHARIA_KERNEL_ADDRESS=
 ```
 
 Now, create a `test_haiku.py` file and add the following code:
@@ -118,10 +120,17 @@ Make sure to set the required environment variables:
 
 ```sh
 # .env
-SKILL_REGISTRY_USER=
-SKILL_REGISTRY_TOKEN=
+
+# The Kernel supports registries to deploy skills to. See https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#namespaces for more details.
+# If you are unsure what value to set here, check with the operator of your PhariaAI instance what registries your Kernel is configured with.
 SKILL_REGISTRY=registry.gitlab.aleph-alpha.de
 SKILL_REPOSITORY=engineering/pharia-kernel-playground/skills
+
+# The `pharia-skill` cli tool uses basic auth to authenticate against the skill registry.
+# In case you are using a token as a password, the value of `SKILL_REGISTRY_USER` can be anything.
+SKILL_REGISTRY_USER=something
+# Skill registry token needs to have read and write access to the registry.
+SKILL_REGISTRY_TOKEN=
 ```
 
 To publish your skill, run
