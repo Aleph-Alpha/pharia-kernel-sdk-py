@@ -125,7 +125,7 @@ Make sure to set the required environment variables:
 ```sh
 # .env
 
-# The Kernel supports registries to deploy skills to. See https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#namespaces for more details.
+# The Kernel supports arbiratry OCI registries to deploy skills to. See https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#namespaces for more details.
 # If you are unsure what value to set here, check with the operator of your PhariaAI instance what registries your Kernel is configured with.
 # E.g. registry.gitlab.{your-domain} for a gitlab registry, but could also be a GitHub or any other registry that is configured in your Kernel.
 SKILL_REGISTRY=
@@ -137,7 +137,7 @@ SKILL_REPOSITORY=
 # The `pharia-skill` cli tool uses basic auth to authenticate against the skill registry.
 # In case you are using a token as a password, the value of `SKILL_REGISTRY_USER` can be anything, e.g. `dummy`.
 SKILL_REGISTRY_USER=
-# Skill registry token needs to have read and write access to the registry.
+# A token that has read and write access to the registry you want to publish your Skill to.
 SKILL_REGISTRY_TOKEN=
 ```
 
