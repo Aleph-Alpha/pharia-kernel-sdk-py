@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.13.1...v0.13.2) (2025-04-04)
+
+
+### Features
+
+* raise value errors if prefixes do not match expectation ([dd475dc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/dd475dca58b9c42b5725a2beb26da90982595b12))
+
 ## [0.13.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.13.0...v0.13.1) (2025-03-31)
 
 
