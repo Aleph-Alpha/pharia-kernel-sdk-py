@@ -1,5 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Generic
+
+from opentelemetry import trace
 
 from pharia_skill.message_stream.writer import (
     MessageAppend,
@@ -50,12 +52,27 @@ class MessageRecorder(MessageWriter[Payload]):
 
     def __init__(self) -> None:
         self.items: list[MessageItem[Payload]] = []
+        self.span: trace.Span | None = None
 
     def write(self, item: MessageItem[Payload]) -> None:
         """Store and validate the streamed items.
 
         Validating the stream here gives the developer early feedback at test time.
         """
+        # get current span and write an event
+        if self.span is not None:
+            match item:
+                case MessageBegin():
+                    self.span.add_event("message_begin", asdict(item))
+                case MessageAppend():
+                    self.span.add_event("message_append", asdict(item))
+                case MessageEnd(payload=payload):
+                    self.span.add_event(
+                        "message_end",
+                        {"payload": payload.model_dump_json()}
+                        if payload is not None
+                        else {},
+                    )
         MessageRecorder.validate(self.items, item)
         self.items.append(item)
 

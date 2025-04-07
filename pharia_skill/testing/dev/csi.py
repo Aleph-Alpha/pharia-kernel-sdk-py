@@ -251,7 +251,17 @@ class DevCsi(Csi):
             try:
                 events = self.client.stream(function, data)
                 for event in events:
-                    span.add_event(event.event, attributes=event.data)
+                    # OpenTelemetry only allows for one level of nesting in attributes, hence we flatten
+                    # nested dicts to json strings.
+                    # Studio itself would support arbitray nesting (see `StudioSpan.events`), but as we use
+                    # OpenTelemetry for tracing and only convert to Studio spans when exporting, we need to
+                    # respeect that limitation here.
+                    # Another option would be to load these json strings into Python dicts in `StudioSpan.from_otel`.
+                    attributes = {
+                        k: json.dumps(v) if isinstance(v, dict) else v
+                        for k, v in event.data.items()
+                    }
+                    span.add_event(event.event, attributes=attributes)
                     if event.event == "error":
                         raise ValueError(event.data["message"])
                     yield event
