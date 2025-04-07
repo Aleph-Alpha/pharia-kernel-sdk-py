@@ -3,8 +3,6 @@ import json
 import traceback
 from typing import Callable, Type, TypeVar
 
-from opentelemetry import trace
-from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel
 
 from pharia_skill import Csi
@@ -85,6 +83,7 @@ def message_stream(
 
     class MessageStream(exports.MessageStream):
         def run(self, input: bytes, output: wit.StreamOutput) -> None:
+            """This is the function that gets executed when running the Skill as a WASM component."""
             try:
                 validated = input_model.model_validate_json(input)
             except Exception:
@@ -102,6 +101,14 @@ def message_stream(
     def trace_message_stream(
         csi: Csi, writer: MessageWriter[Payload], input: UserInput
     ) -> None:
+        """This is the function that we return from the decorator and that get's executed at test time.
+
+        The `opentelemetry` library import is moved to within the function to not make it a dependency of the
+        WASM component.
+        """
+        from opentelemetry import trace
+        from opentelemetry.trace import Status, StatusCode
+
         with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
             writer.span = span  # type: ignore
 
