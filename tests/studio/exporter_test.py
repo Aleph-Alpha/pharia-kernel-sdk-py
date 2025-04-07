@@ -167,13 +167,18 @@ def test_message_stream_is_traced(stub_dev_csi: DevCsi):
     assert len(client.spans) == 1
     assert len(client.spans[0]) == 2
 
+    # And the chat spans are written to the chat span
     chat_span = client.spans[0][0]
     assert chat_span.name == "chat_stream"
     assert chat_span.status == SpanStatus.OK
+    assert len(chat_span.events) == 3
+    assert chat_span.events[1].body == {"content": "Hello, world!", "logprobs": []}
 
+    # And the output is written to the haiku span
     haiku_span = client.spans[0][1]
     assert haiku_span.name == "haiku_stream"
     assert haiku_span.status == SpanStatus.OK
+    assert len(haiku_span.events) == 3
 
     assert chat_span.parent_id == haiku_span.context.span_id
 
