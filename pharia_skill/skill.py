@@ -3,8 +3,8 @@ import json
 import traceback
 from typing import Callable, Type, TypeVar
 
-from opentelemetry import trace
-from opentelemetry.trace import Status, StatusCode
+# from opentelemetry import trace
+# from opentelemetry.trace import Status, StatusCode
 from pydantic import (
     BaseModel,
     # For generation of JSON schemas, Pydantic imports the `root_model` module at runtime: https://github.com/pydantic/pydantic/blob/main/pydantic/json_schema.py#L1500
@@ -88,6 +88,7 @@ def skill(
 
     class SkillHandler(exports.SkillHandler):
         def run(self, input: bytes) -> bytes:
+            """This is the function that gets executed when running the Skill as a WASM component."""
             try:
                 validated = input_model.model_validate_json(input)
             except Exception:
@@ -104,6 +105,14 @@ def skill(
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
 
     def trace_skill(csi: Csi, input: UserInput) -> UserOutput:
+        """This is the function that we return from the decorator and that get's executed at test time.
+
+        The `opentelemetry` library import is moved to within the function to not make it a dependency of the
+        WASM component.
+        """
+        from opentelemetry import trace
+        from opentelemetry.trace import Status, StatusCode
+
         with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
             span.set_attribute("input", json.dumps(input.model_dump()))
             result = func(csi, input)
