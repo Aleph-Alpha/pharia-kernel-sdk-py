@@ -82,6 +82,13 @@ class IsSkill(BuildError):
         self.message = message
 
 
+class NoHttpError(BuildError):
+    """Skill imports requests, which is currently not supported."""
+
+    def __init__(self, message: str):
+        self.message = message
+
+
 class SkillType(str, Enum):
     SKILL = "skill"
     MESSAGE_STREAM_SKILL = "message-stream-skill"
@@ -124,12 +131,21 @@ def run_componentize_py(
             text=True,
         )
     except subprocess.CalledProcessError as e:
-        if "message_stream" in e.stderr:
+        if (
+            "ModuleNotFoundError: No module named 'pharia_skill.bindings.exports.message_stream'"
+            in e.stderr
+        ):
             raise IsMessageStream(e.stderr)
-        if "skill_handler" in e.stderr:
+        if (
+            "ModuleNotFoundError: No module named 'pharia_skill.bindings.exports.skill_handler'"
+            in e.stderr
+        ):
             raise IsSkill(e.stderr)
-        raise BuildError(e.stderr)
 
+        if "ModuleNotFoundError: No module named 'zlib'" in e.stderr:
+            raise NoHttpError(e.stderr)
+
+        raise BuildError(e.stderr)
     return output_file
 
 
@@ -329,6 +345,14 @@ def build(
             console.print(
                 Panel(
                     "It seems you are trying to build a Skill decorated with the @skill decorator.\nPlease ensure to set the --skill-type flag to [green]skill[/green].",
+                    title="[bold red]Error[/bold red]",
+                )
+            )
+            raise typer.Exit(code=1)
+        except NoHttpError:
+            console.print(
+                Panel(
+                    "It seems you are trying to build a Skill that imports a library that does [red]outbound http[/red] requests.\nThis is currently not supported.\nPlease remove the corresponding import for the build to succeed.",
                     title="[bold red]Error[/bold red]",
                 )
             )
