@@ -46,6 +46,77 @@ def rag(csi: Csi, input: Input) -> Output:
     documents = csi.search(index, query=input.topic)
 ```
 
+## Streaming
+
+The SDK provides interfaces to receive chat and completion responses in chunks, and to return intermediate responses.
+This allows building Skills that stream their output in small chunks, in contrast to only returning a single response.
+
+### Message Stream
+
+A message stream tries to model a conversation as a sequence of messages.
+In a stream there is only one active message at a time.
+You can write text to the message stream using a writer, which is passed into the Skill.
+The Kernel takes care of translating the interactions with the writer into Server-Sent-Events.
+Each message has a begin and an end, which can be indicated by [writer.begin_message](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.MessageWriter.begin_message) and [writer.end_message](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.MessageWriter.begin_message) respectively.
+Between these, you can iteratively append text with [writer.append_to_message](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.MessageWriter.append_to_message)
+When ending the message, you can provide an optional, arbitrary payload.
+
+```python
+writer.begin_message("assistant")
+writer.append_to_message("Hello, ")
+writer.append_to_message("world!")
+writer.end_message(None)
+```
+
+### Requesting a Stream
+
+To request a chat completion as a stream, you can use the [csi.chat_stream](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.Csi.chat_stream) context manager.
+It returns a `ChatStreamResponse`, which provides a `stream` method you can iterate over:
+
+```python
+params = ChatParams()
+with csi.chat_stream(model, messages, params) as response:
+    for event in response.stream():
+        # e.g. writer.append_to_message(event.content)
+        ...
+```
+
+The writer also provides a convenience method for returning a `ChatStreamResponse` directly:
+
+```python
+params = ChatParams()
+with csi.chat_stream(model, messages, params) as response:
+    writer.forward_response(response)
+```
+
+In case you want to stream a completion response (in contrast to a chat response), you can use [csi.completion_stream](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.Csi.completion_stream).
+
+### Decorator
+
+Skills that stream their output must be annotated with the [message_stream](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.message_stream) decorator.
+They have some unique properties:
+
+1. They take a second argument of type `MessageWriter`
+2. They don't return anything
+3. If you want to return a custom payload, use [writer.end_message](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.MessageWriter.end_message)
+
+```python
+from pharia_skill import ChatParams, Csi, Message, MessageWriter, message_stream
+
+@message_stream
+def haiku_stream(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
+    model = "llama-3.1-8b-instruct"
+    messages = [
+        Message.system("You are a poet who strictly speaks in haikus."),
+        Message.user(input.topic),
+    ]
+    params = ChatParams()
+    with csi.chat_stream(model, messages, params) as response:
+        writer.forward_response(response)
+```
+
+Using the `message_stream` decorator requires passing the `--skill-type message-stream-skill` flag when running `pharia-skill build`.
+
 ## Conversational Search
 
 Conversational search is the idea to have a chat conversation with an LLM which has access to a knowledge database.
