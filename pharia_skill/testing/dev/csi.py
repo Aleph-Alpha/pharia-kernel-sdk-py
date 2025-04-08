@@ -236,7 +236,6 @@ class DevCsi(Csi):
             except Exception as e:
                 span.set_status(StatusCode.ERROR, str(e))
                 raise e
-            span.set_status(StatusCode.OK)
             span.set_attribute("output", json.dumps(output))
 
         return output
@@ -247,7 +246,6 @@ class DevCsi(Csi):
         with trace.get_tracer(__name__).start_as_current_span(function) as span:
             span.set_attribute("input", json.dumps(data))
             # We don't know if the entire stream will be consumed, so set status to OK here
-            span.set_status(StatusCode.OK)
             try:
                 events = self.client.stream(function, data)
                 for event in events:

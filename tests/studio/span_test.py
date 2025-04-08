@@ -1,4 +1,5 @@
 from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.trace import SpanContext, Status, StatusCode
 
 from pharia_skill.studio.span import SpanStatus, StudioSpan, double_to_128bit
 
@@ -40,3 +41,26 @@ def test_exported_span_from_error(error_span: ReadableSpan):
     assert exported_span.events[0].name == "ValueError"
     # And can be dumped to json
     exported_span.model_dump_json()
+
+
+def test_exported_span_without_status_is_ok():
+    # Given an otel ReadableSpan without a status
+    span = ReadableSpan(
+        name="test",
+        status=Status(StatusCode.UNSET),
+        context=SpanContext(trace_id=1, span_id=2, is_remote=False),
+        start_time=1,
+        end_time=2,
+        attributes={
+            "input": '{"topic": "oat milk"}',
+            "output": '{"haiku": "oat milk"}',
+        },
+        events=[],
+    )
+    assert span.status.status_code == StatusCode.UNSET
+
+    # When converting to a studio span
+    exported_span = StudioSpan.from_otel(span)
+
+    # Then the status is set to ok
+    assert exported_span.status == SpanStatus.OK
