@@ -71,7 +71,7 @@ writer.end_message(None)
 ### Requesting a Stream
 
 To request a chat completion as a stream, you can use the [csi.chat_stream](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.Csi.chat_stream) context manager.
-It returns a `ChatStreamResponse`, which provides a `stream` method you can iterate over:
+It returns a [ChatStreamResponse](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.ChatStreamResponse), which provides a `stream` method you can iterate over:
 
 ```python
 params = ChatParams()
