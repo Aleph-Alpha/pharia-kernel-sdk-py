@@ -183,6 +183,22 @@ def test_message_stream_is_traced(stub_dev_csi: DevCsi):
     assert chat_span.parent_id == haiku_span.context.span_id
 
 
+def test_failing_csi_stream_usage_leads_to_error_span(saboteur_dev_csi: DevCsi):
+    # Given a csi that raises an exception on every call
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    saboteur_dev_csi.set_span_exporter(exporter)
+
+    # When running a skill
+    with pytest.raises(RuntimeError, match="Out of cheese"):
+        haiku_stream(saboteur_dev_csi, MessageRecorder(), Input(topic="oat milk"))
+
+    # Then both, the csi and the skill span are marked as an error
+    assert len(client.spans) == 1
+    assert client.spans[0][0].status == SpanStatus.ERROR
+    assert client.spans[0][1].status == SpanStatus.ERROR
+
+
 def test_csi_call_is_traced(stub_dev_csi: DevCsi):
     # Given a csi setup with an in-memory exporter
     client = SpyClient()

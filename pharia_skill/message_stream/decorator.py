@@ -107,14 +107,12 @@ def message_stream(
         WASM component.
         """
         from opentelemetry import trace
-        from opentelemetry.trace import Status, StatusCode
 
         with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
             writer.span = span  # type: ignore
 
             span.set_attribute("input", json.dumps(input.model_dump()))
             func(csi, writer, input)
-            span.set_status(Status(StatusCode.OK))
             return
 
     func.__globals__["MessageStream"] = MessageStream

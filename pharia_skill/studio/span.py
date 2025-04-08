@@ -83,6 +83,11 @@ class TaskSpanAttributes(BaseModel):
 
 
 class SpanStatus(Enum):
+    """The status of a span.
+
+    Studio does not have the concept of Unset, so we need to map unset to OK.
+    """
+
     OK = "OK"
     ERROR = "ERROR"
 
@@ -125,6 +130,8 @@ class StudioSpan(BaseModel):
     @field_validator("status", mode="before")
     def validate_status(cls, data: dict[str, str]) -> SpanStatus:
         if data["status_code"] == "OK":
+            return SpanStatus.OK
+        elif data["status_code"] == "UNSET":
             return SpanStatus.OK
         return SpanStatus.ERROR
 

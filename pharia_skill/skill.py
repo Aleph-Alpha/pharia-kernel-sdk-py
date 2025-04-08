@@ -111,13 +111,11 @@ def skill(
         WASM component.
         """
         from opentelemetry import trace
-        from opentelemetry.trace import Status, StatusCode
 
         with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
             span.set_attribute("input", json.dumps(input.model_dump()))
             result = func(csi, input)
             span.set_attribute("output", json.dumps(result.model_dump()))
-            span.set_status(Status(StatusCode.OK))
             return result
 
     func.__globals__["SkillHandler"] = SkillHandler
