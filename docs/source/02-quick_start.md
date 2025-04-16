@@ -24,7 +24,7 @@ uv init haiku && cd haiku
 and add the SDK as a dependency:
 
 ```sh
-uv add pharia-skill
+uv add "pharia-skill[cli]"
 ```
 
 ## 2. Writing a Skill
