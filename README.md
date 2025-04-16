@@ -14,5 +14,5 @@ We recommend using [uv](https://docs.astral.sh/uv/) to manage Python dependencie
 To add the SDK as a dependency to an existing project managed by `uv`, run
 
 ```sh
-uv add pharia-skill
+uv add "pharia-skill[cli]"
 ```

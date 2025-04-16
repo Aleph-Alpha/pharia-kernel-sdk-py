@@ -443,12 +443,16 @@ name = "pharia-skill"
 version = "0.14.0"
 source = { editable = "." }
 dependencies = [
-    { name = "componentize-py" },
     { name = "opentelemetry-sdk" },
     { name = "pydantic" },
     { name = "pydantic-core" },
     { name = "python-dotenv" },
     { name = "requests" },
+]
+
+[package.optional-dependencies]
+cli = [
+    { name = "componentize-py" },
     { name = "rich" },
     { name = "typer" },
 ]
@@ -473,15 +477,16 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "componentize-py", specifier = ">=0.16.0,<0.17" },
+    { name = "componentize-py", marker = "extra == 'cli'", specifier = ">=0.16.0,<0.17" },
     { name = "opentelemetry-sdk", specifier = ">=1.28.1,<2" },
     { name = "pydantic", specifier = "==2.10.6" },
     { name = "pydantic-core", specifier = "==2.27.2" },
     { name = "python-dotenv", specifier = ">=1.0.1,<2" },
     { name = "requests", specifier = ">=2.32.3,<3" },
-    { name = "rich", specifier = ">=13.7.0,<15" },
-    { name = "typer", specifier = ">=0.15.4,<0.16" },
+    { name = "rich", marker = "extra == 'cli'", specifier = ">=13.7.0,<15" },
+    { name = "typer", marker = "extra == 'cli'", specifier = ">=0.15.4,<0.16" },
 ]
+provides-extras = ["cli"]
 
 [package.metadata.requires-dev]
 dev = [
