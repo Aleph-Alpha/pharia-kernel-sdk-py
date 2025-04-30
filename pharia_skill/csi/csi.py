@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from .chunking import Chunk, ChunkParams, ChunkRequest
 from .document_index import (
@@ -32,7 +32,8 @@ class Csi(Protocol):
 
     Most functionality in the CSI is offered in two forms: As a single request, and as multiple
     concurrent requests. For all concurrent requests, it is guaranteed that the responses are
-    returned in the same order as the requests.
+    returned in the same order as the requests. Therefore, our interface requires the user to provide
+    Sequences, as we want the input to be ordered.
     """
 
     def completion_stream(
@@ -112,7 +113,7 @@ class Csi(Protocol):
         request = ChunkRequest(text, params)
         return self.chunk_concurrent([request])[0]
 
-    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
+    def chunk_concurrent(self, requests: Sequence[ChunkRequest]) -> list[list[Chunk]]:
         """Chunk a text into chunks concurrently.
 
         Parameters:
@@ -147,7 +148,7 @@ class Csi(Protocol):
         request = ChatRequest(model, messages, params)
         return self.chat_concurrent([request])[0]
 
-    def chat_concurrent(self, requests: list[ChatRequest]) -> list[ChatResponse]:
+    def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
         """Chat with a model concurrently.
 
         Parameters:
@@ -166,7 +167,7 @@ class Csi(Protocol):
         return self.explain_concurrent([request])[0]
 
     def explain_concurrent(
-        self, requests: list[ExplanationRequest]
+        self, requests: Sequence[ExplanationRequest]
     ) -> list[list[TextScore]]: ...
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
@@ -188,7 +189,7 @@ class Csi(Protocol):
         return self.select_language_concurrent([request])[0]
 
     def select_language_concurrent(
-        self, requests: list[SelectLanguageRequest]
+        self, requests: Sequence[SelectLanguageRequest]
     ) -> list[Language | None]:
         """Detect the language for multiple texts concurrently.
 
@@ -227,7 +228,7 @@ class Csi(Protocol):
         return self.search_concurrent([request])[0]
 
     def search_concurrent(
-        self, requests: list[SearchRequest]
+        self, requests: Sequence[SearchRequest]
     ) -> list[list[SearchResult]]: ...
 
     """Execute multiple search requests against the Document Index."""
@@ -246,7 +247,7 @@ class Csi(Protocol):
         """
         return self.documents([document_path])[0]
 
-    def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
+    def documents(self, document_paths: Sequence[DocumentPath]) -> list[Document]:
         """Fetch multiple documents from the Document Index.
 
         The documents are guaranteed to be returned in the same order as the document paths.
@@ -265,7 +266,7 @@ class Csi(Protocol):
         return self.documents_metadata([document_path])[0]
 
     def documents_metadata(
-        self, document_paths: list[DocumentPath]
+        self, document_paths: Sequence[DocumentPath]
     ) -> list[JsonSerializable]:
         """Return the metadata of multiple documents in the Document Index.
 

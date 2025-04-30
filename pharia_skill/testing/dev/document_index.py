@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from pydantic import RootModel
 
 from pharia_skill.csi import (
@@ -8,19 +10,19 @@ from pharia_skill.csi import (
     SearchResult,
 )
 
-DocumentMetadataSerializer = RootModel[list[DocumentPath]]
+DocumentMetadataSerializer = RootModel[Sequence[DocumentPath]]
 
 
 DocumentMetadataDeserializer = RootModel[list[JsonSerializable | None]]
 
 
-DocumentSerializer = RootModel[list[DocumentPath]]
+DocumentSerializer = RootModel[Sequence[DocumentPath]]
 
 
 DocumentDeserializer = RootModel[list[Document]]
 
 
-SearchRequestSerializer = RootModel[list[SearchRequest]]
+SearchRequestSerializer = RootModel[Sequence[SearchRequest]]
 
 
 SearchResultDeserializer = RootModel[list[list[SearchResult]]]

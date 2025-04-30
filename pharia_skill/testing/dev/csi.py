@@ -10,7 +10,7 @@ uncoupling these interfaces brings two advantages:
 
 import json
 from collections.abc import Generator
-from typing import Any
+from typing import Any, Sequence
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -125,51 +125,51 @@ class DevCsi(Csi):
         return DevChatStreamResponse(events)
 
     def complete_concurrent(
-        self, requests: list[CompletionRequest]
+        self, requests: Sequence[CompletionRequest]
     ) -> list[Completion]:
         body = CompletionRequestListSerializer(root=requests).model_dump()
         output = self.run("complete", body)
         return CompletionListDeserializer(root=output).root
 
-    def chat_concurrent(self, requests: list[ChatRequest]) -> list[ChatResponse]:
+    def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
         body = ChatRequestListSerializer(root=requests).model_dump()
         output = self.run("chat", body)
         return ChatListDeserializer(root=output).root
 
     def explain_concurrent(
-        self, requests: list[ExplanationRequest]
+        self, requests: Sequence[ExplanationRequest]
     ) -> list[list[TextScore]]:
         body = ExplanationRequestListSerializer(root=requests).model_dump()
         output = self.run("explain", body)
         return ExplanationListDeserializer(root=output).root
 
-    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
+    def chunk_concurrent(self, requests: Sequence[ChunkRequest]) -> list[list[Chunk]]:
         body = ChunkRequestSerializer(root=requests).model_dump()
         output = self.run("chunk_with_offsets", body)
         return ChunkDeserializer(root=output).root
 
     def select_language_concurrent(
-        self, requests: list[SelectLanguageRequest]
+        self, requests: Sequence[SelectLanguageRequest]
     ) -> list[Language | None]:
         body = SelectLanguageRequestSerializer(root=requests).model_dump()
         output = self.run("select_language", body)
         return SelectLanguageDeserializer(root=output).root
 
     def search_concurrent(
-        self, requests: list[SearchRequest]
+        self, requests: Sequence[SearchRequest]
     ) -> list[list[SearchResult]]:
         body = SearchRequestSerializer(root=requests).model_dump()
         output = self.run("search", body)
         return SearchResultDeserializer(root=output).root
 
     def documents_metadata(
-        self, document_paths: list[DocumentPath]
+        self, document_paths: Sequence[DocumentPath]
     ) -> list[JsonSerializable | None]:
         body = DocumentMetadataSerializer(root=document_paths).model_dump()
         output = self.run("document_metadata", body)
         return DocumentMetadataDeserializer(root=output).root
 
-    def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
+    def documents(self, document_paths: Sequence[DocumentPath]) -> list[Document]:
         body = DocumentSerializer(root=document_paths).model_dump()
         output = self.run("documents", body)
         return DocumentDeserializer(root=output).root
