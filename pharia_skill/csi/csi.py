@@ -28,7 +28,12 @@ from .language import Language, SelectLanguageRequest
 
 
 class Csi(Protocol):
-    """The Cognitive System Interface (CSI) is a protocol that allows skills to interact with the Pharia Kernel."""
+    """The Cognitive System Interface (CSI) is a protocol that allows skills to interact with the Pharia Kernel.
+
+    Most functionality in the CSI is offered in two forms: As a single request, and as multiple
+    concurrent requests. For all concurrent requests, it is guaranteed that the responses are
+    returned in the same order as the requests.
+    """
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
@@ -244,6 +249,8 @@ class Csi(Protocol):
     def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
         """Fetch multiple documents from the Document Index.
 
+        The documents are guaranteed to be returned in the same order as the document paths.
+
         Parameters:
             document_paths (list[DocumentPath], required): The document paths to get the documents from.
         """
@@ -261,6 +268,8 @@ class Csi(Protocol):
         self, document_paths: list[DocumentPath]
     ) -> list[JsonSerializable]:
         """Return the metadata of multiple documents in the Document Index.
+
+        The metadata is guaranteed to be returned in the same order as the document paths.
 
         Parameters:
             document_paths (list[DocumentPath], required): The document paths to get metadata from.
