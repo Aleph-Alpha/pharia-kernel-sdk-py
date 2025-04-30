@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from typing import Sequence
 
 from pydantic import BaseModel, RootModel, TypeAdapter
 
@@ -97,19 +98,19 @@ class RoleDeserializer(BaseModel):
     role: str
 
 
-CompletionRequestListSerializer = RootModel[list[CompletionRequest]]
+CompletionRequestListSerializer = RootModel[Sequence[CompletionRequest]]
 
 
 CompletionListDeserializer = RootModel[list[Completion]]
 
 
-ChatRequestListSerializer = RootModel[list[ChatRequest]]
+ChatRequestListSerializer = RootModel[Sequence[ChatRequest]]
 
 
 ChatListDeserializer = RootModel[list[ChatResponse]]
 
 
-ExplanationRequestListSerializer = RootModel[list[ExplanationRequest]]
+ExplanationRequestListSerializer = RootModel[Sequence[ExplanationRequest]]
 
 
 ExplanationListDeserializer = RootModel[list[list[TextScore]]]

@@ -3,6 +3,7 @@ StubCsi can be used for testing without a backing Pharia Kernel instance.
 """
 
 from collections.abc import Generator
+from typing import Sequence
 
 from pharia_skill import (
     ChatParams,
@@ -113,7 +114,7 @@ class StubCsi(Csi):
         return StubChatStreamResponse(generator())
 
     def complete_concurrent(
-        self, requests: list[CompletionRequest]
+        self, requests: Sequence[CompletionRequest]
     ) -> list[Completion]:
         return [
             Completion(
@@ -127,10 +128,10 @@ class StubCsi(Csi):
             for request in requests
         ]
 
-    def chunk_concurrent(self, requests: list[ChunkRequest]) -> list[list[Chunk]]:
+    def chunk_concurrent(self, requests: Sequence[ChunkRequest]) -> list[list[Chunk]]:
         return [[Chunk(text=request.text, offset=0)] for request in requests]
 
-    def chat_concurrent(self, requests: list[ChatRequest]) -> list[ChatResponse]:
+    def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
         return [
             ChatResponse(
                 message=Message.assistant(request.messages[-1].content),
@@ -145,19 +146,19 @@ class StubCsi(Csi):
         ]
 
     def explain_concurrent(
-        self, requests: list[ExplanationRequest]
+        self, requests: Sequence[ExplanationRequest]
     ) -> list[list[TextScore]]:
         return [[] for _ in requests]
 
     def select_language_concurrent(
-        self, requests: list[SelectLanguageRequest]
+        self, requests: Sequence[SelectLanguageRequest]
     ) -> list[Language | None]:
         return [
             request.languages[0] if request.languages else None for request in requests
         ]
 
     def search_concurrent(
-        self, requests: list[SearchRequest]
+        self, requests: Sequence[SearchRequest]
     ) -> list[list[SearchResult]]:
         return [
             [
@@ -176,7 +177,7 @@ class StubCsi(Csi):
             for _ in requests
         ]
 
-    def documents(self, document_paths: list[DocumentPath]) -> list[Document]:
+    def documents(self, document_paths: Sequence[DocumentPath]) -> list[Document]:
         return [
             Document(
                 path=document_path,
@@ -187,6 +188,6 @@ class StubCsi(Csi):
         ]
 
     def documents_metadata(
-        self, document_paths: list[DocumentPath]
+        self, document_paths: Sequence[DocumentPath]
     ) -> list[JsonSerializable]:
         return [{} for _ in document_paths]
