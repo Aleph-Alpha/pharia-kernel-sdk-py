@@ -5,11 +5,15 @@ from typing import Any, Literal
 from pydantic import model_serializer
 
 
-@dataclass
+@dataclass(frozen=True)
 class DocumentPath:
     """Path identifying a document.
 
     A DocumentPath consists of a namespace, within the namespace a collection and within the collection a document has a name.
+
+    A user might want to filter for unique documents. By making `DocumentPath` a frozen dataclass,
+    we ensure that it is hashable and a user can use a set to filter for unique ones before
+    requesting the documents.
 
     Attributes:
         namespace (str): The namespace.
