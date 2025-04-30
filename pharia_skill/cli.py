@@ -12,6 +12,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.prompt import Confirm, Prompt
 from typing_extensions import Annotated
 
+from . import generate
 from .pharia_skill_cli import PhariaSkillCli, Registry
 
 logging.basicConfig(
@@ -257,6 +258,7 @@ def prompt_for_publish(wasm_file: str) -> None:
 
 
 app = typer.Typer(rich_markup_mode="rich")
+app.add_typer(generate.app, name="generate")
 
 
 @app.callback()

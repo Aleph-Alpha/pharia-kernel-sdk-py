@@ -30,6 +30,7 @@ The Kernel provides a focused environment for AI engineers to develop and deploy
 03-core_concepts
 04-how_to
 05-llm_code_execution
-06-faq
+06-skill_templates
+07-faq
 references
 ```
