@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.14.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.13.1...v0.14.0) (2025-04-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* make document path hashable to simplify unique filtering
+
+### Features
+
+* add tracing to message stream skills ([645f6b3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/645f6b370c3457436887d6767145af4d4734acfb))
+* expose StreamResponses ([decd195](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/decd195f7cbb9b95074c425fe4835646806269b7))
+* good error message when zlib is imported in skill build step ([e5772fe](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e5772feba31e8f23d9b32a513cf6238a28a6d703))
+* make document path hashable to simplify unique filtering ([30e59c5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/30e59c52d05dcb0c48e6b74f2617715f72393953))
+* move opentelemtry to inside trace skill ([ac641d7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ac641d7166a49df5a4b484a513f877f54177f545))
+* raise value errors if prefixes do not match expectation ([dd475dc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/dd475dca58b9c42b5725a2beb26da90982595b12))
+* trace message writer interactions ([139cf05](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/139cf05e889ed5309ce96c9c9c731b720cc28407))
+
+
+### Bug Fixes
+
+* treat unset status as OK when converting to studio format ([42f984b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/42f984b4aeb9ac5fe38013e342bdbdd7f9bf4c2c))
+
+
+### Documentation
+
+* how to do streaming ([3ca4b18](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3ca4b181136ad71d99902d571cc1e94cc85baa97))
+* remove default values which might be confusing ([73f4727](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/73f4727c844df888294f25749e60a03f70bd8aeb))
+* remove link to product playground ([d3eeeaa](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/d3eeeaa5a05376fa4221adfd12af0cebe6aa4c03))
+* set --no-interactive flag in building step ([7a4a4ef](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/7a4a4ef2d552cd4ae26308a70cdee8d3284533a3))
+* set --no-interactive flag in building step ([cef9c1b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/cef9c1bd1a372e5040dfbc76c50593ac9f527035))
+* specify concurrent ordering in doc-string ([e87bba7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e87bba7b7bfba1b7892f273e4010404e1aa6694a))
+* specify meaning of env variables ([da3a4d7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/da3a4d7278d251a417ee2b3aaa721e73f76003c5))
+* specify OCI registry is needed ([22c6b0c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/22c6b0cc9b29c3dccca8aa9d541aa9007440b4da))
+* specify what a namespace name is ([60735de](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/60735de5f7fc6727ed59508e55fd51c433b9911a))
+
 ## [0.13.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.13.0...v0.13.1) (2025-03-31)
 
 
