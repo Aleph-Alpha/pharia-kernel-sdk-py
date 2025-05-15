@@ -19,7 +19,7 @@ dependencies = [
     "python-dotenv>=1.0.1,<2",
     "componentize-py>=0.16.0,<0.17",
     "opentelemetry-sdk>=1.28.1,<2",
-    "typer>=0.15.1",
+    "typer>=0.15.4,<0.16",
     "rich>=13.7.0,<14",
 ]
 
