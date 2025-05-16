@@ -11,6 +11,7 @@ You can access the documentation on [Read the Docs](https://pharia-skill.readthe
 
 The SDK is published on [PyPI](https://pypi.org/project/pharia-skill/).
 We recommend using [uv](https://docs.astral.sh/uv/) to manage Python dependencies.
+
 To add the SDK as a dependency to an existing project managed by `uv`, run
 
 ```sh
