@@ -26,7 +26,7 @@ console = Console()
 
 def setup_wasi_deps() -> None:
     """Download the Pydantic WASI wheels if they are not already present."""
-    PYDANTIC_CORE_VERSION = "2.27.2"
+    PYDANTIC_CORE_VERSION = "2.33.2"
     WASI_DEPS_PATH = "wasi_deps"
     if os.path.exists(WASI_DEPS_PATH):
         if not os.path.exists(
