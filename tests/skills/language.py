@@ -1,5 +1,5 @@
 """
-Call into the language detection interface to test it in WASM
+Call into the language detection interface to test it in Wasm
 """
 
 from pydantic import BaseModel, RootModel

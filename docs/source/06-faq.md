@@ -11,7 +11,7 @@ Build it locally, publish it to a registry and then configure it in a [namespace
 
 **How is my Skill executed?**
 
-The Kernel offers a WASM runtime in which your skill runs.
+The Kernel offers a Wasm runtime in which your skill runs.
 Multiple invocations of your Skill can run in parallel.
 Skill Execution will be suspended after ten minutes.
 

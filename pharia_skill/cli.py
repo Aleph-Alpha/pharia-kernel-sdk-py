@@ -32,11 +32,11 @@ def setup_wasi_deps() -> None:
         if not os.path.exists(
             f"{WASI_DEPS_PATH}/pydantic_core-{PYDANTIC_CORE_VERSION}.dist-info"
         ):
-            logger.info("Deleting outdated Pydantic Wasi wheels...")
+            logger.info("Deleting outdated Pydantic WASI wheels...")
             subprocess.run(["rm", "-rf", WASI_DEPS_PATH])
 
     if not os.path.exists(WASI_DEPS_PATH):
-        logger.info("Downloading Pydantic Wasi wheels...")
+        logger.info("Downloading Pydantic WASI wheels...")
         subprocess.run(
             [
                 "pip3",
@@ -62,7 +62,7 @@ def setup_wasi_deps() -> None:
 
 
 class BuildError(Exception):
-    """Any error encountered trying to build the Skill as a WASM component."""
+    """Any error encountered trying to build the Skill as a Wasm component."""
 
     def __init__(self, message: str):
         self.message = message
@@ -97,13 +97,13 @@ class SkillType(str, Enum):
 def run_componentize_py(
     skill_module: str, output_file: str, unstable: bool, skill_type: SkillType
 ) -> str:
-    """Build the skill to a WASM component using componentize-py.
+    """Build the skill to a Wasm component using componentize-py.
 
     The call to componentize-py targets the `skill` wit world and adds the downloaded
     Pydantic WASI wheels to the Python path.
 
     Returns:
-        str: The path to the generated WASM file.
+        str: The path to the generated Wasm file.
     """
     setup_wasi_deps()
     args = ["--all-features"] if unstable else []
@@ -153,7 +153,7 @@ def display_publish_suggestion(wasm_file: str) -> None:
     """Display a colorful suggestion to publish the skill.
 
     Args:
-        wasm_file: Path to the generated WASM file.
+        wasm_file: Path to the generated Wasm file.
     """
     wasm_filename = wasm_file.lstrip("./")
     publish_command = f"pharia-skill publish {wasm_filename} --tag [TAG] --name [NAME]"
@@ -174,7 +174,7 @@ def publish_skill(skill_path: str, name: Optional[str], tag: str) -> None:
     """Publish a skill with progress indicator and success message.
 
     Args:
-        skill_path: Path to the WASM file to publish.
+        skill_path: Path to the Wasm file to publish.
         name: Name to publish the skill as, or None to use the filename.
         tag: Tag to publish the skill with.
     """
@@ -227,7 +227,7 @@ def prompt_for_publish(wasm_file: str) -> None:
     """Prompt the user to publish the skill.
 
     Args:
-        wasm_file: Path to the generated WASM file.
+        wasm_file: Path to the generated Wasm file.
     """
     wasm_filename = wasm_file.lstrip("./")
 
@@ -323,7 +323,7 @@ def build(
     with Progress(
         SpinnerColumn(),
         TextColumn(
-            f"Building WASM component [cyan]{output_file}[/cyan] from module [cyan]{skill}[/cyan]..."
+            f"Building Wasm component [cyan]{output_file}[/cyan] from module [cyan]{skill}[/cyan]..."
         ),
         TimeElapsedColumn(),
         console=console,
