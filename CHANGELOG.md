@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.14.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.14.0...v0.14.1) (2025-05-16)
+
+
+### Documentation
+
+* add link to PyPI ([3a47965](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3a479654d382618fc963f17ba0cc452ac2f5a866))
+* fix abbreviations for Wasm and WASI ([c05cfca](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c05cfca706ff3feb8c199fa600b02bd8f0d2fdef))
+
 ## [0.14.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.13.1...v0.14.0) (2025-04-30)
 
 
