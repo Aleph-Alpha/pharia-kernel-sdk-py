@@ -3,7 +3,7 @@
 ## Install dependencies
 
 ```shell
-uv sync --dev --frozen
+uv sync --dev --extra cli --frozen
 ```
 
 ## Running `pre-commit` hooks

@@ -17,10 +17,7 @@ dependencies = [
     "pydantic==2.10.6",
     "requests>=2.32.3,<3",
     "python-dotenv>=1.0.1,<2",
-    "componentize-py>=0.16.0,<0.17",
     "opentelemetry-sdk>=1.28.1,<2",
-    "typer>=0.15.4,<0.16",
-    "rich>=13.7.0,<15",
 ]
 
 [project.urls]
@@ -31,6 +28,13 @@ Changelog = "https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/blob/main/CHANG
 
 [project.scripts]
 pharia-skill = "pharia_skill.cli:app"
+
+[project.optional-dependencies]
+cli = [
+    "componentize-py>=0.16.0,<0.17",
+    "rich>=13.7.0,<15",
+    "typer>=0.15.4,<0.16",
+]
 
 [dependency-groups]
 dev = [
