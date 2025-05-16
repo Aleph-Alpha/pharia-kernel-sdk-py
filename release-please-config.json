@@ -3,7 +3,14 @@
   "bump-patch-for-minor-pre-major": true,
   "packages": {
     ".": {
-      "release-type": "python"
+      "release-type": "python",
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='pharia-skill')].version"
+        }
+      ]
     }
   }
 }
