@@ -150,7 +150,7 @@ class PhariaSkillCli:
     ) -> None:
         """Publish a skill to an OCI registry.
 
-        Takes a path to a WASM component, wrap it in an OCI image and publish it to an OCI
+        Takes a path to a Wasm component, wrap it in an OCI image and publish it to an OCI
         registry under the `latest` tag. This does not fully deploy the skill, as an older
         version might still be cached in the Kernel.
         """

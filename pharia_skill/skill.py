@@ -88,7 +88,7 @@ def skill(
 
     class SkillHandler(exports.SkillHandler):
         def run(self, input: bytes) -> bytes:
-            """This is the function that gets executed when running the Skill as a WASM component."""
+            """This is the function that gets executed when running the Skill as a Wasm component."""
             try:
                 validated = input_model.model_validate_json(input)
             except Exception:
@@ -108,7 +108,7 @@ def skill(
         """This is the function that we return from the decorator and that get's executed at test time.
 
         The `opentelemetry` library import is moved to within the function to not make it a dependency of the
-        WASM component.
+        Wasm component.
         """
         from opentelemetry import trace
 

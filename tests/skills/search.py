@@ -1,5 +1,5 @@
 """
-Test document search and metadata in WASM
+Test document search and metadata in Wasm
 """
 
 from pydantic import RootModel

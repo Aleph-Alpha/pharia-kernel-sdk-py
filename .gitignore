@@ -1,4 +1,4 @@
-# WASM and wasi wheels directories
+# Wasm and WASI wheels directories
 wasi_deps/
 skills/
 !tests/skills/

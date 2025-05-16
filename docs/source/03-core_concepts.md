@@ -10,9 +10,9 @@ Unlike traditional serverless or FaaS (Function as a Service) functions, Skills 
 
 When this Skill will get executed, and how, is up to the Kernel, which allows the engineer to focus on the business and AI logic of the Skill at hand.
 
-## WASM Component
+## Wasm Component
 
-On a more technical level, when you build your Skill, it is compiled to a [WASM Component](https://component-model.bytecodealliance.org/).
+On a more technical level, when you build your Skill, it is compiled to a [Wasm Component](https://component-model.bytecodealliance.org/).
 Under the hood, we use [componentize-py](https://github.com/bytecodealliance/componentize-py?tab=readme-ov-file#known-limitations) to do that.
 `componentize-py` resolves the imports of a Skill module, so any package you import in you Skill will also be included in the Component.
 However, non-native dependencies (e.g. `NumPy` which is written in `C`) only work if the wheels for [WASI targets](https://github.com/benbrandt/wasi-wheels) are available at build-time. For `Pydantic`, our SDK resolves this under the hood for you.
@@ -28,7 +28,7 @@ To make this interface available at development time, the SDK provides a [DevCSI
 
 ### Testing
 
-When Skills are run in the Kernel, the CSI is provided via an Application Binary Interface. This interface is defined via the [WASM Interface Type](https://component-model.bytecodealliance.org/design/wit.html) (WIT) language.
+When Skills are run in the Kernel, the CSI is provided via an Application Binary Interface. This interface is defined via the [Wasm Interface Type](https://component-model.bytecodealliance.org/design/wit.html) (WIT) language.
 For development and debugging, Skills can also run in a local Python environment. The CSI which is available to the Skill at runtime can be substituted with a [DevCSI](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) which is backed by HTTP requests against a running instance of the Kernel.
 Developers can write tests, step through their Python code and inspect the state of variables.
 

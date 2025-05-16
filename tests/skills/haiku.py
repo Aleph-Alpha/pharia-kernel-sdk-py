@@ -1,5 +1,5 @@
 """
-Call into the completion and chat completion interface to test both in WASM
+Call into the completion and chat completion interface to test both in Wasm
 """
 
 from pydantic import BaseModel, RootModel
