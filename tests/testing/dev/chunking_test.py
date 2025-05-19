@@ -48,4 +48,4 @@ def test_deserialize_chunk_response():
 
     # Then we get a list of chunks
     assert len(deserialized.root) == 1
-    assert deserialized.root[0][0] == Chunk(text="Hello, world!", offset=10)
+    assert deserialized.root[0][0] == Chunk(text="Hello, world!", character_offset=10)

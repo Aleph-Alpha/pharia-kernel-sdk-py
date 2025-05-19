@@ -43,8 +43,8 @@ class Output(BaseModel):
 
 def overlap(search_result: SearchResult, chunk: Chunk) -> bool:
     """Check if the specified chunk overlaps with the search result."""
-    return max(search_result.start.position, chunk.offset) <= min(
-        search_result.end.position, chunk.offset + len(chunk.text)
+    return max(search_result.start.position, chunk.character_offset) <= min(
+        search_result.end.position, chunk.character_offset + len(chunk.text)
     )
 
 

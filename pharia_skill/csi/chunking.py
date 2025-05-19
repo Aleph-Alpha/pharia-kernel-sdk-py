@@ -1,7 +1,7 @@
 from dataclasses import asdict
 from typing import Any
 
-from pydantic import Field, model_serializer
+from pydantic import model_serializer
 
 # We use pydantic.dataclasses to get type validation.
 # See the docstring of `csi` module for more information on the why.
@@ -50,8 +50,8 @@ class Chunk:
 
     Attributes:
         text (str, required): The text that was chunked
-        offset (int, required): The character offset relative to the start of the original text
+        character_offset (int, required): The character offset relative to the start of the original text
     """
 
     text: str
-    offset: int = Field(validation_alias="character_offset")
+    character_offset: int
