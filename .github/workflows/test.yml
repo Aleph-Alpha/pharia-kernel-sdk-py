@@ -111,6 +111,7 @@ jobs:
           uv run pharia-skill build tests.skills.search --no-interactive
           uv run pharia-skill build tests.skills.language --no-interactive
           uv run pharia-skill build tests.skills.failing --no-interactive
+          uv run pharia-skill build tests.skills.bad_csi_input --no-interactive
           uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive --skill-type message-stream-skill
           uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive --skill-type message-stream-skill
       - name: Test skill publishing
@@ -130,6 +131,7 @@ jobs:
           uv run sh -x -e ./scripts/run_streaming_skill.sh streaming_haiku_chat $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_streaming_skill.sh streaming_haiku_completion $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_bad_csi_input_skill.sh $PHARIA_AI_TOKEN
       - name: Test skill metadata on ubuntu only
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
