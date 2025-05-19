@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.15.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.14.2...v0.15.0) (2025-05-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename offset field on chunk to character offset
+* validate types passed to the csi with pydantic dataclasses
+
+### Features
+
+* validate types passed to the csi with pydantic dataclasses ([173ad09](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/173ad098d319cb1cfe120f801ebe91500d0ad647))
+
+
+### Code Refactoring
+
+* rename offset field on chunk to character offset ([85dcf66](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/85dcf66b462fbe3cf5e27bda1460308ba92a5f54))
+
 ## [0.14.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.14.1...v0.14.2) (2025-05-16)
 
 
