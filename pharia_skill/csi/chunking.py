@@ -1,7 +1,11 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from typing import Any
 
 from pydantic import Field, model_serializer
+
+# We use pydantic.dataclasses to get type validation.
+# See the docstring of `csi` module for more information on the why.
+from pydantic.dataclasses import dataclass
 
 
 @dataclass
