@@ -1,6 +1,6 @@
 [project]
 name = "pharia-skill"
-version = "0.14.2"
+version = "0.15.0"
 description = "SDK for building Python skills for Pharia Kernel"
 license = "Apache-2.0"
 authors = [
