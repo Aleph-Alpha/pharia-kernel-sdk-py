@@ -6,12 +6,16 @@ via the Cognitive System Interface (CSI).
 from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Generator
-from dataclasses import dataclass, field
+from dataclasses import field
 from enum import Enum
 from types import TracebackType
 from typing import Any, Literal, Self
 
 from pydantic import field_validator
+
+# We use pydantic.dataclasses to get type validation.
+# See the docstring of `csi` module for more information on the why.
+from pydantic.dataclasses import dataclass
 
 
 @dataclass

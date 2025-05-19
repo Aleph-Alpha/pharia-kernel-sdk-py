@@ -1,3 +1,24 @@
+"""
+The protocol we offer to Skill developers.
+
+This interface is type-checked, in that we validate all data that we pass along to the
+bindings. For this validation, we rely on `pydantic.dataclasses` to validate the types.
+
+Python uses duck typing and this implies that someone using a library is responsible to
+ensure the types that are passed are correct. This assumption holds true for all types that
+we use in the SDK, and do not pass on to the bindings. However, it is the responsibility of
+the SDK to ensure that the error messages users receive if they pass incorrect types are
+are actionable. With `componentize-py`, the backtrace which is offered does not guide the
+user towards the correct solution. Therefore, it is our responsibility to make sure that
+we pass the correct types to the bindings.
+
+This validation responsibility only covers types we pass to the bindings, it does not extend
+to assert the type of something we use in our Python code. E.g. if we receive a DocumentPath
+in our `Csi` interface, and only use this to instantiate a `bindings.imports.DocumentPath`,
+the Python interpreter makes sure the caller gets a good error message if they pass in e.g.
+`None` and we access the `name` attribute in our SDK.
+"""
+
 from typing import Protocol, Sequence
 
 from .chunking import Chunk, ChunkParams, ChunkRequest

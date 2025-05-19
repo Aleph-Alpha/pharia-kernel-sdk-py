@@ -1,5 +1,8 @@
-from dataclasses import dataclass
 from enum import Enum
+
+# We use pydantic.dataclasses to get type validation.
+# See the docstring of `csi` module for more information on the why.
+from pydantic.dataclasses import dataclass
 
 
 class Language(str, Enum):

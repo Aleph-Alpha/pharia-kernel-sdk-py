@@ -53,6 +53,10 @@ class WitCsi(Csi):
 
     Responsible to tranlate between the types we expose in the SDK and the types in the `wit.imports` module,
     which are automatically generated from the WIT world via `componentize-py`.
+
+    All parameters to any methods on the `WitCsi` must be type checked, as otherwise `componentize-py`
+    produces a non-helpful error message. This is done by using `pydantic.dataclasses`. See the
+    docstring of `csi` module for more information.
     """
 
     def completion_stream(
