@@ -17,7 +17,7 @@ dependencies = [
     "pydantic==2.11.4",
     "requests>=2.32.3,<3",
     "python-dotenv>=1.0.1,<2",
-    "componentize-py>=0.16.0,<0.17",
+    "componentize-py>=0.17.0,<0.18",
     "opentelemetry-sdk>=1.28.1,<2",
     "typer>=0.15.4,<0.16",
     "rich>=13.7.0,<15",

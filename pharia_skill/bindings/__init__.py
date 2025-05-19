@@ -9,5 +9,5 @@ from .types import Result, Ok, Err, Some
 
 
 
-class SkillAll(Protocol):
+class Bindings(Protocol):
     pass
