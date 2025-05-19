@@ -23,4 +23,4 @@ def chunk_request_to_wit(
 def chunk_from_wit(chunk: wit.ChunkWithOffset) -> Chunk:
     # The character offset is always expected becaused the flag `character_offsets` is enabled
     assert chunk.character_offset is not None
-    return Chunk(text=chunk.text, offset=chunk.character_offset)
+    return Chunk(text=chunk.text, character_offset=chunk.character_offset)

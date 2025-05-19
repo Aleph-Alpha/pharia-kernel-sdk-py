@@ -129,7 +129,7 @@ class StubCsi(Csi):
         ]
 
     def chunk_concurrent(self, requests: Sequence[ChunkRequest]) -> list[list[Chunk]]:
-        return [[Chunk(text=request.text, offset=0)] for request in requests]
+        return [[Chunk(text=request.text, character_offset=0)] for request in requests]
 
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
         return [
