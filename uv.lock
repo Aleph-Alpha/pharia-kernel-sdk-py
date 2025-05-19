@@ -124,15 +124,15 @@ wheels = [
 
 [[package]]
 name = "componentize-py"
-version = "0.16.0"
+version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d1/64/d64b0cbf596b4624f941199c943cf4547612807f125c25d26d6c7dfa7e03/componentize_py-0.16.0.tar.gz", hash = "sha256:2823e5f3abf7a4eaf993d0841d8e7888f13d3b46a8e42230e044d64b49311e57", size = 156307 }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/29/2ca1ff34e422667bfe905735a5718466edf56bac907c57a536b6078bf8fb/componentize_py-0.17.0.tar.gz", hash = "sha256:694c5279d55b587c1ac9458b45c4b4cadc2b6dadf24cbfb4b2192d51dbdc2f33", size = 161713 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c1/39/55db339c8d2a3de3f9b57e94763308eaa1ea4691b671606b90595cbcef3f/componentize_py-0.16.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:a67f378aada7d4652c14abfb922be915c6383192416d0fe75aef33c4fd8ed6f0", size = 18121079 },
-    { url = "https://files.pythonhosted.org/packages/59/c0/7721d5d3f8e6d716309fc0da466856695b699a6a55d557dfcc841b088730/componentize_py-0.16.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:0728eb5c584651a21c7fde39e9c4c21d0b469b37e07e5e32b2d72e7ac5047083", size = 17763273 },
-    { url = "https://files.pythonhosted.org/packages/47/4b/8e70d5526073825a791dc2a4a1d02ef255034203d3fb4ff6450b06c927f5/componentize_py-0.16.0-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:46bc31b4d3e93d556174827aeef326f644e7de4b85f3c1f8e05769aa3f522a08", size = 18544158 },
-    { url = "https://files.pythonhosted.org/packages/dc/78/368da5fdc97e8c56ee5d59a1c3f452233aa91f6c2e89fc8cde532612c6a3/componentize_py-0.16.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:95644bf551b8e93f56049a623307bbc1d982ebfa3ebb1ef45b3e631bfd65b798", size = 19050720 },
-    { url = "https://files.pythonhosted.org/packages/12/47/55d85805686da60018b1f3d32c1025e46f9c2fe18a9c7e369912fa65998b/componentize_py-0.16.0-cp39-abi3-win_amd64.whl", hash = "sha256:8b0571f7a081dac86c9ab1b7ed0e0a5b5d5c9107f3d33db29f0764f261d7c1b8", size = 17282010 },
+    { url = "https://files.pythonhosted.org/packages/98/24/94dc7157189b4b2b63f86d4d47a2281bc01346e66a746080d66e69344b87/componentize_py-0.17.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:5f9b500f43fe7eb4918e2e17833ccef3f6f842d39df8d7f20a00753780347e6c", size = 19383054 },
+    { url = "https://files.pythonhosted.org/packages/82/b6/64dcf79cf3eee66495436315ebbb2a81a97c0ed9c49bc8a361afa0b22e39/componentize_py-0.17.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:7a902d5c7756777997ca9a8282fb71d480d04ab84991fc1d058aee37a344e2a8", size = 18914389 },
+    { url = "https://files.pythonhosted.org/packages/24/c1/89ee273aa9b6bdbb29829f80c7a6ece17545042e145ff4dfca9a1cdd7f83/componentize_py-0.17.0-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:15ebfd32389682f28603b157e1cdf7d51c580c41505c8e782771e8d065892c32", size = 19687678 },
+    { url = "https://files.pythonhosted.org/packages/bb/46/82379177bc12a6787246a627d2c9914567c671d99e2ad5600196455bcb12/componentize_py-0.17.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:f96d10d373fa29efb4e0d82248e968b091b641c1c9333e36c86e70cb2a07a79c", size = 20257476 },
+    { url = "https://files.pythonhosted.org/packages/42/64/bf17f2173a61140da9a541970ccde384f3874d251849f4a1017ab2439cf0/componentize_py-0.17.0-cp39-abi3-win_amd64.whl", hash = "sha256:9fb8ab120a9a56818afe9d9760a7eb34c22f7aa11f3f0a73dc4d2c9e513462ee", size = 18253176 },
 ]
 
 [[package]]
@@ -474,7 +474,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "componentize-py", specifier = ">=0.16.0,<0.17" },
+    { name = "componentize-py", specifier = ">=0.17.0,<0.18" },
     { name = "opentelemetry-sdk", specifier = ">=1.28.1,<2" },
     { name = "pydantic", specifier = "==2.11.4" },
     { name = "pydantic-core", specifier = "==2.33.2" },
