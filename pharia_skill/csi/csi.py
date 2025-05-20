@@ -19,7 +19,11 @@ the Python interpreter makes sure the caller gets a good error message if they p
 `None` and we access the `name` attribute in our SDK.
 """
 
-from typing import Protocol, Sequence
+from typing import Any, Protocol, Sequence
+
+from pydantic import BaseModel
+
+from pharia_skill.llama3.tool import Tool, ToolDefinition
 
 from .chunking import Chunk, ChunkParams, ChunkRequest
 from .document_index import (
@@ -48,6 +52,12 @@ from .inference import (
 from .language import Language, SelectLanguageRequest
 
 
+class PopulationTool(Tool):
+    """Return the number of people living in a city"""
+
+    city: str
+
+
 class Csi(Protocol):
     """The Cognitive System Interface (CSI) is a protocol that allows skills to interact with the Pharia Kernel.
 
@@ -56,6 +66,31 @@ class Csi(Protocol):
     returned in the same order as the requests. Therefore, our interface requires the user to provide
     Sequences, as we want the input to be ordered.
     """
+
+    def get_tool(self, name: str) -> ToolDefinition:
+        """Get a tool by name."""
+        match name:
+            case "population_tool":
+                return PopulationTool
+            case _:
+                raise ValueError(f"Unknown tool: {name}")
+
+    def invoke_tool(self, name: str, parameters: dict[str, Any] | BaseModel) -> str:
+        """Invoke a tool with the given name and parameters."""
+        match name:
+            case "population_tool":
+                parameters = (
+                    parameters.model_dump()
+                    if isinstance(parameters, BaseModel)
+                    else parameters
+                )
+                match parameters.get("city"):
+                    case "Paris":
+                        return "90 Million"
+                    case _:
+                        raise ValueError(f"Unknown city: {parameters.get('city')}")
+            case _:
+                raise ValueError(f"Unknown tool: {name}")
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams

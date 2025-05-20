@@ -72,7 +72,7 @@ class ChatRequest:
     The system message is automatically adapted.
     """
 
-    tools: Sequence[ToolDefinition] = field(default_factory=list)
+    tools: Sequence[ToolDefinition | str] = field(default_factory=list)
     params: ChatParams = field(default_factory=ChatParams)
 
     def __post_init__(self) -> None:
@@ -109,11 +109,17 @@ class ChatRequest:
         """
         validate_messages(self.messages)
         completion_params = to_completion_params(self.params)
-        completion = csi.complete(self.model, self.render(), completion_params)
-        message = AssistantMessage.from_raw_response(completion.text, self.tools)
+        completion = csi.complete(self.model, self.render(csi), completion_params)
+        message = AssistantMessage.from_raw_response(
+            completion.text, self.resolved_tools(csi)
+        )
 
         self.messages.append(message)
         return ChatResponse(message, completion.finish_reason)
+
+    def resolved_tools(self, csi: Csi) -> list[ToolDefinition]:
+        """Resolve the tools to a list of ToolDefinitions."""
+        return [csi.get_tool(t) if isinstance(t, str) else t for t in self.tools]
 
     def extend(self, message: Message) -> None:
         """Add a message to a chat request.
@@ -124,11 +130,11 @@ class ChatRequest:
         validate_messages(self.messages + [message])
         self.messages.append(message)
 
-    def render(self) -> str:
+    def render(self, csi: Csi) -> str:
         """Convert the chat request to a prompt that can be passed to the model."""
         prompt = SpecialTokens.BeginOfText.value
         if self.system or self.tools:
-            prompt += SystemMessage(self.system or "").render(self.tools)
+            prompt += SystemMessage(self.system or "").render(self.resolved_tools(csi))
 
         # tools only get passed to the first user message
         for message in self.messages:
