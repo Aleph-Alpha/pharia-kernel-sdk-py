@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 
 from pydantic import BaseModel
 
@@ -8,7 +9,7 @@ from pharia_skill.llama3.message import (
     ToolMessage,
     UserMessage,
 )
-from pharia_skill.llama3.tool import BraveSearch, CodeInterpreter, Tool, WolframAlpha
+from pharia_skill.llama3.tool import Tool
 from pharia_skill.llama3.tool_call import ToolCall
 
 
@@ -21,45 +22,11 @@ class GetGithubReadme(Tool):
 def test_render_system_message():
     system = SystemMessage("You are a helpful assistant.")
     expected = "<|start_header_id|>system<|end_header_id|>\n\nYou are a helpful assistant.<|eot_id|>"
-    assert system.render(tools=[]) == expected
-
-
-def test_system_prompt_tools():
-    tools: list[type[Tool]] = [CodeInterpreter, BraveSearch, GetGithubReadme]
-    assert SystemMessage.system_prompt_tools(tools) == [BraveSearch]
-
-
-def test_system_prompt_with_code_interpreter():
-    system = SystemMessage("")
-    tools = [CodeInterpreter]
-    expected = f"""<|start_header_id|>system<|end_header_id|>
-
-Environment: ipython
-If you decide to run python code, assign the result to a variable called `result`.
-Cutting Knowledge Date: December 2023
-Today Date: {dt.datetime.now().strftime("%d %B %Y")}
-
-You are a helpful assistant.<|eot_id|>"""
-    assert system.render(tools=tools) == expected
-
-
-def test_system_prompt_merged_from_user_and_tools():
-    system = SystemMessage("You are a poet who strictly speaks in haikus.")
-    tools = [CodeInterpreter]
-    expected = f"""<|start_header_id|>system<|end_header_id|>
-
-Environment: ipython
-If you decide to run python code, assign the result to a variable called `result`.
-Cutting Knowledge Date: December 2023
-Today Date: {dt.datetime.now().strftime("%d %B %Y")}
-
-You are a helpful assistant.
-You are a poet who strictly speaks in haikus.<|eot_id|>"""
-    assert system.render(tools) == expected
+    assert system.render(tool_schemas=[]) == expected
 
 
 def test_system_prompt_with_json_based_tools():
-    tools = [GetGithubReadme]
+    tools = [json.dumps(GetGithubReadme.json_schema())]
     system = SystemMessage("")
     expected = f"""<|start_header_id|>system<|end_header_id|>
 
@@ -97,45 +64,15 @@ You are a helpful assistant.<|eot_id|>"""
 
 def test_ipython_environment_activated_by_custom_tool():
     system = SystemMessage("")
-    tools = [GetGithubReadme]
+    tools = [json.dumps(GetGithubReadme.json_schema())]
     expected = """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython"""
     assert system.render(tools).startswith(expected)
-
-
-def test_system_prompt_lists_built_in_tools():
-    tools: list[type[Tool]] = [CodeInterpreter, BraveSearch, WolframAlpha]
-    system = SystemMessage("")
-    expected = f"""<|start_header_id|>system<|end_header_id|>
-
-Environment: ipython
-Tools: brave_search, wolfram_alpha
-If you decide to run python code, assign the result to a variable called `result`.
-Cutting Knowledge Date: December 2023
-Today Date: {dt.datetime.now().strftime("%d %B %Y")}
-
-You are a helpful assistant.<|eot_id|>"""
-    assert system.render(tools) == expected
 
 
 def test_render_user_message():
     message = UserMessage("Hello, world!")
     expected = "<|start_header_id|>user<|end_header_id|>\n\nHello, world!<|eot_id|>"
-    assert message.render(tools=[]) == expected
-
-
-def test_user_provided_tools():
-    tools: list[type[Tool]] = [CodeInterpreter, BraveSearch, GetGithubReadme]
-    assert UserMessage.json_based_tools(tools) == [GetGithubReadme]
-
-
-def test_render_user_message_with_tools():
-    message = UserMessage("What is the readme of the pharia-kernel repository?")
-    tools: list[type[Tool]] = [GetGithubReadme, CodeInterpreter, BraveSearch]
-
-    expected = """<|start_header_id|>user<|end_header_id|>
-
-What is the readme of the pharia-kernel repository?<|eot_id|>"""
-    assert message.render(tools) == expected
+    assert message.render() == expected
 
 
 def deserialize_user_and_system_message():
@@ -172,7 +109,7 @@ def test_render_tool_response():
         success=True,
     )
     expected = '<|start_header_id|>ipython<|end_header_id|>\n\ncompleted[stdout]{"weather": "sunny", "temperature": "70 degrees"}[/stdout]<|eot_id|>'
-    assert tool.render(tools=[]) == expected
+    assert tool.render() == expected
 
 
 def test_render_failed_tool_response():
@@ -181,7 +118,7 @@ def test_render_failed_tool_response():
         success=False,
     )
     expected = "<|start_header_id|>ipython<|end_header_id|>\n\nfailed[stderr]failed to connect to server[/stderr]<|eot_id|>"
-    assert tool.render(tools=[]) == expected
+    assert tool.render() == expected
 
 
 def test_render_assistant_message_without_tool_calls():
@@ -189,13 +126,13 @@ def test_render_assistant_message_without_tool_calls():
     expected = (
         "<|start_header_id|>assistant<|end_header_id|>\n\nHello, world!<|eot_id|>"
     )
-    assert message.render(tools=[]) == expected
+    assert message.render() == expected
 
 
 def test_render_assistant_messages_without_ipython_ends_in_eom():
     tool_call = ToolCall(
-        name="get_github_readme", parameters=GetGithubReadme(repository="pharia-kernel")
+        name="get_github_readme", parameters={"repository": "pharia-kernel"}
     )
     message = AssistantMessage(tool_calls=[tool_call])
     expected = """<|start_header_id|>assistant<|end_header_id|>\n\n<|python_tag|>{"name": "get_github_readme", "parameters": {"repository": "pharia-kernel"}}<|eom_id|>"""
-    assert message.render(tools=[GetGithubReadme]) == expected
+    assert message.render() == expected

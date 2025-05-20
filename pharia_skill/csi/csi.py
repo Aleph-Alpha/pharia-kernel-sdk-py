@@ -19,11 +19,8 @@ the Python interpreter makes sure the caller gets a good error message if they p
 `None` and we access the `name` attribute in our SDK.
 """
 
+import json
 from typing import Any, Protocol, Sequence
-
-from pydantic import BaseModel
-
-from pharia_skill.llama3.tool import Tool, ToolDefinition
 
 from .chunking import Chunk, ChunkParams, ChunkRequest
 from .document_index import (
@@ -51,11 +48,7 @@ from .inference import (
 )
 from .language import Language, SelectLanguageRequest
 
-
-class PopulationTool(Tool):
-    """Return the number of people living in a city"""
-
-    city: str
+type ToolSchema = str
 
 
 class Csi(Protocol):
@@ -67,23 +60,34 @@ class Csi(Protocol):
     Sequences, as we want the input to be ordered.
     """
 
-    def get_tool(self, name: str) -> ToolDefinition:
+    def tool_schema(self, name: str) -> ToolSchema:
         """Get a tool by name."""
         match name:
             case "population_tool":
-                return PopulationTool
+                schema = {
+                    "properties": {"city": {"title": "City", "type": "string"}},
+                    "required": ["city"],
+                    "title": "Population",
+                    "type": "object",
+                }
+                data = {
+                    "type": "function",
+                    "function": {
+                        "name": "population_tool",
+                        "description": "Return the number of people living in a city",
+                        "parameters": schema,
+                    },
+                }
+                return json.dumps(data)
             case _:
-                raise ValueError(f"Unknown tool: {name}")
+                raise ValueError(
+                    f"Runtime error: The Skill tried accessing tool {name} which is currently not available. Please contact the operator of you PhariaAI instance."
+                )
 
-    def invoke_tool(self, name: str, parameters: dict[str, Any] | BaseModel) -> str:
+    def invoke_tool(self, name: str, parameters: dict[str, Any]) -> str:
         """Invoke a tool with the given name and parameters."""
         match name:
             case "population_tool":
-                parameters = (
-                    parameters.model_dump()
-                    if isinstance(parameters, BaseModel)
-                    else parameters
-                )
                 match parameters.get("city"):
                     case "Paris":
                         return "90 Million"

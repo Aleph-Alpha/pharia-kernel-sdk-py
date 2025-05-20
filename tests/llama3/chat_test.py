@@ -6,7 +6,6 @@ from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason, To
 from pharia_skill.llama3 import (
     ChatRequest,
     Role,
-    Tool,
     ToolCall,
     ToolMessage,
     UserMessage,
@@ -33,12 +32,6 @@ class MockCsi(Csi):
     def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         self.prompts.append(prompt)
         return self.completion
-
-
-class GetShipmentDate(Tool):
-    """Get the shipment date for a specific order"""
-
-    order_id: str
 
 
 def test_can_not_chat_twice_without_appending_message():
@@ -85,8 +78,8 @@ def test_can_chat_twice_when_providing_user_response():
 @pytest.mark.kernel
 def test_trigger_tool_call(csi: DevCsi):
     # Given a chat request with a tool definition and a message that requires the tool
-    message = UserMessage("When will the order `42` ship?")
-    request = ChatRequest(llama, [message], tools=[GetShipmentDate])
+    message = UserMessage("What is the population of Paris?")
+    request = ChatRequest(llama, [message], tools=["population_tool"])
 
     # When doing a chat request
     response = request.chat(csi)
@@ -95,8 +88,8 @@ def test_trigger_tool_call(csi: DevCsi):
     assert response.message.role == Role.Assistant
     assert response.message.content is None
     assert response.message.tool_calls
-    assert isinstance(response.message.tool_calls[0].parameters, GetShipmentDate)
-    assert response.message.tool_calls[0].parameters.order_id == "42"
+    assert response.message.tool_calls[0].name == "population_tool"
+    assert response.message.tool_calls[0].parameters == {"city": "Paris"}
 
     # And the original request should be extended
     assert request.messages[-1].role == Role.Assistant
@@ -105,51 +98,30 @@ def test_trigger_tool_call(csi: DevCsi):
 @pytest.mark.kernel
 def test_provide_tool_result(csi: DevCsi):
     # Given an assistant that has requested a tool call
-    user = UserMessage("When will the order `42` ship?")
-    tool_call = ToolCall(GetShipmentDate.name(), parameters={"order_id": "42"})
+    user = UserMessage("How many people live in Paris?")
+    tool_call = ToolCall("population_tool", parameters={"city": "Paris"})
     assistant = AssistantMessage(tool_calls=[tool_call])
 
     # When providing a tool response back to the model
-    tool = ToolMessage(content="1970-01-01")
-    request = ChatRequest(llama, [user, assistant, tool], tools=[GetShipmentDate])
+    tool = ToolMessage(content="71 million people")
+    request = ChatRequest(llama, [user, assistant, tool], tools=["population_tool"])
     response = request.chat(csi)
 
     # Then the response should answer the original question
     assert response.message.role == Role.Assistant
     assert response.message.tool_calls is None
     assert response.message.content is not None
-    assert "will ship" in response.message.content
-    assert "1970" in response.message.content
-
-
-def test_tool_response_is_parsed_into_provided_class():
-    # Given a tool specified as pydantic model
-    message = UserMessage("When will the order `42` ship?")
-    request = ChatRequest(llama, [message], tools=[GetShipmentDate])
-    completion = Completion(
-        text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}',
-        finish_reason=FinishReason.STOP,
-        logprobs=[],
-        usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
-    )
-    csi = MockCsi(completion)  #  type: ignore
-
-    # When doing a completion request
-    response = request.chat(csi)
-
-    # Then the response is parsed into the provided class
-    assert response.message.tool_calls
-    assert isinstance(response.message.tool_calls[0].parameters, GetShipmentDate)
+    assert "71 million" in response.message.content
 
 
 def test_tool_response_can_be_added_to_prompt():
     # Given a chat request with a tool definition and a message that requires the tool
-    message = UserMessage("When will the order `42` ship?")
-    request = ChatRequest(llama, [message], tools=[GetShipmentDate])
+    message = UserMessage("How many people live in Paris?")
+    request = ChatRequest(llama, [message], tools=["population_tool"])
 
     # And given a csi that always responds with a function call
     completion = Completion(
-        text='{"type": "function", "name": "get_shipment_date", "parameters": {"order_id": "42"}}',
+        text='{"type": "function", "name": "population_tool", "parameters": {"city": "Paris"}}',
         finish_reason=FinishReason.STOP,
         logprobs=[],
         usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
@@ -159,10 +131,10 @@ def test_tool_response_can_be_added_to_prompt():
     # When doing a chat request
     response = request.chat(csi)
     assert response.message.tool_calls
-    assert isinstance(response.message.tool_calls[0].parameters, GetShipmentDate)
+    assert response.message.tool_calls[0].parameters == {"city": "Paris"}
 
     # And providing the tool response
-    tool = ToolMessage(content='{"result": "1970-01-01"}')
+    tool = ToolMessage(content='{"result": "71 million"}')
     request.extend(tool)
 
     # And doing another chat request against a spy csi
@@ -181,16 +153,16 @@ Here is a list of functions in JSON format:
 {
     "type": "function",
     "function": {
-        "name": "get_shipment_date",
-        "description": "Get the shipment date for a specific order",
+        "name": "population_tool",
+        "description": "Return the number of people living in a city",
         "parameters": {
             "properties": {
-                "order_id": {
+                "city": {
                     "type": "string"
                 }
             },
             "required": [
-                "order_id"
+                "city"
             ],
             "type": "object"
         }
@@ -201,11 +173,11 @@ Return function calls in JSON format.
 
 You are a helpful assistant.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
-When will the order `42` ship?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+How many people live in Paris?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-<|python_tag|>{"name": "get_shipment_date", "parameters": {"order_id": "42"}}<|eom_id|><|start_header_id|>ipython<|end_header_id|>
+<|python_tag|>{"name": "population_tool", "parameters": {"city": "Paris"}}<|eom_id|><|start_header_id|>ipython<|end_header_id|>
 
-completed[stdout]{"result": "1970-01-01"}[/stdout]<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+completed[stdout]{"result": "71 million"}[/stdout]<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
 """
     )

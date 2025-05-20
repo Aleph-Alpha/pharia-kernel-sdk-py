@@ -33,6 +33,4 @@ def chat_with_tools(csi: Csi, input: Input) -> Output:
         response = request.chat(csi)
         assert response.message.content is not None
         return Output(answer=response.message.content)
-    else:
-        assert response.message.content is not None
-        return Output(answer=response.message.content)
+    raise ValueError(f"No tool call found in response: {response.message}")

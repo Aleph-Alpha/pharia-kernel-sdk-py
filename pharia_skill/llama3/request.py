@@ -11,13 +11,9 @@ a message or tool response to the request.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Literal, Sequence
+from typing import Literal, Sequence
 
-from pydantic import (
-    BaseModel,
-    field_serializer,
-    field_validator,
-)
+from pydantic import BaseModel
 
 from pharia_skill.csi import ChatParams, CompletionParams, Csi, FinishReason
 
@@ -29,7 +25,6 @@ from .message import (
     UserMessage,
 )
 from .response import SpecialTokens
-from .tool import BuiltInTools, JsonSchema, ToolDefinition
 
 Message = UserMessage | AssistantMessage | ToolMessage
 
@@ -72,7 +67,7 @@ class ChatRequest:
     The system message is automatically adapted.
     """
 
-    tools: Sequence[ToolDefinition | str] = field(default_factory=list)
+    tools: Sequence[str] = field(default_factory=list)
     params: ChatParams = field(default_factory=ChatParams)
 
     def __post_init__(self) -> None:
@@ -111,15 +106,11 @@ class ChatRequest:
         completion_params = to_completion_params(self.params)
         completion = csi.complete(self.model, self.render(csi), completion_params)
         message = AssistantMessage.from_raw_response(
-            completion.text, self.resolved_tools(csi)
+            completion.text, [csi.tool_schema(t) for t in self.tools]
         )
 
         self.messages.append(message)
         return ChatResponse(message, completion.finish_reason)
-
-    def resolved_tools(self, csi: Csi) -> list[ToolDefinition]:
-        """Resolve the tools to a list of ToolDefinitions."""
-        return [csi.get_tool(t) if isinstance(t, str) else t for t in self.tools]
 
     def extend(self, message: Message) -> None:
         """Add a message to a chat request.
@@ -134,45 +125,17 @@ class ChatRequest:
         """Convert the chat request to a prompt that can be passed to the model."""
         prompt = SpecialTokens.BeginOfText.value
         if self.system or self.tools:
-            prompt += SystemMessage(self.system or "").render(self.resolved_tools(csi))
+            prompt += SystemMessage(self.system or "").render(
+                [csi.tool_schema(t) for t in self.tools]
+            )
 
         # tools only get passed to the first user message
         for message in self.messages:
-            prompt += message.render([])
+            prompt += message.render()
 
         prompt += Role.Assistant.render()
         prompt += "\n\n"
         return prompt
-
-    @field_serializer("tools")
-    def as_dict(self, tools: Sequence[ToolDefinition]) -> list[dict[str, Any]]:
-        """Pydantic can not serialize type[BaseModel], so we serialize it manually."""
-        return [
-            t.model_dump() if isinstance(t, JsonSchema) else t.json_schema()
-            for t in tools
-        ]
-
-    @field_validator(
-        "tools",
-        mode="before",
-        json_schema_input_type=list[JsonSchema | BuiltInToolSchema],
-    )
-    @classmethod
-    def validate_tools(cls, value: Any) -> Sequence[ToolDefinition]:
-        assert isinstance(value, list)
-        tools = []
-        for tool in value:
-            assert isinstance(tool, dict) and tool.get("type")
-            if tool["type"] != "function":
-                known = next(
-                    (b for b in BuiltInTools if tool["type"] == b.name()), None
-                )
-                if not known:
-                    raise ValueError(f"Invalid built in tool: {tool}")
-                tools.append(known)
-            elif isinstance(tool, dict):
-                tools.append(JsonSchema(**tool))  # type: ignore
-        return tools
 
 
 def to_completion_params(params: ChatParams) -> CompletionParams:

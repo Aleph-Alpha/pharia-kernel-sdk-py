@@ -12,11 +12,11 @@ from pharia_skill.llama3 import (
 llama = "llama-3.1-8b-instruct"
 
 
+
 class GetGithubReadme(Tool):
     """Get the readme of a GitHub repository"""
 
     repository: str
-
 
 def test_no_system_prompt_included_if_no_tools_provided():
     user = UserMessage("What is the square root of 16?")
@@ -110,7 +110,7 @@ def test_chat_request_with_tool_definition_is_serializable():
         request: ChatRequest
 
     user = UserMessage("When will my order (42) arrive?")
-    request = ChatRequest("llama-3.1-8b-instruct", [user], tools=[GetGithubReadme])
+    request = ChatRequest("llama-3.1-8b-instruct", [user], tools=[GetGithubReadme.name()])
     chat = ChatApi(request=request)
 
     # Then the model can be dumped to json without an error
@@ -121,7 +121,7 @@ def test_tools_not_included_in_second_user_prompt():
     # Given a chat request with two user messages
     user = UserMessage("What is the meaning of life?")
     assistant = AssistantMessage("42")
-    chat_request = ChatRequest(llama, [user, assistant, user], tools=[GetGithubReadme])
+    chat_request = ChatRequest(llama, [user, assistant, user], tools=[GetGithubReadme.name()])
 
     # When rendering the chat request
     rendered = chat_request.render()
@@ -138,8 +138,7 @@ def test_schema_includes_built_in_tools():
     # When creating the schema
     schema = Wrapper.model_json_schema()
 
-    # Then the tools are specified to either be "BuiltInToolSchema" or "JsonSchema"
-    assert schema["$defs"]["ChatRequest"]["properties"]["tools"]["items"]["anyOf"] == [
-        {"$ref": "#/$defs/JsonSchema"},
-        {"$ref": "#/$defs/BuiltInToolSchema"},
-    ]
+    # Then the tools are specified to be a list of strings
+    assert schema["$defs"]["ChatRequest"]["properties"]["tools"]["items"] == {
+        "type": "string"
+    }

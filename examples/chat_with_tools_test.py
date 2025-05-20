@@ -11,7 +11,7 @@ def csi() -> Csi:
     return DevCsi()
 
 
-def test_brave_search(csi: Csi):
+def test_chat_with_tools(csi: Csi):
     # Given a question
     question = "How many people live in Paris?"
 

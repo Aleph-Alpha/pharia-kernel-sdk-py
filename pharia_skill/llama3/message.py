@@ -7,13 +7,13 @@ A message represents one turn in a conversation with an LLM.
 """
 
 import datetime as dt
-import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, Sequence
 
+from pharia_skill.csi.csi import ToolSchema
+
 from .response import RawResponse, Response, SpecialTokens
-from .tool import BuiltInTools, CodeInterpreter, JsonSchema, Tool, ToolDefinition
 from .tool_call import ToolCall
 
 
@@ -40,21 +40,8 @@ class UserMessage:
     content: str
     role: Literal[Role.User] = Role.User
 
-    def render(self, tools: Sequence[ToolDefinition]) -> str:
+    def render(self) -> str:
         return f"{Role.User.render()}\n\n{self.content}{SpecialTokens.EndOfTurn.value}"
-
-    @staticmethod
-    def json_based_tools(tools: Sequence[ToolDefinition]) -> Sequence[ToolDefinition]:
-        """Tools that are defined as JSON schema and invoked with json based tool calling.
-
-        We insert these in the user prompt. The model card states:
-
-        The tool definition is provided in the user prompt, as that is how the model was
-        trained for the built in JSON tool calling. However, it's possible to provide
-        the tool definition in the system prompt as well—and get similar results.
-        Developers must test which way works best for their use case.
-        """
-        return [tool for tool in tools if tool not in BuiltInTools]
 
 
 @dataclass
@@ -75,7 +62,7 @@ class SystemMessage:
     def __init__(self, content: str):
         self.content = content
 
-    def render(self, tools: Sequence[ToolDefinition]) -> str:
+    def render(self, tool_schemas: Sequence[ToolSchema]) -> str:
         """Render a system message and inject tools into the prompt.
 
         Always activate the IPython environment if any tools are provided. Activating
@@ -92,36 +79,20 @@ class SystemMessage:
         def render_content(content: str) -> str:
             return f"{Role.System.render()}\n\n{content}{SpecialTokens.EndOfTurn.value}"
 
-        def render_tool(tool: ToolDefinition) -> str:
-            schema = (
-                tool.model_dump()
-                if isinstance(tool, JsonSchema)
-                else tool.json_schema()
-            )
-            return json.dumps(schema, indent=4)
-
-        if not tools:
+        if not tool_schemas:
             return render_content(self.content)
 
-        # CodeInterpreter is automatically ijncluded when IPython is activated and does not need to be listed in the system prompt.
-        content = "Environment: ipython"
-        if filtered := self.system_prompt_tools(tools):
-            content += f"\nTools: {', '.join(tool.name() for tool in filtered)}"
-
-        if CodeInterpreter in tools:
-            content += "\nIf you decide to run python code, assign the result to a variable called `result`."
-
+        # CodeInterpreter is automatically included when IPython is activated and does not need to be listed in the system prompt.
+        content = "Environment: ipython" if tool_schemas else ""
         content += f"\nCutting Knowledge Date: December 2023\nToday Date: {dt.datetime.now().strftime('%d %B %Y')}"
-
-        if json_tools := self.json_based_tools(tools):
-            content += (
-                "\n\nAnswer the user's question by making use of the following functions if needed.\n"
-                "Only use functions if they are relevant to the user's question.\n"
-                "Here is a list of functions in JSON format:\n"
-            )
-            for tool in json_tools:
-                content += f"{render_tool(tool)}\n"
-            content += "\nReturn function calls in JSON format."
+        content += (
+            "\n\nAnswer the user's question by making use of the following functions if needed.\n"
+            "Only use functions if they are relevant to the user's question.\n"
+            "Here is a list of functions in JSON format:\n"
+        )
+        for tool in tool_schemas:
+            content += f"{tool}\n"
+        content += "\nReturn function calls in JSON format."
 
         content += "\n\nYou are a helpful assistant."
 
@@ -129,34 +100,6 @@ class SystemMessage:
         if self.content:
             content += f"\n{self.content}"
         return render_content(content)
-
-    @staticmethod
-    def json_based_tools(tools: Sequence[ToolDefinition]) -> Sequence[ToolDefinition]:
-        """Tools that are defined as JSON schema and invoked with json based tool calling.
-
-        We insert these in the user prompt. The model card states:
-
-        The tool definition is provided in the user prompt, as that is how the model was
-        trained for the built in JSON tool calling. However, it's possible to provide
-        the tool definition in the system prompt as well—and get similar results.
-        Developers must test which way works best for their use case.
-        """
-        return [tool for tool in tools if tool not in BuiltInTools]
-
-    @staticmethod
-    def system_prompt_tools(tools: Sequence[ToolDefinition]) -> list[type[Tool]]:
-        """Subset of specified tools that need to be activated in the system prompt.
-
-        CodeInterpreter is automatically included when IPython is activated and does
-        not need to be listed in the system prompt.
-        """
-        return [
-            tool
-            for tool in tools
-            if isinstance(tool, type)
-            and tool in BuiltInTools
-            and tool != CodeInterpreter
-        ]
 
 
 @dataclass
@@ -176,7 +119,7 @@ class ToolMessage:
         self.content = content
         self.success = success
 
-    def render(self, tools: Sequence[ToolDefinition]) -> str:
+    def render(self) -> str:
         return f"{self.role.render()}\n\n{self.output()}{SpecialTokens.EndOfTurn.value}"
 
     def output(self) -> str:
@@ -203,7 +146,7 @@ class AssistantMessage:
     role: Literal[Role.Assistant] = Role.Assistant
     tool_calls: list[ToolCall] | None = None
 
-    def render(self, tools: Sequence[ToolDefinition]) -> str:
+    def render(self) -> str:
         """Always end in <|eom_id|> for tool calls because we always activate the IPython environment.
 
         Llama will end messages with <|eom_id|> instead of <|eot_id|> if it responds
@@ -230,7 +173,7 @@ class AssistantMessage:
 
     @staticmethod
     def from_raw_response(
-        raw: RawResponse, tools: Sequence[ToolDefinition] | None = None
+        raw: RawResponse, tools: Sequence[str] | None = None
     ) -> "AssistantMessage":
         response = Response.from_raw(raw)
         if tools and (tool_call := ToolCall.from_response(response, tools)):
