@@ -83,14 +83,12 @@ Here is a list of functions in JSON format:
         "parameters": {{
             "properties": {{
                 "city": {{
-                    "title": "City",
                     "type": "string"
                 }}
             }},
             "required": [
                 "city"
             ],
-            "title": "Population",
             "type": "object"
         }}
     }}

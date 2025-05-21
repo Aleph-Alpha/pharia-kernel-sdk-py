@@ -65,9 +65,8 @@ class Csi(Protocol):
         match name:
             case "population_tool":
                 schema = {
-                    "properties": {"city": {"title": "City", "type": "string"}},
+                    "properties": {"city": {"type": "string"}},
                     "required": ["city"],
-                    "title": "Population",
                     "type": "object",
                 }
                 data = {
