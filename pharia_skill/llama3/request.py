@@ -56,7 +56,7 @@ class ChatRequest:
     model: str
     messages: list[Message]
     """The message history to be passed to the model. Can be `User`, `Assistant`, or `Tool` messages.
-    
+
     Note that if you want to include a system prompt, you can use the top-level system parameter —
     there is no `system` role for input messages in the Messages API."""
 
@@ -104,9 +104,11 @@ class ChatRequest:
         """
         validate_messages(self.messages)
         completion_params = to_completion_params(self.params)
-        completion = csi.complete(self.model, self.render(csi), completion_params)
+        completion = csi.complete(
+            self.model, self.render(csi), completion_params
+        )
         message = AssistantMessage.from_raw_response(
-            completion.text, [csi.tool_schema(t) for t in self.tools]
+            completion.text, self.tools
         )
 
         self.messages.append(message)
@@ -170,10 +172,14 @@ def validate_messages(messages: list[Message]) -> None:
     for i, message in enumerate(messages[1:]):
         if i % 2 == 0:
             if message.role != Role.Assistant:
-                raise ValueError("Assistant messages must alternate with user messages")
+                raise ValueError(
+                    "Assistant messages must alternate with user messages"
+                )
         else:
             if message.role not in (Role.User, Role.IPython):
-                raise ValueError("User messages must alternate with assistant messages")
+                raise ValueError(
+                    "User messages must alternate with assistant messages"
+                )
 
     # 3. check that the last message is a user/ipython message
     if messages[-1].role not in (Role.User, Role.IPython):

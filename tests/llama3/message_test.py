@@ -26,7 +26,7 @@ def test_render_system_message():
 
 
 def test_system_prompt_with_json_based_tools():
-    tools = [json.dumps(GetGithubReadme.json_schema())]
+    tools = [json.dumps(GetGithubReadme.json_schema(), indent=4)]
     system = SystemMessage("")
     expected = f"""<|start_header_id|>system<|end_header_id|>
 
@@ -65,13 +65,17 @@ You are a helpful assistant.<|eot_id|>"""
 def test_ipython_environment_activated_by_custom_tool():
     system = SystemMessage("")
     tools = [json.dumps(GetGithubReadme.json_schema())]
-    expected = """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython"""
+    expected = (
+        """<|start_header_id|>system<|end_header_id|>\n\nEnvironment: ipython"""
+    )
     assert system.render(tools).startswith(expected)
 
 
 def test_render_user_message():
     message = UserMessage("Hello, world!")
-    expected = "<|start_header_id|>user<|end_header_id|>\n\nHello, world!<|eot_id|>"
+    expected = (
+        "<|start_header_id|>user<|end_header_id|>\n\nHello, world!<|eot_id|>"
+    )
     assert message.render() == expected
 
 
@@ -123,9 +127,7 @@ def test_render_failed_tool_response():
 
 def test_render_assistant_message_without_tool_calls():
     message = AssistantMessage("Hello, world!")
-    expected = (
-        "<|start_header_id|>assistant<|end_header_id|>\n\nHello, world!<|eot_id|>"
-    )
+    expected = "<|start_header_id|>assistant<|end_header_id|>\n\nHello, world!<|eot_id|>"
     assert message.render() == expected
 
 

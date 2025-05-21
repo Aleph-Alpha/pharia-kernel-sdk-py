@@ -8,9 +8,9 @@ from pharia_skill.llama3 import (
     Tool,
     UserMessage,
 )
+from pharia_skill.testing import DevCsi
 
 llama = "llama-3.1-8b-instruct"
-
 
 
 class GetGithubReadme(Tool):
@@ -18,16 +18,19 @@ class GetGithubReadme(Tool):
 
     repository: str
 
+
 def test_no_system_prompt_included_if_no_tools_provided():
     user = UserMessage("What is the square root of 16?")
     chat_request = ChatRequest(llama, [user])
-    assert "system" not in chat_request.render()
+    csi = DevCsi()
+    assert "system" not in chat_request.render(csi)
 
 
 def test_system_prompt_included_if_only_custom_tools_provided():
     user = UserMessage("What is the square root of 16?")
-    chat_request = ChatRequest(llama, [user], tools=[GetGithubReadme])
-    assert "system" in chat_request.render()
+    chat_request = ChatRequest(llama, [user], tools=["population_tool"])
+    csi = DevCsi()
+    assert "system" in chat_request.render(csi)
 
 
 def test_chat_request_to_prompt():
@@ -36,7 +39,8 @@ def test_chat_request_to_prompt():
 
     chat_request = ChatRequest(llama, [user], system=system)
 
-    prompt = chat_request.render()
+    csi = DevCsi()
+    prompt = chat_request.render(csi)
 
     expected = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
@@ -54,11 +58,12 @@ def test_custom_tool_definition_in_system_prompt():
     chat_request = ChatRequest(
         llama,
         [UserMessage("What is the readme of the pharia-kernel repository?")],
-        tools=[GetGithubReadme],
+        tools=["population_tool"],
     )
 
     # When rendering the chat request
-    rendered = chat_request.render()
+    csi = DevCsi()
+    rendered = chat_request.render(csi)
 
     # Then the custom tool definition should be included in the system prompt
     expected = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -73,17 +78,19 @@ Here is a list of functions in JSON format:
 {{
     "type": "function",
     "function": {{
-        "name": "get_github_readme",
-        "description": "Get the readme of a GitHub repository",
+        "name": "population_tool",
+        "description": "Return the number of people living in a city",
         "parameters": {{
             "properties": {{
-                "repository": {{
+                "city": {{
+                    "title": "City",
                     "type": "string"
                 }}
             }},
             "required": [
-                "repository"
+                "city"
             ],
+            "title": "Population",
             "type": "object"
         }}
     }}
@@ -110,7 +117,9 @@ def test_chat_request_with_tool_definition_is_serializable():
         request: ChatRequest
 
     user = UserMessage("When will my order (42) arrive?")
-    request = ChatRequest("llama-3.1-8b-instruct", [user], tools=[GetGithubReadme.name()])
+    request = ChatRequest(
+        "llama-3.1-8b-instruct", [user], tools=[GetGithubReadme.name()]
+    )
     chat = ChatApi(request=request)
 
     # Then the model can be dumped to json without an error
@@ -121,13 +130,16 @@ def test_tools_not_included_in_second_user_prompt():
     # Given a chat request with two user messages
     user = UserMessage("What is the meaning of life?")
     assistant = AssistantMessage("42")
-    chat_request = ChatRequest(llama, [user, assistant, user], tools=[GetGithubReadme.name()])
+    chat_request = ChatRequest(
+        llama, [user, assistant, user], tools=["population_tool"]
+    )
 
     # When rendering the chat request
-    rendered = chat_request.render()
+    csi = DevCsi()
+    rendered = chat_request.render(csi)
 
     # Then the tool definition is only included once
-    assert rendered.count("github") == 1
+    assert rendered.count("population_tool") == 1
 
 
 def test_schema_includes_built_in_tools():
