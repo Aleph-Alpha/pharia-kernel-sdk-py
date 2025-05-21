@@ -34,9 +34,7 @@ class ToolCall:
         the message history for a later interactions with the model.
         """
         if isinstance(self.parameters, dict):
-            return json.dumps(
-                {"name": self.name, "parameters": self.parameters}
-            )
+            return json.dumps({"name": self.name, "parameters": self.parameters})
         return self.parameters.render()
 
     @classmethod

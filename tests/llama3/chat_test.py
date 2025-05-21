@@ -35,9 +35,7 @@ class MockCsi(Csi):
         self.completion = completion
         self.prompts: list[str] = []
 
-    def complete(
-        self, model: str, prompt: str, params: CompletionParams
-    ) -> Completion:
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         self.prompts.append(prompt)
         return self.completion
 
@@ -50,9 +48,7 @@ def test_can_not_chat_twice_without_appending_message():
         text="42",
         finish_reason=FinishReason.STOP,
         logprobs=[],
-        usage=TokenUsage(
-            prompt=len(message.content), completion=len(message.content)
-        ),
+        usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
     )
     csi = MockCsi(completion)  # type: ignore
 
@@ -72,9 +68,7 @@ def test_can_chat_twice_when_providing_user_response():
         text="42",
         finish_reason=FinishReason.STOP,
         logprobs=[],
-        usage=TokenUsage(
-            prompt=len(message.content), completion=len(message.content)
-        ),
+        usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
     )
     csi = MockCsi(completion)  # type: ignore
 
@@ -116,9 +110,7 @@ def test_provide_tool_result(csi: DevCsi):
 
     # When providing a tool response back to the model
     tool = ToolMessage(content="71 million people")
-    request = ChatRequest(
-        llama, [user, assistant, tool], tools=["population_tool"]
-    )
+    request = ChatRequest(llama, [user, assistant, tool], tools=["population_tool"])
     response = request.chat(csi)
 
     # Then the response should answer the original question
@@ -138,9 +130,7 @@ def test_tool_response_can_be_added_to_prompt():
         text='{"type": "function", "name": "population_tool", "parameters": {"city": "Paris"}}',
         finish_reason=FinishReason.STOP,
         logprobs=[],
-        usage=TokenUsage(
-            prompt=len(message.content), completion=len(message.content)
-        ),
+        usage=TokenUsage(prompt=len(message.content), completion=len(message.content)),
     )
     csi = MockCsi(completion)  #  type: ignore
 

@@ -92,9 +92,7 @@ class Csi(Protocol):
                     case "Paris":
                         return "90 Million"
                     case _:
-                        raise ValueError(
-                            f"Unknown city: {parameters.get('city')}"
-                        )
+                        raise ValueError(f"Unknown city: {parameters.get('city')}")
             case _:
                 raise ValueError(f"Unknown tool: {name}")
 
@@ -127,9 +125,7 @@ class Csi(Protocol):
         """
         ...
 
-    def complete(
-        self, model: str, prompt: str, params: CompletionParams
-    ) -> Completion:
+    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
         """Generates completions given a prompt.
 
         Parameters:
@@ -177,9 +173,7 @@ class Csi(Protocol):
         request = ChunkRequest(text, params)
         return self.chunk_concurrent([request])[0]
 
-    def chunk_concurrent(
-        self, requests: Sequence[ChunkRequest]
-    ) -> list[list[Chunk]]:
+    def chunk_concurrent(self, requests: Sequence[ChunkRequest]) -> list[list[Chunk]]:
         """Chunk a text into chunks concurrently.
 
         Parameters:
@@ -214,9 +208,7 @@ class Csi(Protocol):
         request = ChatRequest(model, messages, params)
         return self.chat_concurrent([request])[0]
 
-    def chat_concurrent(
-        self, requests: Sequence[ChatRequest]
-    ) -> list[ChatResponse]:
+    def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
         """Chat with a model concurrently.
 
         Parameters:
@@ -238,9 +230,7 @@ class Csi(Protocol):
         self, requests: Sequence[ExplanationRequest]
     ) -> list[list[TextScore]]: ...
 
-    def select_language(
-        self, text: str, languages: list[Language]
-    ) -> Language | None:
+    def select_language(self, text: str, languages: list[Language]) -> Language | None:
         """Select the detected language for the provided input based on the list of possible languages.
 
         If no language matches, None is returned.
@@ -317,9 +307,7 @@ class Csi(Protocol):
         """
         return self.documents([document_path])[0]
 
-    def documents(
-        self, document_paths: Sequence[DocumentPath]
-    ) -> list[Document]:
+    def documents(self, document_paths: Sequence[DocumentPath]) -> list[Document]:
         """Fetch multiple documents from the Document Index.
 
         The documents are guaranteed to be returned in the same order as the document paths.
@@ -329,9 +317,7 @@ class Csi(Protocol):
         """
         ...
 
-    def document_metadata(
-        self, document_path: DocumentPath
-    ) -> JsonSerializable:
+    def document_metadata(self, document_path: DocumentPath) -> JsonSerializable:
         """Return the metadata of a document in the Document Index.
 
         Parameters:
