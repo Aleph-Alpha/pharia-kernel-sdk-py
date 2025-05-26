@@ -1,4 +1,4 @@
-package pharia:skill@0.3.6;
+package pharia:skill@0.3.8;
 
 @since(version = 0.3.0)
 world skill {
@@ -96,6 +96,29 @@ world csi {
     import document-index;
     import inference;
     import language;
+
+    import tool;
+}
+
+// The tool interface allows Skills to interact with the outside world.
+// We run into issues making the interface itself unstable, so only
+// all members are marked as unstable.
+@since(version = 0.3.7)
+interface tool {
+    @unstable(feature = tool)
+    record invoke-request {
+        tool-name: string,
+        arguments: list<argument>,
+    }
+
+    @unstable(feature = tool)
+    record argument {
+        name: string,
+        value: list<u8>
+    }
+
+    @unstable(feature = tool)
+    invoke-tool: func(request: list<invoke-request>) -> list<list<u8>>;
 }
 
 @since(version = 0.3.0)
@@ -416,6 +439,8 @@ interface inference {
     }
 
     /// Completion request parameters
+    /// Outdated, consumers should use `completion-request-v2` instead.
+    /// Still supported for backwards compatibility.
     @since(version = 0.3.0)
     record completion-request {
         model: string,
@@ -423,8 +448,58 @@ interface inference {
         params: completion-params
     }
 
+    /// Outdated, consumers should use `complete-v2` instead.
+    /// Still supported for backwards compatibility.
     @since(version = 0.3.0)
     complete: func(requests: list<completion-request>) -> list<completion>;
+
+    /// Completion request parameters
+    @since(version = 0.3.8)
+    record completion-params-v2 {
+        /// The maximum tokens that should be inferred.
+        ///
+        /// Note: the backing implementation may return less tokens due to
+        /// other stop reasons.
+        max-tokens: option<u32>,
+        /// The randomness with which the next token is selected.
+        temperature: option<f64>,
+        /// The number of possible next tokens the model will choose from.
+        top-k: option<u32>,
+        /// The probability total of next tokens the model will choose from.
+        top-p: option<f64>,
+        /// A list of sequences that, if encountered, the API will stop generating further tokens.
+        stop: list<string>,
+        /// Whether to include special tokens like `<|eot_id|>` in the completion
+        return-special-tokens: bool,
+        /// When specified, this number will decrease (or increase) the probability of repeating
+        /// tokens that were mentioned prior in the completion. The penalty is cumulative. The more
+        /// a token is mentioned in the completion, the more its probability will decrease.
+        /// A negative value will increase the likelihood of repeating tokens.
+        frequency-penalty: option<f64>,
+        /// The presence penalty reduces the probability of generating tokens that are already
+        /// present in the generated text respectively prompt. Presence penalty is independent of the
+        /// number of occurrences. Increase the value to reduce the probability of repeating text.
+        presence-penalty: option<f64>,
+        /// Use this to control the logarithmic probabilities you want to have returned. This is useful
+        /// to figure out how likely it had been that this specific token had been sampled.
+        logprobs: logprobs,
+        /// Echo the prompt in the completion. This may be especially helpful when log_probs is set
+        /// to return logprobs for the prompt.
+        echo: bool,
+    }
+
+    /// Completion request parameters
+    /// Introduces support for `echo` without requiring a version bump.
+    @since(version = 0.3.8)
+    record completion-request-v2 {
+        model: string,
+        prompt: string,
+        params: completion-params-v2
+    }
+
+    /// Introduces support for `echo` without requiring a version bump.
+    @since(version = 0.3.8)
+    complete-v2: func(requests: list<completion-request-v2>) -> list<completion>;
 
     /// A chunk of a completion returned by a completion stream.
     @since(version = 0.3.6)

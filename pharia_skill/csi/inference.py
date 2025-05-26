@@ -51,6 +51,7 @@ class CompletionParams:
         frequency-penalty (float, optional, default None): The presence penalty reduces the probability of generating tokens that are already present in the generated text respectively prompt. Presence penalty is independent of the number of occurrences. Increase the value to reduce the probability of repeating text.
         presence-penalty (float, optional, default None): The presence penalty reduces the probability of generating tokens that are already present in the generated text respectively prompt. Presence penalty is independent of the number of occurrences. Increase the value to reduce the probability of repeating text.
         logprobs (Logprobs, optional, default NoLogprobs()): Use this to control the logarithmic probabilities you want to have returned. This is useful to figure out how likely it had been that this specific token had been sampled.
+        echo (bool, optional, default False): Whether to include the prompt in the completion response. This parameter is not supported for streaming requests.
     """
 
     max_tokens: int | None = None
@@ -66,6 +67,7 @@ class CompletionParams:
     frequency_penalty: float | None = None
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
+    echo: bool = False
 
 
 class FinishReason(str, Enum):

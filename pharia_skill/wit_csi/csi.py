@@ -42,6 +42,7 @@ from .inference import (
     chat_response_from_wit,
     completion_from_wit,
     completion_request_to_wit,
+    completion_request_to_wit_v2,
     explanation_request_to_wit,
     text_score_from_wit,
 )
@@ -51,7 +52,7 @@ from .language import language_from_wit, language_request_to_wit
 class WitCsi(Csi):
     """Implementation of the Cognitive System Interface (CSI) that gets injected to skills at runtime.
 
-    Responsible to tranlate between the types we expose in the SDK and the types in the `wit.imports` module,
+    Responsible to translate between the types we expose in the SDK and the types in the `wit.imports` module,
     which are automatically generated from the WIT world via `componentize-py`.
 
     All parameters to any methods on the `WitCsi` must be type checked, as otherwise `componentize-py`
@@ -76,8 +77,8 @@ class WitCsi(Csi):
     def complete_concurrent(
         self, requests: Sequence[CompletionRequest]
     ) -> list[Completion]:
-        wit_requests = [completion_request_to_wit(r) for r in requests]
-        completions = wit_inference.complete(wit_requests)
+        wit_requests = [completion_request_to_wit_v2(r) for r in requests]
+        completions = wit_inference.complete_v2(wit_requests)
         return [completion_from_wit(completion) for completion in completions]
 
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
