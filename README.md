@@ -17,3 +17,9 @@ To add the SDK as a dependency to an existing project managed by `uv`, run
 ```sh
 uv add pharia-skill
 ```
+
+In case you want to use changes in the SDK that have not been released, use GitHub as source:
+
+```sh
+uv add git+https://github.com/aleph-alpha/pharia-kernel-sdk-py.git
+```
