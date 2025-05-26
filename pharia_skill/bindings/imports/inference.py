@@ -110,10 +110,38 @@ class CompletionParams:
 class CompletionRequest:
     """
     Completion request parameters
+    Outdated, consumers should use `completion-request-v2` instead.
+    Still supported for backwards compatibility.
     """
     model: str
     prompt: str
     params: CompletionParams
+
+@dataclass
+class CompletionParamsV2:
+    """
+    Completion request parameters
+    """
+    max_tokens: Optional[int]
+    temperature: Optional[float]
+    top_k: Optional[int]
+    top_p: Optional[float]
+    stop: List[str]
+    return_special_tokens: bool
+    frequency_penalty: Optional[float]
+    presence_penalty: Optional[float]
+    logprobs: Logprobs
+    echo: bool
+
+@dataclass
+class CompletionRequestV2:
+    """
+    Completion request parameters
+    Introduces support for `echo` without requiring a version bump.
+    """
+    model: str
+    prompt: str
+    params: CompletionParamsV2
 
 @dataclass
 class CompletionAppend:
@@ -272,6 +300,16 @@ def explain(request: List[ExplanationRequest]) -> List[List[TextScore]]:
     raise NotImplementedError
 
 def complete(requests: List[CompletionRequest]) -> List[Completion]:
+    """
+    Outdated, consumers should use `complete-v2` instead.
+    Still supported for backwards compatibility.
+    """
+    raise NotImplementedError
+
+def complete_v2(requests: List[CompletionRequestV2]) -> List[Completion]:
+    """
+    Introduces support for `echo` without requiring a version bump.
+    """
     raise NotImplementedError
 
 def chat(requests: List[ChatRequest]) -> List[ChatResponse]:

@@ -114,6 +114,14 @@ def test_complete(csi: Csi, model: str):
 
 
 @pytest.mark.kernel
+def test_complete_echo(csi: Csi, model: str):
+    params = CompletionParams(max_tokens=1, echo=True)
+    result = csi.complete(model, "An apple a day", params)
+    assert result.text == "An apple a day keeps"
+    assert isinstance(result.finish_reason, FinishReason)
+
+
+@pytest.mark.kernel
 def test_chat(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]

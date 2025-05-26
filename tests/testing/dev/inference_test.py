@@ -41,7 +41,7 @@ def test_serialize_completion_request():
             CompletionRequest(
                 "llama-3.1-8b-instruct",
                 "Say hello to Bob",
-                CompletionParams(max_tokens=64),
+                CompletionParams(max_tokens=64, echo=True),
             )
         ]
     )
@@ -65,6 +65,7 @@ def test_serialize_completion_request():
                     "frequency_penalty": None,
                     "presence_penalty": None,
                     "logprobs": "no",
+                    "echo": True,
                 },
             }
         ]

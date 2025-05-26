@@ -184,6 +184,23 @@ def completion_params_to_wit(
     )
 
 
+def completion_params_to_wit_v2(
+    completion_params: CompletionParams,
+) -> wit.CompletionParamsV2:
+    return wit.CompletionParamsV2(
+        max_tokens=completion_params.max_tokens,
+        temperature=completion_params.temperature,
+        top_k=completion_params.top_k,
+        top_p=completion_params.top_p,
+        stop=completion_params.stop,
+        return_special_tokens=completion_params.return_special_tokens,
+        frequency_penalty=completion_params.frequency_penalty,
+        presence_penalty=completion_params.presence_penalty,
+        logprobs=logprobs_to_wit(completion_params.logprobs),
+        echo=completion_params.echo,
+    )
+
+
 def logprobs_to_wit(logprobs: Logprobs) -> wit.Logprobs:
     match logprobs:
         case "no":
@@ -201,6 +218,16 @@ def completion_request_to_wit(
         model=completion_request.model,
         prompt=completion_request.prompt,
         params=completion_params_to_wit(completion_request.params),
+    )
+
+
+def completion_request_to_wit_v2(
+    completion_request: CompletionRequest,
+) -> wit.CompletionRequestV2:
+    return wit.CompletionRequestV2(
+        model=completion_request.model,
+        prompt=completion_request.prompt,
+        params=completion_params_to_wit_v2(completion_request.params),
     )
 
 
