@@ -100,7 +100,7 @@ class DevCsi(Csi):
 
     If you want to export traces to Pharia Studio, also set:
 
-    * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.aleph-alpha.stackit.run")
+    * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.product.pharia.com")
     """
 
     def __init__(self) -> None:

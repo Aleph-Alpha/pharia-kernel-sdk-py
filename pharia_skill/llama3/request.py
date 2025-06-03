@@ -86,6 +86,7 @@ class ChatRequest:
         to do a tool call, this will be available on the response:
 
         Example::
+
             # define the tool
             class GetGithubReadme(BaseModel):
                 repository: str

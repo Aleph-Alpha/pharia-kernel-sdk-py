@@ -63,13 +63,13 @@ class StubCsi(Csi):
 
         class CustomMockCsi(StubCsi):
             def chat(self, model: str, messages: list[Message], params: ChatParams) -> ChatResponse:
-                message = Message.assistant("Whispers in the dark\nEchoes of a fleeting dream\nMeaning lost in space")
+                message = Message.assistant("Whispers in the dark\\nEchoes of a fleeting dream\\nMeaning lost in space")
                 return ChatResponse(message=message, finish_reason=FinishReason.STOP)
 
         def test_run():
             csi = CustomMockCsi()
             result = run(csi, Input(topic="The meaning of life"))
-            assert result.haiku == "Whispers in the dark\nEchoes of a fleeting dream\nMeaning lost in space"
+            assert result.haiku == "Whispers in the dark\\nEchoes of a fleeting dream\\nMeaning lost in space"
     """
 
     def completion_stream(
