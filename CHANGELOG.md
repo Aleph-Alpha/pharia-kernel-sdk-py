@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.16.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.15.0...v0.16.0) (2025-06-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* support echo parameters in completion request
+
+### Features
+
+* support echo parameters in completion request ([c78ea2b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c78ea2b1e649cf7fb9549eb33bc9c6cab7a1457e))
+
+
+### Documentation
+
+* fix rendering issues in code examples ([9285c07](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9285c07ff5f25082a3643ceab224d53b672566ad))
+* specify how to install from github ([c6e9b03](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c6e9b03f767f8bb6f0b2c67ed3019030a48857d5))
+
 ## [0.15.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.14.2...v0.15.0) (2025-05-19)
 
 
