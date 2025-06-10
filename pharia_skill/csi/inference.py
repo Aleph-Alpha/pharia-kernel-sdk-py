@@ -9,13 +9,26 @@ from collections.abc import Generator
 from dataclasses import field
 from enum import Enum
 from types import TracebackType
-from typing import Any, Literal, Self
+from typing import Annotated, Any, Literal, Self
 
-from pydantic import field_validator
+from pydantic import BeforeValidator, field_validator
 
 # We use pydantic.dataclasses to get type validation.
 # See the docstring of `csi` module for more information on the why.
 from pydantic.dataclasses import dataclass
+
+
+def none_to_nan(v: float | None) -> float:
+    """Custom deserialization for Nan.
+
+    This custom deserialization is necessary because JSON does not support NaN (Not a Number)
+    values as valid data types, as specified by the JSON standard.
+    """
+
+    return float("nan") if v is None else v
+
+
+NanFloat = Annotated[float, BeforeValidator(none_to_nan)]
 
 
 @dataclass
@@ -91,7 +104,7 @@ class Logprob:
     """Logarithmic probability of the token returned in the completion."""
 
     token: bytes
-    logprob: float
+    logprob: NanFloat
 
     @field_validator("token", mode="before")
     @classmethod
