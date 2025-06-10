@@ -1,3 +1,5 @@
+from math import isnan
+
 import pytest
 
 from pharia_skill import (
@@ -18,7 +20,11 @@ from pharia_skill import (
     TokenUsage,
     TopLogprobs,
 )
-from pharia_skill.csi.inference import CompletionAppend, MessageAppend, MessageBegin
+from pharia_skill.csi.inference import (
+    CompletionAppend,
+    MessageAppend,
+    MessageBegin,
+)
 from pharia_skill.testing.dev.client import Event
 from pharia_skill.testing.dev.inference import (
     ChatListDeserializer,
@@ -104,6 +110,35 @@ def test_deserialize_completion():
         logprobs=[Distribution(sampled=Logprob(token=b"Hello", logprob=0.0), top=[])],
         usage=TokenUsage(prompt=0, completion=0),
     )
+
+
+def test_deserialize_completion_with_logprob_nan():
+    # Given a serialized completion response without a logprob
+    serialized = dumps(
+        [
+            {
+                "text": "Hello",
+                "finish_reason": "stop",
+                "logprobs": [
+                    {
+                        "sampled": {
+                            "token": [72, 101, 108, 108, 111],
+                            "logprob": None,
+                        },
+                        "top": [],
+                    }
+                ],
+                "usage": {"prompt": 0, "completion": 0},
+            }
+        ]
+    )
+
+    # When deserializing it
+    deserialized = CompletionListDeserializer.model_validate_json(serialized)
+    completion = deserialized.root[0]
+
+    # Then the sampled logprob is parsed as NaN
+    assert isnan(completion.logprobs[0].sampled.logprob)
 
 
 def test_serialize_chat_request():
