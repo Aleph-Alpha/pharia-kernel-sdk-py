@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.16.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.0...v0.16.1) (2025-06-10)
+
+
+### Bug Fixes
+
+* handle logprob deserialization for NaN ([b737b1f](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/b737b1ffbfa5082a61240fb11fc689382c598495))
+
+
+### Documentation
+
+* fix typo ([55e9435](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/55e9435d1aa4be5dbf55c51282de9c50831ebef5))
+
 ## [0.16.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.15.0...v0.16.0) (2025-06-03)
 
 
