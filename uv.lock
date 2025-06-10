@@ -124,15 +124,15 @@ wheels = [
 
 [[package]]
 name = "componentize-py"
-version = "0.17.0"
+version = "0.17.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/9f/29/2ca1ff34e422667bfe905735a5718466edf56bac907c57a536b6078bf8fb/componentize_py-0.17.0.tar.gz", hash = "sha256:694c5279d55b587c1ac9458b45c4b4cadc2b6dadf24cbfb4b2192d51dbdc2f33", size = 161713, upload-time = "2025-05-16T17:26:23.788Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/24/6d/c00b2b09ff22d0cc5587f0a8d146a3682c0ee9adb8f8bbbcc7479965a571/componentize_py-0.17.1.tar.gz", hash = "sha256:a3dec642771405cbfd652a182811bfb5dbfd0b0a383d3fa03347800e25b99d22", size = 161925, upload-time = "2025-05-29T18:50:19.918Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/24/94dc7157189b4b2b63f86d4d47a2281bc01346e66a746080d66e69344b87/componentize_py-0.17.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:5f9b500f43fe7eb4918e2e17833ccef3f6f842d39df8d7f20a00753780347e6c", size = 19383054, upload-time = "2025-05-16T17:25:42.633Z" },
-    { url = "https://files.pythonhosted.org/packages/82/b6/64dcf79cf3eee66495436315ebbb2a81a97c0ed9c49bc8a361afa0b22e39/componentize_py-0.17.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:7a902d5c7756777997ca9a8282fb71d480d04ab84991fc1d058aee37a344e2a8", size = 18914389, upload-time = "2025-05-16T17:25:51.4Z" },
-    { url = "https://files.pythonhosted.org/packages/24/c1/89ee273aa9b6bdbb29829f80c7a6ece17545042e145ff4dfca9a1cdd7f83/componentize_py-0.17.0-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:15ebfd32389682f28603b157e1cdf7d51c580c41505c8e782771e8d065892c32", size = 19687678, upload-time = "2025-05-16T17:26:03.568Z" },
-    { url = "https://files.pythonhosted.org/packages/bb/46/82379177bc12a6787246a627d2c9914567c671d99e2ad5600196455bcb12/componentize_py-0.17.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:f96d10d373fa29efb4e0d82248e968b091b641c1c9333e36c86e70cb2a07a79c", size = 20257476, upload-time = "2025-05-16T17:26:13.378Z" },
-    { url = "https://files.pythonhosted.org/packages/42/64/bf17f2173a61140da9a541970ccde384f3874d251849f4a1017ab2439cf0/componentize_py-0.17.0-cp39-abi3-win_amd64.whl", hash = "sha256:9fb8ab120a9a56818afe9d9760a7eb34c22f7aa11f3f0a73dc4d2c9e513462ee", size = 18253176, upload-time = "2025-05-16T17:26:21.93Z" },
+    { url = "https://files.pythonhosted.org/packages/24/07/291f03cb1185d148985213b50194160ffb0c2cae80def62bd4807557647e/componentize_py-0.17.1-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:31611ce4fff2500d30fda011fbd2919fbf9adbb8db5041ed70f7138f21cf0479", size = 19404639, upload-time = "2025-05-29T18:49:41.394Z" },
+    { url = "https://files.pythonhosted.org/packages/56/af/fad0ef80ab3992ab733931a5b22f007a71447d031c876e0c7b3d106020c5/componentize_py-0.17.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:f70807f0b6a270d7f6489ae5f6c92ae57251aaee4046c8b07b354fbfc826e02c", size = 18947122, upload-time = "2025-05-29T18:49:50.155Z" },
+    { url = "https://files.pythonhosted.org/packages/07/2b/612f7e57231f1269da434f222379782b9ea47de47c86ffa72021353c178f/componentize_py-0.17.1-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:d453218e6931e2d7ccac4031342a8e0ec2fd49787c3be222a4d492675659a378", size = 19713907, upload-time = "2025-05-29T18:49:59.372Z" },
+    { url = "https://files.pythonhosted.org/packages/36/2d/b6b8ce3ab84517bb9eafec7e6cd08fb167b68aec4551ece2686c9b0d559c/componentize_py-0.17.1-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:c3321c21682040806274957caf992033fd33049e9c6de0ef3e4ac27b6d10d828", size = 20288778, upload-time = "2025-05-29T18:50:10.04Z" },
+    { url = "https://files.pythonhosted.org/packages/62/d2/07e670e8a228834e0f2701a90f4e94942af2284cff84fc3b736887b3a227/componentize_py-0.17.1-cp39-abi3-win_amd64.whl", hash = "sha256:ab9ae2d8ab246604609ba031dd0f97666e1a4af932bc5e1f3349223bf8270a1a", size = 18263892, upload-time = "2025-05-29T18:50:18.056Z" },
 ]
 
 [[package]]
