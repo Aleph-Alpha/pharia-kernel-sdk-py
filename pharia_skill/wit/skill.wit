@@ -96,7 +96,6 @@ world csi {
     import document-index;
     import inference;
     import language;
-
     import tool;
 }
 
@@ -117,8 +116,19 @@ interface tool {
         value: list<u8>
     }
 
+    // A tool result is an arbitrary sized list of modalities.
+    // See <https://modelcontextprotocol.io/specification/2025-03-26/server/tools#tool-result>.
+    // At the moment, we only support text modalities from the Kernel.
     @unstable(feature = tool)
-    invoke-tool: func(request: list<invoke-request>) -> list<list<u8>>;
+    type tool-output = list<modality>;
+
+    @unstable(feature = tool)
+    variant modality {
+        text(string),
+    }
+
+    @unstable(feature = tool)
+    invoke-tool: func(request: list<invoke-request>) -> list<tool-output>;
 }
 
 @since(version = 0.3.0)
