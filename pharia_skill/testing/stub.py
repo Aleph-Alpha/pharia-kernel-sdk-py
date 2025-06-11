@@ -39,6 +39,7 @@ from pharia_skill.csi.inference import (
     MessageAppend,
     MessageBegin,
 )
+from pharia_skill.csi.tool import InvokeRequest, ToolOutput
 
 
 class StubCsi(Csi):
@@ -71,6 +72,11 @@ class StubCsi(Csi):
             result = run(csi, Input(topic="The meaning of life"))
             assert result.haiku == "Whispers in the dark\\nEchoes of a fleeting dream\\nMeaning lost in space"
     """
+
+    def invoke_tool_concurrent(
+        self, requests: Sequence[InvokeRequest]
+    ) -> list[ToolOutput]:
+        return [ToolOutput(contents=[]) for _ in requests]
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams

@@ -21,6 +21,8 @@ the Python interpreter makes sure the caller gets a good error message if they p
 
 from typing import Protocol, Sequence
 
+from pydantic.types import JsonValue
+
 from .chunking import Chunk, ChunkParams, ChunkRequest
 from .document_index import (
     Document,
@@ -46,6 +48,7 @@ from .inference import (
     TextScore,
 )
 from .language import Language, SelectLanguageRequest
+from .tool import InvokeRequest, ToolOutput
 
 
 class Csi(Protocol):
@@ -56,6 +59,30 @@ class Csi(Protocol):
     returned in the same order as the requests. Therefore, our interface requires the user to provide
     Sequences, as we want the input to be ordered.
     """
+
+    def invoke_tool(self, name: str, arguments: dict[str, JsonValue]) -> ToolOutput:
+        """Invoke a tool that is configured with the Kernel.
+
+        Tools can be configured for each namespace by listing MCP servers in the namespace config.
+        The Kernel then exposes the tools of these MCP servers to Skills.
+        The list of available tools per namespace can be queried from the Kernel API.
+
+        Parameters:
+            name (str, required): Name of the tool to invoke.
+            arguments (dict[str, JsonValue], required): Arguments to pass to the tool.
+        """
+        request = InvokeRequest(name, arguments)
+        return self.invoke_tool_concurrent([request])[0]
+
+    def invoke_tool_concurrent(
+        self, requests: Sequence[InvokeRequest]
+    ) -> list[ToolOutput]:
+        """Invoke multiple tools concurrently.
+
+        Parameters:
+            requests (list[InvokeRequest], required): List of invoke requests.
+        """
+        ...
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
