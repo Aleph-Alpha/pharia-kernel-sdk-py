@@ -39,7 +39,10 @@ from pharia_skill import (
     TextScore,
     ToolOutput,
 )
-from pharia_skill.csi.inference import ChatStreamResponse, CompletionStreamResponse
+from pharia_skill.csi.inference import (
+    ChatStreamResponse,
+    CompletionStreamResponse,
+)
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,
@@ -72,6 +75,7 @@ from .language import (
     SelectLanguageDeserializer,
     SelectLanguageRequestSerializer,
 )
+from .tool import InvokeRequestListSerializer, validate_tool_output
 
 
 class DevCsi(Csi):
@@ -111,7 +115,9 @@ class DevCsi(Csi):
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
     ) -> list[ToolOutput]:
-        raise NotImplementedError
+        body = InvokeRequestListSerializer(root=requests).model_dump()
+        output = self.run("invoke_tool", body)
+        return validate_tool_output(output)
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
