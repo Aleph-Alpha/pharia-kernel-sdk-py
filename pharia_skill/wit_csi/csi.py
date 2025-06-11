@@ -7,6 +7,7 @@ from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index
 from ..bindings.imports import inference as wit_inference
 from ..bindings.imports import language as wit_language
+from ..bindings.imports import tool as wit_tool
 from ..csi import (
     ChatParams,
     ChatRequest,
@@ -20,6 +21,7 @@ from ..csi import (
     Document,
     DocumentPath,
     ExplanationRequest,
+    InvokeRequest,
     JsonSerializable,
     Language,
     Message,
@@ -27,6 +29,7 @@ from ..csi import (
     SearchResult,
     SelectLanguageRequest,
     TextScore,
+    ToolOutput,
 )
 from .chunking import chunk_from_wit, chunk_request_to_wit
 from .document_index import (
@@ -47,6 +50,7 @@ from .inference import (
     text_score_from_wit,
 )
 from .language import language_from_wit, language_request_to_wit
+from .tool import invoke_request_to_wit, tool_output_from_wit
 
 
 class WitCsi(Csi):
@@ -59,6 +63,13 @@ class WitCsi(Csi):
     produces a non-helpful error message. This is done by using `pydantic.dataclasses`. See the
     docstring of `csi` module for more information.
     """
+
+    def invoke_tool_concurrent(
+        self, requests: Sequence[InvokeRequest]
+    ) -> list[ToolOutput]:
+        wit_requests = [invoke_request_to_wit(request) for request in requests]
+        responses = wit_tool.invoke_tool(wit_requests)
+        return [tool_output_from_wit(response) for response in responses]
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
