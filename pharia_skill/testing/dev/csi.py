@@ -75,7 +75,10 @@ from .language import (
     SelectLanguageDeserializer,
     SelectLanguageRequestSerializer,
 )
-from .tool import InvokeRequestListSerializer, validate_tool_output
+from .tool import (
+    deserialize_tool_output,
+    serialize_tool_requests,
+)
 
 
 class DevCsi(Csi):
@@ -115,9 +118,9 @@ class DevCsi(Csi):
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
     ) -> list[ToolOutput]:
-        body = InvokeRequestListSerializer(root=requests).model_dump()
+        body = serialize_tool_requests(namespace="playground", requests=requests)
         output = self.run("invoke_tool", body)
-        return validate_tool_output(output)
+        return deserialize_tool_output(output)
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams

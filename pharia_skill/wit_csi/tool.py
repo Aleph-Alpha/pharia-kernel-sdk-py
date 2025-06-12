@@ -6,7 +6,7 @@ from ..csi.tool import InvokeRequest, ToolOutput
 
 def invoke_request_to_wit(request: InvokeRequest) -> wit.InvokeRequest:
     return wit.InvokeRequest(
-        tool_name=request.tool_name,
+        tool_name=request.name,
         arguments=[
             wit.Argument(name=name, value=json.dumps(value).encode())
             for name, value in request.arguments.items()
