@@ -61,6 +61,7 @@ from .inference import (
     TopLogprobs,
 )
 from .language import Language, SelectLanguageRequest
+from .tool import InvokeRequest, ToolOutput
 
 __all__ = [
     "After",
@@ -91,6 +92,7 @@ __all__ = [
     "GreaterThanOrEqualTo",
     "Image",
     "IndexPath",
+    "InvokeRequest",
     "IsNull",
     "JsonSerializable",
     "Language",
@@ -112,6 +114,7 @@ __all__ = [
     "Text",
     "TextScore",
     "TokenUsage",
+    "ToolOutput",
     "TopLogprobs",
     "Without",
     "With",

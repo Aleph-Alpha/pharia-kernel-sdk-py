@@ -29,6 +29,7 @@ from pharia_skill import (
     Document,
     DocumentPath,
     ExplanationRequest,
+    InvokeRequest,
     JsonSerializable,
     Language,
     Message,
@@ -36,8 +37,12 @@ from pharia_skill import (
     SearchResult,
     SelectLanguageRequest,
     TextScore,
+    ToolOutput,
 )
-from pharia_skill.csi.inference import ChatStreamResponse, CompletionStreamResponse
+from pharia_skill.csi.inference import (
+    ChatStreamResponse,
+    CompletionStreamResponse,
+)
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,
@@ -69,6 +74,10 @@ from .inference import (
 from .language import (
     SelectLanguageDeserializer,
     SelectLanguageRequestSerializer,
+)
+from .tool import (
+    deserialize_tool_output,
+    serialize_tool_requests,
 )
 
 
@@ -105,6 +114,13 @@ class DevCsi(Csi):
 
     def __init__(self) -> None:
         self.client: CsiClient = Client()
+
+    def invoke_tool_concurrent(
+        self, requests: Sequence[InvokeRequest]
+    ) -> list[ToolOutput]:
+        body = serialize_tool_requests(namespace="playground", requests=requests)
+        output = self.run("invoke_tool", body)
+        return deserialize_tool_output(output)
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams

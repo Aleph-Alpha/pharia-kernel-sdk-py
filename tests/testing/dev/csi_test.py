@@ -47,6 +47,12 @@ def given_index() -> IndexPath:
 
 
 @pytest.mark.kernel
+def test_invoke_tool(csi: Csi):
+    result = csi.invoke_tool("add", {"a": 1, "b": 2})
+    assert result.contents == ["3"]
+
+
+@pytest.mark.kernel
 def test_completion_stream(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
     response = csi.completion_stream(model, "Say hello to Bob", params)

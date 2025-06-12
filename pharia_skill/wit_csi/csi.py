@@ -1,7 +1,10 @@
 import json
 from typing import Sequence
 
-from pharia_skill.csi.inference import ChatStreamResponse, CompletionStreamResponse
+from pharia_skill.csi.inference import (
+    ChatStreamResponse,
+    CompletionStreamResponse,
+)
 
 from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index
@@ -20,6 +23,7 @@ from ..csi import (
     Document,
     DocumentPath,
     ExplanationRequest,
+    InvokeRequest,
     JsonSerializable,
     Language,
     Message,
@@ -27,6 +31,7 @@ from ..csi import (
     SearchResult,
     SelectLanguageRequest,
     TextScore,
+    ToolOutput,
 )
 from .chunking import chunk_from_wit, chunk_request_to_wit
 from .document_index import (
@@ -59,6 +64,16 @@ class WitCsi(Csi):
     produces a non-helpful error message. This is done by using `pydantic.dataclasses`. See the
     docstring of `csi` module for more information.
     """
+
+    def invoke_tool_concurrent(
+        self, requests: Sequence[InvokeRequest]
+    ) -> list[ToolOutput]:
+        from ..bindings.imports import tool as wit_tool
+        from .tool import invoke_request_to_wit, tool_output_from_wit
+
+        wit_requests = [invoke_request_to_wit(request) for request in requests]
+        responses = wit_tool.invoke_tool(wit_requests)
+        return [tool_output_from_wit(response) for response in responses]
 
     def completion_stream(
         self, model: str, prompt: str, params: CompletionParams
