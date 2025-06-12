@@ -4,7 +4,7 @@ from pydantic.types import JsonValue
 
 @dataclass
 class InvokeRequest:
-    tool_name: str
+    name: str
     arguments: dict[str, JsonValue]
 
 
