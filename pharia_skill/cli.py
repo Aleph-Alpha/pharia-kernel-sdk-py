@@ -42,7 +42,7 @@ def find_wasi_wheels_path() -> Path:
 
 
 def setup_wasi_deps() -> None:
-    """Download the Pydantic WASI wheels if they are not already present."""
+    """Install the Pydantic WASI wheels if they are not already present."""
     PYDANTIC_CORE_VERSION = "2.33.2"
     WASI_DEPS_PATH = "wasi_deps"
     if os.path.exists(WASI_DEPS_PATH):
