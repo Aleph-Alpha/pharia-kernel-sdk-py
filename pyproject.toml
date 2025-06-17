@@ -51,10 +51,10 @@ docs = [
 ]
 
 [tool.hatch.build.targets.sdist]
-include = ["pharia_skill"]
+include = ["pharia_skill", "wasi_wheels"]
 
 [tool.hatch.build.targets.wheel]
-include = ["pharia_skill"]
+include = ["pharia_skill", "wasi_wheels"]
 
 [build-system]
 requires = ["hatchling"]

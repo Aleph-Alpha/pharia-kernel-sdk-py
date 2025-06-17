@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -24,6 +25,22 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 
+def find_wasi_wheels_path() -> Path:
+    """Locate the `wasi_wheels` directory that ships with the SDK.
+
+    It is installed as a sibling to the `pharia_skill` package.
+    """
+    package_dir = Path(__file__).resolve().parent
+    candidate = package_dir.parent / "wasi_wheels"
+    if candidate.exists():
+        return candidate
+    # This indicates a bug in the SDK, as the wasi_wheels should always be installed
+    # together with the pharia_skill package.
+    raise FileNotFoundError(
+        "Directory containing WASI wheels not found. Please contact the maintainers of the pharia-skill package."
+    )
+
+
 def setup_wasi_deps() -> None:
     """Download the Pydantic WASI wheels if they are not already present."""
     PYDANTIC_CORE_VERSION = "2.33.2"
@@ -36,7 +53,7 @@ def setup_wasi_deps() -> None:
             subprocess.run(["rm", "-rf", WASI_DEPS_PATH])
 
     if not os.path.exists(WASI_DEPS_PATH):
-        logger.info("Downloading Pydantic WASI wheels...")
+        logger.info("Installing Pydantic WASI wheels...")
         subprocess.run(
             [
                 "pip3",
@@ -51,10 +68,8 @@ def setup_wasi_deps() -> None:
                 "wasi_0_0_0_wasm32",
                 "--python-version",
                 "3.12",
-                "--index-url",
-                "https://benbrandt.github.io/wasi-wheels/",
-                "--extra-index-url",
-                "https://pypi.org/simple",
+                "--find-links",
+                find_wasi_wheels_path(),
                 f"pydantic-core=={PYDANTIC_CORE_VERSION}",
             ],
             check=True,
@@ -99,8 +114,8 @@ def run_componentize_py(
 ) -> str:
     """Build the skill to a Wasm component using componentize-py.
 
-    The call to componentize-py targets the `skill` wit world and adds the downloaded
-    Pydantic WASI wheels to the Python path.
+    The call to componentize-py targets the `skill` world and expects the downloaded
+    Pydantic WASI wheels to be present in the `wasi_deps` directory.
 
     Returns:
         str: The path to the generated Wasm file.
