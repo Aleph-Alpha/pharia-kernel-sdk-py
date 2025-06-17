@@ -120,7 +120,6 @@ def run_componentize_py(
     Returns:
         str: The path to the generated Wasm file.
     """
-    setup_wasi_deps()
     args = ["--all-features"] if unstable else []
     command = [
         "componentize-py",
@@ -335,6 +334,8 @@ def build(
         raise typer.Exit(code=1)
 
     output_file = f"./{skill.split('.')[-1]}.wasm"
+    setup_wasi_deps()
+
     with Progress(
         SpinnerColumn(),
         TextColumn(
