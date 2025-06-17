@@ -51,9 +51,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
       - name: Test
-        run: uv run pytest -m 'not kernel'
+        run: uv run pytest -m 'not kernel and not studio'
 
-  kernel-test:
+  kernel-and-studio-test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -73,8 +73,8 @@ jobs:
         run: uv sync --dev
       - name: Run Pharia Kernel
         run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }}
-      - name: Run kernel tests
-        run: uv run pytest -m 'kernel'
+      - name: Run kernel and studio tests
+        run: uv run pytest -m 'kernel or studio'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
           PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
