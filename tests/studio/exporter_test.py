@@ -117,6 +117,7 @@ def saboteur_dev_csi() -> DevCsi:
 
 
 @pytest.mark.kernel
+@pytest.mark.studio
 def test_trace_upload_studio_does_not_raise(stub_dev_csi: DevCsi):
     """Errors from uploading traces are handled by ErrorHandles.
     The default handling is silently ignoring the exceptions.
