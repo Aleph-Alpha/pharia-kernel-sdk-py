@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.3...v0.16.4) (2025-06-17)
+
+
+### Documentation
+
+* fix typos ([6038c63](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/6038c6374c6ede40df8027c94eb462a194178bf1))
+
 ## [0.16.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.2...v0.16.3) (2025-06-17)
 
 
