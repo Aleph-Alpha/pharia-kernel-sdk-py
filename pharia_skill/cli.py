@@ -13,7 +13,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.prompt import Confirm, Prompt
 from typing_extensions import Annotated
 
-from .pharia_skill_cli import PhariaSkillCli, Registry
+from .pharia_skill_cli import Registry, cli_publish
 
 logging.basicConfig(
     level=logging.INFO,
@@ -197,8 +197,6 @@ def publish_skill(skill_path: str, name: Optional[str], tag: str) -> None:
 
     display_name = name if name else skill_path.replace(".wasm", "")
 
-    cli = PhariaSkillCli()
-
     try:
         registry = Registry.from_env()
     except KeyError as e:
@@ -221,7 +219,7 @@ def publish_skill(skill_path: str, name: Optional[str], tag: str) -> None:
         transient=True,
     ) as progress:
         task = progress.add_task("", total=None)
-        cli.publish(skill_path, name, tag, registry)
+        cli_publish(skill_path, name, tag, registry)
         progress.update(task, completed=True)
 
     console.print(
