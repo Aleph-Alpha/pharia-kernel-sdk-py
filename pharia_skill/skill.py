@@ -105,7 +105,7 @@ def skill(
     assert "SkillHandler" not in func.__globals__, "`@skill` can only be used once."
 
     def trace_skill(csi: Csi, input: UserInput) -> UserOutput:
-        """This is the function that we return from the decorator and that get's executed at test time.
+        """This function is returned by the decorator and executed at test time.
 
         The `opentelemetry` library import is moved to within the function to not make it a dependency of the
         Wasm component.
