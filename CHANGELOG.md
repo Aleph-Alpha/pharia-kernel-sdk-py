@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.16.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.1...v0.16.2) (2025-06-17)
+
+
+### Features
+
+* package wasi wheels together with the sdk ([47d5f6b](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/47d5f6b86578fc3e4b49e33f3cf0c5ccf18625fd))
+
+
+### Bug Fixes
+
+* move setup of wasi_deps outside of spinner ([b2108ed](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/b2108ed60f98d225de68d65c0a17f1a59a1f0345))
+
 ## [0.16.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.0...v0.16.1) (2025-06-10)
 
 
