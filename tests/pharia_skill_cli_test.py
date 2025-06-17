@@ -9,6 +9,7 @@ from pharia_skill.cli import (
     NoHttpError,
     SkillType,
     run_componentize_py,
+    setup_wasi_deps,
 )
 from pharia_skill.pharia_skill_cli import PhariaSkillCli
 
@@ -32,6 +33,11 @@ def test_download_pharia_skill_windows():
 @pytest.mark.kernel
 def test_pharia_skill_update_if_needed():
     PhariaSkillCli.update_if_needed()
+
+
+@pytest.fixture(autouse=True)
+def wasi_wheels_installed():
+    setup_wasi_deps()
 
 
 def test_building_message_stream_skill_with_wrong_skill_type_raises():
