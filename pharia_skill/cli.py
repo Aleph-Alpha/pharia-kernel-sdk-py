@@ -91,7 +91,7 @@ class IsMessageStream(BuildError):
 
 
 class IsSkill(BuildError):
-    """Skill is not build against the `skill` world."""
+    """Skill is not built against the `skill` world."""
 
     def __init__(self, message: str):
         self.message = message
