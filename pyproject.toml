@@ -62,7 +62,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
-markers = ["kernel: marks tests that requires Pharia Kernel"]
+markers = [
+    "kernel: marks tests that requires PhariaKernel",
+    "studio: marks tests that requires PhariaStudio",
+]
 testpaths = ["tests"]
 
 [tool.ruff]

@@ -232,6 +232,7 @@ def test_set_different_trace_exporter_raises():
 
 
 @pytest.mark.kernel
+@pytest.mark.studio
 def test_multiple_csi_instances_do_not_duplicate_exporters():
     """A user might use different `DevCsi` instances in the same process.
 
