@@ -116,12 +116,10 @@ jobs:
           uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive --skill-type message-stream-skill
       - name: Create .env file for skill publishing
         run: |
-          cat > .env << EOF
-          SKILL_REGISTRY_USER=${{ github.actor }}
-          SKILL_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          SKILL_REGISTRY=ghcr.io
-          SKILL_REPOSITORY=aleph-alpha/pharia-kernel-sdk-py/skills
-          EOF
+          echo "SKILL_REGISTRY_USER=${{ github.actor }}" > .env
+          echo "SKILL_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
+          echo "SKILL_REGISTRY=ghcr.io" >> .env
+          echo "SKILL_REPOSITORY=aleph-alpha/pharia-kernel-sdk-py/skills" >> .env
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
       - name: Test skill execution on ubuntu only
