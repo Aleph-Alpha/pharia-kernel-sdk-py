@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.4...v0.16.5) (2025-06-18)
+
+
+### Bug Fixes
+
+* load dotenv file before retrieving env variables ([4a80c9c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4a80c9c05545b3bd51ad90ffc73378a86ff348b6))
+
 ## [0.16.4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.3...v0.16.4) (2025-06-17)
 
 
