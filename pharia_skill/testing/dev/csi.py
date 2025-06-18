@@ -88,6 +88,9 @@ class DevCsi(Csi):
     This implementation of Cognitive System Interface (CSI) is backed by a running instance of Pharia Kernel via HTTP.
     This enables skill developers to run and test Skills against the same services that are used by the Pharia Kernel.
 
+    Args:
+        namespace: The namespace to use for tool invocations.
+
     Examples::
 
         # import your skill
@@ -112,13 +115,17 @@ class DevCsi(Csi):
     * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.product.pharia.com")
     """
 
-    def __init__(self) -> None:
+    def __init__(self, namespace: str | None = None) -> None:
         self.client: CsiClient = Client()
+        self.namespace = namespace
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
     ) -> list[ToolOutput]:
-        body = serialize_tool_requests(namespace="playground", requests=requests)
+        assert self.namespace is not None, (
+            "Specifying a namespace when constructing a DevCsi is required when invoking tools"
+        )
+        body = serialize_tool_requests(namespace=self.namespace, requests=requests)
         output = self.run("invoke_tool", body)
         return deserialize_tool_output(output)
 
