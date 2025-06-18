@@ -4,6 +4,8 @@ import subprocess
 import sys
 from typing import NamedTuple
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +19,7 @@ class Registry(NamedTuple):
 
     @classmethod
     def from_env(cls) -> "Registry":
+        load_dotenv()
         return cls(
             user=os.environ["SKILL_REGISTRY_USER"],
             token=os.environ["SKILL_REGISTRY_TOKEN"],
