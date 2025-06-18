@@ -34,6 +34,12 @@ def csi() -> Csi:
     return DevCsi()
 
 
+@pytest.fixture(scope="module")
+def csi_with_test_namespace() -> Csi:
+    """The `test-beta` namespace is configured with hardcoded tools."""
+    return DevCsi(namespace="test-beta")
+
+
 @pytest.fixture
 def given_document() -> DocumentPath:
     """The tests suite expects a document `kernel-docs` in the `test` collection of the `Kernel` index."""
@@ -47,8 +53,8 @@ def given_index() -> IndexPath:
 
 
 @pytest.mark.kernel
-def test_invoke_tool(csi: Csi):
-    result = csi.invoke_tool("add", {"a": 1, "b": 2})
+def test_invoke_tool(csi_with_test_namespace: Csi):
+    result = csi_with_test_namespace.invoke_tool("add", {"a": 1, "b": 2})
     assert result.contents == ["3"]
 
 
