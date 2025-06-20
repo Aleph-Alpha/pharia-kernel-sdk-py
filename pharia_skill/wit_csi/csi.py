@@ -69,7 +69,18 @@ class WitCsi(Csi):
         self, requests: Sequence[InvokeRequest]
     ) -> list[ToolOutput]:
         from ..bindings.imports import tool as wit_tool
-        from .tool import invoke_request_to_wit, tool_output_from_wit
+
+        def invoke_request_to_wit(request: InvokeRequest) -> wit_tool.InvokeRequest:
+            return wit_tool.InvokeRequest(
+                tool_name=request.name,
+                arguments=[
+                    wit_tool.Argument(name=name, value=json.dumps(value).encode())
+                    for name, value in request.arguments.items()
+                ],
+            )
+
+        def tool_output_from_wit(response: list[wit_tool.Modality]) -> ToolOutput:
+            return ToolOutput(contents=[modality.value for modality in response])
 
         wit_requests = [invoke_request_to_wit(request) for request in requests]
         responses = wit_tool.invoke_tool(wit_requests)
