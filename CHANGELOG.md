@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.16.6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.5...v0.16.6) (2025-06-20)
+
+
+### Features
+
+* allow DevCsi namespace to be configured for tool invocation ([5adf08e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5adf08e1840d46953618ade59e04cee43b25a11c))
+* expose invoke tool in csi ([99b41c0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/99b41c0d02d9fdbc8e343dcdd045ad02f2eb193b))
+* implement invoke_tool in DevCsi ([c6a560c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c6a560c76a4b20a2b81962e88aa72b9f5d9afd3a))
+
+
+### Bug Fixes
+
+* import unstable bindings for tools on demand ([d567b59](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/d567b599b8aaf325d2726a207a3d3565dc0c6a49))
+
 ## [0.16.5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.4...v0.16.5) (2025-06-18)
 
 
