@@ -27,7 +27,7 @@ def haiku_stream(csi: Csi, writer: MessageWriter[SkillOutput], input: Input) -> 
     ]
     params = ChatParams()
     content = ""
-    with csi.chat_stream(model, messages, params) as response:
+    with csi._chat_stream(model, messages, params) as response:
         writer.begin_message(response.role)
         for event in response.stream():
             content += event.content

@@ -21,7 +21,7 @@ def haiku_stream(csi: Csi, writer: MessageWriter[SkillOutput], input: Input) -> 
     model = "llama-3.1-8b-instruct"
     prompt = f"Generate a haiku about {input.root}"
     params = CompletionParams(max_tokens=50)
-    with csi.completion_stream(model, prompt, params) as response:
+    with csi._completion_stream(model, prompt, params) as response:
         writer.forward_response(
             response, lambda r: SkillOutput(finish_reason=r.finish_reason())
         )

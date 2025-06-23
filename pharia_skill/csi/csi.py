@@ -85,41 +85,53 @@ class Csi(Protocol):
         ...
 
     def completion_stream(
-        self, model: str, prompt: str, params: CompletionParams
+        self, model: str, prompt: str, params: CompletionParams | None = None
     ) -> CompletionStreamResponse:
         """Streams completions given a prompt.
 
         Parameters:
             model (str, required): Name of model to use.
             prompt (str, required): The text to be completed.
-            params (CompletionParams, required): Parameters for the requested completion.
+            params (CompletionParams, optional, Default None):
+                Parameters for the requested completion.
         """
-        ...
+        params = params or CompletionParams()
+        return self._completion_stream(model, prompt, params)
+
+    def _completion_stream(
+        self, model: str, prompt: str, params: CompletionParams
+    ) -> CompletionStreamResponse: ...
 
     def chat_stream(
-        self, model: str, messages: list[Message], params: ChatParams
+        self, model: str, messages: list[Message], params: ChatParams | None = None
     ) -> ChatStreamResponse:
         """Streams chat with a model, where the first item is the role.
 
         Parameters:
-            model (str, required):
-                Name of model to use.
+            model (str, required): Name of model to use.
 
             messages (list[Message], required):
                 List of messages, alternating between messages from user and assistant.
 
-            params (ChatParams, required):
-                Parameters used for the chat.
+            params (ChatParams, optional, Default None): Parameters used for the chat.
         """
-        ...
+        params = params or ChatParams()
+        return self._chat_stream(model, messages, params)
 
-    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
+    def _chat_stream(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> ChatStreamResponse: ...
+
+    def complete(
+        self, model: str, prompt: str, params: CompletionParams | None = None
+    ) -> Completion:
         """Generates completions given a prompt.
 
         Parameters:
             model (str, required): Name of model to use.
             prompt (str, required): The text to be completed.
-            params (CompletionParams, required): Parameters for the requested completion.
+            params (CompletionParams, optional, Default None):
+                Parameters for the requested completion.
 
         Examples::
 
@@ -131,6 +143,7 @@ class Csi(Protocol):
             params = CompletionParams(max_tokens=64)
             completion = csi.complete("llama-3.1-8b-instruct", prompt, params)
         """
+        params = params or CompletionParams()
         request = CompletionRequest(model, prompt, params)
         return self.complete_concurrent([request])[0]
 
@@ -149,7 +162,8 @@ class Csi(Protocol):
 
         Parameters:
             text (str, required): Text to be chunked.
-            params (ChunkParams, required): Parameter used for chunking, model and maximal number of tokens.
+            params (ChunkParams, required):
+                Parameter used for chunking, model and maximal number of tokens.
 
         Examples::
 
@@ -170,7 +184,7 @@ class Csi(Protocol):
         ...
 
     def chat(
-        self, model: str, messages: list[Message], params: ChatParams
+        self, model: str, messages: list[Message], params: ChatParams | None = None
     ) -> ChatResponse:
         """Chat with a model.
 
@@ -181,7 +195,7 @@ class Csi(Protocol):
             messages (list[Message], required):
                 List of messages, alternating between messages from user and assistant.
 
-            params (ChatParams, required):
+            params (ChatParams, optional, Default None):
                 Parameters used for the chat.
 
         Examples::
@@ -193,6 +207,7 @@ class Csi(Protocol):
             model = "llama-3.1-8b-instruct"
             chat_response = csi.chat(model, [msg], ChatParams(max_tokens=64))
         """
+        params = params or ChatParams()
         request = ChatRequest(model, messages, params)
         return self.chat_concurrent([request])[0]
 
@@ -211,21 +226,38 @@ class Csi(Protocol):
         model: str,
         granularity: Granularity = Granularity.AUTO,
     ) -> list[TextScore]:
+        """Request an explanation for the completion.
+
+        Parameters:
+            prompt (str, required): The prompt used for the completion.
+            target (str, required): The completion text.
+            model (str, required): The model used for the completion.
+            granularity (Granularity, optional, Default Granularity.AUTO):
+                Controls the length of the ranges which are explained.
+        """
         request = ExplanationRequest(prompt, target, model, granularity)
         return self.explain_concurrent([request])[0]
 
     def explain_concurrent(
         self, requests: Sequence[ExplanationRequest]
-    ) -> list[list[TextScore]]: ...
+    ) -> list[list[TextScore]]:
+        """Request an explanation for the completion concurrently.
+
+        Parameters:
+            requests (list[ExplanationRequest], required): List of explanation requests.
+        """
+        ...
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
-        """Select the detected language for the provided input based on the list of possible languages.
+        """Select the detected language for the provided input based on the list of
+        possible languages.
 
         If no language matches, None is returned.
 
         Parameters:
             text (str, required): Text input.
-            languages (list[Language], required): All languages that should be considered during detection.
+            languages (list[Language], required):
+                All languages that should be considered during detection.
 
         Examples::
 
@@ -242,7 +274,8 @@ class Csi(Protocol):
         """Detect the language for multiple texts concurrently.
 
         Parameters:
-            requests (list[SelectLanguageRequest], required): List of select language requests.
+            requests (list[SelectLanguageRequest], required):
+                List of select language requests.
         """
         ...
 
@@ -257,10 +290,14 @@ class Csi(Protocol):
         """Search an existing Index in the Document Index.
 
         Parameters:
-            index_path (IndexPath, required): Index path in the Document Index to access.
+            index_path (IndexPath, required):
+                Index path in the Document Index to access.
             query (str, required): Text to be search for.
-            max_results (int, required): Maximal number of results.
-            min_score (float, optional, Default NoneNone): Minimal score for result to be included.
+            max_results (int, optional, Default 1): Maximal number of results.
+            min_score (float, optional, Default None):
+                Minimal score for result to be included.
+            filters (list[SearchFilter], optional, Default None):
+                Filters to be applied to the search.
 
         Examples::
 
@@ -277,15 +314,16 @@ class Csi(Protocol):
 
     def search_concurrent(
         self, requests: Sequence[SearchRequest]
-    ) -> list[list[SearchResult]]: ...
-
-    """Execute multiple search requests against the Document Index."""
+    ) -> list[list[SearchResult]]:
+        """Execute multiple search requests against the Document Index."""
+        ...
 
     def document(self, document_path: DocumentPath) -> Document:
         """Fetch a document from the Document Index.
 
         Parameters:
-            document_path (DocumentPath, required): The document path to get the document from.
+            document_path (DocumentPath, required):
+                The document path to get the document from.
 
         Examples::
 
@@ -298,10 +336,12 @@ class Csi(Protocol):
     def documents(self, document_paths: Sequence[DocumentPath]) -> list[Document]:
         """Fetch multiple documents from the Document Index.
 
-        The documents are guaranteed to be returned in the same order as the document paths.
+        The documents are guaranteed to be returned in the same order as the document
+        paths.
 
         Parameters:
-            document_paths (list[DocumentPath], required): The document paths to get the documents from.
+            document_paths (list[DocumentPath], required):
+                The document paths to get the documents from.
         """
         ...
 
@@ -309,7 +349,8 @@ class Csi(Protocol):
         """Return the metadata of a document in the Document Index.
 
         Parameters:
-            document_path (DocumentPath, required): The document path to get metadata from.
+            document_path (DocumentPath, required):
+                The document path to get metadata from.
         """
         return self.documents_metadata([document_path])[0]
 
@@ -318,9 +359,11 @@ class Csi(Protocol):
     ) -> list[JsonSerializable]:
         """Return the metadata of multiple documents in the Document Index.
 
-        The metadata is guaranteed to be returned in the same order as the document paths.
+        The metadata is guaranteed to be returned in the same order as the document
+        paths.
 
         Parameters:
-            document_paths (list[DocumentPath], required): The document paths to get metadata from.
+            document_paths (list[DocumentPath], required):
+                The document paths to get metadata from.
         """
         ...

@@ -139,7 +139,7 @@ def test_trace_upload_studio_does_not_raise(stub_dev_csi: DevCsi):
 @message_stream
 def haiku_stream(csi: Csi, writer: MessageWriter[Output], input: Input) -> None:
     """Do a chat stream and forward the response."""
-    result = csi.chat_stream(
+    result = csi._chat_stream(
         "llama-3.1-8b-instruct", [Message.user(input.topic)], ChatParams()
     )
     writer.forward_response(result)
