@@ -18,9 +18,7 @@ def summarize(csi: Csi, input: Input) -> Output:
     """A skill that fetches and summarizes the latest news articles for the provided topic."""
 
     # Search for news articles
-    search_news_output = csi.invoke_tool(
-        name="search_news", arguments={"query": input.topic}
-    )
+    search_news_output = csi.invoke_tool("search_news", query=input.topic)
 
     # Extract the first 10 results
     search_results = [

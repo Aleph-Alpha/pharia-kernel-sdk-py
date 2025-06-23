@@ -60,7 +60,7 @@ class Csi(Protocol):
     Sequences, as we want the input to be ordered.
     """
 
-    def invoke_tool(self, name: str, arguments: dict[str, JsonValue]) -> ToolOutput:
+    def invoke_tool(self, name: str, **kwargs: JsonValue) -> ToolOutput:
         """Invoke a tool that is configured with the Kernel.
 
         Tools can be configured for each namespace by listing MCP servers in the namespace config.
@@ -69,9 +69,9 @@ class Csi(Protocol):
 
         Parameters:
             name (str, required): Name of the tool to invoke.
-            arguments (dict[str, JsonValue], required): Arguments to pass to the tool.
+            **kwargs (JsonValue, required): Arguments to pass to the tool.
         """
-        request = InvokeRequest(name, arguments)
+        request = InvokeRequest(name, kwargs)
         return self.invoke_tool_concurrent([request])[0]
 
     def invoke_tool_concurrent(
