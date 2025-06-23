@@ -54,7 +54,7 @@ def given_index() -> IndexPath:
 
 @pytest.mark.kernel
 def test_invoke_tool(csi_with_test_namespace: Csi):
-    result = csi_with_test_namespace.invoke_tool("add", {"a": 1, "b": 2})
+    result = csi_with_test_namespace.invoke_tool("add", a=1, b=2)
     assert result.contents == ["3"]
 
 

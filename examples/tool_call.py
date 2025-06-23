@@ -22,10 +22,10 @@ def compute(csi: Csi, input: Input) -> Output:
     This skill demonstrates how to invoke the tools.
     """
 
-    add_output = csi.invoke_tool(name="add", arguments={"a": input.root, "b": 100})
+    add_output = csi.invoke_tool("add", a=input.root, b=100)
     sum = int(add_output.contents[0])
 
-    subtract_output = csi.invoke_tool(name="subtract", arguments={"a": sum, "b": 60})
+    subtract_output = csi.invoke_tool("subtract", a=sum, b=60)
     answer = int(subtract_output.contents[0])
 
     return Output(root=answer)
