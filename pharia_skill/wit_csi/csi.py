@@ -86,14 +86,14 @@ class WitCsi(Csi):
         responses = wit_tool.invoke_tool(wit_requests)
         return [tool_output_from_wit(response) for response in responses]
 
-    def completion_stream(
+    def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         request = completion_request_to_wit(CompletionRequest(model, prompt, params))
         stream = wit_inference.CompletionStream(request)
         return WitCompletionStreamResponse(stream)
 
-    def chat_stream(
+    def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         request = chat_request_to_wit(ChatRequest(model, messages, params))

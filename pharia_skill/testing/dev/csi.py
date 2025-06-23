@@ -129,7 +129,7 @@ class DevCsi(Csi):
         output = self.run("invoke_tool", body)
         return deserialize_tool_output(output)
 
-    def completion_stream(
+    def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         body = CompletionRequestSerializer(
@@ -138,7 +138,7 @@ class DevCsi(Csi):
         events = self.stream("completion_stream", body)
         return DevCompletionStreamResponse(events)
 
-    def chat_stream(
+    def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         body = ChatRequestSerializer(

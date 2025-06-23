@@ -71,7 +71,7 @@ class CompletionParams:
     temperature: float | None = None
     top_k: int | None = None
     top_p: float | None = None
-    stop: list[str] = field(default_factory=lambda: list())
+    stop: list[str] = field(default_factory=list)
 
     # While the default of this parameters in the api-scheduler is False, we believe that
     # with the introduction of the chat endpoint, the completion endpoint is mostly used for
@@ -395,12 +395,13 @@ class CompletionRequest:
     Attributes:
         model (str, required): Name of model to use.
         prompt (str, required): The text to be completed.
-        params (CompletionParams, required): Parameters for the requested completion.
+        params (CompletionParams, optional, Default CompletionParams()):
+            Parameters for the requested completion.
     """
 
     model: str
     prompt: str
-    params: CompletionParams
+    params: CompletionParams = field(default_factory=CompletionParams)
 
 
 @dataclass
@@ -471,12 +472,13 @@ class ChatRequest:
     Attributes:
         model (str, required): Name of model to use.
         messages (list[Message], required): The messages to be sent to the model.
-        params (ChatParams, required): Parameters for the requested chat.
+        params (ChatParams, optional, Default ChatParams()):
+            Parameters for the requested chat.
     """
 
     model: str
     messages: list[Message]
-    params: ChatParams
+    params: ChatParams = field(default_factory=ChatParams)
 
 
 @dataclass
@@ -536,7 +538,8 @@ class ExplanationRequest:
         prompt (str): The prompt used for the completion.
         target (str): The completion text.
         model (str): The model used for the completion.
-        granularity (Granularity, optional): Controls the length of the ranges which are explained.
+        granularity (Granularity, optional, Default Granularity.AUTO):
+            Controls the length of the ranges which are explained.
     """
 
     prompt: str

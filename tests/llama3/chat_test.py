@@ -2,7 +2,8 @@ import datetime as dt
 
 import pytest
 
-from pharia_skill.csi import Completion, CompletionParams, Csi, FinishReason, TokenUsage
+from pharia_skill.csi import Completion, Csi, FinishReason, TokenUsage
+from pharia_skill.csi.inference import CompletionRequest
 from pharia_skill.llama3 import (
     ChatRequest,
     Role,
@@ -30,9 +31,11 @@ class MockCsi(Csi):
         self.completion = completion
         self.prompts: list[str] = []
 
-    def complete(self, model: str, prompt: str, params: CompletionParams) -> Completion:
-        self.prompts.append(prompt)
-        return self.completion
+    def complete_concurrent(
+        self, requests: list[CompletionRequest]
+    ) -> list[Completion]:
+        self.prompts.append(requests[0].prompt)
+        return [self.completion]
 
 
 class GetShipmentDate(Tool):

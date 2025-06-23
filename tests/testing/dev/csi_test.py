@@ -61,7 +61,7 @@ def test_invoke_tool(csi_with_test_namespace: Csi):
 @pytest.mark.kernel
 def test_completion_stream(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
-    response = csi.completion_stream(model, "Say hello to Bob", params)
+    response = csi._completion_stream(model, "Say hello to Bob", params)
 
     stream = response.stream()
     assert next(stream).text is not None
@@ -76,7 +76,7 @@ def test_completion_stream(csi: Csi, model: str):
 def test_chat_stream(csi: Csi, model: str):
     params = ChatParams(max_tokens=64, logprobs="sampled")
     messages = [Message.user("Say hello to Bob")]
-    message = csi.chat_stream(model, messages, params)
+    message = csi._chat_stream(model, messages, params)
 
     assert message.role == "assistant"
 
@@ -97,7 +97,7 @@ def test_chat_stream(csi: Csi, model: str):
 def test_chat_stream_skip_streaming_message(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
-    message = csi.chat_stream(model, messages, params)
+    message = csi._chat_stream(model, messages, params)
 
     assert message.finish_reason() == FinishReason.STOP
     usage = message.usage()
@@ -109,7 +109,7 @@ def test_chat_stream_skip_streaming_message(csi: Csi, model: str):
 def test_chat_stream_after_consumed(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
-    message = csi.chat_stream(model, messages, params)
+    message = csi._chat_stream(model, messages, params)
 
     assert message.finish_reason() == FinishReason.STOP
     with pytest.raises(RuntimeError) as excinfo:
@@ -282,7 +282,7 @@ def test_stream_error_event_is_raised():
     # Given a completion request against a non-existing model
     csi = DevCsi()
     params = CompletionParams(max_tokens=64)
-    stream = csi.completion_stream("non-existing-model", "Say hello to Bob", params)
+    stream = csi._completion_stream("non-existing-model", "Say hello to Bob", params)
 
     # When calling next
     with pytest.raises(ValueError) as e:

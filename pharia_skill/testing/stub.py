@@ -78,7 +78,7 @@ class StubCsi(Csi):
     ) -> list[ToolOutput]:
         return [ToolOutput(contents=[]) for _ in requests]
 
-    def completion_stream(
+    def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams
     ) -> CompletionStreamResponse:
         class StubCompletionStreamResponse(CompletionStreamResponse):
@@ -96,7 +96,7 @@ class StubCsi(Csi):
 
         return StubCompletionStreamResponse(generator())
 
-    def chat_stream(
+    def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
         class StubChatStreamResponse(ChatStreamResponse):
