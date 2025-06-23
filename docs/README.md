@@ -4,9 +4,8 @@
 
 ```sh
 uv sync --group docs
-source .venv/bin/activate
 cd docs
-make html
+uv run make html
 ```
 
 ## Structure
