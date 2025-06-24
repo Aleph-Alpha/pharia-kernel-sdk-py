@@ -58,7 +58,8 @@ receives the error message, it can try a second time. Even if there is an error 
 tool itself, the model may decided that it can solve the users problem without this
 particular tool. Therefore, tool errors are passed to the Skill.
 
-The most Pythonic way would be to raise a ToolException and let the user handle
-this. However, multiple tool calls can be executed in parallel, which does not go
-well with exceptions. Therefore, we return a `ToolResult` type.
+For single tool calls, we stick to the Pythonic way and raise the `ToolError` as an
+Exception. However, this pattern would not work for multiple parallel tool calls,
+where the other results are still relevant even if one tool call fails. Therefore,
+we introduce a `ToolResult` type.
 """
