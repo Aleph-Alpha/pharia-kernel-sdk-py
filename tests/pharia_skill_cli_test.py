@@ -22,6 +22,7 @@ def test_building_message_stream_skill_with_wrong_skill_type_raises():
             "haiku_stream.wasm",
             False,
             SkillType.SKILL,
+            [],
         )
 
 
@@ -32,6 +33,7 @@ def test_building_skill_with_wrong_skill_type_raises():
             "haiku.wasm",
             False,
             SkillType.MESSAGE_STREAM_SKILL,
+            [],
         )
 
 
@@ -42,4 +44,5 @@ def test_building_skill_which_imports_requests_raises():
             "http_haiku.wasm",
             False,
             SkillType.SKILL,
+            [],
         )
