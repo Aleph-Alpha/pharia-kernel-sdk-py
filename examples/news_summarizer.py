@@ -19,7 +19,6 @@ def summarize(csi: Csi, input: Input) -> Output:
 
     # Search for news articles
     search_news_output = csi.invoke_tool("search_news", query=input.topic)
-    assert isinstance(search_news_output, ToolOutput)
 
     # Extract the first 10 results
     search_results = [
@@ -35,15 +34,11 @@ def summarize(csi: Csi, input: Input) -> Output:
     fetch_outputs = csi.invoke_tool_concurrent(fetch_requests)
 
     # Format the news articles
-    contents = [
-        "\n\n".join(output.contents)
-        for output in fetch_outputs
-        if isinstance(output, ToolOutput)
-    ]
     news = "\n\n\n".join(
         [
-            f"Title: {title}\nURL: {url}\nContent: {content}"
-            for (title, url), content in zip(search_results, contents)
+            f"Title: {title}\nURL: {url}\nContent: {result.text()}"
+            for (title, url), result in zip(search_results, fetch_outputs)
+            if isinstance(result, ToolOutput)
         ]
     )
 

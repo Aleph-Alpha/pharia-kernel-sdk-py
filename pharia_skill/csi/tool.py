@@ -21,9 +21,18 @@ class ToolOutput:
 
     contents: list[str]
 
+    def text(self) -> str:
+        """Append all text contents to a single string.
+
+        While the MCP specification allows for multiple modalities, in most cases
+        MCP tools will return a single text modality. This property allows accessing
+        the text content of the tool output as a single string.
+        """
+        return "\n\n".join(self.contents)
+
 
 @dataclass
-class ToolError:
+class ToolError(Exception):
     """The error message in case the tool invocation failed.
 
     A tool error can have different causes. The tool might not have been found,

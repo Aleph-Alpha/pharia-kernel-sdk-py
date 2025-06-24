@@ -15,6 +15,7 @@ from pharia_skill import (
     FinishReason,
     Granularity,
     IndexPath,
+    InvokeRequest,
     Language,
     Message,
     Role,
@@ -57,15 +58,32 @@ def given_index() -> IndexPath:
 @pytest.mark.kernel
 def test_invoke_tool(csi_with_test_namespace: Csi):
     result = csi_with_test_namespace.invoke_tool("add", a=1, b=2)
-    assert isinstance(result, ToolOutput)
     assert result.contents == ["3"]
 
 
 @pytest.mark.kernel
 def test_invoke_saboteur_tool(csi_with_test_namespace: Csi):
-    result = csi_with_test_namespace.invoke_tool("saboteur", a=1, b=2)
-    assert isinstance(result, ToolError)
-    assert result.message == "Out of cheese."
+    with pytest.raises(ToolError) as excinfo:
+        csi_with_test_namespace.invoke_tool("saboteur", a=1, b=2)
+
+    assert "Out of cheese." in str(excinfo.value)
+
+
+@pytest.mark.kernel
+def test_invoke_tool_concurrent(csi_with_test_namespace: Csi):
+    # Given a list of invoke requests
+    requests = [
+        InvokeRequest(name="add", arguments={"a": 1, "b": 2}),
+        InvokeRequest(name="saboteur", arguments={"a": 1, "b": 2}),
+    ]
+
+    # When invoking the tools concurrently
+    results = csi_with_test_namespace.invoke_tool_concurrent(requests)
+
+    # Then the results contain one success and one error
+    assert len(results) == 2
+    assert isinstance(results[0], ToolOutput)
+    assert isinstance(results[1], ToolError)
 
 
 @pytest.mark.kernel
