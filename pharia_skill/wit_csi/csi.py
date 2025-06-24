@@ -10,6 +10,7 @@ from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index
 from ..bindings.imports import inference as wit_inference
 from ..bindings.imports import language as wit_language
+from ..bindings.types import Ok, Result
 from ..csi import (
     ChatParams,
     ChatRequest,
@@ -31,7 +32,9 @@ from ..csi import (
     SearchResult,
     SelectLanguageRequest,
     TextScore,
+    ToolError,
     ToolOutput,
+    ToolResult,
 )
 from .chunking import chunk_from_wit, chunk_request_to_wit
 from .document_index import (
@@ -67,7 +70,7 @@ class WitCsi(Csi):
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
-    ) -> list[ToolOutput]:
+    ) -> list[ToolResult]:
         from ..bindings.imports import tool as wit_tool
 
         def invoke_request_to_wit(request: InvokeRequest) -> wit_tool.InvokeRequest:
@@ -79,8 +82,14 @@ class WitCsi(Csi):
                 ],
             )
 
-        def tool_output_from_wit(response: list[wit_tool.Modality]) -> ToolOutput:
-            return ToolOutput(contents=[modality.value for modality in response])
+        def tool_output_from_wit(
+            response: Result[list[wit_tool.Modality], str],
+        ) -> ToolResult:
+            return (
+                ToolOutput(contents=[modality.value for modality in response.value])
+                if isinstance(response, Ok)
+                else ToolError(message=response.value)
+            )
 
         wit_requests = [invoke_request_to_wit(request) for request in requests]
         responses = wit_tool.invoke_tool(wit_requests)

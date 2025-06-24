@@ -29,6 +29,7 @@ from pharia_skill import (
     Text,
     TextScore,
     TokenUsage,
+    ToolResult,
 )
 from pharia_skill.csi.inference import (
     ChatEvent,
@@ -75,7 +76,7 @@ class StubCsi(Csi):
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
-    ) -> list[ToolOutput]:
+    ) -> list[ToolResult]:
         return [ToolOutput(contents=[]) for _ in requests]
 
     def _completion_stream(

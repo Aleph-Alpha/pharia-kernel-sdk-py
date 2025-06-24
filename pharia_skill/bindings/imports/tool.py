@@ -33,6 +33,6 @@ Modality = Union[Modality_Text]
 
 
 
-def invoke_tool(request: List[InvokeRequest]) -> List[List[Modality]]:
+def invoke_tool(request: List[InvokeRequest]) -> List[Result[List[Modality], str]]:
     raise NotImplementedError
 

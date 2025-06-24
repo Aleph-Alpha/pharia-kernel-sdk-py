@@ -51,15 +51,21 @@ class Text(BaseModel):
 
 # Pylance complains about a Union of only one type.
 # However, for discriminated deserialization we do require the Union.
-class ToolOutputDeserializer(RootModel[Union[Text]]):  # pyright: ignore[reportInvalidTypeArguments]
+class ToolModalityDeserializer(RootModel[Union[Text]]):  # pyright: ignore[reportInvalidTypeArguments]
     root: Union[Text] = Field(discriminator="type")  # pyright: ignore[reportInvalidTypeArguments]
 
 
-ToolOutputListDeserializer = RootModel[list[list[ToolOutputDeserializer]]]
+ToolOutputListDeserializer = RootModel[list[list[ToolModalityDeserializer] | str]]
+"""Deserialization of the tool output.
+
+In the success case, we receive a list of modalities. In the error case a string.
+"""
 
 
-def deserialize_tool_output(output: Any) -> list[tool.ToolOutput]:
+def deserialize_tool_output(output: Any) -> list[tool.ToolResult]:
     return [
         tool.ToolOutput(contents=[content.root.text for content in deserialized])
+        if isinstance(deserialized, list)
+        else tool.ToolError(message=deserialized)
         for deserialized in ToolOutputListDeserializer(root=output).root
     ]

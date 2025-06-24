@@ -48,7 +48,7 @@ from .inference import (
     TextScore,
 )
 from .language import Language, SelectLanguageRequest
-from .tool import InvokeRequest, ToolOutput
+from .tool import InvokeRequest, ToolResult
 
 
 class Csi(Protocol):
@@ -60,7 +60,7 @@ class Csi(Protocol):
     Sequences, as we want the input to be ordered.
     """
 
-    def invoke_tool(self, name: str, **kwargs: JsonValue) -> ToolOutput:
+    def invoke_tool(self, name: str, **kwargs: JsonValue) -> ToolResult:
         """Invoke a tool that is configured with the Kernel.
 
         Tools can be configured for each namespace by listing MCP servers in the namespace config.
@@ -76,7 +76,7 @@ class Csi(Protocol):
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
-    ) -> list[ToolOutput]:
+    ) -> list[ToolResult]:
         """Invoke multiple tools concurrently.
 
         Parameters:

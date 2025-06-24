@@ -1,6 +1,6 @@
 from pydantic import RootModel
 
-from pharia_skill import Csi, skill
+from pharia_skill import Csi, ToolOutput, skill
 
 
 class Input(RootModel[int]):
@@ -23,9 +23,11 @@ def compute(csi: Csi, input: Input) -> Output:
     """
 
     add_output = csi.invoke_tool("add", a=input.root, b=100)
+    assert isinstance(add_output, ToolOutput)
     sum = int(add_output.contents[0])
 
     subtract_output = csi.invoke_tool("subtract", a=sum, b=60)
+    assert isinstance(subtract_output, ToolOutput)
     answer = int(subtract_output.contents[0])
 
     return Output(root=answer)

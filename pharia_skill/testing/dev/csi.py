@@ -37,7 +37,7 @@ from pharia_skill import (
     SearchResult,
     SelectLanguageRequest,
     TextScore,
-    ToolOutput,
+    ToolResult,
 )
 from pharia_skill.csi.inference import (
     ChatStreamResponse,
@@ -121,7 +121,7 @@ class DevCsi(Csi):
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
-    ) -> list[ToolOutput]:
+    ) -> list[ToolResult]:
         assert self.namespace is not None, (
             "Specifying a namespace when constructing a DevCsi is required when invoking tools"
         )

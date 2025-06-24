@@ -20,3 +20,36 @@ class ToolOutput:
     """
 
     contents: list[str]
+
+
+@dataclass
+class ToolError:
+    """The error message in case the tool invocation failed.
+
+    A tool error can have different causes. The tool might not have been found,
+    the arguments to the tool might have been in the wrong format, there could have
+    been an error while connecting to the tool, or there could have been an error
+    executing the tool.
+    """
+
+    message: str
+
+
+ToolResult = ToolOutput | ToolError
+"""The result of a tool invocation.
+
+For almost all functionality offered by the CSI, errors are handled by the Kernel
+runtime. If the error seems non-recoverable, Skill execution is suspended and the error
+never makes it to user code.
+
+For tools, however, the error is passed to the Skill. The reason for this is that there
+is a good chance a Skill can recover from this error. Think of a model doing a tool
+call. It might have misspelled the tool name or the arguments to the tool. If it
+receives the error message, it can try a second time. Even if there is an error in the
+tool itself, the model may decided that it can solve the users problem without this
+particular tool. Therefore, tool errors are passed to the Skill.
+
+The most Pythonic way would be to raise a ToolException and let the user handle
+this. However, multiple tool calls can be executed in parallel, which does not go
+well with exceptions. Therefore, we return a `ToolResult` type.
+"""

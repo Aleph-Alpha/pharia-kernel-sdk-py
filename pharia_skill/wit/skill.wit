@@ -1,4 +1,4 @@
-package pharia:skill@0.3.8;
+package pharia:skill@0.3.9;
 
 @since(version = 0.3.0)
 world skill {
@@ -127,8 +127,13 @@ interface tool {
         text(string),
     }
 
+    // See <https://github.com/bytecodealliance/wasm-tools/issues/2210> why a type alias is needed
+    // as long as tool-output is not stable.
     @unstable(feature = tool)
-    invoke-tool: func(request: list<invoke-request>) -> list<tool-output>;
+    type tool-result = result<tool-output, string>;
+
+    @unstable(feature = tool)
+    invoke-tool: func(request: list<invoke-request>) -> list<tool-result>;
 }
 
 @since(version = 0.3.0)
