@@ -48,7 +48,7 @@ from .inference import (
     TextScore,
 )
 from .language import Language, SelectLanguageRequest
-from .tool import InvokeRequest, ToolResult
+from .tool import InvokeRequest, ToolError, ToolOutput, ToolResult
 
 
 class Csi(Protocol):
@@ -60,7 +60,7 @@ class Csi(Protocol):
     Sequences, as we want the input to be ordered.
     """
 
-    def invoke_tool(self, name: str, **kwargs: JsonValue) -> ToolResult:
+    def invoke_tool(self, name: str, **kwargs: JsonValue) -> ToolOutput:
         """Invoke a tool that is configured with the Kernel.
 
         Tools can be configured for each namespace by listing MCP servers in the namespace config.
@@ -70,14 +70,26 @@ class Csi(Protocol):
         Parameters:
             name (str, required): Name of the tool to invoke.
             **kwargs (JsonValue, required): Arguments to pass to the tool.
+
+        Raises:
+            ToolError: If the tool invocation fails.
         """
         request = InvokeRequest(name, kwargs)
-        return self.invoke_tool_concurrent([request])[0]
+        result = self.invoke_tool_concurrent([request])[0]
+        if isinstance(result, ToolOutput):
+            return result
+        else:
+            raise ToolError(result.message)
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
     ) -> list[ToolResult]:
         """Invoke multiple tools concurrently.
+
+        This function does not raise an error if a tool invocation fails, but rather
+        returns a `ToolResult`, which can either be a `ToolOutput` or a `ToolError`.
+        The reason for this is that for concurrent tool invocations, raising an error
+        would prevent the caller from accessing the results of other tool calls.
 
         Parameters:
             requests (list[InvokeRequest], required): List of invoke requests.
