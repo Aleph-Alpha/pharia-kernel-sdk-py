@@ -114,7 +114,7 @@ def run_componentize_py(
     output_file: str,
     unstable: bool,
     skill_type: SkillType,
-    source_paths: list[str] | None = None,
+    source_paths: list[str],
 ) -> str:
     """Build the skill to a Wasm component using componentize-py.
 
@@ -139,9 +139,8 @@ def run_componentize_py(
         "-p",
         "wasi_deps",
     ]
-    if source_paths is not None:
-        for source_path in source_paths:
-            command.extend(["-p", source_path])
+    for source_path in source_paths:
+        command.extend(["-p", source_path])
 
     try:
         subprocess.run(
@@ -362,7 +361,7 @@ def build(
         task = progress.add_task("", total=None)
         try:
             wasm_file = run_componentize_py(
-                skill, output_file, unstable, skill_type, source_paths
+                skill, output_file, unstable, skill_type, source_paths or []
             )
             progress.update(task, completed=True)
         except IsMessageStream:
