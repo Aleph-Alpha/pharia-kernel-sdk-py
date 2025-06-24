@@ -1,4 +1,4 @@
-from pharia_skill.csi.tool import InvokeRequest, ToolOutput
+from pharia_skill.csi.tool import InvokeRequest, ToolError, ToolOutput
 from pharia_skill.testing.dev.tool import (
     deserialize_tool_output,
     serialize_tool_requests,
@@ -23,11 +23,33 @@ def test_serialize_invoke_request():
 
 
 def test_deserialize_tool_output():
-    # Given a serialized completion response
+    # Given a serialized tool output
     serialized = [[{"type": "text", "text": "3"}, {"type": "text", "text": "42"}]]
 
     # When deserializing it
     output = deserialize_tool_output(serialized)
 
-    # Then the completion is loaded recursively
+    # Then the tool output is loaded
     assert output == [ToolOutput(contents=["3", "42"])]
+
+
+def test_deserialize_tool_error_output():
+    # Given a serialized tool error output
+    serialized = ["No fish caught."]
+
+    # When deserializing it
+    output = deserialize_tool_output(serialized)
+
+    # Then the tool error is loaded
+    assert output == [ToolError(message="No fish caught.")]
+
+
+def test_deserialize_mixed_tool_output():
+    # Given a serialized tool invocation with one success and one error
+    serialized = [[{"type": "text", "text": "3"}], "No fish caught."]
+
+    # When deserializing it
+    output = deserialize_tool_output(serialized)
+
+    # Then the tool output and error are loaded
+    assert output == [ToolOutput(contents=["3"]), ToolError(message="No fish caught.")]

@@ -19,6 +19,8 @@ from pharia_skill import (
     Message,
     Role,
     Text,
+    ToolError,
+    ToolOutput,
 )
 from pharia_skill.studio import (
     SpanClient,
@@ -55,7 +57,15 @@ def given_index() -> IndexPath:
 @pytest.mark.kernel
 def test_invoke_tool(csi_with_test_namespace: Csi):
     result = csi_with_test_namespace.invoke_tool("add", a=1, b=2)
+    assert isinstance(result, ToolOutput)
     assert result.contents == ["3"]
+
+
+@pytest.mark.kernel
+def test_invoke_saboteur_tool(csi_with_test_namespace: Csi):
+    result = csi_with_test_namespace.invoke_tool("saboteur", a=1, b=2)
+    assert isinstance(result, ToolError)
+    assert result.message == "Out of cheese."
 
 
 @pytest.mark.kernel

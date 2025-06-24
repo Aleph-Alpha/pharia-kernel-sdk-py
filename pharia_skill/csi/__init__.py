@@ -61,7 +61,7 @@ from .inference import (
     TopLogprobs,
 )
 from .language import Language, SelectLanguageRequest
-from .tool import InvokeRequest, ToolOutput
+from .tool import InvokeRequest, ToolError, ToolOutput, ToolResult
 
 __all__ = [
     "After",
@@ -114,7 +114,9 @@ __all__ = [
     "Text",
     "TextScore",
     "TokenUsage",
+    "ToolError",
     "ToolOutput",
+    "ToolResult",
     "TopLogprobs",
     "Without",
     "With",
