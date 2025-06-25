@@ -96,6 +96,10 @@ class ToolCall:
         """
         try:
             data = json.loads(response)
+            if "function" in data:
+                # Sometimes the model returns name and parameter nested inside a function key.
+                data = data["function"]
+
             name = data["name"]
             parameters = data["parameters"]
             tool = next(
