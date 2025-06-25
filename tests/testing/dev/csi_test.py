@@ -279,8 +279,8 @@ def test_multiple_csi_instances_do_not_duplicate_exporters():
     Assert that the processors are not duplicated.
     """
     # Given two csi instances
-    csi1 = DevCsi.with_studio(project="kernel-test")
-    csi2 = DevCsi.with_studio(project="kernel-test")
+    csi1 = DevCsi(project="kernel-test")
+    csi2 = DevCsi(project="kernel-test")
 
     # Then only one exporter is attached
     assert len(csi1.provider()._active_span_processor._span_processors) == 1
