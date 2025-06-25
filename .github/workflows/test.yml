@@ -114,6 +114,12 @@ jobs:
           uv run pharia-skill build tests.skills.bad_csi_input --no-interactive
           uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive --skill-type message-stream-skill
           uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive --skill-type message-stream-skill
+      - name: Test skill building on PowerShell
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: pwsh
+        run: |
+          uv run pharia-skill build tests.skills.haiku --no-interactive
+          uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive --skill-type message-stream-skill
       - name: Create .env file for skill publishing
         run: |
           echo "SKILL_REGISTRY_USER=${{ github.actor }}" > .env
