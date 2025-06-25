@@ -9,6 +9,7 @@ uncoupling these interfaces brings two advantages:
 """
 
 import json
+import warnings
 from collections.abc import Generator
 from typing import Any, Sequence
 
@@ -90,6 +91,8 @@ class DevCsi(Csi):
 
     Args:
         namespace: The namespace to use for tool invocations.
+        project: The name of the studio project to export traces to.
+            Will be created if it does not exist.
 
     Examples::
 
@@ -115,9 +118,45 @@ class DevCsi(Csi):
     * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.product.pharia.com")
     """
 
-    def __init__(self, namespace: str | None = None) -> None:
+    def __init__(
+        self, namespace: str | None = None, project: str | None = None
+    ) -> None:
         self.client: CsiClient = Client()
         self.namespace = namespace
+        if project is not None:
+            self._set_project(project)
+
+    def _set_project(self, project: str) -> None:
+        """Configure the `DevCsi` to export traces to Pharia Studio.
+
+        This function creates a `StudioExporter` and registers it with the tracer provider.
+        The exporter uploads spans once the root span ends.
+
+        Args:
+            project: The name of the studio project to export traces to. Will be created if it does not exist.
+        """
+        client = StudioClient.with_project(project)
+        exporter = StudioExporter(client)
+        self.set_span_exporter(exporter)
+
+    @classmethod
+    def with_studio(cls, project: str) -> "DevCsi":
+        """Create a `DevCsi` that exports traces to Pharia Studio.
+
+        This function creates a `StudioExporter` and registers it with the tracer provider.
+        The exporter uploads spans once the root span ends.
+
+        Args:
+            project: The name of the studio project to export traces to. Will be created if it does not exist.
+        """
+        warnings.warn(
+            "`DevCsi.with_studio` is deprecated. Use `DevCsi(project=...)` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        csi = cls()
+        csi._set_project(project)
+        return csi
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
@@ -196,22 +235,6 @@ class DevCsi(Csi):
         body = DocumentSerializer(root=document_paths).model_dump()
         output = self.run("documents", body)
         return DocumentDeserializer(root=output).root
-
-    @classmethod
-    def with_studio(cls, project: str) -> "DevCsi":
-        """Create a `DevCsi` that exports traces to Pharia Studio.
-
-        This function creates a `StudioExporter` and registers it with the tracer provider.
-        The exporter uploads spans once the root span ends.
-
-        Args:
-            project: The name of the studio project to export traces to. Will be created if it does not exist.
-        """
-        csi = cls()
-        client = StudioClient.with_project(project)
-        exporter = StudioExporter(client)
-        csi.set_span_exporter(exporter)
-        return csi
 
     @classmethod
     def set_span_exporter(cls, exporter: StudioExporter) -> None:
