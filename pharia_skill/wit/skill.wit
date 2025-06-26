@@ -1,4 +1,4 @@
-package pharia:skill@0.3.9;
+package pharia:skill@0.3.10;
 
 @since(version = 0.3.0)
 world skill {
@@ -134,6 +134,21 @@ interface tool {
 
     @unstable(feature = tool)
     invoke-tool: func(request: list<invoke-request>) -> list<tool-result>;
+
+    @unstable(feature = tool)
+    record tool {
+        name: string,
+        description: string,
+        input-schema: list<u8>,
+    }
+
+    // As long as we do not support tool calling in the inference, the prompt synthesis happens in the Skill code.
+    // It could also happen in the Kernel, but we already have the logic in the SDK, and it seems like this will
+    // move to inference soon anyway. Therefore, the Skill needs to know about the schema of the different tools.
+    // While this could be achieved by querying for a list of tool names, and then getting a list of options in
+    // the same order, simply listing all tools seems to be the simpler solution.
+    @unstable(feature = tool)
+    list-tools: func() -> list<tool>;
 }
 
 @since(version = 0.3.0)
@@ -651,7 +666,7 @@ interface language {
         languages: list<string>,
     }
 
-    /// Select most likely language from a list of supported ISO 639-3language codes.
+    /// Select most likely language from a list of supported ISO 639-3 language codes.
     ///
     /// Afrikaans - "afr",
     /// Arabic - "ara",
