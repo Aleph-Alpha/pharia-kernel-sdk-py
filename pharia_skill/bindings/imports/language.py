@@ -23,7 +23,7 @@ class SelectLanguageRequest:
 
 def select_language(request: List[SelectLanguageRequest]) -> List[Optional[str]]:
     """
-    Select most likely language from a list of supported ISO 639-3language codes.
+    Select most likely language from a list of supported ISO 639-3 language codes.
     
     Afrikaans - "afr",
     Arabic - "ara",
