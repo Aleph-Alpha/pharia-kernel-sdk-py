@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from pharia_skill import Csi, ToolError, skill
 from pharia_skill.llama3 import ChatRequest, Tool, ToolMessage
 from pharia_skill.llama3.request import Message
+from pharia_skill.llama3.tool import JsonSchema
 
 
 class Input(BaseModel):
@@ -25,21 +26,31 @@ class Fetch(Tool):
     url: str
 
 
-system = """You are a helpful research assistant. You can search the web and fetch content from URLs.
+system = """You are a helpful research assistant.
 When tasked with a question, you will take as many steps and tries as needed to find the correct answer.
 If you are doing a tool call, only respond with the tool call itself.
 Do not respond with any reasoning or explanation in this case.
+
+You can search the web and fetch content from URLs.
+To ensure that efficiency, only fetch the content after you have found the relevant URLs.
 """
 
 
 @skill
 def web_search(csi: Csi, input: Input) -> Output:
     """A Skill that can decide to search the web."""
+
+    tools = [
+        JsonSchema.model_validate(tool._json_schema())
+        for tool in csi.list_tools()
+        if tool.name in ["search", "fetch"]
+    ]
+
     request = ChatRequest(
         model="llama-3.3-70b-instruct",
         messages=input.messages,
         system=system,
-        tools=[Search, Fetch],
+        tools=tools,
     )
 
     while True:
