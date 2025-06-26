@@ -14,6 +14,16 @@ class Tool:
     description: str
     input_schema: dict[str, JsonValue]
 
+    def _json_schema(self) -> dict[str, JsonValue]:
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.input_schema,
+            },
+        }
+
 
 @dataclass
 class ToolOutput:
