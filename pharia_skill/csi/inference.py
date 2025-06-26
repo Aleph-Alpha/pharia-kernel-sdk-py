@@ -435,7 +435,7 @@ class Role(str, Enum):
 
 @dataclass
 class Message:
-    """Describes a message in a chat.
+    """A single turn in a conversation.
 
     Parameters:
         role (Role, required): The role of the message.
@@ -467,11 +467,16 @@ class Message:
 
 @dataclass
 class ChatRequest:
-    """A chat request that can be sent to the model.
+    """A request for a model to generate a response from a conversation.
+
+    Only one optional "system" message is allowed at the beginning of the conversation.
+    The remaining conversation must alternate between "user" and "assistant" messages,
+    and must begin with a "user" message.
 
     Attributes:
         model (str, required): Name of model to use.
-        messages (list[Message], required): The messages to be sent to the model.
+        messages (list[Message], required): A list of messages comprising the
+            conversation so far.
         params (ChatParams, optional, Default ChatParams()):
             Parameters for the requested chat.
     """

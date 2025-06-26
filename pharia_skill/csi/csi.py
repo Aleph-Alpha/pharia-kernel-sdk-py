@@ -96,52 +96,15 @@ class Csi(Protocol):
         """
         ...
 
-    def completion_stream(
-        self, model: str, prompt: str, params: CompletionParams | None = None
-    ) -> CompletionStreamResponse:
-        """Streams completions given a prompt.
-
-        Parameters:
-            model (str, required): Name of model to use.
-            prompt (str, required): The text to be completed.
-            params (CompletionParams, optional, Default None):
-                Parameters for the requested completion.
-        """
-        params = params or CompletionParams()
-        return self._completion_stream(model, prompt, params)
-
-    def _completion_stream(
-        self, model: str, prompt: str, params: CompletionParams
-    ) -> CompletionStreamResponse: ...
-
-    def chat_stream(
-        self, model: str, messages: list[Message], params: ChatParams | None = None
-    ) -> ChatStreamResponse:
-        """Streams chat with a model, where the first item is the role.
-
-        Parameters:
-            model (str, required): Name of model to use.
-
-            messages (list[Message], required):
-                List of messages, alternating between messages from user and assistant.
-
-            params (ChatParams, optional, Default None): Parameters used for the chat.
-        """
-        params = params or ChatParams()
-        return self._chat_stream(model, messages, params)
-
-    def _chat_stream(
-        self, model: str, messages: list[Message], params: ChatParams
-    ) -> ChatStreamResponse: ...
-
     def complete(
         self, model: str, prompt: str, params: CompletionParams | None = None
     ) -> Completion:
-        """Generates completions given a prompt.
+        """Complete a prompt using a specific model.
 
         Parameters:
             model (str, required): Name of model to use.
-            prompt (str, required): The text to be completed.
+            prompt (str, required): The text to be completed. Prompts need to adhere
+                to the format expected by the specified model.
             params (CompletionParams, optional, Default None):
                 Parameters for the requested completion.
 
@@ -162,12 +125,37 @@ class Csi(Protocol):
     def complete_concurrent(
         self, requests: list[CompletionRequest]
     ) -> list[Completion]:
-        """Generate completions concurrently.
+        """Complete multiple prompts concurrently.
+
+        This represents the concurrent version of :func:`~pharia_skill.Csi.complete`.
 
         Parameters:
             requests (list[CompletionRequest], required): List of completion requests.
         """
         ...
+
+    def completion_stream(
+        self, model: str, prompt: str, params: CompletionParams | None = None
+    ) -> CompletionStreamResponse:
+        """Complete a prompt using a specific model.
+
+        This method represents the streaming version of :func:`~pharia_skill.Csi.complete`.
+        Instead of returning a single completion, this method returns a
+        :class:`~pharia_skill.CompletionStreamResponse`, allowing to receive the response
+        in small chunks.
+
+        Parameters:
+            model (str, required): Name of model to use.
+            prompt (str, required): The text to be completed.
+            params (CompletionParams, optional, Default None):
+                Parameters for the requested completion.
+        """
+        params = params or CompletionParams()
+        return self._completion_stream(model, prompt, params)
+
+    def _completion_stream(
+        self, model: str, prompt: str, params: CompletionParams
+    ) -> CompletionStreamResponse: ...
 
     def chunk(self, text: str, params: ChunkParams) -> list[Chunk]:
         """Chunks a text into chunks according to params.
@@ -198,7 +186,13 @@ class Csi(Protocol):
     def chat(
         self, model: str, messages: list[Message], params: ChatParams | None = None
     ) -> ChatResponse:
-        """Chat with a model.
+        """Generate a model response from a list of messages comprising a conversation.
+
+        Compared to completions, chat requests introduces the `messages` concept,
+        abstracting away the details of model-specific prompt formats. A message
+        represents a single natural language turn in a conversation.
+
+        For more details, see <https://docs.aleph-alpha.com/products/apis/pharia-inference/chat-completions/>.
 
         Parameters:
             model (str, required):
@@ -213,23 +207,49 @@ class Csi(Protocol):
         Examples::
 
             input = "oat milk"
-            msg = Message.user(f\"\"\"You are a poet who strictly speaks in haikus.
-
-            {input}\"\"\")
+            system = Message.system("You are a helpful assistant.")
+            msg = Message.user("What is the capital of France?")
             model = "llama-3.1-8b-instruct"
-            chat_response = csi.chat(model, [msg], ChatParams(max_tokens=64))
+            chat_response = csi.chat(model, [system, msg], ChatParams(max_tokens=64))
         """
         params = params or ChatParams()
         request = ChatRequest(model, messages, params)
         return self.chat_concurrent([request])[0]
 
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
-        """Chat with a model concurrently.
+        """Generate model responses for a list of chat requests concurrently.
+
+        This represents the concurrent version of :func:`~pharia_skill.Csi.chat`
 
         Parameters:
             requests (list[ChatRequest], required): List of chat requests.
         """
         ...
+
+    def chat_stream(
+        self, model: str, messages: list[Message], params: ChatParams | None = None
+    ) -> ChatStreamResponse:
+        """Generate a model response from a list of messages comprising a conversation.
+
+        This method represents the streaming version of :func:`~pharia_skill.Csi.chat`.
+        Instead of returning a single message, this method returns a
+        :class:`~pharia_skill.ChatStreamResponse`, allowing to receive the response in
+        small chunks.
+
+        Parameters:
+            model (str, required): Name of model to use.
+
+            messages (list[Message], required):
+                List of messages, alternating between messages from user and assistant.
+
+            params (ChatParams, optional, Default None): Parameters used for the chat.
+        """
+        params = params or ChatParams()
+        return self._chat_stream(model, messages, params)
+
+    def _chat_stream(
+        self, model: str, messages: list[Message], params: ChatParams
+    ) -> ChatStreamResponse: ...
 
     def explain(
         self,
