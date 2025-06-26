@@ -19,26 +19,21 @@ def summarize(csi: Csi, input: Input) -> Output:
 
     # Search for news articles
     search_news_output = csi.invoke_tool("search_news", query=input.topic)
-
-    # Extract the first 10 results
-    search_results = [
-        (result["title"], result["url"])
-        for content in search_news_output.contents
-        for result in json.loads(content)["results"][:10]
-    ]
+    search_results = [json.loads(content) for content in search_news_output.contents]
 
     # Fetch the content of the news articles concurrently
     fetch_requests = [
-        InvokeRequest(name="fetch", arguments={"url": url}) for _, url in search_results
+        InvokeRequest(name="fetch", arguments={"url": result["url"]})
+        for result in search_results
     ]
     fetch_outputs = csi.invoke_tool_concurrent(fetch_requests)
 
     # Format the news articles
     news = "\n\n\n".join(
         [
-            f"Title: {title}\nURL: {url}\nContent: {result.text()}"
-            for (title, url), result in zip(search_results, fetch_outputs)
-            if isinstance(result, ToolOutput)
+            f"Title: {result['title']}\nURL: {result['url']}\nDescription: {result['description']}\nContent: {output.text()}"
+            for result, output in zip(search_results, fetch_outputs)
+            if isinstance(output, ToolOutput)
         ]
     )
 
