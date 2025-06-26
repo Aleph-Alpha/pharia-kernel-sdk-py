@@ -44,6 +44,7 @@ from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
 )
+from pharia_skill.csi.tool import Tool
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,
@@ -78,6 +79,7 @@ from .language import (
 )
 from .tool import (
     deserialize_tool_output,
+    deserialize_tools,
     serialize_tool_requests,
 )
 
@@ -167,6 +169,11 @@ class DevCsi(Csi):
         body = serialize_tool_requests(namespace=self.namespace, requests=requests)
         output = self.run("invoke_tool", body)
         return deserialize_tool_output(output)
+
+    def list_tools(self) -> list[Tool]:
+        body = {"namespace": self.namespace}
+        output = self.run("list_tools", body)
+        return deserialize_tools(output)
 
     def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams

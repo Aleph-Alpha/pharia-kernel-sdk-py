@@ -48,7 +48,7 @@ from .inference import (
     TextScore,
 )
 from .language import Language, SelectLanguageRequest
-from .tool import InvokeRequest, ToolError, ToolOutput, ToolResult
+from .tool import InvokeRequest, Tool, ToolError, ToolOutput, ToolResult
 
 
 class Csi(Protocol):
@@ -93,6 +93,14 @@ class Csi(Protocol):
 
         Parameters:
             requests (list[InvokeRequest], required): List of invoke requests.
+        """
+        ...
+
+    def list_tools(self) -> list[Tool]:
+        """List all tools that are available to the skill.
+
+        Returns:
+            list[Tool]: List of tools.
         """
         ...
 
