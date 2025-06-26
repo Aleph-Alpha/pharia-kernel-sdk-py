@@ -1,6 +1,7 @@
-from pharia_skill.csi.tool import InvokeRequest, ToolError, ToolOutput
+from pharia_skill.csi.tool import InvokeRequest, Tool, ToolError, ToolOutput
 from pharia_skill.testing.dev.tool import (
     deserialize_tool_output,
+    deserialize_tools,
     serialize_tool_requests,
 )
 
@@ -53,3 +54,36 @@ def test_deserialize_mixed_tool_output():
 
     # Then the tool output and error are loaded
     assert output == [ToolOutput(contents=["3"]), ToolError(message="No fish caught.")]
+
+
+def test_deserialize_tools():
+    # Given two serialized tools
+    serialized = [
+        {
+            "name": "add",
+            "description": "Add two numbers",
+            "input_schema": {"a": {"type": "number"}, "b": {"type": "number"}},
+        },
+        {
+            "name": "subtract",
+            "description": "Subtract two numbers",
+            "input_schema": {"a": {"type": "number"}, "b": {"type": "number"}},
+        },
+    ]
+
+    # When deserializing them
+    output = deserialize_tools(serialized)
+
+    # Then the tools are loaded
+    assert output == [
+        Tool(
+            name="add",
+            description="Add two numbers",
+            input_schema={"a": {"type": "number"}, "b": {"type": "number"}},
+        ),
+        Tool(
+            name="subtract",
+            description="Subtract two numbers",
+            input_schema={"a": {"type": "number"}, "b": {"type": "number"}},
+        ),
+    ]

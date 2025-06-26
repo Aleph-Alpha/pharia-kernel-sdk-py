@@ -69,3 +69,19 @@ def deserialize_tool_output(output: Any) -> list[tool.ToolResult]:
         else tool.ToolError(message=deserialized)
         for deserialized in ToolOutputListDeserializer(root=output).root
     ]
+
+
+class ToolDeserializer(BaseModel):
+    name: str
+    description: str
+    input_schema: dict[str, JsonValue]
+
+
+ToolListDeserializer = RootModel[list[ToolDeserializer]]
+
+
+def deserialize_tools(output: Any) -> list[tool.Tool]:
+    return [
+        tool.Tool(name=t.name, description=t.description, input_schema=t.input_schema)
+        for t in ToolListDeserializer(root=output).root
+    ]

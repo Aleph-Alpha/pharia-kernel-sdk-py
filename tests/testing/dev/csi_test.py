@@ -87,6 +87,15 @@ def test_invoke_tool_concurrent(csi_with_test_namespace: Csi):
 
 
 @pytest.mark.kernel
+def test_list_tools(csi_with_test_namespace: Csi):
+    tools = csi_with_test_namespace.list_tools()
+    assert len(tools) == 3
+    assert tools[0].name == "add"
+    assert tools[1].name == "saboteur"
+    assert tools[2].name == "subtract"
+
+
+@pytest.mark.kernel
 def test_completion_stream(csi: Csi, model: str):
     params = CompletionParams(max_tokens=64)
     response = csi._completion_stream(model, "Say hello to Bob", params)

@@ -5,6 +5,7 @@ from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
 )
+from pharia_skill.csi.tool import Tool
 
 from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index
@@ -94,6 +95,18 @@ class WitCsi(Csi):
         wit_requests = [invoke_request_to_wit(request) for request in requests]
         responses = wit_tool.invoke_tool(wit_requests)
         return [tool_output_from_wit(response) for response in responses]
+
+    def list_tools(self) -> list[Tool]:
+        from ..bindings.imports import tool as wit_tool
+
+        return [
+            Tool(
+                name=tool.name,
+                description=tool.description,
+                input_schema=json.loads(tool.input_schema),
+            )
+            for tool in wit_tool.list_tools()
+        ]
 
     def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams

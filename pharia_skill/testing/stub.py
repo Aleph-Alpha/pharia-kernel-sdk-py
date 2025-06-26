@@ -40,7 +40,7 @@ from pharia_skill.csi.inference import (
     MessageAppend,
     MessageBegin,
 )
-from pharia_skill.csi.tool import InvokeRequest, ToolOutput
+from pharia_skill.csi.tool import InvokeRequest, Tool, ToolOutput
 
 
 class StubCsi(Csi):
@@ -78,6 +78,9 @@ class StubCsi(Csi):
         self, requests: Sequence[InvokeRequest]
     ) -> list[ToolResult]:
         return [ToolOutput(contents=[]) for _ in requests]
+
+    def list_tools(self) -> list[Tool]:
+        return []
 
     def _completion_stream(
         self, model: str, prompt: str, params: CompletionParams
