@@ -9,7 +9,7 @@ class Input(BaseModel):
     messages: list[Message]
 
 
-system = """You are a helpful research assistant.
+SYSTEM = """You are a helpful research assistant.
 When tasked with a question, you will take as many steps and tries as needed to find the correct answer.
 If you are doing a tool call, only respond with the tool call itself.
 Do not respond with any reasoning or explanation in this case.
@@ -22,9 +22,7 @@ To ensure that efficiency, only fetch the content after you have found the relev
 def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
     """A Skill that can decide to search the web."""
 
-    # This is awkward and shows why the chat request should take system prompt as a
-    # parameter.
-    messages = [Message.system(system)] + input.messages
+    messages = [Message.system(SYSTEM)] + input.messages
     model = "llama-3.3-70b-instruct"
 
     while True:
