@@ -1,5 +1,57 @@
 # Changelog
 
+## [0.17.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.6...v0.17.0) (2025-06-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* inspect and return tool call request directly when streaming with tool
+* rename ToolCallRequest and add render message methods
+* move Message and Role to common inference_types module
+* move common types to inference_types module
+* update chat_stream to accept tool names
+* accept kwargs as arguments for invoke_tool
+
+### Features
+
+* accept kwargs as arguments for invoke_tool ([3374fc5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3374fc5f619bcb39137c22dae685614397ef97c6))
+* add unstable JSON schema method for tool ([5121648](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5121648ed9a304e7b4aa51ec8264d5000d2ca3e1))
+* enable adding additional source paths ([3a3cadb](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3a3cadb7811c9712ab09ba7b2fbbb7004c83589d))
+* expose tool error in csi ([49c4191](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/49c4191e1abea96cb4616e9420c65756895d33bc))
+* implement list_tools for CSIs ([5a791f9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5a791f9be78550e6fdcd8cfbc602f3db24ac8883))
+* parse tool calls on the fly ([352c627](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/352c62752c5e83ceb1aa14bb39f6386686638edf))
+* port web search example to streaming ([1ed4064](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1ed40645a95994fa4a36203f4d222479f6e59930))
+* project can be specified in DevCsi constructer ([6760310](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/67603108d5e554d4b1dc55c32d279696e8fb268c))
+* provide default params in CSI methods ([befd989](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/befd9891f222a09f271a7e6f6f30ebc28538d498))
+* raise tool errors as exception ([1940bb2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1940bb2f22fd81ed17da84481bba21b44d12a915))
+* tools can be rendered in chat request ([8aef198](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8aef1980cd8e72523e09f7d6efcfdb96963d6ba8))
+* update chat_stream to accept tool names ([b918606](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/b918606f45a2af82327909657f6e09cc89e43ea6))
+
+
+### Bug Fixes
+
+* more resiliant tool call parsing ([39e72c4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/39e72c4ec8207fe052a158a8a89836c7e3677159))
+
+
+### Documentation
+
+* add examples for invoking tools ([fceaf8a](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/fceaf8ae1a7928205af1b38ee9b1cd84ec4223d1))
+* add web research example ([4f42724](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4f42724259a872e348c50946d0cdeefdd128b623))
+* clarify what chat requests are ([8617ae9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8617ae99908844921f9d31f6e892dca65e54b638))
+* explain tool error more concise ([7ebc2c4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/7ebc2c4e5a3e9326463c0bba4f3998196f17bd03))
+* update docs for building docs ([ffcae6c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ffcae6c850fa04e955935cce226c9d98f039a1ff))
+* update example with chat session ([3622974](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/36229741cc646e759d0fda056848fbb296e8b97c))
+* use stream_with_tool ([ed29085](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ed2908514048850aa20e4beb099fe0b9a313d99a))
+* use UPPER_CASE for constant system prompt ([81d34fc](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/81d34fcaabd68595b8be66bbe1fc2b8b0af2d591))
+
+
+### Code Refactoring
+
+* inspect and return tool call request directly when streaming with tool ([6b4b2b6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/6b4b2b6ca5307d14ac21263386517e4fdf5481e7))
+* move common types to inference_types module ([caeb11c](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/caeb11c946b1ddacee276c647087c78eb6361692))
+* move Message and Role to common inference_types module ([4c0b04f](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4c0b04f15ded77302cd6fed1178c95e643891145))
+* rename ToolCallRequest and add render message methods ([607b755](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/607b755ec5420a7044bcfad3835606a4324f491f))
+
 ## [0.16.6](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.5...v0.16.6) (2025-06-20)
 
 
