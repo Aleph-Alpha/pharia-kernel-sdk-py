@@ -9,7 +9,7 @@ from collections.abc import Generator
 from dataclasses import field
 from enum import Enum
 from types import TracebackType
-from typing import Any, Literal, Self
+from typing import Any, Literal, Self, cast
 
 # We use pydantic.dataclasses to get type validation.
 # See the docstring of `csi` module for more information on the why.
@@ -291,12 +291,22 @@ class ChatStreamResponse(ABC):
 
     def stream_with_tool(
         self,
-    ) -> Generator[MessageAppend | ToolCallRequest, None, None]:
+    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
         """Stream the content of the message and optionally parse tool calls.
 
         This does not include the role, the finish reason and usage.
         """
-        return stream_tool_call(self.stream())
+        stream = stream_tool_call(self.stream())
+        first_chunk = next(stream)
+        if isinstance(first_chunk, ToolCallRequest):
+            return first_chunk
+        else:
+
+            def generator() -> Generator[MessageAppend, None, None]:
+                yield first_chunk
+                yield from cast(Generator[MessageAppend, None, None], stream)
+
+            return generator()
 
 
 @dataclass
