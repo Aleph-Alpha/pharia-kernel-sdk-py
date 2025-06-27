@@ -1,6 +1,5 @@
 import pytest
 
-from pharia_skill import Message
 from pharia_skill.testing import DevCsi, MessageRecorder
 
 from .web_search import Input, web_search
@@ -12,7 +11,7 @@ def test_skill_searches_the_web():
 
     # Given a question that can only be answered by searching the web
     query = "What was the winning time of the 21st stage of the 2025 Giro de Italia?"
-    input = Input(messages=[Message.user(query)])
+    input = Input(question=query)
 
     # When the skill is called
     recorder: MessageRecorder[None] = MessageRecorder()
