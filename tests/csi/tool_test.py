@@ -3,12 +3,14 @@ import datetime as dt
 import pytest
 from pydantic import ValidationError
 
-from pharia_skill.csi.inference import Message, Role
+from pharia_skill.csi.inference import Message, MessageAppend, Role
 from pharia_skill.csi.tool import (
     InvokeRequest,
     Tool,
+    ToolCall,
     _render_system,
     add_tools_to_system_prompt,
+    stream_tool_call,
 )
 
 
@@ -134,3 +136,40 @@ Return function calls in JSON format.
 You are Spider-Man."""
 
     assert system == expected
+
+
+def test_non_tool_calls_are_forwarded():
+    # Given a stream of non-toolmessages
+    items = [
+        MessageAppend(content="Hello, ", logprobs=[]),
+        MessageAppend(content="world!", logprobs=[]),
+    ]
+
+    # When streaming the tool calls
+    items = stream_tool_call(iter(items))
+
+    # Then the tool calls are forwarded
+    assert list(items) == [
+        MessageAppend(content="Hello, ", logprobs=[]),
+        MessageAppend(content="world!", logprobs=[]),
+    ]
+
+
+def test_tool_calls_are_yielded():
+    # Given a stream of messages that contain a tool call
+    items = [
+        '{"type": "function", "function": {"name": "search',
+        '", "parameters": {"query": "2025 Giro de Italia last stage winning time"}}}',
+    ]
+    items = iter([MessageAppend(content=item, logprobs=[]) for item in items])
+
+    # When streaming the tool calls
+    items = stream_tool_call(items)
+
+    # Then the tool calls are yielded
+    assert list(items) == [
+        ToolCall(
+            name="search",
+            parameters={"query": "2025 Giro de Italia last stage winning time"},
+        ),
+    ]

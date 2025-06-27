@@ -245,8 +245,8 @@ class Csi(Protocol):
         self,
         model: str,
         messages: list[Message],
-        tools: list[Tool] | None = None,
         params: ChatParams | None = None,
+        tools: list[Tool] | None = None,
     ) -> ChatStreamResponse:
         """Generate a model response from a list of messages comprising a conversation.
 
@@ -261,10 +261,10 @@ class Csi(Protocol):
             messages (list[Message], required):
                 List of messages, alternating between messages from user and assistant.
 
-            tools (list[dict], required):
-                List of tools that are available to the model.
-
             params (ChatParams, optional, Default None): Parameters used for the chat.
+
+            tools (list[Tool], optional, Default None):
+                List of tools that are available to the model.
         """
         params = params or ChatParams()
         if tools:

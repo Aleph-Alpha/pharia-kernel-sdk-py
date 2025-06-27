@@ -1,10 +1,12 @@
 import datetime as dt
 import json
+from typing import Iterator, Literal
 
+from pydantic import BaseModel, ValidationError
 from pydantic.dataclasses import dataclass
 from pydantic.types import JsonValue
 
-from pharia_skill.csi.inference import Message, Role
+from pharia_skill.csi.inference import Message, MessageAppend, Role
 
 
 @dataclass
@@ -130,3 +132,47 @@ Exception. However, this pattern would not work for multiple parallel tool calls
 where the other results are still relevant even if one tool call fails. Therefore,
 we introduce a `ToolResult` type.
 """
+
+
+@dataclass(frozen=True)
+class ToolCall:
+    """A request from a model to invoke a tool."""
+
+    name: str
+    parameters: dict[str, JsonValue]
+
+
+def stream_tool_call(
+    stream: Iterator[MessageAppend],
+) -> Iterator[MessageAppend | ToolCall]:
+    """Take a stream of messages and convert it to a stream of messages or tool calls.
+
+    Currently, as our inference API does not have a tool call concept in their events,
+    we need to do this in the SDK. For streaming, this is an interesting problem, as
+    a decision on whether a chunk is part of a normal message or part of a tool call
+    needs to be taken on the fly. This is what this function does.
+
+    It either forwards the messages appends, or yields a tool call.
+    """
+
+    class ToolCallDeserializer(BaseModel):
+        type: Literal["function"]
+        function: ToolCall
+
+    maybe_tool_call: list[MessageAppend] = []
+    for i, event in enumerate(stream):
+        tool_call_start = event.content.startswith("{") and i == 0
+
+        if tool_call_start or maybe_tool_call:
+            maybe_tool_call.append(event)
+        else:
+            yield event
+
+    if maybe_tool_call:
+        try:
+            content = "".join([e.content for e in maybe_tool_call])
+            deserialized = ToolCallDeserializer.model_validate_json(content)
+            yield deserialized.function
+        except ValidationError:
+            for event in maybe_tool_call:
+                yield event

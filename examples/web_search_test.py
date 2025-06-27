@@ -1,7 +1,7 @@
 import pytest
 
-from pharia_skill.llama3 import AssistantMessage, UserMessage
-from pharia_skill.testing import DevCsi
+from pharia_skill import Message
+from pharia_skill.testing import DevCsi, MessageRecorder
 
 from .web_search import Input, web_search
 
@@ -12,13 +12,15 @@ def test_skill_searches_the_web():
 
     # Given a question that can only be answered by searching the web
     query = "What was the winning time of the last stage of the 2025 Giro de Italia?"
-    input = Input(messages=[UserMessage(content=query)])
+    input = Input(messages=[Message.user(query)])
 
     # When the skill is called
-    result = web_search(csi, input)
+    recorder: MessageRecorder[None] = MessageRecorder()
+    web_search(csi, recorder, input)
 
     # Then the correct answer is given
-    answer = result.message[-1]
-    assert isinstance(answer, AssistantMessage)
-    assert answer.content is not None
-    assert "3:12:19" in answer.content.lower()
+    messages = recorder.messages()
+
+    assert len(messages) == 1
+    answer = messages[0].content
+    assert "3:12:19" in answer.lower()
