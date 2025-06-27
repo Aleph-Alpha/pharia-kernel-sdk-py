@@ -22,16 +22,13 @@ To ensure that efficiency, only fetch the content after you have found the relev
 def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
     """A Skill that can decide to search the web."""
 
-    tools = [tool for tool in csi.list_tools() if tool.name in ["search", "fetch"]]
-    assert len(tools) == 2
-
     # This is awkward and shows why the chat request should take system prompt as a
     # parameter.
     messages = [Message.system(system)] + input.messages
     model = "llama-3.3-70b-instruct"
 
     while True:
-        response = csi.chat_stream(model, messages, tools=tools)
+        response = csi.chat_stream(model, messages, tools=["search", "fetch"])
         stream = stream_tool_call(response.stream())
         first_chunk = next(stream)
 

@@ -111,6 +111,23 @@ class Csi(Protocol):
         """
         ...
 
+    def _list_tool_schemas(self, tools: list[str]) -> list[Tool]:
+        """List all tool schemas that are specified in the tools parameter.
+
+        This function raises an error if a tool is specified in the tools parameter but not
+        available in the namespace.
+
+        Returns:
+            list[Tool]: List of tool schemas.
+        """
+        tool_schemas = {t.name: t for t in self.list_tools() if t.name in tools}
+        for t in tools:
+            if t not in tool_schemas:
+                raise ValueError(
+                    f"Tool {t} required by Skill but not configured in namespace."
+                )
+        return list(tool_schemas.values())
+
     def complete(
         self, model: str, prompt: str, params: CompletionParams | None = None
     ) -> Completion:
@@ -246,7 +263,7 @@ class Csi(Protocol):
         model: str,
         messages: list[Message],
         params: ChatParams | None = None,
-        tools: list[Tool] | None = None,
+        tools: list[str] | None = None,
     ) -> ChatStreamResponse:
         """Generate a model response from a list of messages comprising a conversation.
 
@@ -267,8 +284,11 @@ class Csi(Protocol):
                 List of tools that are available to the model.
         """
         params = params or ChatParams()
+
         if tools:
-            messages = add_tools_to_system_prompt(messages, tools)
+            schemas = self._list_tool_schemas(tools)
+            messages = add_tools_to_system_prompt(messages, schemas)
+
         return self._chat_stream(model, messages, params)
 
     def _chat_stream(
