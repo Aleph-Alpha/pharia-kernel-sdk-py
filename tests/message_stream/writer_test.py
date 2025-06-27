@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from pharia_skill.csi import inference
+from pharia_skill.csi import inference, inference_types
 from pharia_skill.message_stream.writer import (
     MessageAppend,
     MessageBegin,
@@ -38,7 +38,7 @@ def test_forward_response():
 
     events: list[inference.ChatEvent] = [
         inference.MessageBegin(role="assistant"),
-        inference.MessageAppend(content="Hello, world!", logprobs=[]),
+        inference_types.MessageAppend(content="Hello, world!", logprobs=[]),
         inference.FinishReason.STOP,
         inference.TokenUsage(completion=1, prompt=0),
     ]

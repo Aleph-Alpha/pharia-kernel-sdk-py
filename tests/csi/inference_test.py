@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
-from pharia_skill.csi.inference import Logprob, Message
+from pharia_skill.csi.inference import Message
+from pharia_skill.csi.inference_types import Logprob
 
 
 def test_serialized_roles_are_openai_compatible():

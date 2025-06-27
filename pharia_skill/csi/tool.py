@@ -6,7 +6,8 @@ from pydantic import BaseModel, RootModel, ValidationError
 from pydantic.dataclasses import dataclass
 from pydantic.types import JsonValue
 
-from pharia_skill.csi.inference import Message, MessageAppend, Role
+from pharia_skill.csi.inference import Message, Role
+from pharia_skill.csi.inference_types import MessageAppend
 
 
 @dataclass

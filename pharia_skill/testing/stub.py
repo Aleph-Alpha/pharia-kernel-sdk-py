@@ -37,9 +37,9 @@ from pharia_skill.csi.inference import (
     CompletionAppend,
     CompletionEvent,
     CompletionStreamResponse,
-    MessageAppend,
     MessageBegin,
 )
+from pharia_skill.csi.inference_types import MessageAppend
 from pharia_skill.csi.tool import InvokeRequest, Tool, ToolOutput
 
 
