@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from pharia_skill import Csi, Message, MessageWriter, message_stream
 from pharia_skill.csi.inference_types import MessageAppend
-from pharia_skill.csi.tool import ToolCall
+from pharia_skill.csi.tool import ToolCallRequest
 
 
 class Input(BaseModel):
@@ -30,18 +30,14 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
         stream = response.stream_with_tool()
         first_chunk = next(stream)
 
-        if isinstance(first_chunk, ToolCall):
+        if isinstance(first_chunk, ToolCallRequest):
             # TODO chat stream should validate alternation between assistant and user/tool
             # Make it part of the message history
-            tool_call_request = Message.assistant(first_chunk.render())
+            tool_call_request = first_chunk._as_message()
             messages.append(tool_call_request)
 
             tool_response = csi.invoke_tool(first_chunk.name, **first_chunk.parameters)
-            rendered = (
-                f'completed[stdout]:{{"result": {tool_response.text()}}}[/stdout]'
-            )
-            # We need a concept for tool responses as messages now
-            messages.append(Message.tool(rendered))
+            messages.append(tool_response._as_message())
         else:
             writer.begin_message()
             writer.append_to_message(first_chunk.content)
