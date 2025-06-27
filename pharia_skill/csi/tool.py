@@ -1,5 +1,10 @@
+import datetime as dt
+import json
+
 from pydantic.dataclasses import dataclass
 from pydantic.types import JsonValue
+
+from pharia_skill.csi.inference import Message, Role
 
 
 @dataclass
@@ -23,6 +28,51 @@ class Tool:
                 "parameters": self.input_schema,
             },
         }
+
+
+def add_tools_to_system_prompt(
+    messages: list[Message], tools: list[Tool]
+) -> list[Message]:
+    """Make a model aware about tools it can use.
+
+    This function raises the level of abstraction on which developers think about
+    talking to a model. Instead of needing to format the tools in the prompt, they
+    pass them in, and this function takes care of rendering them as part of the system
+    prompt. This abstraction is also what OpenAI compatible inference APIs provide.
+    As long as we do not have support for that in the Kernel, we do this here.
+    """
+    if not tools:
+        return messages
+
+    today = dt.date.today()
+    if messages[0].role != Role.System:
+        system = _render_system(today, tools, "")
+        messages.insert(0, Message.system(system))
+    else:
+        messages[0].content = _render_system(today, tools, messages[0].content)
+    return messages
+
+
+SYSTEM = """Environment: ipython
+Cutting Knowledge Date: December 2023
+Today Date: {today}
+
+Answer the user's question by making use of the following functions if needed.
+Only use functions if they are relevant to the user's question.
+Here is a list of functions in JSON format:
+{json_schema}
+
+Return function calls in JSON format.
+
+{existing_system}"""
+
+
+def _render_system(today: dt.date, tools: list[Tool], existing_system: str) -> str:
+    return SYSTEM.format(
+        today=today.strftime("%d %B %Y"),
+        json_schema="\n".join([json.dumps(t._json_schema(), indent=4) for t in tools]),
+        existing_system=existing_system,
+    )
 
 
 @dataclass

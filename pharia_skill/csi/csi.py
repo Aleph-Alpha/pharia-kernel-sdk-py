@@ -48,7 +48,14 @@ from .inference import (
     TextScore,
 )
 from .language import Language, SelectLanguageRequest
-from .tool import InvokeRequest, Tool, ToolError, ToolOutput, ToolResult
+from .tool import (
+    InvokeRequest,
+    Tool,
+    ToolError,
+    ToolOutput,
+    ToolResult,
+    add_tools_to_system_prompt,
+)
 
 
 class Csi(Protocol):
@@ -235,7 +242,11 @@ class Csi(Protocol):
         ...
 
     def chat_stream(
-        self, model: str, messages: list[Message], params: ChatParams | None = None
+        self,
+        model: str,
+        messages: list[Message],
+        tools: list[Tool] | None = None,
+        params: ChatParams | None = None,
     ) -> ChatStreamResponse:
         """Generate a model response from a list of messages comprising a conversation.
 
@@ -250,9 +261,14 @@ class Csi(Protocol):
             messages (list[Message], required):
                 List of messages, alternating between messages from user and assistant.
 
+            tools (list[dict], required):
+                List of tools that are available to the model.
+
             params (ChatParams, optional, Default None): Parameters used for the chat.
         """
         params = params or ChatParams()
+        if tools:
+            messages = add_tools_to_system_prompt(messages, tools)
         return self._chat_stream(model, messages, params)
 
     def _chat_stream(
