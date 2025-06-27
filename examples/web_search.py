@@ -1,12 +1,14 @@
+from collections.abc import Generator
+
 from pydantic import BaseModel
 
 from pharia_skill import Csi, Message, MessageWriter, message_stream
 from pharia_skill.csi.inference_types import MessageAppend
-from pharia_skill.csi.tool import ToolCallRequest
+from pharia_skill.csi.tool import ToolCallRequest, ToolOutput
 
 
 class Input(BaseModel):
-    messages: list[Message]
+    question: str
 
 
 SYSTEM = """You are a helpful research assistant.
@@ -22,28 +24,54 @@ To ensure that efficiency, only fetch the content after you have found the relev
 def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
     """A Skill that can decide to search the web."""
 
-    messages = [Message.system(SYSTEM)] + input.messages
     model = "llama-3.3-70b-instruct"
+    session = ChatSession(csi, model, SYSTEM, ["search", "fetch"])
+    response = session.chat(input.question)
 
     while True:
-        response = csi.chat_stream(model, messages, tools=["search", "fetch"])
-        stream = response.stream_with_tool()
-        first_chunk = next(stream)
-
-        if isinstance(first_chunk, ToolCallRequest):
+        if isinstance(response, ToolCallRequest):
             # TODO chat stream should validate alternation between assistant and user/tool
-            # Make it part of the message history
-            tool_call_request = first_chunk._as_message()
-            messages.append(tool_call_request)
-
-            tool_response = csi.invoke_tool(first_chunk.name, **first_chunk.parameters)
-            messages.append(tool_response._as_message())
+            tool_response = csi.invoke_tool(response.name, **response.parameters)
+            response = session.report_tool_result(tool_response)
         else:
             writer.begin_message()
-            writer.append_to_message(first_chunk.content)
 
             # We do not account for the possibility of getting two tool calls
-            for chunk in stream:
+            for chunk in response:
                 assert isinstance(chunk, MessageAppend)
                 writer.append_to_message(chunk.content)
             return
+
+
+class ChatSession:
+    def __init__(
+        self,
+        csi: Csi,
+        model: str,
+        system: str | None = None,
+        tools: list[str] | None = None,
+    ):
+        self.csi = csi
+        self.model = model
+        self.messages: list[Message] = [Message.system(system)] if system else []
+        self.tools = tools
+
+    def reply(
+        self, message: Message
+    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+        self.messages.append(message)
+        response = self.csi.chat_stream(self.model, self.messages, tools=self.tools)
+        stream = response.stream_with_tool()
+        if isinstance(stream, ToolCallRequest):
+            self.messages.append(stream._as_message())
+        return stream
+
+    def chat(
+        self, question: str
+    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+        return self.reply(Message.user(question))
+
+    def report_tool_result(
+        self, tool_result: ToolOutput
+    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+        return self.reply(tool_result._as_message())
