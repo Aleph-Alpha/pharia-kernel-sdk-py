@@ -16,9 +16,9 @@ from pharia_skill.csi.inference import (
     CompletionAppend,
     CompletionEvent,
     CompletionStreamResponse,
-    MessageAppend,
     MessageBegin,
 )
+from pharia_skill.csi.inference_types import MessageAppend
 
 from ..bindings.imports import inference as wit
 from ..csi import (

@@ -46,11 +46,9 @@ from .inference import (
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
-    Distribution,
     ExplanationRequest,
     FinishReason,
     Granularity,
-    Logprob,
     Logprobs,
     Message,
     NoLogprobs,
@@ -60,6 +58,7 @@ from .inference import (
     TokenUsage,
     TopLogprobs,
 )
+from .inference_types import Distribution, Logprob
 from .language import Language, SelectLanguageRequest
 from .tool import InvokeRequest, ToolError, ToolOutput, ToolResult
 
