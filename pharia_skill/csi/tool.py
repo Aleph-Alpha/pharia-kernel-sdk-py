@@ -2,7 +2,7 @@ import datetime as dt
 import json
 from typing import Iterator, Literal
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, RootModel, ValidationError
 from pydantic.dataclasses import dataclass
 from pydantic.types import JsonValue
 
@@ -47,12 +47,12 @@ def add_tools_to_system_prompt(
         return messages
 
     today = dt.date.today()
-    if messages[0].role != Role.System:
-        system = _render_system(today, tools, "")
-        messages.insert(0, Message.system(system))
+    if messages[0].role == Role.System:
+        system = _render_system(today, tools, messages[0].content)
+        return [Message.system(system)] + messages[1:]
     else:
-        messages[0].content = _render_system(today, tools, messages[0].content)
-    return messages
+        system = _render_system(today, tools, "")
+        return [Message.system(system)] + messages
 
 
 SYSTEM = """Environment: ipython
@@ -141,6 +141,18 @@ class ToolCall:
     name: str
     parameters: dict[str, JsonValue]
 
+    def render(self) -> str:
+        """Render the tool call to the format received by the model.
+
+        This is necessary to add a tool call to the message history again.
+        """
+        return "<|python_tag|>" + json.dumps(
+            {
+                "type": "function",
+                "function": {"name": self.name, "parameters": self.parameters},
+            }
+        )
+
 
 def stream_tool_call(
     stream: Iterator[MessageAppend],
@@ -155,24 +167,55 @@ def stream_tool_call(
     It either forwards the messages appends, or yields a tool call.
     """
 
-    class ToolCallDeserializer(BaseModel):
-        type: Literal["function"]
-        function: ToolCall
-
     maybe_tool_call: list[MessageAppend] = []
-    for i, event in enumerate(stream):
-        tool_call_start = event.content.startswith("{") and i == 0
+    i = 0
+    for event in stream:
+        # Empty chunk can occur before a tool call.
+        if event.content == "":
+            continue
 
+        tool_call_start = event.content.startswith("{") and i == 0
         if tool_call_start or maybe_tool_call:
             maybe_tool_call.append(event)
         else:
             yield event
+        i += 1
 
     if maybe_tool_call:
         try:
             content = "".join([e.content for e in maybe_tool_call])
-            deserialized = ToolCallDeserializer.model_validate_json(content)
-            yield deserialized.function
+            yield _deserialize_tool_call(content)
         except ValidationError:
             for event in maybe_tool_call:
                 yield event
+
+
+def _deserialize_tool_call(content: str) -> ToolCall:
+    """Deserialize a tool call from a plain text response.
+
+    Notably, `llama-3.3-70b-instruct` returns different formats for tool calls.
+    We try to support all formats.
+    """
+
+    class Function(BaseModel):
+        name: str
+        parameters: dict[str, JsonValue]
+
+    class StandardFormat(BaseModel):
+        type: Literal["function"]
+        function: Function
+
+    class OtherFormat(BaseModel):
+        type: Literal["function"]
+        name: str
+        parameters: dict[str, JsonValue]
+
+    Deserializer = RootModel[StandardFormat | OtherFormat]
+
+    match Deserializer.model_validate_json(content).root:
+        case StandardFormat(function=function):
+            return ToolCall(name=function.name, parameters=function.parameters)
+        case OtherFormat(name=name, parameters=parameters):
+            return ToolCall(name=name, parameters=parameters)
+        case _:
+            raise ValueError("This will never happen.")
