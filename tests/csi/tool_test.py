@@ -8,7 +8,7 @@ from pharia_skill.csi.inference_types import MessageAppend
 from pharia_skill.csi.tool import (
     InvokeRequest,
     Tool,
-    ToolCall,
+    ToolCallRequest,
     _deserialize_tool_call,
     _render_system,
     add_tools_to_system_prompt,
@@ -196,7 +196,7 @@ def test_tool_calls_are_yielded():
 
     # Then the tool calls are yielded
     assert list(stream) == [
-        ToolCall(
+        ToolCallRequest(
             name="search",
             parameters={"query": "2025 Giro de Italia last stage winning time"},
         ),
@@ -217,7 +217,7 @@ def test_empty_first_chunk_is_ignored():
 
     # Then the tool calls are yielded
     assert list(stream) == [
-        ToolCall(
+        ToolCallRequest(
             name="search",
             parameters={"query": "2025 Giro de Italia last stage winning time"},
         ),

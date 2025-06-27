@@ -100,6 +100,14 @@ class ToolOutput:
         """
         return "\n\n".join(self.contents)
 
+    def _render(self) -> str:
+        """Render the tool output to the format received by the model."""
+        return f'completed[stdout]:{{"result": {self.text()}}}[/stdout]'
+
+    def _as_message(self) -> Message:
+        """Render the tool output to a message."""
+        return Message.tool(self._render())
+
 
 @dataclass
 class ToolError(Exception):
@@ -136,13 +144,13 @@ we introduce a `ToolResult` type.
 
 
 @dataclass(frozen=True)
-class ToolCall:
+class ToolCallRequest:
     """A request from a model to invoke a tool."""
 
     name: str
     parameters: dict[str, JsonValue]
 
-    def render(self) -> str:
+    def _render(self) -> str:
         """Render the tool call to the format received by the model.
 
         This is necessary to add a tool call to the message history again.
@@ -154,10 +162,14 @@ class ToolCall:
             }
         )
 
+    def _as_message(self) -> Message:
+        """Render the tool call to a message."""
+        return Message.assistant(self._render())
+
 
 def stream_tool_call(
     stream: Iterator[MessageAppend],
-) -> Generator[MessageAppend | ToolCall, None, None]:
+) -> Generator[MessageAppend | ToolCallRequest, None, None]:
     """Take a stream of messages and convert it to a stream of messages or tool calls.
 
     Currently, as our inference API does not have a tool call concept in their events,
@@ -191,7 +203,7 @@ def stream_tool_call(
                 yield event
 
 
-def _deserialize_tool_call(content: str) -> ToolCall:
+def _deserialize_tool_call(content: str) -> ToolCallRequest:
     """Deserialize a tool call from a plain text response.
 
     Notably, `llama-3.3-70b-instruct` returns different formats for tool calls.
@@ -215,8 +227,8 @@ def _deserialize_tool_call(content: str) -> ToolCall:
 
     match Deserializer.model_validate_json(content).root:
         case StandardFormat(function=function):
-            return ToolCall(name=function.name, parameters=function.parameters)
+            return ToolCallRequest(name=function.name, parameters=function.parameters)
         case OtherFormat(name=name, parameters=parameters):
-            return ToolCall(name=name, parameters=parameters)
+            return ToolCallRequest(name=name, parameters=parameters)
         case _:
             raise ValueError("This will never happen.")

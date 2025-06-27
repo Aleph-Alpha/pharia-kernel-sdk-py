@@ -16,7 +16,7 @@ from typing import Any, Literal, Self
 from pydantic.dataclasses import dataclass
 
 from pharia_skill.csi.inference_types import Distribution, Message, MessageAppend
-from pharia_skill.csi.tool import ToolCall, stream_tool_call
+from pharia_skill.csi.tool import ToolCallRequest, stream_tool_call
 
 
 @dataclass
@@ -289,7 +289,9 @@ class ChatStreamResponse(ABC):
                     self._usage = event
                     break
 
-    def stream_with_tool(self) -> Generator[MessageAppend | ToolCall, None, None]:
+    def stream_with_tool(
+        self,
+    ) -> Generator[MessageAppend | ToolCallRequest, None, None]:
         """Stream the content of the message and optionally parse tool calls.
 
         This does not include the role, the finish reason and usage.
