@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from pharia_skill import Csi, Message, MessageWriter, message_stream
 from pharia_skill.csi.inference_types import MessageAppend
-from pharia_skill.csi.tool import ToolCall, stream_tool_call
+from pharia_skill.csi.tool import ToolCall
 
 
 class Input(BaseModel):
@@ -27,7 +27,7 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
 
     while True:
         response = csi.chat_stream(model, messages, tools=["search", "fetch"])
-        stream = stream_tool_call(response.stream())
+        stream = response.stream_with_tool()
         first_chunk = next(stream)
 
         if isinstance(first_chunk, ToolCall):
