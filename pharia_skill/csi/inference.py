@@ -431,6 +431,7 @@ class Role(str, Enum):
     User = "user"
     Assistant = "assistant"
     System = "system"
+    Tool = "tool"
 
 
 @dataclass
@@ -456,6 +457,10 @@ class Message:
     @classmethod
     def system(cls, content: str) -> "Message":
         return cls(role=Role.System, content=content)
+
+    @classmethod
+    def tool(cls, content: str) -> "Message":
+        return cls(role=Role.Tool, content=content)
 
     @classmethod
     def from_dict(cls, body: dict[str, Any]) -> "Message":
