@@ -12,7 +12,7 @@ from pharia_skill import (
     message_stream,
     skill,
 )
-from pharia_skill.csi.inference import ChatParams, Message
+from pharia_skill.csi import ChatParams, Message
 from pharia_skill.message_stream.writer import MessageWriter
 from pharia_skill.studio import (
     SpanClient,

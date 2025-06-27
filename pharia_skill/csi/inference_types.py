@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Annotated, Any, Self
 
 from pydantic import BeforeValidator, field_validator
@@ -73,3 +74,48 @@ class MessageAppend:
             content=body["content"],
             logprobs=body["logprobs"],
         )
+
+
+class Role(str, Enum):
+    """A role used for a message in a chat."""
+
+    User = "user"
+    Assistant = "assistant"
+    System = "system"
+    Tool = "tool"
+
+
+@dataclass
+class Message:
+    """A single turn in a conversation.
+
+    Parameters:
+        role (Role, required): The role of the message.
+        content (str, required): The content of the message.
+    """
+
+    role: Role
+    content: str
+
+    @classmethod
+    def user(cls, content: str) -> Self:
+        return cls(role=Role.User, content=content)
+
+    @classmethod
+    def assistant(cls, content: str) -> Self:
+        return cls(role=Role.Assistant, content=content)
+
+    @classmethod
+    def system(cls, content: str) -> Self:
+        return cls(role=Role.System, content=content)
+
+    @classmethod
+    def tool(cls, content: str) -> Self:
+        return cls(role=Role.Tool, content=content)
+
+    @classmethod
+    def from_dict(cls, body: dict[str, Any]) -> Self:
+        # the shell csi does not serialize the roles in lowercase
+        role = Role(body["role"].lower())
+        content = body["content"]
+        return cls(role=role, content=content)
