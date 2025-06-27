@@ -11,7 +11,7 @@ def test_skill_searches_the_web():
     csi = DevCsi(namespace="playground", project="kernel-test")
 
     # Given a question that can only be answered by searching the web
-    query = "What was the winning time of the last stage of the 2025 Giro de Italia?"
+    query = "What was the winning time of the 21st stage of the 2025 Giro de Italia?"
     input = Input(messages=[Message.user(query)])
 
     # When the skill is called

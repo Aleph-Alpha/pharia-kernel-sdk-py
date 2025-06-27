@@ -8,6 +8,7 @@ from pharia_skill.csi.tool import (
     InvokeRequest,
     Tool,
     ToolCall,
+    _deserialize_tool_call,
     _render_system,
     add_tools_to_system_prompt,
     stream_tool_call,
@@ -30,6 +31,32 @@ def test_validation_error_for_invalid_json_value():
     # Then an error is raised when we try to put it in the arguments
     with pytest.raises(ValidationError):
         InvokeRequest(name="add", arguments={"a": 1, "b": {"c": MyClass()}})  # type: ignore
+
+
+def test_add_tools_to_system_prompt_does_not_modify_messages():
+    """Messages are handled by the user themselves.
+
+    Even if we map tools to a different internal message representation, we should
+    not alter their message state.
+    """
+    # Given a list of messages
+    messages = [Message.user("Hello, world!")]
+
+    # When adding the tools to the system prompt
+    new_messages = add_tools_to_system_prompt(
+        messages,
+        [
+            Tool(
+                name="add",
+                description="Add two numbers",
+                input_schema={"a": {"type": "number"}, "b": {"type": "number"}},
+            )
+        ],
+    )
+
+    # Then the original messages are not modified
+    assert messages == [Message.user("Hello, world!")]
+    assert len(new_messages) == 2
 
 
 def test_system_prompt_is_added_for_tools():
@@ -146,10 +173,10 @@ def test_non_tool_calls_are_forwarded():
     ]
 
     # When streaming the tool calls
-    items = stream_tool_call(iter(items))
+    stream = stream_tool_call(iter(items))
 
     # Then the tool calls are forwarded
-    assert list(items) == [
+    assert list(stream) == [
         MessageAppend(content="Hello, ", logprobs=[]),
         MessageAppend(content="world!", logprobs=[]),
     ]
@@ -157,19 +184,62 @@ def test_non_tool_calls_are_forwarded():
 
 def test_tool_calls_are_yielded():
     # Given a stream of messages that contain a tool call
-    items = [
+    function_parts = [
         '{"type": "function", "function": {"name": "search',
         '", "parameters": {"query": "2025 Giro de Italia last stage winning time"}}}',
     ]
-    items = iter([MessageAppend(content=item, logprobs=[]) for item in items])
+    items = iter([MessageAppend(content=part, logprobs=[]) for part in function_parts])
 
     # When streaming the tool calls
-    items = stream_tool_call(items)
+    stream = stream_tool_call(iter(items))
 
     # Then the tool calls are yielded
-    assert list(items) == [
+    assert list(stream) == [
         ToolCall(
             name="search",
             parameters={"query": "2025 Giro de Italia last stage winning time"},
         ),
     ]
+
+
+def test_empty_first_chunk_is_ignored():
+    # Given a stream of messages that contain a tool call, but also an empty first chunk
+    function_parts = [
+        "",
+        '{"type": "function", "function": {"name": "search',
+        '", "parameters": {"query": "2025 Giro de Italia last stage winning time"}}}',
+    ]
+    items = iter([MessageAppend(content=part, logprobs=[]) for part in function_parts])
+
+    # When streaming the tool calls
+    stream = stream_tool_call(iter(items))
+
+    # Then the tool calls are yielded
+    assert list(stream) == [
+        ToolCall(
+            name="search",
+            parameters={"query": "2025 Giro de Italia last stage winning time"},
+        ),
+    ]
+
+
+def test_standard_tool_call_format_is_supported():
+    # Given a function call in the standard format
+    json = '{"type": "function", "function": {"name": "search", "parameters": {"query": "2025 Giro de Italia last stage winning time"}}}'
+
+    # When deserializing the tool call
+    deserialized = _deserialize_tool_call(json)
+
+    # Then
+    assert deserialized.name == "search"
+
+
+def test_different_tool_format_is_supported():
+    # Given a function call in the non-nested format
+    json = '{"type": "function", "name": "search", "parameters": {"query": "2025 Giro de Italia last stage winning time"}}'
+
+    # When deserializing the tool call
+    deserialized = _deserialize_tool_call(json)
+
+    # Then
+    assert deserialized.name == "search"
