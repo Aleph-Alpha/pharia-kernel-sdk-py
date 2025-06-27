@@ -15,7 +15,8 @@ from typing import Any, Literal, Self
 # See the docstring of `csi` module for more information on the why.
 from pydantic.dataclasses import dataclass
 
-from pharia_skill.csi.inference_types import Distribution, MessageAppend
+from pharia_skill.csi.inference_types import Distribution, Message, MessageAppend
+from pharia_skill.csi.tool import ToolCall, stream_tool_call
 
 
 @dataclass
@@ -288,6 +289,13 @@ class ChatStreamResponse(ABC):
                     self._usage = event
                     break
 
+    def stream_with_tool(self) -> Generator[MessageAppend | ToolCall, None, None]:
+        """Stream the content of the message and optionally parse tool calls.
+
+        This does not include the role, the finish reason and usage.
+        """
+        return stream_tool_call(self.stream())
+
 
 @dataclass
 class Completion:
@@ -352,51 +360,6 @@ class ChatParams:
     frequency_penalty: float | None = None
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
-
-
-class Role(str, Enum):
-    """A role used for a message in a chat."""
-
-    User = "user"
-    Assistant = "assistant"
-    System = "system"
-    Tool = "tool"
-
-
-@dataclass
-class Message:
-    """A single turn in a conversation.
-
-    Parameters:
-        role (Role, required): The role of the message.
-        content (str, required): The content of the message.
-    """
-
-    role: Role
-    content: str
-
-    @classmethod
-    def user(cls, content: str) -> "Message":
-        return cls(role=Role.User, content=content)
-
-    @classmethod
-    def assistant(cls, content: str) -> "Message":
-        return cls(role=Role.Assistant, content=content)
-
-    @classmethod
-    def system(cls, content: str) -> "Message":
-        return cls(role=Role.System, content=content)
-
-    @classmethod
-    def tool(cls, content: str) -> "Message":
-        return cls(role=Role.Tool, content=content)
-
-    @classmethod
-    def from_dict(cls, body: dict[str, Any]) -> "Message":
-        # the shell csi does not serialize the roles in lowercase
-        role = Role(body["role"].lower())
-        content = body["content"]
-        return cls(role=role, content=content)
 
 
 @dataclass

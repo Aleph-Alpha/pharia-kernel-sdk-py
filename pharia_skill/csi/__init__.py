@@ -50,15 +50,13 @@ from .inference import (
     FinishReason,
     Granularity,
     Logprobs,
-    Message,
     NoLogprobs,
-    Role,
     SampledLogprobs,
     TextScore,
     TokenUsage,
     TopLogprobs,
 )
-from .inference_types import Distribution, Logprob
+from .inference_types import Distribution, Logprob, Message, Role
 from .language import Language, SelectLanguageRequest
 from .tool import InvokeRequest, ToolError, ToolOutput, ToolResult
 

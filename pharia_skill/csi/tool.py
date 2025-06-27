@@ -1,13 +1,13 @@
 import datetime as dt
 import json
+from collections.abc import Generator
 from typing import Iterator, Literal
 
 from pydantic import BaseModel, RootModel, ValidationError
 from pydantic.dataclasses import dataclass
 from pydantic.types import JsonValue
 
-from pharia_skill.csi.inference import Message, Role
-from pharia_skill.csi.inference_types import MessageAppend
+from pharia_skill.csi.inference_types import Message, MessageAppend, Role
 
 
 @dataclass
@@ -157,7 +157,7 @@ class ToolCall:
 
 def stream_tool_call(
     stream: Iterator[MessageAppend],
-) -> Iterator[MessageAppend | ToolCall]:
+) -> Generator[MessageAppend | ToolCall, None, None]:
     """Take a stream of messages and convert it to a stream of messages or tool calls.
 
     Currently, as our inference API does not have a tool call concept in their events,

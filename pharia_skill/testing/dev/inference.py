@@ -17,12 +17,11 @@ from pharia_skill.csi.inference import (
     CompletionStreamResponse,
     ExplanationRequest,
     FinishReason,
-    Message,
     MessageBegin,
     TextScore,
     TokenUsage,
 )
-from pharia_skill.csi.inference_types import MessageAppend
+from pharia_skill.csi.inference_types import Message, MessageAppend
 from pharia_skill.testing.dev.client import Event
 
 

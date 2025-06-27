@@ -1,12 +1,12 @@
 from typing import Sequence
 
-from pharia_skill.csi.inference import (
+from pharia_skill.csi import (
     ChatParams,
     ChatRequest,
     ChatResponse,
     ChatStreamResponse,
-    Message,
 )
+from pharia_skill.csi.inference_types import Message
 from pharia_skill.testing.stub import StubCsi
 
 

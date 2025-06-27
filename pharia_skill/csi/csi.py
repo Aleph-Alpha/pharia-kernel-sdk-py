@@ -44,9 +44,9 @@ from .inference import (
     CompletionStreamResponse,
     ExplanationRequest,
     Granularity,
-    Message,
     TextScore,
 )
+from .inference_types import Message
 from .language import Language, SelectLanguageRequest
 from .tool import (
     InvokeRequest,
