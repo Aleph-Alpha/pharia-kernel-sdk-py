@@ -30,13 +30,10 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
 
     while True:
         if isinstance(response, ToolCallRequest):
-            # TODO chat stream should validate alternation between assistant and user/tool
             tool_response = csi.invoke_tool(response.name, **response.parameters)
             response = session.report_tool_result(tool_response)
         else:
             writer.begin_message()
-
-            # We do not account for the possibility of getting two tool calls
             for chunk in response:
                 assert isinstance(chunk, MessageAppend)
                 writer.append_to_message(chunk.content)
@@ -44,6 +41,20 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
 
 
 class ChatSession:
+    """A chat session manages a conversation with a model.
+
+    The session is a higher level abstraction over the chat API, which might be useful
+    in cases where multiple messages are exchanges with the model. A typical usage
+    pattern would be:
+
+    1. Start a conversation by `ChatSession.chat`.
+    2. In case the model returns a tool call, you are responsible to execute the tool call
+        yourself, and can report the result by calling `ChatSession.report_tool_result`.
+        This will update the conversation and trigger another call to the model.
+    3. In case the model returns a streaming message, you stream the result to the
+        invoker of the Skill.
+    """
+
     def __init__(
         self,
         csi: Csi,
@@ -56,22 +67,34 @@ class ChatSession:
         self.messages: list[Message] = [Message.system(system)] if system else []
         self.tools = tools
 
-    def reply(
+    def chat(
+        self, question: str
+    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+        """Begin a chat interaction with the model.
+
+        Return either a streaming response or a tool call request.
+        """
+        return self.step(Message.user(question))
+
+    def report_tool_result(
+        self, tool_result: ToolOutput
+    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+        """Report the result of a tool call that was executed back to the model.
+
+        Return either a streaming response or a tool call request.
+        """
+        return self.step(tool_result._as_message())
+
+    def step(
         self, message: Message
     ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+        """Take a step in the chat interaction.
+
+        Add a message to the conversation and trigger a new response from the model.
+        """
         self.messages.append(message)
         response = self.csi.chat_stream(self.model, self.messages, tools=self.tools)
         stream = response.stream_with_tool()
         if isinstance(stream, ToolCallRequest):
             self.messages.append(stream._as_message())
         return stream
-
-    def chat(
-        self, question: str
-    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
-        return self.reply(Message.user(question))
-
-    def report_tool_result(
-        self, tool_result: ToolOutput
-    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
-        return self.reply(tool_result._as_message())
