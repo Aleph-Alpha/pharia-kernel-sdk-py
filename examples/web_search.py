@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from pharia_skill import ChatSession, Csi, Message, MessageWriter, message_stream
+from pharia_skill import Csi, Message, MessageWriter, message_stream
 
 
 class Input(BaseModel):
@@ -22,6 +22,5 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
 
     model = "llama-3.3-70b-instruct"
     messages = [Message.system(SYSTEM), *input.messages]
-    session = ChatSession(csi, model, messages, tools=["search", "fetch"])
-    response = session.run()
-    writer.forward_response(response)
+    with csi.chat_stream(model, messages, tools=["search", "fetch"]) as response:
+        writer.forward_response(response)

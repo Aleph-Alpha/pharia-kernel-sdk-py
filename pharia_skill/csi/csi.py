@@ -52,7 +52,7 @@ from .inference import (
     ToolOutput,
     ToolResult,
 )
-from .inference.tool import add_tools_to_system_prompt
+from .inference.tool import ToolCallRequest, add_tools_to_system_prompt
 from .language import Language, SelectLanguageRequest
 
 
@@ -287,7 +287,30 @@ class Csi(Protocol):
             schemas = self._list_tool_schemas(tools)
             messages = add_tools_to_system_prompt(messages, schemas)
 
-        return self._chat_stream(model, messages, params)
+        response = self._chat_stream(model, messages, params)
+
+        if tools:
+            while (tool_call := response.tool_call()) is not None:
+                self._handle_tool_call(tool_call, messages)
+                response = self._chat_stream(model, messages, params)
+
+        return response
+
+    def _handle_tool_call(
+        self, tool_call: ToolCallRequest, messages: list[Message]
+    ) -> None:
+        """Handle a tool call from the model.
+
+        The tool call is added to the conversation and the tool response is added to the conversation.
+        """
+        messages.append(tool_call._as_message())
+        try:
+            tool_response = self.invoke_tool(tool_call.name, **tool_call.parameters)
+            messages.append(tool_response._as_message())
+        except ToolError as e:
+            messages.append(
+                Message.tool(f'failed[stderr]:{{"error": {e.message}}}[/stderr]')
+            )
 
     def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
