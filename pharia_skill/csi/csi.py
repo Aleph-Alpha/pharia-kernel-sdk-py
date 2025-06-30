@@ -44,18 +44,16 @@ from .inference import (
     CompletionStreamResponse,
     ExplanationRequest,
     Granularity,
-    TextScore,
-)
-from .inference_types import Message
-from .language import Language, SelectLanguageRequest
-from .tool import (
     InvokeRequest,
+    Message,
+    TextScore,
     Tool,
     ToolError,
     ToolOutput,
     ToolResult,
-    add_tools_to_system_prompt,
 )
+from .inference.tool import add_tools_to_system_prompt
+from .language import Language, SelectLanguageRequest
 
 
 class Csi(Protocol):

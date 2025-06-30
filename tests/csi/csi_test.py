@@ -1,7 +1,7 @@
 import pytest
 
 from pharia_skill.csi import ChatParams, ChatStreamResponse, Message
-from pharia_skill.csi.tool import Tool
+from pharia_skill.csi.inference.tool import Tool
 from pharia_skill.testing.stub import StubCsi
 
 

@@ -1,4 +1,4 @@
-from pharia_skill.csi.tool import InvokeRequest, Tool, ToolError, ToolOutput
+from pharia_skill.csi.inference.tool import InvokeRequest, Tool, ToolError, ToolOutput
 from pharia_skill.testing.dev.tool import (
     deserialize_tool_output,
     deserialize_tools,

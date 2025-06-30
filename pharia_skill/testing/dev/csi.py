@@ -44,7 +44,7 @@ from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
 )
-from pharia_skill.csi.tool import Tool
+from pharia_skill.csi.inference.tool import Tool
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,

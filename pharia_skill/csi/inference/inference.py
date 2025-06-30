@@ -15,7 +15,9 @@ from typing import Any, Literal, Self
 # See the docstring of `csi` module for more information on the why.
 from pydantic.dataclasses import dataclass
 
-from pharia_skill.csi.inference_types import (
+from pharia_skill.csi.inference.tool import ToolCallRequest, parse_tool_call
+
+from .types import (
     ChatEvent,
     Distribution,
     FinishReason,
@@ -24,7 +26,6 @@ from pharia_skill.csi.inference_types import (
     MessageBegin,
     TokenUsage,
 )
-from pharia_skill.csi.tool import ToolCallRequest, parse_tool_call
 
 
 @dataclass

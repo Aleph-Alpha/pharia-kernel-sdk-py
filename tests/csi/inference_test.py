@@ -1,9 +1,13 @@
 from pydantic import BaseModel
 
 from pharia_skill.csi import Logprob, Message, Role
-from pharia_skill.csi.inference import ChatStreamResponse
-from pharia_skill.csi.inference_types import ChatEvent, MessageAppend, MessageBegin
-from pharia_skill.csi.tool import ToolCallRequest
+from pharia_skill.csi.inference import (
+    ChatEvent,
+    ChatStreamResponse,
+    MessageAppend,
+    MessageBegin,
+    ToolCallRequest,
+)
 
 
 def test_serialized_roles_are_openai_compatible():

@@ -6,7 +6,7 @@ from pharia_skill.csi import (
     ChatResponse,
     ChatStreamResponse,
 )
-from pharia_skill.csi.inference_types import Message
+from pharia_skill.csi.inference import Message
 from pharia_skill.testing.stub import StubCsi
 
 

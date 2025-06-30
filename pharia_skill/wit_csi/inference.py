@@ -11,13 +11,11 @@ from types import TracebackType
 from typing import Self
 
 from pharia_skill.csi.inference import (
+    ChatEvent,
     ChatStreamResponse,
     CompletionAppend,
     CompletionEvent,
     CompletionStreamResponse,
-)
-from pharia_skill.csi.inference_types import (
-    ChatEvent,
     MessageAppend,
     MessageBegin,
 )
