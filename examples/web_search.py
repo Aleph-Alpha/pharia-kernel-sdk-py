@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 from pharia_skill import ChatSession, Csi, MessageWriter, message_stream
-from pharia_skill.csi.tool import ToolCallRequest
+from pharia_skill.csi.inference import ChatStreamResponse
 
 
 class Input(BaseModel):
@@ -22,16 +22,23 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
     """A Skill that can decide to search the web."""
 
     model = "llama-3.3-70b-instruct"
-    session = ChatSession(csi, model, SYSTEM, ["search", "fetch"])
-    response = session.ask(input.question)
+    agent = Agent(model, SYSTEM, ["search", "fetch"])
+    response = agent.run(csi, input.question)
+    writer.forward_response(response)
 
-    while True:
-        if isinstance(response, ToolCallRequest):
-            tool_response = csi.invoke_tool(response.name, **response.parameters)
-            response = session.report_tool_result(tool_response)
-        else:
-            writer.begin_message(role="assistant")
-            for append in response:
-                writer.append_to_message(append.content)
-            writer.end_message()
-            break
+
+class Agent:
+    def __init__(self, model: str, system: str, tools: list[str]):
+        self.model = model
+        self.system = system
+        self.tools = tools
+
+    def run(self, csi: Csi, question: str) -> ChatStreamResponse:
+        session = ChatSession(csi, self.model, self.system, self.tools)
+        response = session.ask(question)
+        while True:
+            if (tool_call := response.tool_call()) is not None:
+                tool_response = csi.invoke_tool(tool_call.name, **tool_call.parameters)
+                response = session.report_tool_result(tool_response)
+            else:
+                return response

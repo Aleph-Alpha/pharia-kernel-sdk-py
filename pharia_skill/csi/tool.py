@@ -1,13 +1,12 @@
 import datetime as dt
 import json
-from collections.abc import Generator
 from typing import Iterator, Literal
 
 from pydantic import BaseModel, RootModel, ValidationError
 from pydantic.dataclasses import dataclass
 from pydantic.types import JsonValue
 
-from pharia_skill.csi.inference_types import Message, MessageAppend, Role
+from pharia_skill.csi.inference_types import ChatEvent, Message, MessageAppend, Role
 
 
 @dataclass
@@ -167,10 +166,8 @@ class ToolCallRequest:
         return Message.assistant(self._render())
 
 
-def stream_tool_call(
-    stream: Iterator[MessageAppend],
-) -> Generator[MessageAppend | ToolCallRequest, None, None]:
-    """Take a stream of messages and convert it to a stream of messages or tool calls.
+def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
+    """Inspect a stream of of messages. Do not alter it. Return a tool call if it is present.
 
     Currently, as our inference API does not have a tool call concept in their events,
     we need to do this in the SDK. For streaming, this is an interesting problem, as
@@ -183,6 +180,9 @@ def stream_tool_call(
     maybe_tool_call: list[MessageAppend] = []
     i = 0
     for event in stream:
+        if not isinstance(event, MessageAppend):
+            continue
+
         # Empty chunk can occur before a tool call.
         if event.content == "":
             continue
@@ -191,16 +191,18 @@ def stream_tool_call(
         if tool_call_start or maybe_tool_call:
             maybe_tool_call.append(event)
         else:
-            yield event
+            # We can return early here. There is no tool call.
+            return None
         i += 1
 
     if maybe_tool_call:
         try:
             content = "".join([e.content for e in maybe_tool_call])
-            yield _deserialize_tool_call(content)
+            return _deserialize_tool_call(content)
         except ValidationError:
-            for event in maybe_tool_call:
-                yield event
+            pass
+
+    return None
 
 
 def _deserialize_tool_call(content: str) -> ToolCallRequest:

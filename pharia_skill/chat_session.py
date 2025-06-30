@@ -1,8 +1,6 @@
-from collections.abc import Generator
-
 from pharia_skill.csi import Csi, Message
-from pharia_skill.csi.inference_types import MessageAppend
-from pharia_skill.csi.tool import ToolCallRequest, ToolOutput
+from pharia_skill.csi.inference import ChatStreamResponse
+from pharia_skill.csi.tool import ToolOutput
 
 
 class ChatSession:
@@ -32,45 +30,24 @@ class ChatSession:
         self.messages: list[Message] = [Message.system(system)] if system else []
         self.tools = tools
 
-    def ask(
-        self, question: str
-    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+    def ask(self, question: str) -> ChatStreamResponse:
         """Begin a chat interaction with the model.
 
         Return either a streaming response or a tool call request.
         """
         return self._step(Message.user(question))
 
-    def report_tool_result(
-        self, tool_result: ToolOutput
-    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+    def report_tool_result(self, tool_result: ToolOutput) -> ChatStreamResponse:
         """Report the result of a tool call that was executed back to the model.
 
         Return either a streaming response or a tool call request.
         """
         return self._step(tool_result._as_message())
 
-    def _step(
-        self, message: Message
-    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
+    def _step(self, message: Message) -> ChatStreamResponse:
         """Take a step in the chat interaction.
 
         Add a message to the conversation and trigger a new response from the model.
         """
         self.messages.append(message)
-        response = self.csi.chat_stream(self.model, self.messages, tools=self.tools)
-        stream = response.stream_with_tool()
-        if isinstance(stream, ToolCallRequest):
-            self.messages.append(stream._as_message())
-            return stream
-        else:
-            return self._wrap_stream(stream)
-
-    def _wrap_stream(
-        self, stream: Generator[MessageAppend, None, None]
-    ) -> Generator[MessageAppend, None, None]:
-        """Adapt the stream such that is is stored on the session."""
-        self.messages.append(Message.assistant(content=""))
-        for append in stream:
-            self.messages[-1].content += append.content
-            yield append
+        return self.csi.chat_stream(self.model, self.messages, tools=self.tools)

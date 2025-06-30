@@ -4,7 +4,6 @@ from typing import Sequence
 from pydantic import BaseModel, RootModel, TypeAdapter
 
 from pharia_skill.csi.inference import (
-    ChatEvent,
     ChatParams,
     ChatRequest,
     ChatResponse,
@@ -16,12 +15,16 @@ from pharia_skill.csi.inference import (
     CompletionRequest,
     CompletionStreamResponse,
     ExplanationRequest,
-    FinishReason,
-    MessageBegin,
     TextScore,
+)
+from pharia_skill.csi.inference_types import (
+    ChatEvent,
+    FinishReason,
+    Message,
+    MessageAppend,
+    MessageBegin,
     TokenUsage,
 )
-from pharia_skill.csi.inference_types import Message, MessageAppend
 from pharia_skill.testing.dev.client import Event
 
 
@@ -52,7 +55,7 @@ class DevChatStreamResponse(ChatStreamResponse):
         self._stream = stream
         super().__init__()
 
-    def next(self) -> ChatEvent | None:
+    def _next(self) -> ChatEvent | None:
         if event := next(self._stream, None):
             return chat_event_from_sse(event)
         return None

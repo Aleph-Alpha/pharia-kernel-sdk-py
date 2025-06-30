@@ -24,23 +24,23 @@ def test_forward_response():
 
     # and given a stub chat stream response
     class StubChatStreamResponse(inference.ChatStreamResponse):
-        def __init__(self, events: list[inference.ChatEvent]) -> None:
+        def __init__(self, events: list[inference_types.ChatEvent]) -> None:
             self._events = events
             self._index = 0
             super().__init__()
 
-        def next(self) -> inference.ChatEvent | None:
+        def _next(self) -> inference_types.ChatEvent | None:
             if self._index < len(self._events):
                 event = self._events[self._index]
                 self._index += 1
                 return event
             return None
 
-    events: list[inference.ChatEvent] = [
-        inference.MessageBegin(role="assistant"),
+    events: list[inference_types.ChatEvent] = [
+        inference_types.MessageBegin(role="assistant"),
         inference_types.MessageAppend(content="Hello, world!", logprobs=[]),
-        inference.FinishReason.STOP,
-        inference.TokenUsage(completion=1, prompt=0),
+        inference_types.FinishReason.STOP,
+        inference_types.TokenUsage(completion=1, prompt=0),
     ]
     response = StubChatStreamResponse(events)
 

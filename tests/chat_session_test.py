@@ -2,8 +2,7 @@ from collections.abc import Generator
 
 from pharia_skill import ChatSession
 from pharia_skill.csi import ChatParams, ChatStreamResponse, Message
-from pharia_skill.csi.inference import ChatEvent, MessageBegin
-from pharia_skill.csi.inference_types import MessageAppend
+from pharia_skill.csi.inference_types import ChatEvent, MessageAppend, MessageBegin
 from pharia_skill.testing import StubCsi
 
 
@@ -16,7 +15,7 @@ class MockCsi(StubCsi):
                 self._stream = stream
                 super().__init__()
 
-            def next(self) -> ChatEvent | None:
+            def _next(self) -> ChatEvent | None:
                 return next(self._stream, None)
 
         def generator() -> Generator[ChatEvent, None, None]:
@@ -35,10 +34,8 @@ def test_chat_session_extends_history():
     response = session.ask("Hello, how are you?")
 
     # When the response is consumed
-    assert isinstance(response, Generator)
-    list(response)
+    list(response.stream())
 
-    # Then both messages are stored on the session
-    assert len(session.messages) == 2
+    # Then only the incoming message is stored on the session
+    assert len(session.messages) == 1
     assert session.messages[0].content == "Hello, how are you?"
-    assert session.messages[1].content == "Hi, I'm an old fisherman, how are you?"

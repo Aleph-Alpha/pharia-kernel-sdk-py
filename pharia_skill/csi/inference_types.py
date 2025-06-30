@@ -86,6 +86,38 @@ class Role(str, Enum):
 
 
 @dataclass
+class MessageBegin:
+    role: str
+
+
+@dataclass
+class TokenUsage:
+    """Usage statistics for the completion request."""
+
+    prompt: int
+    completion: int
+
+
+class FinishReason(str, Enum):
+    """The reason the model finished generating.
+
+    Attributes:
+        STOP: The model hit a natural stopping point or a provided stop sequence.
+
+        LENGTH: The maximum number of tokens specified in the request was reached.
+
+        CONTENT_FILTER: Content was omitted due to a flag from content filters.
+    """
+
+    STOP = "stop"
+    LENGTH = "length"
+    CONTENT_FILTER = "content_filter"
+
+
+ChatEvent = MessageBegin | MessageAppend | FinishReason | TokenUsage
+
+
+@dataclass
 class Message:
     """A single turn in a conversation.
 

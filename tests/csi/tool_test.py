@@ -12,7 +12,7 @@ from pharia_skill.csi.tool import (
     _deserialize_tool_call,
     _render_system,
     add_tools_to_system_prompt,
-    stream_tool_call,
+    parse_tool_call,
 )
 
 
@@ -173,14 +173,11 @@ def test_non_tool_calls_are_forwarded():
         MessageAppend(content="world!", logprobs=[]),
     ]
 
-    # When streaming the tool calls
-    stream = stream_tool_call(iter(items))
+    # When parsing the tool calls
+    tool_call = parse_tool_call(iter(items))
 
-    # Then the tool calls are forwarded
-    assert list(stream) == [
-        MessageAppend(content="Hello, ", logprobs=[]),
-        MessageAppend(content="world!", logprobs=[]),
-    ]
+    # Then no tool call is returned
+    assert tool_call is None
 
 
 def test_tool_calls_are_yielded():
@@ -191,16 +188,14 @@ def test_tool_calls_are_yielded():
     ]
     items = iter([MessageAppend(content=part, logprobs=[]) for part in function_parts])
 
-    # When streaming the tool calls
-    stream = stream_tool_call(iter(items))
+    # When parsing the tool calls
+    tool_call = parse_tool_call(iter(items))
 
     # Then the tool calls are yielded
-    assert list(stream) == [
-        ToolCallRequest(
-            name="search",
-            parameters={"query": "2025 Giro de Italia last stage winning time"},
-        ),
-    ]
+    assert tool_call == ToolCallRequest(
+        name="search",
+        parameters={"query": "2025 Giro de Italia last stage winning time"},
+    )
 
 
 def test_empty_first_chunk_is_ignored():
@@ -213,15 +208,13 @@ def test_empty_first_chunk_is_ignored():
     items = iter([MessageAppend(content=part, logprobs=[]) for part in function_parts])
 
     # When streaming the tool calls
-    stream = stream_tool_call(iter(items))
+    tool_call = parse_tool_call(iter(items))
 
     # Then the tool calls are yielded
-    assert list(stream) == [
-        ToolCallRequest(
-            name="search",
-            parameters={"query": "2025 Giro de Italia last stage winning time"},
-        ),
-    ]
+    assert tool_call == ToolCallRequest(
+        name="search",
+        parameters={"query": "2025 Giro de Italia last stage winning time"},
+    )
 
 
 def test_standard_tool_call_format_is_supported():

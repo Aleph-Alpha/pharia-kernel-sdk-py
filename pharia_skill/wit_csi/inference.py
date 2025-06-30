@@ -11,14 +11,16 @@ from types import TracebackType
 from typing import Self
 
 from pharia_skill.csi.inference import (
-    ChatEvent,
     ChatStreamResponse,
     CompletionAppend,
     CompletionEvent,
     CompletionStreamResponse,
+)
+from pharia_skill.csi.inference_types import (
+    ChatEvent,
+    MessageAppend,
     MessageBegin,
 )
-from pharia_skill.csi.inference_types import MessageAppend
 
 from ..bindings.imports import inference as wit
 from ..csi import (
@@ -87,7 +89,7 @@ class WitChatStreamResponse(ChatStreamResponse):
     ) -> bool | None:
         return self._stream.__exit__(exc_type, exc_value, traceback)
 
-    def next(self) -> ChatEvent | None:
+    def _next(self) -> ChatEvent | None:
         match self._stream.next():
             case wit.ChatEvent_MessageBegin(value):
                 return MessageBegin(value)
