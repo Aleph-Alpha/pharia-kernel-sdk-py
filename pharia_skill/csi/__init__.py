@@ -47,16 +47,21 @@ from .inference import (
     CompletionRequest,
     CompletionStreamResponse,
     ExplanationRequest,
-    FinishReason,
     Granularity,
     Logprobs,
     NoLogprobs,
     SampledLogprobs,
     TextScore,
-    TokenUsage,
     TopLogprobs,
 )
-from .inference_types import Distribution, Logprob, Message, Role
+from .inference_types import (
+    Distribution,
+    FinishReason,
+    Logprob,
+    Message,
+    Role,
+    TokenUsage,
+)
 from .language import Language, SelectLanguageRequest
 from .tool import InvokeRequest, ToolError, ToolOutput, ToolResult
 

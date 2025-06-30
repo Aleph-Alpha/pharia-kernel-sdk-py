@@ -32,14 +32,12 @@ from pharia_skill import (
     ToolResult,
 )
 from pharia_skill.csi.inference import (
-    ChatEvent,
     ChatStreamResponse,
     CompletionAppend,
     CompletionEvent,
     CompletionStreamResponse,
-    MessageBegin,
 )
-from pharia_skill.csi.inference_types import MessageAppend
+from pharia_skill.csi.inference_types import ChatEvent, MessageAppend, MessageBegin
 from pharia_skill.csi.tool import InvokeRequest, Tool, ToolOutput
 
 
@@ -108,7 +106,7 @@ class StubCsi(Csi):
                 self._stream = stream
                 super().__init__()
 
-            def next(self) -> ChatEvent | None:
+            def _next(self) -> ChatEvent | None:
                 return next(self._stream, None)
 
         def generator() -> Generator[ChatEvent, None, None]:

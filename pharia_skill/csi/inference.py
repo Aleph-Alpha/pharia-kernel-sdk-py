@@ -9,14 +9,22 @@ from collections.abc import Generator
 from dataclasses import field
 from enum import Enum
 from types import TracebackType
-from typing import Any, Literal, Self, cast
+from typing import Any, Literal, Self
 
 # We use pydantic.dataclasses to get type validation.
 # See the docstring of `csi` module for more information on the why.
 from pydantic.dataclasses import dataclass
 
-from pharia_skill.csi.inference_types import Distribution, Message, MessageAppend
-from pharia_skill.csi.tool import ToolCallRequest, stream_tool_call
+from pharia_skill.csi.inference_types import (
+    ChatEvent,
+    Distribution,
+    FinishReason,
+    Message,
+    MessageAppend,
+    MessageBegin,
+    TokenUsage,
+)
+from pharia_skill.csi.tool import ToolCallRequest, parse_tool_call
 
 
 @dataclass
@@ -69,30 +77,6 @@ class CompletionParams:
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
     echo: bool = False
-
-
-class FinishReason(str, Enum):
-    """The reason the model finished generating.
-
-    Attributes:
-        STOP: The model hit a natural stopping point or a provided stop sequence.
-
-        LENGTH: The maximum number of tokens specified in the request was reached.
-
-        CONTENT_FILTER: Content was omitted due to a flag from content filters.
-    """
-
-    STOP = "stop"
-    LENGTH = "length"
-    CONTENT_FILTER = "content_filter"
-
-
-@dataclass
-class TokenUsage:
-    """Usage statistics for the completion request."""
-
-    prompt: int
-    completion: int
 
 
 @dataclass
@@ -191,14 +175,6 @@ class CompletionStreamResponse(ABC):
                     raise ValueError("Invalid event")
 
 
-@dataclass
-class MessageBegin:
-    role: str
-
-
-ChatEvent = MessageBegin | MessageAppend | FinishReason | TokenUsage
-
-
 class ChatStreamResponse(ABC):
     """Abstract base class for streaming chat responses.
 
@@ -221,9 +197,11 @@ class ChatStreamResponse(ABC):
     """
 
     role: str
+    buffer: list[ChatEvent]
 
     _finish_reason: FinishReason | None = None
     _usage: TokenUsage | None = None
+    _tool_call: ToolCallRequest | None = None
 
     def __enter__(self) -> Self:
         """Enter the context manager."""
@@ -238,16 +216,68 @@ class ChatStreamResponse(ABC):
         """Exit the context manager and ensure resources are properly cleaned up."""
         pass
 
-    @abstractmethod
     def next(self) -> ChatEvent | None:
-        """Get the next chat event."""
+        """Get the next chat event.
+
+        If there are events stored in the internal buffer, use them as event source.
+        Otherwise, get the next event from the stream. Keeping track of events in the
+        buffer allows others to peek at the next stream event without altering the
+        stream. An example where this is necessary is when checking for a tool call.
+        """
+        if self.buffer:
+            return self.buffer.pop(0)
+        else:
+            return self._next()
+
+    @abstractmethod
+    def _next(self) -> ChatEvent | None:
+        """Get the next chat event from the stream."""
         ...
 
+    def peek(self) -> ChatEvent | None:
+        """Peek at the next chat event without changing the stream."""
+        event = self._next()
+        if event is not None:
+            self.buffer.append(event)
+        return event
+
+    def peek_iterator(self) -> Generator[ChatEvent, None, None]:
+        """An iterator over the chat events that does not alter the stream."""
+        while (event := self.peek()) is not None:
+            yield event
+
     def __init__(self) -> None:
-        first_event = self.next()
+        self.buffer = []
+        first_event = self._next()
         if not isinstance(first_event, MessageBegin):
             raise ValueError(f"Invalid first stream event: {first_event}")
         self.role = first_event.role
+
+    def tool_call(self) -> ToolCallRequest | None:
+        """Inspect the stream to find out if the model is calling a tool.
+
+        This method must be called before the stream is consumed. A typical usage
+        pattern would be to check for the tool call, and, if there is none, stream the
+        rest of the message. In case the response is not a tool call, normally only
+        one element of the stream needs to be inspected, so the impact is minimal.
+        However, in edge scenarios, the full stream might need to be inspected.
+
+        Returns:
+            The tool call if there is one in the request, otherwise `None`.
+
+        Example::
+
+            response = csi.chat_stream("llama-3.1-8b-instruct", [system, user], params)
+            tool_call = response.tool_call()
+            if tool_call:
+                # Handle the tool call
+            else:
+                writer.forward_response(response)
+        """
+        if self._tool_call is None:
+            self._tool_call = parse_tool_call(self.peek_iterator())
+
+        return self._tool_call
 
     def finish_reason(self) -> FinishReason:
         """The reason the model finished generating."""
@@ -288,25 +318,6 @@ class ChatStreamResponse(ABC):
                 case TokenUsage():
                     self._usage = event
                     break
-
-    def stream_with_tool(
-        self,
-    ) -> Generator[MessageAppend, None, None] | ToolCallRequest:
-        """Stream the content of the message and optionally parse tool calls.
-
-        This does not include the role, the finish reason and usage.
-        """
-        stream = stream_tool_call(self.stream())
-        first_chunk = next(stream)
-        if isinstance(first_chunk, ToolCallRequest):
-            return first_chunk
-        else:
-
-            def generator() -> Generator[MessageAppend, None, None]:
-                yield first_chunk
-                yield from cast(Generator[MessageAppend, None, None], stream)
-
-            return generator()
 
 
 @dataclass
