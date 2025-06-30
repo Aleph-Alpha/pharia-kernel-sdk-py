@@ -30,6 +30,14 @@ class ChatSession:
         self.messages = messages
         self.tools = tools
 
+    def run(self) -> ChatStreamResponse:
+        """Run a chat session and execute tool calls until the model returns a normal response."""
+        response = self._step()
+        while (tool_call := response.tool_call()) is not None:
+            self._handle_tool_call(tool_call)
+            response = self._step()
+        return response
+
     def _step(self) -> ChatStreamResponse:
         """Take a step in the chat interaction.
 
@@ -45,13 +53,3 @@ class ChatSession:
         self.messages.append(tool_call._as_message())
         tool_response = self.csi.invoke_tool(tool_call.name, **tool_call.parameters)
         self.messages.append(tool_response._as_message())
-
-    def run(self) -> ChatStreamResponse:
-        """Run a chat session and execute tool calls until the model returns a normal response."""
-        response = self._step()
-        while True:
-            if (tool_call := response.tool_call()) is not None:
-                self._handle_tool_call(tool_call)
-                response = self._step()
-            else:
-                return response
