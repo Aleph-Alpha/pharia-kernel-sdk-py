@@ -167,14 +167,15 @@ class ToolCallRequest:
 
 
 def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
-    """Inspect a stream of of messages. Do not alter it. Return a tool call if it is present.
+    """Inspect if a stream contains a tool call with minimal polls.
+
+    If the stream does not contain a tool call, return `None` as soon as possible,
+    so the caller can still stream the response.
 
     Currently, as our inference API does not have a tool call concept in their events,
     we need to do this in the SDK. For streaming, this is an interesting problem, as
     a decision on whether a chunk is part of a normal message or part of a tool call
     needs to be taken on the fly. This is what this function does.
-
-    It either forwards the messages appends, or yields a tool call.
     """
 
     maybe_tool_call: list[MessageAppend] = []
