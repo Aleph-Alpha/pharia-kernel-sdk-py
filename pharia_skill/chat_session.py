@@ -10,7 +10,7 @@ class ChatSession:
     in cases where multiple messages are exchanges with the model. A typical usage
     pattern would be:
 
-    1. Start a conversation by `ChatSession.chat`.
+    1. Start a conversation by `ChatSession.ask`.
     2. In case the model returns a tool call, you are responsible to execute the tool call
         yourself, and can report the result by calling `ChatSession.report_tool_result`.
         This will update the conversation and trigger another call to the model.
