@@ -1,6 +1,6 @@
 from pharia_skill.csi import Csi, Message
 from pharia_skill.csi.inference import ChatStreamResponse
-from pharia_skill.csi.tool import ToolOutput
+from pharia_skill.csi.inference.tool import ToolOutput
 
 
 class ChatSession:

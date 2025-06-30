@@ -3,7 +3,7 @@ from typing import Any, Literal, Sequence, Union
 from pydantic import BaseModel, Field, RootModel
 from pydantic.types import JsonValue
 
-from pharia_skill.csi import tool
+from pharia_skill.csi.inference import tool
 
 
 class ArgumentSerializer(BaseModel):

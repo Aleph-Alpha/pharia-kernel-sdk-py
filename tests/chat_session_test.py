@@ -2,7 +2,7 @@ from collections.abc import Generator
 
 from pharia_skill import ChatSession
 from pharia_skill.csi import ChatParams, ChatStreamResponse, Message
-from pharia_skill.csi.inference_types import ChatEvent, MessageAppend, MessageBegin
+from pharia_skill.csi.inference import ChatEvent, MessageAppend, MessageBegin
 from pharia_skill.testing import StubCsi
 
 

@@ -20,8 +20,7 @@ from pharia_skill import (
     TokenUsage,
     TopLogprobs,
 )
-from pharia_skill.csi.inference import CompletionAppend
-from pharia_skill.csi.inference_types import MessageAppend, MessageBegin
+from pharia_skill.csi.inference import CompletionAppend, MessageAppend, MessageBegin
 from pharia_skill.testing.dev.client import Event
 from pharia_skill.testing.dev.inference import (
     ChatListDeserializer,

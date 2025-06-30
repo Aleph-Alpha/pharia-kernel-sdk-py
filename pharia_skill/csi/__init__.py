@@ -46,24 +46,22 @@ from .inference import (
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
+    Distribution,
     ExplanationRequest,
+    FinishReason,
     Granularity,
+    Logprob,
     Logprobs,
+    Message,
     NoLogprobs,
+    Role,
     SampledLogprobs,
     TextScore,
+    TokenUsage,
     TopLogprobs,
 )
-from .inference_types import (
-    Distribution,
-    FinishReason,
-    Logprob,
-    Message,
-    Role,
-    TokenUsage,
-)
+from .inference.tool import InvokeRequest, ToolError, ToolOutput, ToolResult
 from .language import Language, SelectLanguageRequest
-from .tool import InvokeRequest, ToolError, ToolOutput, ToolResult
 
 __all__ = [
     "After",

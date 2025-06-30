@@ -32,13 +32,17 @@ from pharia_skill import (
     ToolResult,
 )
 from pharia_skill.csi.inference import (
+    ChatEvent,
     ChatStreamResponse,
     CompletionAppend,
     CompletionEvent,
     CompletionStreamResponse,
+    InvokeRequest,
+    MessageAppend,
+    MessageBegin,
+    Tool,
+    ToolOutput,
 )
-from pharia_skill.csi.inference_types import ChatEvent, MessageAppend, MessageBegin
-from pharia_skill.csi.tool import InvokeRequest, Tool, ToolOutput
 
 
 class StubCsi(Csi):

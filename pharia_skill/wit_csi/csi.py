@@ -5,7 +5,7 @@ from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
 )
-from pharia_skill.csi.tool import Tool
+from pharia_skill.csi.inference.tool import Tool
 
 from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index

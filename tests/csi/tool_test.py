@@ -4,8 +4,8 @@ import pytest
 from pydantic import ValidationError
 
 from pharia_skill.csi import Message, Role
-from pharia_skill.csi.inference_types import MessageAppend
-from pharia_skill.csi.tool import (
+from pharia_skill.csi.inference import MessageAppend
+from pharia_skill.csi.inference.tool import (
     InvokeRequest,
     Tool,
     ToolCallRequest,
