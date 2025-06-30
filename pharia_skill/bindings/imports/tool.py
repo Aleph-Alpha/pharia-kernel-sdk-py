@@ -1,7 +1,5 @@
 """
 The tool interface allows Skills to interact with the outside world.
-We run into issues making the interface itself unstable, so only
-all members are marked as unstable.
 """
 from typing import TypeVar, Generic, Union, Optional, Protocol, Tuple, List, Any, Self
 from types import TracebackType
