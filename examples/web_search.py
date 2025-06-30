@@ -22,5 +22,5 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
 
     model = "llama-3.3-70b-instruct"
     session = ChatSession(csi, model, SYSTEM, ["search", "fetch"])
-    response = session.run(csi, input.question)
+    response = session.run(input.question)
     writer.forward_response(response)
