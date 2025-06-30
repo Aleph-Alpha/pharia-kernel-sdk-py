@@ -51,3 +51,13 @@ class ChatSession:
         """
         self.messages.append(message)
         return self.csi.chat_stream(self.model, self.messages, tools=self.tools)
+
+    def run(self, csi: Csi, question: str) -> ChatStreamResponse:
+        """Run a chat session and execute tool calls until the model returns a normal response."""
+        response = self.ask(question)
+        while True:
+            if (tool_call := response.tool_call()) is not None:
+                tool_response = csi.invoke_tool(tool_call.name, **tool_call.parameters)
+                response = self.report_tool_result(tool_response)
+            else:
+                return response
