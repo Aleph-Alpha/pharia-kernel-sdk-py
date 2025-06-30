@@ -22,42 +22,29 @@ class ChatSession:
         self,
         csi: Csi,
         model: str,
-        system: str | None = None,
+        messages: list[Message],
         tools: list[str] | None = None,
     ):
         self.csi = csi
         self.model = model
-        self.messages: list[Message] = [Message.system(system)] if system else []
+        self.messages = messages
         self.tools = tools
 
-    def ask(self, question: str) -> ChatStreamResponse:
-        """Begin a chat interaction with the model.
-
-        Return either a streaming response or a tool call request.
-        """
-        return self._step(Message.user(question))
-
-    def report_tool_result(self, tool_result: ToolOutput) -> ChatStreamResponse:
+    def _report_tool_result(self, tool_result: ToolOutput) -> ChatStreamResponse:
         """Report the result of a tool call that was executed back to the model.
 
         Return either a streaming response or a tool call request.
         """
-        return self._step(tool_result._as_message())
-
-    def _step(self, message: Message) -> ChatStreamResponse:
-        """Take a step in the chat interaction.
-
-        Add a message to the conversation and trigger a new response from the model.
-        """
-        self.messages.append(message)
+        self.messages.append(tool_result._as_message())
         return self.csi.chat_stream(self.model, self.messages, tools=self.tools)
 
-    def run(self, question: str) -> ChatStreamResponse:
+    def run(self) -> ChatStreamResponse:
         """Run a chat session and execute tool calls until the model returns a normal response."""
-        response = self.ask(question)
+        response = self.csi.chat_stream(self.model, self.messages, tools=self.tools)
         while True:
             if (tool_call := response.tool_call()) is not None:
+                self.messages.append(tool_call._as_message())
                 tool_response = self.csi.invoke_tool(tool_call.name, **tool_call.parameters)
-                response = self.report_tool_result(tool_response)
+                response = self._report_tool_result(tool_response)
             else:
                 return response

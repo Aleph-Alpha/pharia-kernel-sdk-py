@@ -30,8 +30,10 @@ class MockCsi(StubCsi):
 def test_chat_session_extends_history():
     # Given a chat session with an initial message
     csi = MockCsi()
-    session = ChatSession(csi, "llama-3.1-8b-instruct")
-    response = session.ask("Hello, how are you?")
+    session = ChatSession(
+        csi, "llama-3.1-8b-instruct", [Message.user("Hello, how are you?")]
+    )
+    response = session.run()
 
     # When the response is consumed
     list(response.stream())
