@@ -1,6 +1,6 @@
 from pharia_skill.csi import Csi, Message
 from pharia_skill.csi.inference import ChatStreamResponse
-from pharia_skill.csi.inference.tool import ToolOutput
+from pharia_skill.csi.inference.tool import ToolCallRequest
 
 
 class ChatSession:
@@ -30,21 +30,28 @@ class ChatSession:
         self.messages = messages
         self.tools = tools
 
-    def _report_tool_result(self, tool_result: ToolOutput) -> ChatStreamResponse:
-        """Report the result of a tool call that was executed back to the model.
+    def _step(self) -> ChatStreamResponse:
+        """Take a step in the chat interaction.
 
-        Return either a streaming response or a tool call request.
+        Add a message to the conversation and trigger a new response from the model.
         """
-        self.messages.append(tool_result._as_message())
         return self.csi.chat_stream(self.model, self.messages, tools=self.tools)
+
+    def _handle_tool_call(self, tool_call: ToolCallRequest) -> None:
+        """Handle a tool call from the model.
+
+        The tool call is added to the conversation and the tool response is added to the conversation.
+        """
+        self.messages.append(tool_call._as_message())
+        tool_response = self.csi.invoke_tool(tool_call.name, **tool_call.parameters)
+        self.messages.append(tool_response._as_message())
 
     def run(self) -> ChatStreamResponse:
         """Run a chat session and execute tool calls until the model returns a normal response."""
-        response = self.csi.chat_stream(self.model, self.messages, tools=self.tools)
+        response = self._step()
         while True:
             if (tool_call := response.tool_call()) is not None:
-                self.messages.append(tool_call._as_message())
-                tool_response = self.csi.invoke_tool(tool_call.name, **tool_call.parameters)
-                response = self._report_tool_result(tool_response)
+                self._handle_tool_call(tool_call)
+                response = self._step()
             else:
                 return response
