@@ -278,8 +278,8 @@ class Csi(Protocol):
 
             params (ChatParams, optional, Default None): Parameters used for the chat.
 
-            tools (list[Tool], optional, Default None):
-                List of tools that are available to the model.
+            tools (list[str], optional, Default None):
+                List of tool names that are available to the model.
         """
         params = params or ChatParams()
 
