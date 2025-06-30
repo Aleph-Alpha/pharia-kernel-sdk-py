@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 
-from pharia_skill import ChatSession, Csi, MessageWriter, message_stream
+from pharia_skill import ChatSession, Csi, Message, MessageWriter, message_stream
 
 
 class Input(BaseModel):
-    question: str
+    messages: list[Message]
 
 
 SYSTEM = """You are a helpful research assistant.
@@ -21,6 +21,7 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
     """A Skill that can decide to search the web."""
 
     model = "llama-3.3-70b-instruct"
-    session = ChatSession(csi, model, SYSTEM, ["search", "fetch"])
-    response = session.run(input.question)
+    messages = [Message.system(SYSTEM), *input.messages]
+    session = ChatSession(csi, model, messages, tools=["search", "fetch"])
+    response = session.run()
     writer.forward_response(response)
