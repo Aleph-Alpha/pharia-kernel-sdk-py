@@ -28,7 +28,7 @@ from pharia_skill.studio import (
     StudioExporter,
     StudioSpan,
 )
-from pharia_skill.testing.dev import DevCsi
+from pharia_skill.testing.dev import DevCsi, MessageRecorder
 from pharia_skill.testing.dev.client import Client
 
 
@@ -152,6 +152,45 @@ def test_chat_stream_after_consumed(csi: Csi, model: str):
     with pytest.raises(RuntimeError) as excinfo:
         next(message.stream())
     assert "The stream has already been consumed" == str(excinfo.value)
+
+
+@pytest.mark.kernel
+def test_chat_stream_with_tool(csi_with_test_namespace: Csi):
+    model = "llama-3.3-70b-instruct"
+    system = Message.system(
+        'DO NOT use quotes (") for integer values when calling tools. i.e. `"parameters": {"a": 1}`'
+    )
+    user = Message.user("What is 1 + 2?")
+    messages = [system, user]
+
+    recorder = MessageRecorder[None]()
+    with csi_with_test_namespace.chat_stream(
+        model, messages, tools=["add"]
+    ) as response:
+        recorder.forward_response(response)
+
+    recorded_messages = recorder.messages()
+
+    assert len(recorded_messages) == 1
+    assert recorded_messages[0].role == "assistant"
+    assert recorded_messages[0].content == "The answer is 3."
+
+
+@pytest.mark.kernel
+def test_chat_stream_with_saboteur_tool(csi_with_test_namespace: Csi, model: str):
+    messages = [Message.user("Return response directly")]
+
+    recorder = MessageRecorder[None]()
+    with csi_with_test_namespace.chat_stream(
+        model, messages, tools=["saboteur"]
+    ) as response:
+        recorder.forward_response(response)
+
+    recorded_messages = recorder.messages()
+
+    assert len(recorded_messages) == 1
+    assert recorded_messages[0].role == "assistant"
+    assert "error" in recorded_messages[0].content
 
 
 @pytest.mark.kernel

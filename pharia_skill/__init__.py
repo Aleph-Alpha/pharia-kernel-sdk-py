@@ -1,4 +1,3 @@
-from .chat_session import ChatSession
 from .csi import (
     After,
     AtOrAfter,
@@ -77,7 +76,6 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
     "ChatStreamResponse",
-    "ChatSession",
     "Chunk",
     "ChunkParams",
     "ChunkRequest",
