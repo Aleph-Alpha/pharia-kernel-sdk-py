@@ -113,9 +113,9 @@ def skill(
         from opentelemetry import trace
 
         with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
-            span.set_attribute("input", json.dumps(input.model_dump()))
+            span.set_attribute("input", input.model_dump_json())
             result = func(csi, input)
-            span.set_attribute("output", json.dumps(result.model_dump()))
+            span.set_attribute("output", result.model_dump_json())
             return result
 
     func.__globals__["SkillHandler"] = SkillHandler
