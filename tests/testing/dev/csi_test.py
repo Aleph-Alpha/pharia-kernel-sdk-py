@@ -328,7 +328,7 @@ def test_stream_error_event_is_raised():
     # Then an error with a good error message is raised
     assert (
         str(e.value)
-        == 'HTTP request failed with status code 404. Body:\n{"error":"Model not found","code":"UNKNOWN_MODEL"}'
+        == "The Skill tried to access a model that was not found. Please check the provided model name. You can query the list of available models at the `models` endpoint of the inference API. If you believe the model should be available, contact the operator of your PhariaAI instance."
     )
 
 
