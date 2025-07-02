@@ -199,7 +199,7 @@ def test_message_stream_result_is_traced(stub_dev_csi: DevCsi):
     exporter = StudioExporter(client)
     stub_dev_csi.set_span_exporter(exporter)
 
-    # When running a message stream Skill
+    # When running a message stream Skilla
     haiku_stream(stub_dev_csi, MessageRecorder(), Input(topic="oat milk"))
 
     # Then we have the skill output on the outer most span
@@ -338,3 +338,121 @@ def test_inner_trace_is_matched_with_correct_parent(
     # Then only the outer span is submitted
     assert len(client.spans) == 1
     assert len(client.spans[0]) == 1
+
+
+def test_stream_creation_exception_is_traced(saboteur_dev_csi: DevCsi):
+    # Given a csi that raises an exception when a stream is created
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    saboteur_dev_csi.set_span_exporter(exporter)
+
+    # When running a stream request
+    with pytest.raises(RuntimeError, match="Out of cheese"):
+        saboteur_dev_csi.chat_stream(
+            "llama-3.1-8b-instruct", [Message.user("oat milk")], ChatParams()
+        )
+
+    # Then the spans are collected by the studio collector
+    assert len(client.spans) == 1
+    assert client.spans[0][0].status == SpanStatus.ERROR
+
+
+def test_exception_in_stream_item_is_traced():
+    # Given a csi that raises an exception on the first stream item
+    class SaboteurStreamClient(CsiClient):
+        """A client that returns a stream, but then raises an exception later."""
+
+        def run(self, function: str, data: Any) -> Any:
+            raise NotImplementedError
+
+        def stream(
+            self, function: str, data: dict[str, Any]
+        ) -> Generator[Event, None, None]:
+            yield Event(event="message_begin", data={"role": "assistant"})
+            raise RuntimeError("Out of cheese")
+
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    csi = DevCsi.__new__(DevCsi)
+    csi.client = SaboteurStreamClient()
+    csi.set_span_exporter(exporter)
+
+    # When running a chat stream request
+    with pytest.raises(RuntimeError, match="Out of cheese"):
+        with csi.chat_stream(
+            "llama-3.1-8b-instruct", [Message.user("oat milk")], ChatParams()
+        ) as response:
+            list(response.stream())
+
+    # Then the spans are collected by the studio collector
+    assert len(client.spans) == 1
+    assert client.spans[0][0].status == SpanStatus.ERROR
+
+
+def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
+    # Given a message stream skill that does a completion
+    events = [
+        Event(event="message_begin", data={"role": "assistant"}),
+        Event(event="message_append", data={"content": "Hello, ", "logprobs": []}),
+        Event(event="message_append", data={"content": "world!", "logprobs": []}),
+        Event(event="message_end", data={"finish_reason": "stop"}),
+        Event(event="usage", data={"usage": {"prompt": 1, "completion": 1}}),
+        Event(event="finish_reason", data={"finish_reason": "stop"}),
+    ]
+    stub_dev_csi.client.events = events  # type: ignore
+
+    # And given a spy client on the Studio exporter
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    stub_dev_csi.set_span_exporter(exporter)
+
+    # When doing a chat stream request
+    with stub_dev_csi.chat_stream(
+        "llama-3.1-8b-instruct", [Message.user("oat milk")], ChatParams()
+    ) as response:
+        list(response.stream())
+
+    # Then the chat completion output is recorded on the span
+    chat_span = client.spans[0][0]
+    assert chat_span.name == "chat_stream"
+    assert chat_span.status == SpanStatus.OK
+    assert chat_span.attributes.output == {
+        "message": {
+            "role": "assistant",
+            "content": "Hello, world!",
+        },
+        "finish_reason": "stop",
+        "usage": {"prompt": 1, "completion": 1},
+    }
+
+
+def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):
+    # Given a message stream skill that does a completion
+    events = [
+        Event(event="append", data={"text": "Hello, ", "logprobs": []}),
+        Event(event="append", data={"text": "world!", "logprobs": []}),
+        Event(event="end", data={"finish_reason": "stop"}),
+        Event(event="usage", data={"usage": {"prompt": 1, "completion": 1}}),
+    ]
+    stub_dev_csi.client.events = events  # type: ignore
+
+    # And given a spy client on the Studio exporter
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    stub_dev_csi.set_span_exporter(exporter)
+
+    # When doing a completion stream request
+    with stub_dev_csi.completion_stream(
+        "llama-3.1-8b-instruct", "How many fish in the sea?", CompletionParams()
+    ) as response:
+        list(response.stream())
+
+    # Then the completion output is recorded on the span
+    completion_span = client.spans[0][0]
+    assert completion_span.name == "completion_stream"
+    assert completion_span.status == SpanStatus.OK
+    assert completion_span.attributes.output == {
+        "text": "Hello, world!",
+        "finish_reason": "stop",
+        "usage": {"prompt": 1, "completion": 1},
+    }
