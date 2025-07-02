@@ -1,10 +1,58 @@
 import datetime as dt
-from typing import Any
+from typing import Any, Generator, Sequence
 
 import pytest
-from opentelemetry.sdk.trace import Event, ReadableSpan
+from opentelemetry.sdk.trace import Event as OtelEvent
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.trace.span import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
+
+from pharia_skill.studio import SpanClient, StudioSpan
+from pharia_skill.testing import DevCsi
+from pharia_skill.testing.dev.client import CsiClient, Event
+
+
+class SpyClient(SpanClient):
+    def __init__(self) -> None:
+        self.spans: list[Sequence[StudioSpan]] = []
+
+    def submit_spans(self, spans: Sequence[StudioSpan]):
+        self.spans.append(spans)
+
+
+class StubCsiClient(CsiClient):
+    """Use the `DevCsi` without doing any http calls to the Kernel."""
+
+    def __init__(self) -> None:
+        self.events: list[Event] = []
+
+    def run(self, function: str, data: Any) -> Any:
+        completion = {
+            "text": "Hello, world!",
+            "finish_reason": "stop",
+            "logprobs": [],
+            "usage": {"prompt": 1, "completion": 1},
+        }
+        match function:
+            case "complete":
+                return [completion]
+            case "search":
+                return [[]]
+            case _:
+                return {}
+
+    def stream(
+        self, function: str, data: dict[str, Any]
+    ) -> Generator[Event, None, None]:
+        yield from self.events
+
+
+@pytest.fixture
+def stub_dev_csi() -> DevCsi:
+    """Create a `DevCsi` without requiring any env variables or setting up a session."""
+    csi = DevCsi.__new__(DevCsi)
+    csi.client = StubCsiClient()
+    return csi
 
 
 @pytest.fixture
@@ -150,7 +198,7 @@ def span_from_json(inner_span: dict[str, Any]) -> ReadableSpan:
         description=inner_span["status"].get("description"),
     )
     events = [
-        Event(
+        OtelEvent(
             name=event["name"],
             timestamp=timestamp_from_iso(event["timestamp"]),
             attributes=event["attributes"],
