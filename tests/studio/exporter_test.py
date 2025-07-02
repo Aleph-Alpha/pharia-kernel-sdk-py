@@ -184,6 +184,33 @@ def test_message_stream_is_traced(stub_dev_csi: DevCsi):
     assert chat_span.parent_id == haiku_span.context.span_id
 
 
+def test_message_stream_result_is_traced(stub_dev_csi: DevCsi):
+    # Given a message stream skill that returns multiple chat events
+    events = [
+        Event(event="message_begin", data={"role": "assistant"}),
+        Event(event="message_append", data={"content": "Hello, ", "logprobs": []}),
+        Event(event="message_append", data={"content": "world!", "logprobs": []}),
+        Event(event="message_end", data={"finish_reason": "stop"}),
+    ]
+    stub_dev_csi.client.events = events  # type: ignore
+
+    # And given a spy client on the Studio exporter
+    client = SpyClient()
+    exporter = StudioExporter(client)
+    stub_dev_csi.set_span_exporter(exporter)
+
+    # When running a message stream Skill
+    haiku_stream(stub_dev_csi, MessageRecorder(), Input(topic="oat milk"))
+
+    # Then we have the skill output on the outer most span
+    skill_span = client.spans[0][1]
+    assert skill_span.name == "haiku_stream"
+    assert skill_span.attributes.output == {
+        "role": "assistant",
+        "content": "Hello, world!",
+    }
+
+
 def test_failing_csi_stream_usage_leads_to_error_span(saboteur_dev_csi: DevCsi):
     # Given a csi that raises an exception on every call
     client = SpyClient()

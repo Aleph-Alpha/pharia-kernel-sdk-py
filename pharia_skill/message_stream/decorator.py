@@ -1,5 +1,4 @@
 import inspect
-import json
 import traceback
 from typing import Callable, Type, TypeVar
 
@@ -108,11 +107,18 @@ def message_stream(
         """
         from opentelemetry import trace
 
+        from pharia_skill.testing.dev.streaming_output import MessageRecorder
+
         with trace.get_tracer(__name__).start_as_current_span(func.__name__) as span:
             writer.span = span  # type: ignore
 
-            span.set_attribute("input", json.dumps(input.model_dump()))
+            span.set_attribute("input", input.model_dump_json())
             func(csi, writer, input)
+
+            # We do rely on the user passing in a message recorder at test time if they
+            # want tracing to work.
+            if isinstance(writer, MessageRecorder):
+                span.set_attribute("output", writer.skill_output())
             return
 
     func.__globals__["MessageStream"] = MessageStream

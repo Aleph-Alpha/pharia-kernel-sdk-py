@@ -1,7 +1,8 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from typing import Generic
 
 from opentelemetry import trace
+from pydantic import BaseModel, TypeAdapter
 
 from pharia_skill.message_stream.writer import (
     MessageAppend,
@@ -13,8 +14,7 @@ from pharia_skill.message_stream.writer import (
 )
 
 
-@dataclass
-class RecordedMessage(Generic[Payload]):
+class RecordedMessage(BaseModel, Generic[Payload]):
     role: str | None
     content: str = ""
     payload: Payload | None = None
@@ -120,3 +120,25 @@ class MessageRecorder(MessageWriter[Payload]):
                 case MessageEnd(payload=payload):
                     messages[-1].payload = payload
         return messages
+
+    def skill_output(self) -> str:
+        """Serialized output of the skill.
+
+        In constrast to a `skill`, a `message_stream` does not define a concrete output
+        schema. It can yield different type of events, and their order is determined
+        at runtime. In some scenarios, e.g. when testing the skill, a user might be
+        interested in an aggregated view of these events. This is provided by the
+        `messages` method. Studio can also render skill output. This method converts
+        the recorded messages into a representation that can be rendered by Studio.
+        """
+        messages = self.messages()
+        if len(messages) == 1:
+            # Messages do have a custom payload attribute. A majority of skills choose
+            # not to set it. In this case, we do not include it in the json.
+            return messages[0].model_dump_json(exclude_none=True)
+
+        return (
+            TypeAdapter(list[RecordedMessage[Payload]])
+            .dump_json(messages, exclude_none=True)
+            .decode()
+        )
