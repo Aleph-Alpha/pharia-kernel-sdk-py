@@ -106,3 +106,55 @@ def test_consecutive_message_ends_are_invalid():
 
     with pytest.raises(ValueError):
         recorder.write(MessageEnd(payload=None))
+
+
+def test_message_recorder_json_output():
+    # Given a message recorder
+    recorder = MessageRecorder[None]()
+    recorder.write(MessageBegin(role="assistant"))
+    recorder.write(MessageAppend(text="The meaning of"))
+    recorder.write(MessageAppend(text=" life"))
+    recorder.write(MessageEnd(payload=None))
+
+    # When creating a json output from the recorder
+    output = recorder.skill_output()
+
+    # Then the output is a list of json strings
+    assert output == '{"role":"assistant","content":"The meaning of life"}'
+
+
+def test_message_recorder_with_custom_payload_is_included_in_json():
+    class MyPayload(BaseModel):
+        answer: int
+
+    recorder = MessageRecorder[MyPayload]()
+    recorder.write(MessageBegin(role="assistant"))
+    recorder.write(MessageAppend(text="The meaning of"))
+    recorder.write(MessageAppend(text=" life"))
+    recorder.write(MessageEnd(payload=MyPayload(answer=42)))
+
+    assert (
+        recorder.skill_output()
+        == '{"role":"assistant","content":"The meaning of life","payload":{"answer":42}}'
+    )
+
+
+def test_message_recorder_json_output_with_multiple_messages():
+    # Given a message recorder
+    recorder = MessageRecorder[None]()
+    recorder.write(MessageBegin(role="assistant"))
+    recorder.write(MessageAppend(text="Hello!"))
+    recorder.write(MessageEnd(payload=None))
+
+    recorder.write(MessageBegin(role="assistant"))
+    recorder.write(MessageAppend(text="Hi!"))
+    recorder.write(MessageEnd(payload=None))
+
+    # When creating a json output from the recorder
+    output = recorder.skill_output()
+
+    # Then the output is a list of json strings
+    assert (
+        output
+        == '[{"role":"assistant","content":"Hello!"},{"role":"assistant","content":"Hi!"}]'
+    )
