@@ -181,8 +181,11 @@ class DevCsi(Csi):
         body = CompletionRequestSerializer(
             model=model, prompt=prompt, params=params
         ).model_dump()
-        events = self.stream("completion_stream", body)
-        return DevCompletionStreamResponse(events)
+        function = "completion_stream"
+        span = trace.get_tracer(__name__).start_span(function)
+        span.set_attribute("input", json.dumps(body))
+        events = self.stream(function, body, span)
+        return DevCompletionStreamResponse(events, span)
 
     def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
@@ -190,8 +193,11 @@ class DevCsi(Csi):
         body = ChatRequestSerializer(
             model=model, messages=messages, params=params
         ).model_dump()
-        events = self.stream("chat_stream", body)
-        return DevChatStreamResponse(events)
+        function = "chat_stream"
+        span = trace.get_tracer(__name__).start_span(function)
+        span.set_attribute("input", json.dumps(body))
+        events = self.stream(function, body, span)
+        return DevChatStreamResponse(events, span)
 
     def complete_concurrent(
         self, requests: Sequence[CompletionRequest]
@@ -294,28 +300,26 @@ class DevCsi(Csi):
         return output
 
     def stream(
-        self, function: str, data: dict[str, Any]
+        self, function: str, data: dict[str, Any], span: trace.Span
     ) -> Generator[Event, None, None]:
-        with trace.get_tracer(__name__).start_as_current_span(function) as span:
-            span.set_attribute("input", json.dumps(data))
-            # We don't know if the entire stream will be consumed, so set status to OK here
-            try:
-                events = self.client.stream(function, data)
-                for event in events:
-                    # OpenTelemetry only allows for one level of nesting in attributes, hence we flatten
-                    # nested dicts to json strings.
-                    # Studio itself would support arbitray nesting (see `StudioSpan.events`), but as we use
-                    # OpenTelemetry for tracing and only convert to Studio spans when exporting, we need to
-                    # respeect that limitation here.
-                    # Another option would be to load these json strings into Python dicts in `StudioSpan.from_otel`.
-                    attributes = {
-                        k: json.dumps(v) if isinstance(v, dict) else v
-                        for k, v in event.data.items()
-                    }
-                    span.add_event(event.event, attributes=attributes)
-                    if event.event == "error":
-                        raise ValueError(event.data["message"])
-                    yield event
-            except Exception as e:
-                span.set_status(StatusCode.ERROR, str(e))
-                raise e
+        """Stream events from the client.
+
+        While the `DevCsi` is responsible for tracing, streaming requires a different
+        approach, because the `DevCsi` may already go out of scope, even if the
+        completion has not been fully streamed. Therefore, the responsibility moves to
+        the `DevChatStreamResponse` and `DevCompletionStreamResponse` classes.
+
+        However, if an error occurs while constructing each one of these classes, we
+        need to notify the span about the error in here.
+        """
+        try:
+            events = self.client.stream(function, data)
+        except Exception as e:
+            span.set_status(StatusCode.ERROR, str(e))
+            span.end()
+            raise e
+
+        for event in events:
+            if event.event == "error":
+                raise ValueError(event.data["message"])
+            yield event
