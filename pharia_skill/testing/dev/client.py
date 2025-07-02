@@ -38,9 +38,8 @@ class Client(CsiClient):
         The session is stored to allow for re-use of the same connection between tests.
         """
         load_dotenv()
-        self.url = (
-            f"""{os.environ["PHARIA_KERNEL_ADDRESS"]}/csi/{self.HTTP_CSI_VERSION}"""
-        )
+        self.kernel_address = os.environ["PHARIA_KERNEL_ADDRESS"]
+        self.url = f"{self.kernel_address}/csi/{self.HTTP_CSI_VERSION}"
         token = os.environ["PHARIA_AI_TOKEN"]
         self.session = requests.Session()
         self.session.headers = {
@@ -63,9 +62,7 @@ class Client(CsiClient):
                 error = response.json()
             except requests.JSONDecodeError:
                 error = response.text
-            raise Exception(
-                f"{response.status_code} {HTTPStatus(response.status_code).phrase}: {error}"
-            )
+            raise Exception(self.format_error(response.status_code, error))
 
         return response.json()
 
@@ -81,11 +78,19 @@ class Client(CsiClient):
                 error = response.json()
             except requests.JSONDecodeError:
                 error = response.text
-            raise Exception(
-                f"{response.status_code} {HTTPStatus(response.status_code).phrase}: {error}"
-            )
+            raise Exception(self.format_error(response.status_code, error))
 
         return KernelStreamDeserializer(response).events()
+
+    def format_error(self, status_code: int, error: Any) -> str:
+        return (
+            "Error resolving the Csi request against the Kernel.\n"
+            "This could mean that some environment variables are not set correctly.\n"
+            "Please check the values set for `PHARIA_KERNEL_ADDRESS` and `PHARIA_AI_TOKEN`.\n"
+            f"PHARIA_KERNEL_ADDRESS: {self.kernel_address}\n"
+            f"Status Code: {status_code} {HTTPStatus(status_code).phrase}\n"
+            f"Original Error: {error}"
+        )
 
 
 class KernelStreamDeserializer:
