@@ -283,11 +283,12 @@ class Csi(Protocol):
 
             params (ChatParams, optional, Default None): Parameters used for the chat.
         """
-        response = self.chat_stream(model, messages, params, tools)
+        tool_schema = self._list_tool_schemas(tools)
+        response = self.chat_stream(model, messages, params, tool_schema)
 
         while (tool_call := response.tool_call()) is not None:
             self._handle_tool_call(tool_call, messages)
-            response = self.chat_stream(model, messages, params, tools)
+            response = self.chat_stream(model, messages, params, tool_schema)
 
         return response
 
@@ -296,7 +297,7 @@ class Csi(Protocol):
         model: str,
         messages: list[Message],
         params: ChatParams | None = None,
-        tools: list[str] | None = None,
+        tools: list[Tool] | None = None,
     ) -> ChatStreamResponse:
         """Generate a model response from a list of messages comprising a conversation.
 
@@ -313,17 +314,15 @@ class Csi(Protocol):
 
             params (ChatParams, optional, Default None): Parameters used for the chat.
 
-            tools (list[str], optional, Default None):
+            tools (list[Tool], optional, Default None):
                 List of tool names that are available to the model. These tools are
                 added to the system prompt and the responsibility for invoking the
                 tool is left to the caller. If the response is a tool call, it can be
                 checked via :meth:`~pharia_skill.ChatStreamResponse.tool_call`.
         """
         params = params or ChatParams()
-
         if tools:
-            schemas = self._list_tool_schemas(tools)
-            messages = add_tools_to_system_prompt(messages, schemas)
+            messages = add_tools_to_system_prompt(messages, tools)
 
         return self._chat_stream(model, messages, params)
 
