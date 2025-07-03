@@ -1,12 +1,6 @@
 from pydantic import BaseModel
 
-from pharia_skill import (
-    ChatParams,
-    Csi,
-    Message,
-    MessageWriter,
-    message_stream,
-)
+from pharia_skill import Csi, Message, MessageWriter, message_stream
 
 
 class Input(BaseModel):
@@ -25,9 +19,8 @@ def haiku_stream(csi: Csi, writer: MessageWriter[SkillOutput], input: Input) -> 
         Message.system("You are a poet who strictly speaks in haikus."),
         Message.user(input.topic),
     ]
-    params = ChatParams()
     content = ""
-    with csi.chat_stream_step(model, messages, params) as response:
+    with csi.chat_stream(model, messages) as response:
         writer.begin_message(response.role)
         for event in response.stream():
             content += event.content

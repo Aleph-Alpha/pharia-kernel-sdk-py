@@ -260,8 +260,8 @@ class Csi(Protocol):
         self,
         model: str,
         messages: list[Message],
-        tools: list[str],
         params: ChatParams | None = None,
+        tools: list[str] | None = None,
     ) -> ChatStreamResponse:
         """Chat with a model with automatic tool invocation.
 
@@ -283,12 +283,13 @@ class Csi(Protocol):
 
             params (ChatParams, optional, Default None): Parameters used for the chat.
         """
-        tool_schema = self._list_tool_schemas(tools)
-        response = self.chat_stream_step(model, messages, params, tool_schema)
+        tool_schemas = self._list_tool_schemas(tools) if tools else None
+        response = self.chat_stream_step(model, messages, params, tool_schemas)
 
-        while (tool_call := response.tool_call()) is not None:
-            self._handle_tool_call(tool_call, messages)
-            response = self.chat_stream_step(model, messages, params, tool_schema)
+        if tools:
+            while (tool_call := response.tool_call()) is not None:
+                self._handle_tool_call(tool_call, messages)
+                response = self.chat_stream_step(model, messages, params, tool_schemas)
 
         return response
 
@@ -315,7 +316,7 @@ class Csi(Protocol):
             params (ChatParams, optional, Default None): Parameters used for the chat.
 
             tools (list[Tool], optional, Default None):
-                List of tool names that are available to the model. These tools are
+                List of tool schemas that are available to the model. These tools are
                 added to the system prompt and the responsibility for invoking the
                 tool is left to the caller. If the response is a tool call, it can be
                 checked via :meth:`~pharia_skill.ChatStreamResponse.tool_call`.
