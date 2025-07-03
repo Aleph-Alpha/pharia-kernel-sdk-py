@@ -50,6 +50,7 @@ from .inference import (
     ExplanationRequest,
     FinishReason,
     Granularity,
+    InvokeRequest,
     Logprob,
     Logprobs,
     Message,
@@ -58,9 +59,12 @@ from .inference import (
     SampledLogprobs,
     TextScore,
     TokenUsage,
+    Tool,
+    ToolError,
+    ToolOutput,
+    ToolResult,
     TopLogprobs,
 )
-from .inference.tool import InvokeRequest, ToolError, ToolOutput, ToolResult
 from .language import Language, SelectLanguageRequest
 
 __all__ = [
@@ -114,6 +118,7 @@ __all__ = [
     "Text",
     "TextScore",
     "TokenUsage",
+    "Tool",
     "ToolError",
     "ToolOutput",
     "ToolResult",
