@@ -22,7 +22,5 @@ def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
 
     model = "llama-3.3-70b-instruct"
     messages = [Message.system(SYSTEM), *input.messages]
-    with csi.chat_stream_with_tools(
-        model, messages, tools=["search", "fetch"]
-    ) as response:
+    with csi.chat_stream(model, messages, tools=["search", "fetch"]) as response:
         writer.forward_response(response)
