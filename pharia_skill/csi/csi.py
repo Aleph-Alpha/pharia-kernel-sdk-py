@@ -19,6 +19,7 @@ the Python interpreter makes sure the caller gets a good error message if they p
 `None` and we access the `name` attribute in our SDK.
 """
 
+from collections.abc import Callable
 from typing import Protocol, Sequence
 
 from pydantic.types import JsonValue
@@ -262,6 +263,7 @@ class Csi(Protocol):
         messages: list[Message],
         params: ChatParams | None = None,
         tools: list[str] | None = None,
+        handle_tool_call: Callable[[ToolCallRequest], Message | None] | None = None,
     ) -> ChatStreamResponse:
         """Generate a model response from a list of messages comprising a conversation.
 
@@ -280,6 +282,11 @@ class Csi(Protocol):
 
             tools (list[str], optional, Default None):
                 List of tool names that are available to the model.
+
+            handle_tool_call (Callable[[ToolCallRequest], Message | None], optional, Default None):
+                Function to handle tool calls. If provided, the function is called instead
+                of the built-in tool call handling.
+                If the function returns a message, it is added to the conversation.
         """
         params = params or ChatParams()
 
@@ -291,26 +298,34 @@ class Csi(Protocol):
 
         if tools:
             while (tool_call := response.tool_call()) is not None:
-                self._handle_tool_call(tool_call, messages)
+                self._handle_tool_call(tool_call, messages, handle_tool_call)
                 response = self._chat_stream(model, messages, params)
 
         return response
 
     def _handle_tool_call(
-        self, tool_call: ToolCallRequest, messages: list[Message]
+        self,
+        tool_call: ToolCallRequest,
+        messages: list[Message],
+        handle_tool_call: Callable[[ToolCallRequest], Message | None] | None,
     ) -> None:
         """Handle a tool call from the model.
 
         The tool call is added to the conversation and the tool response is added to the conversation.
         """
         messages.append(tool_call._as_message())
-        try:
-            tool_response = self.invoke_tool(tool_call.name, **tool_call.parameters)
-            messages.append(tool_response._as_message())
-        except ToolError as e:
-            messages.append(
-                Message.tool(f'failed[stderr]:{{"error": {e.message}}}[/stderr]')
-            )
+        if handle_tool_call:
+            tool_call_response = handle_tool_call(tool_call)
+            if tool_call_response:
+                messages.append(tool_call_response)
+        else:
+            try:
+                tool_response = self.invoke_tool(tool_call.name, **tool_call.parameters)
+                messages.append(tool_response._as_message())
+            except ToolError as e:
+                messages.append(
+                    Message.tool(f'failed[stderr]:{{"error": {e.message}}}[/stderr]')
+                )
 
     def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
