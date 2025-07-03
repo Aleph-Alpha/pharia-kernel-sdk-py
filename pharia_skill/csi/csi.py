@@ -314,7 +314,10 @@ class Csi(Protocol):
             params (ChatParams, optional, Default None): Parameters used for the chat.
 
             tools (list[str], optional, Default None):
-                List of tool names that are available to the model.
+                List of tool names that are available to the model. These tools are
+                added to the system prompt and the responsibility for invoking the
+                tool is left to the caller. If the response is a tool call, it can be
+                checked via :meth:`~pharia_skill.ChatStreamResponse.tool_call`.
         """
         params = params or ChatParams()
 
