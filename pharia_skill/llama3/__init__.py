@@ -1,3 +1,5 @@
+import warnings
+
 from .message import AssistantMessage, Role, ToolMessage, UserMessage
 from .request import ChatRequest, ChatResponse
 from .response import SpecialTokens
@@ -27,3 +29,11 @@ __all__ = [
     "WolframAlpha",
     "Tool",
 ]
+
+warnings.warn(
+    "The `llama3` module is deprecated and will be removed in the future. "
+    "Use the tool calling functionality offered by the chat methods on the `Csi` "
+    "interface instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
