@@ -1,3 +1,11 @@
+"""Tool calling functionality for the llama3 models.
+
+.. warning::
+   **Deprecated:** This module is deprecated and will be removed in the future.
+   Use the tool calling functionality offered by the chat methods on the `Csi`
+   interface instead.
+"""
+
 import warnings
 
 from .message import AssistantMessage, Role, ToolMessage, UserMessage
