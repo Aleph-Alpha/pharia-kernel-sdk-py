@@ -256,6 +256,41 @@ class Csi(Protocol):
         """
         ...
 
+    def chat_stream_with_tools(
+        self,
+        model: str,
+        messages: list[Message],
+        tools: list[str],
+        params: ChatParams | None = None,
+    ) -> ChatStreamResponse:
+        """Chat with a model with automatic tool invocation.
+
+        While `chat_stream` allows to pass in tools that are then available to the
+        model, it leaves the responsibility of executing the tool call to the caller.
+        This method goes one step further and automatically executes the tool call.
+        If the tool call fails, the model is informed about the failure and can try
+        to recover with a different approach. Once the model returns a non-tool message,
+        it is returned to the caller.
+
+        Parameters:
+            model (str, required): Name of model to use.
+
+            messages (list[Message], required):
+                List of messages, alternating between messages from user and assistant.
+
+            tools (list[str], required):
+                List of tool names that are available to the model.
+
+            params (ChatParams, optional, Default None): Parameters used for the chat.
+        """
+        response = self.chat_stream(model, messages, params, tools)
+
+        while (tool_call := response.tool_call()) is not None:
+            self._handle_tool_call(tool_call, messages)
+            response = self.chat_stream(model, messages, params, tools)
+
+        return response
+
     def chat_stream(
         self,
         model: str,
@@ -287,14 +322,7 @@ class Csi(Protocol):
             schemas = self._list_tool_schemas(tools)
             messages = add_tools_to_system_prompt(messages, schemas)
 
-        response = self._chat_stream(model, messages, params)
-
-        if tools:
-            while (tool_call := response.tool_call()) is not None:
-                self._handle_tool_call(tool_call, messages)
-                response = self._chat_stream(model, messages, params)
-
-        return response
+        return self._chat_stream(model, messages, params)
 
     def _handle_tool_call(
         self, tool_call: ToolCallRequest, messages: list[Message]

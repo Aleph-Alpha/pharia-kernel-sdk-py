@@ -166,7 +166,7 @@ def test_chat_stream_with_tool(csi_with_test_namespace: Csi):
     messages = [system, user]
 
     recorder = MessageRecorder[None]()
-    with csi_with_test_namespace.chat_stream(
+    with csi_with_test_namespace.chat_stream_with_tools(
         model, messages, tools=["add"]
     ) as response:
         recorder.forward_response(response)
@@ -183,7 +183,7 @@ def test_chat_stream_with_saboteur_tool(csi_with_test_namespace: Csi, model: str
     messages = [Message.user("Return response directly")]
 
     recorder = MessageRecorder[None]()
-    with csi_with_test_namespace.chat_stream(
+    with csi_with_test_namespace.chat_stream_with_tools(
         model, messages, tools=["saboteur"]
     ) as response:
         recorder.forward_response(response)
