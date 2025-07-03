@@ -115,7 +115,7 @@ def test_completion_stream(csi: Csi, model: str):
 def test_chat_stream(csi: Csi, model: str):
     params = ChatParams(max_tokens=64, logprobs="sampled")
     messages = [Message.user("Say hello to Bob")]
-    message = csi.chat_stream(model, messages, params)
+    message = csi.chat_stream_step(model, messages, params=params)
 
     assert message.role == "assistant"
 
@@ -136,7 +136,7 @@ def test_chat_stream(csi: Csi, model: str):
 def test_chat_stream_skip_streaming_message(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
-    message = csi.chat_stream(model, messages, params)
+    message = csi.chat_stream_step(model, messages, params=params)
 
     assert message.finish_reason() == FinishReason.STOP
     usage = message.usage()
@@ -148,7 +148,7 @@ def test_chat_stream_skip_streaming_message(csi: Csi, model: str):
 def test_chat_stream_after_consumed(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
-    message = csi.chat_stream(model, messages, params)
+    message = csi.chat_stream_step(model, messages, params=params)
 
     assert message.finish_reason() == FinishReason.STOP
     with pytest.raises(RuntimeError) as excinfo:
@@ -166,7 +166,7 @@ def test_chat_stream_with_tool(csi_with_test_namespace: Csi):
     messages = [system, user]
 
     recorder = MessageRecorder[None]()
-    with csi_with_test_namespace.chat_stream_with_tools(
+    with csi_with_test_namespace.chat_stream(
         model, messages, tools=["add"]
     ) as response:
         recorder.forward_response(response)
@@ -183,7 +183,7 @@ def test_chat_stream_with_saboteur_tool(csi_with_test_namespace: Csi, model: str
     messages = [Message.user("Return response directly")]
 
     recorder = MessageRecorder[None]()
-    with csi_with_test_namespace.chat_stream_with_tools(
+    with csi_with_test_namespace.chat_stream(
         model, messages, tools=["saboteur"]
     ) as response:
         recorder.forward_response(response)
@@ -414,18 +414,10 @@ def test_json_error_response_is_used(mock_post):
 
 
 def test_tools_are_added_to_system_prompt():
-    fish_counter = Tool(
-        name="fish-count",
-        description="Count the number of fish in the sea",
-        input_schema={"fish-type": {"type": "string"}},
-    )
-
+    # Given a spy csi that stores the messages
     class SpyCsi(StubCsi):
         def __init__(self) -> None:
             self.messages: list[Message] = []
-
-        def list_tools(self) -> list[Tool]:
-            return [fish_counter]
 
         def _chat_stream(
             self,
@@ -436,13 +428,16 @@ def test_tools_are_added_to_system_prompt():
             self.messages = messages
             return super()._chat_stream(model, messages, params)
 
-    # Given a chat request with tools
-    messages = [Message.user("How many fish left in the sea?")]
-    tools = ["fish-count"]
+    csi = SpyCsi()
 
     # When calling chat with tools
-    csi = SpyCsi()
-    csi.chat_stream("gpt-nautilus", messages, tools=tools)
+    fish_counter = Tool(
+        name="fish-count",
+        description="Count the number of fish in the sea",
+        input_schema={"fish-type": {"type": "string"}},
+    )
+    messages = [Message.user("How many fish left in the sea?")]
+    csi.chat_stream_step("gpt-nautilus", messages, tools=[fish_counter])
 
     # Then the tools are added to the system prompt
     system = csi.messages[0]

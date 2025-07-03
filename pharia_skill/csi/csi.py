@@ -256,7 +256,7 @@ class Csi(Protocol):
         """
         ...
 
-    def chat_stream_with_tools(
+    def chat_stream(
         self,
         model: str,
         messages: list[Message],
@@ -265,7 +265,7 @@ class Csi(Protocol):
     ) -> ChatStreamResponse:
         """Chat with a model with automatic tool invocation.
 
-        While `chat_stream` allows to pass in tools that are then available to the
+        While `chat_stream_step` allows to pass in tools that are then available to the
         model, it leaves the responsibility of executing the tool call to the caller.
         This method goes one step further and automatically executes the tool call.
         If the tool call fails, the model is informed about the failure and can try
@@ -284,15 +284,15 @@ class Csi(Protocol):
             params (ChatParams, optional, Default None): Parameters used for the chat.
         """
         tool_schema = self._list_tool_schemas(tools)
-        response = self.chat_stream(model, messages, params, tool_schema)
+        response = self.chat_stream_step(model, messages, params, tool_schema)
 
         while (tool_call := response.tool_call()) is not None:
             self._handle_tool_call(tool_call, messages)
-            response = self.chat_stream(model, messages, params, tool_schema)
+            response = self.chat_stream_step(model, messages, params, tool_schema)
 
         return response
 
-    def chat_stream(
+    def chat_stream_step(
         self,
         model: str,
         messages: list[Message],

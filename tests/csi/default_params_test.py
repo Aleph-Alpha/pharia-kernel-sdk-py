@@ -35,6 +35,6 @@ def test_chat_concurrent_default_params():
 
 def test_chat_stream_default_params():
     csi = SpyCsi()
-    csi.chat_stream("llama-3.1-8b-instruct", [Message.user("Hello, world!")])
+    csi.chat_stream_step("llama-3.1-8b-instruct", [Message.user("Hello, world!")])
     assert len(csi.chat_stream_params) == 1
     assert csi.chat_stream_params[0] == ChatParams()

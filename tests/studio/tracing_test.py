@@ -49,8 +49,8 @@ def haiku(csi: Csi, input: Input) -> Output:
 @message_stream
 def haiku_stream(csi: Csi, writer: MessageWriter[Output], input: Input) -> None:
     """Do a chat stream and forward the response."""
-    with csi.chat_stream(
-        "llama-3.1-8b-instruct", [Message.user(input.topic)], ChatParams()
+    with csi.chat_stream_step(
+        "llama-3.1-8b-instruct", [Message.user(input.topic)], params=ChatParams()
     ) as response:
         writer.forward_response(response)
 
@@ -282,7 +282,7 @@ def test_stream_creation_exception_is_traced(saboteur_dev_csi: DevCsi):
 
     # When running a stream request
     with pytest.raises(RuntimeError, match="Out of cheese"):
-        saboteur_dev_csi.chat_stream(
+        saboteur_dev_csi.chat_stream_step(
             "llama-3.1-8b-instruct", [Message.user("oat milk")], ChatParams()
         )
 
@@ -313,7 +313,7 @@ def test_exception_in_stream_item_is_traced():
 
     # When running a chat stream request
     with pytest.raises(RuntimeError, match="Out of cheese"):
-        with csi.chat_stream(
+        with csi.chat_stream_step(
             "llama-3.1-8b-instruct", [Message.user("oat milk")], ChatParams()
         ) as response:
             list(response.stream())
@@ -341,7 +341,7 @@ def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
     stub_dev_csi.set_span_exporter(exporter)
 
     # When doing a chat stream request
-    with stub_dev_csi.chat_stream(
+    with stub_dev_csi.chat_stream_step(
         "llama-3.1-8b-instruct", [Message.user("oat milk")], ChatParams()
     ) as response:
         list(response.stream())
