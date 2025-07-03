@@ -7,6 +7,7 @@ import requests
 
 from pharia_skill import (
     ChatParams,
+    ChatStreamResponse,
     ChunkParams,
     CompletionParams,
     Csi,
@@ -20,6 +21,7 @@ from pharia_skill import (
     Message,
     Role,
     Text,
+    Tool,
     ToolError,
     ToolOutput,
 )
@@ -28,7 +30,7 @@ from pharia_skill.studio import (
     StudioExporter,
     StudioSpan,
 )
-from pharia_skill.testing.dev import DevCsi, MessageRecorder
+from pharia_skill.testing import DevCsi, MessageRecorder, StubCsi
 from pharia_skill.testing.dev.client import Client
 
 
@@ -409,3 +411,40 @@ def test_json_error_response_is_used(mock_post):
 
     # Then the JSON is decoded in the error message
     assert "Original Error: {'error': 'csi-version'}" in str(e.value)
+
+
+def test_tools_are_added_to_system_prompt():
+    fish_counter = Tool(
+        name="fish-count",
+        description="Count the number of fish in the sea",
+        input_schema={"fish-type": {"type": "string"}},
+    )
+
+    class SpyCsi(StubCsi):
+        def __init__(self) -> None:
+            self.messages: list[Message] = []
+
+        def list_tools(self) -> list[Tool]:
+            return [fish_counter]
+
+        def _chat_stream(
+            self,
+            model: str,
+            messages: list[Message],
+            params: ChatParams,
+        ) -> ChatStreamResponse:
+            self.messages = messages
+            return super()._chat_stream(model, messages, params)
+
+    # Given a chat request with tools
+    messages = [Message.user("How many fish left in the sea?")]
+    tools = ["fish-count"]
+
+    # When calling chat with tools
+    csi = SpyCsi()
+    csi.chat_stream("gpt-nautilus", messages, tools=tools)
+
+    # Then the tools are added to the system prompt
+    system = csi.messages[0]
+    assert system.role == Role.System
+    assert "fish-count" in system.content
