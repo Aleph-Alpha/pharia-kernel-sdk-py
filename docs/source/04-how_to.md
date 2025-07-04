@@ -1,7 +1,7 @@
 # How-To
 
 The Kernel SDK provides all the building blocks needed to create sophisticated AI applications.
-If you want to include any dependencies in your Skill, have a look [here](03-core_concepts.md#wasm-component)
+If you want to include any dependencies in your Skill, have a look [here](https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#wasm-component)
 
 ## Completion
 
@@ -146,146 +146,87 @@ def conversational_search(csi: Csi, input: ChatInterface) -> ChatInterface:
 
 You only need to define the `do_search_lookup` function and augment the incoming messages with some context.
 
-## Function Calling
+## Tools
 
-The [llama3 module](https://pharia-skill.readthedocs.io/en/latest/references.html#module-pharia_skill.llama3), provides support for function calling. It supports both user defined and built-in tools.
+The Kernel and SDK offer support for function calling and tool invocations.
+Details on how tools can be made available via MCP can be found in the [Tool Calling](https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#tool-calling) section of the core concepts.
 
-### Tool Definition
+### Automatic Tool Calling
 
-You can define a tool by inheriting from the [Tool](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.Tool) class, which is a wrapper around a Pydantic base model.
-
-For example, suppose we want to give our model the ability to get the readme of a github repository. We can define a tool like this:
-
-```python
-from pharia_skill.llama3 import Tool
-
-
-class GetGithubReadme(Tool):
-    """Get the readme of a github repository."""
-
-    repository: str
-```
-
-You can provide default values for the arguments and even add a description for each field by using Pydantic's `Field` class:
+The [csi.chat_stream](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.Csi.chat_stream) supports automatic tool calling.
+Tools are made available to the model by specifying their name as part of the request.
+They are automatically added to the system prompt. In case the a custom system prompt is provided, these are merged by the SDK.
 
 ```python
-from pharia_skill.llama3 import Tool
-from pydantic import Field
-
-class GetGithubReadme(Tool):
-    """Get the readme of a github repository."""
-
-    repository: str = Field(
-        description="The github repository to get the readme of.",
-        default="https://github.com/aleph-alpha/pharia-kernel",
-    )
+with csi.chat_stream(model, messages, tools=["search", "fetch"]) as response:
+    ...
 ```
-
-The name of the tools is the `snake_case` version of the class name and the doc string is passed to the LLM to describe the tool.
-
-### Tool Usage
-
-You can pass all available tools to the LLM by using the `tools` argument of the [ChatRequest](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.ChatRequest) class.
-
-```python
-from pharia_skill.llama3 import ChatRequest, UserMessage
-
-message = UserMessage(content="How do I install the kernel?")
-request = ChatRequest(
-    model="llama-3.1-8b-instruct",
-    messages=[message],
-    tools=[GetGithubReadme],
-)
-```
-
-If the model decides to use a tool, it will reply with an [AssistantMessage](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.AssistantMessage) containing the tool call.
-A [ToolCall](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.ToolCall) consists of the name of the tool and the parameters to pass to it. If you have provided the tool definition
-as a Pydantic model, then the parameters field will be an instance of the model. In this way, you get a type-safe way to pass parameters to your tools.
-
-Now, it is upon you to execute the tool call.
-Once you have executed the tool, you can pass the result to the LLM by extending the [ChatRequest](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.ChatRequest.extend) with a [ToolMessage](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.ToolMessage).
-
-You can then trigger another round of chat with the LLM to get the final result:
-
-```python
-from pharia_skill import Csi, skill
-from pharia_skill.llama3 import ChatRequest, UserMessage, ToolMessage
-
-@skill
-def github_skill(csi: Csi, input: Input) -> Output:
-    # The input has a question field, which we pass to the LLM
-    message = UserMessage(content=input.question)
-    request = ChatRequest(
-        model="llama-3.3-70b-instruct",
-        messages=[message],
-        tools=[GetGithubReadme],
-    )
-    response = request.chat(csi)
-    if not response.message.tool_calls:
-        return Output(answer=str(response.message.content))
-
-    tool_call = response.message.tool_calls[0].parameters
-    assert isinstance(tool_call, GetGithubReadme)
-
-    # execute the tool call
-    readme = get_github_readme(tool_call.repository)
-
-    # pass the result to the LLM
-    request.extend(ToolMessage(readme))
-
-    # chat again, and return the output
-    response = request.chat(csi)
-    return Output(answer=str(response.message.content))
-```
-
-Note that outbound http requests are currently not supported in the Kernel. This means tools that need to make http requests can only
-be executed in a local environment with the [DevCsi](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) class and not be deployed to the Kernel.
-
-## Code Interpreter
-
-The [CodeInterpreter](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.llama3.CodeInterpreter) tool is a built-in tool that allows the LLM to execute python code.
-This tool is available in the [llama3 module](https://pharia-skill.readthedocs.io/en/latest/references.html#module-pharia_skill.llama3). Here is an example of how to use it:
+The tool names are resolved to the correct schema by the SDK, as long as they are available ot the namespace.
+In case the model requests a tool call, it is executed, and the response is fed back to the model.
+This loop continues until the model returns a non-tool call response.
+A typical usage pattern would be:
 
 ```python
 from pydantic import BaseModel
-from pharia_skill import Csi, skill
-from pharia_skill.llama3 import CodeInterpreter, ChatRequest, UserMessage, ToolMessage
+from pharia_skill import Csi, Message, MessageWriter, message_stream
 
 
 class Input(BaseModel):
-    question: str
+    messages: list[Message]
 
 
-class Output(BaseModel):
-    answer: str | None
-    executed_code: str | None = None
-    code_result: Any | None = None
-
-
-@skill
-def code(csi: Csi, input: Input) -> Output:
-    """A skill that optionally executes python code to answer a question"""
-    message = UserMessage(content=input.question)
-    request = ChatRequest(
-        model="llama-3.3-70b-instruct", messages=[message], tools=[CodeInterpreter]
-    )
-    response = request.chat(csi)
-    if not response.message.tool_calls:
-        return Output(answer=response.message.content)
-
-    # we know that it will be code interpreter
-    tool_call = response.message.tool_calls[0].parameters
-    assert isinstance(tool_call, CodeInterpreter)
-
-    output = tool_call.run()
-    request.extend(ToolMessage(output))
-
-    # chat again, and return the output
-    response = request.chat(csi)
-    return Output(
-        answer=response.message.content,
-        executed_code=tool_call.src,
-        code_result=output,
-    )
-
+@message_stream
+def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
+    model = "llama-3.3-70b-instruct"
+    with csi.chat_stream(model, input.messages, tools=["search", "fetch"]) as response:
+        writer.forward_response(response)
 ```
+
+
+### Manual Tool Calling
+
+The [csi.chat_stream_step](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.Csi.chat_stream_step) functions offers more granular control over the execution loop.
+It allows specifying available tool schemas, but leaves the execution of the tool to the user.
+A typical usage pattern might look like:
+
+```python
+from pydantic import BaseModel
+from pharia_skill import Csi, Message, MessageWriter, message_stream
+
+
+class Input(BaseModel):
+    messages: list[Message]
+
+
+@message_stream
+def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
+    messages = input.messages
+    model = "llama-3.3-70b-instruct"
+
+    # Retrieve the tool schemas from the csi
+    tools = [t for t in csi.list_tools() if t.name in ("search", "fetch")]
+
+    response = csi.chat_stream_step(model, messages, params, tools)
+    while (tool_call := response.tool_call()) is not None:
+        # add the tool call request to the conversation
+        messages.append(tool_call.as_message())
+        try:
+            tool_response = self.invoke_tool(tool_call.name, **tool_call.parameters)
+            # add the tool response to the conversation
+            messages.append(tool_response.as_message())
+        except ToolError as e:
+            messages.append(
+                Message.tool(f'failed[stderr]:{{"error": {e.message}}}[/stderr]')
+            )
+        response = self.chat_stream_step(model, messages, params, tool_schemas)
+
+    writer.forward_response(response)
+```
+
+The [tool_call](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.ChatStreamResponse.tool_call) method allows to check if a response contains a tool calling.
+It does not consume the stream for normal responses, so the last response to the end user will still be returned as a stream.
+
+### Stream Events
+
+For message stream skills, the Kernel reports tool call events via the SSE stream to the caller.
+The caller will receive an event when a tool call starts and when a tool call finishes.

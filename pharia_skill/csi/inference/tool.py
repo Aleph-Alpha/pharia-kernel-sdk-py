@@ -103,7 +103,7 @@ class ToolOutput:
         """Render the tool output to the format received by the model."""
         return f'completed[stdout]:{{"result": {self.text()}}}[/stdout]'
 
-    def _as_message(self) -> Message:
+    def as_message(self) -> Message:
         """Render the tool output to a message."""
         return Message.tool(self._render())
 
@@ -161,7 +161,7 @@ class ToolCallRequest:
             }
         )
 
-    def _as_message(self) -> Message:
+    def as_message(self) -> Message:
         """Render the tool call to a message."""
         return Message.assistant(self._render())
 
