@@ -73,6 +73,6 @@ The more autonomy and control will be given to AI Skills, the more important it 
 For this the Kernel already provides foundational building-blocks for AI agent readiness:
 
 - All Skill executions generate traces for reviews.
-- Enforces runtime limits (CPU/memory/time) to prevent overconsumption.
+- Enforces runtime limits (CPU/memory/time) to prevent over-consumption.
 - Allocates resources dynamically on load & priority needs
-- Support Tool Calling & CodeExecution of LLM generated code
+- Support Tool Calling via MCP and CodeExecution of LLM generated code
