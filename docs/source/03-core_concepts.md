@@ -50,3 +50,31 @@ Permissions for the registry and the namespace configuration could be configured
 In order to make a Skill available in the Kernel two criteria need to be met, the Skill must be deployed as a component to an OCI registry and the Skill must be configured in the namespace configuration.
 
 You can check out `pharia-kernel.namespaces` in the `values.yaml` of the respective deployment. For deployment, configure the `pharia-skill` CLI tool with environment variables to point to the correct registry for the namespace you want to deploy to.
+
+## Tool Calling
+
+### MCP
+
+The Kernel allows Skills to invoke tools via the MCP protocol.
+Each namespace can be configured with a list of MCP servers that the Kernel will connect to:
+
+```json
+mcp-servers = ["http://mcp-brave-search.localhost:8000/mcp"]
+skills = []
+```
+
+The Kernel will then offer the available tools to a Skill if deployed in the same namespace.
+Tools can be invoked via the [invoke_tool](https://pharia-skill.readthedocs.io/en/latest/_modules/pharia_skill/csi/csi.html#Csi.invoke_tool) method of the `DevCsi`.
+The list of available tools for a particular namespace can be queried via a GET request to the `v1/tools/{namespace}` route of the Kernel.
+Currently, only MCP servers without authentication and with a transport type of [streamable HTTP](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#streamable-http) are supported.
+
+### Native Tools
+
+Additionally, the Kernel offers multiple "native tools" that are meant for experimentation and learning.
+They can be enabled per namespace:
+
+```json
+mcp-servers = []
+native-tools = [ "add", "subtract", "saboteur" ]
+skills = []
+```
