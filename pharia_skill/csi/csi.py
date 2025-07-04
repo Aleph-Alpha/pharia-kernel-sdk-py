@@ -268,20 +268,17 @@ class Csi(Protocol):
         While `chat_stream_step` allows to pass in tools that are then available to the
         model, it leaves the responsibility of executing the tool call to the caller.
         This method goes one step further and automatically executes the tool call.
-        If the tool call fails, the model is informed about the failure and can try
-        to recover with a different approach. Once the model returns a non-tool message,
+        If the tool call fails, the model is informed about the failure and can try to
+        recover with a different approach. Once the model returns a non-tool message,
         it is returned to the caller.
 
         Parameters:
             model (str, required): Name of model to use.
-
             messages (list[Message], required):
                 List of messages, alternating between messages from user and assistant.
-
-            tools (list[str], required):
-                List of tool names that are available to the model.
-
             params (ChatParams, optional, Default None): Parameters used for the chat.
+            tools (list[str], optional, Default None):
+                List of tool names that are available to the model.
         """
         tool_schemas = self._list_tool_schemas(tools) if tools else None
         response = self.chat_stream_step(model, messages, params, tool_schemas)
@@ -334,10 +331,10 @@ class Csi(Protocol):
 
         The tool call is added to the conversation and the tool response is added to the conversation.
         """
-        messages.append(tool_call._as_message())
+        messages.append(tool_call.as_message())
         try:
             tool_response = self.invoke_tool(tool_call.name, **tool_call.parameters)
-            messages.append(tool_response._as_message())
+            messages.append(tool_response.as_message())
         except ToolError as e:
             messages.append(
                 Message.tool(f'failed[stderr]:{{"error": {e.message}}}[/stderr]')

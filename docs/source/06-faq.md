@@ -3,11 +3,11 @@
 **What dependencies can I use?**
 
 All Python-only dependencies should work, simply import them in your Skill.
-For non-Python compiled dependencies ("native dependencies"), see [here](03-core_concepts.md#wasm-component).
+For non-Python compiled dependencies ("native dependencies"), see [here](https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#wasm-component).
 
 **How do I deploy my Skill?**
 
-Build it locally, publish it to a registry and then configure it in a [namespaces](03-core_concepts.md#namespaces).
+Build it locally, publish it to a registry and then configure it in a [namespaces](https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#namespaces).
 
 **How is my Skill executed?**
 
