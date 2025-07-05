@@ -1,7 +1,7 @@
 # How-To
 
 The Kernel SDK provides all the building blocks needed to create sophisticated AI applications.
-If you want to include any dependencies in your Skill, have a look [here](https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#wasm-component)
+If you want to include any dependencies in your Skill, have a look [here](03-core_concepts.md#wasm-component)
 
 ## Completion
 
@@ -149,7 +149,7 @@ You only need to define the `do_search_lookup` function and augment the incoming
 ## Tools
 
 The Kernel and SDK offer support for function calling and tool invocations.
-Details on how tools can be made available via MCP can be found in the [Tool Calling](https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#tool-calling) section of the core concepts.
+Details on how tools can be made available via MCP can be found in the [Tool Calling](03-core_concepts.md#tool-calling) section of the core concepts.
 
 ### Automatic Tool Calling
 
