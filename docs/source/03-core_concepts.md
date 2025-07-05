@@ -53,28 +53,28 @@ You can check out `pharia-kernel.namespaces` in the `values.yaml` of the respect
 
 ## Tool Calling
 
-### MCP
+PhariaKernel allows Skill to invoke tools via the [invoke_tool](https://pharia-skill.readthedocs.io/en/latest/_modules/pharia_skill/csi/csi.html#Csi.invoke_tool) method of the `Csi`.
+The list of available tools for a particular namespace can be queried via a GET request to the `v1/tools/{namespace}` route of PhariaKernel.
 
-The Kernel allows Skills to invoke tools via the MCP protocol.
-Each namespace can be configured with a list of MCP servers that the Kernel will connect to:
+### Native tools
+
+PhariaKernel offers native tools that are built-in and optionally configurable for each namespace.
+
+Currently, the available tools are `add`, `subtract`, and `saboteur`, which are intended for testing during skill development:
 
 ```json
-mcp-servers = ["http://mcp-brave-search.localhost:8000/mcp"]
-skills = []
+native-tools = [ "add", "subtract", "saboteur" ]
 ```
 
-The Kernel will then offer the available tools to a Skill if deployed in the same namespace.
-Tools can be invoked via the [invoke_tool](https://pharia-skill.readthedocs.io/en/latest/_modules/pharia_skill/csi/csi.html#Csi.invoke_tool) method of the `DevCsi`.
-The list of available tools for a particular namespace can be queried via a GET request to the `v1/tools/{namespace}` route of the Kernel.
-Currently, only MCP servers without authentication and with a transport type of [streamable HTTP](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#streamable-http) are supported.
+### MCP servers
 
-### Native Tools
+PhariaKernel allows additional tools to be provided via the Model Context Protocol (MCP).
 
-Additionally, the Kernel offers multiple "native tools" that are meant for experimentation and learning.
-They can be enabled per namespace:
+All MCP servers that use Streamable HTTP transport and do not require authentication can be configured for each namespace:
 
 ```json
-mcp-servers = []
-native-tools = [ "add", "subtract", "saboteur" ]
-skills = []
+mcp-servers = [
+    "https://gitmcp.io/Aleph-Alpha/pharia-kernel-sdk-py",
+    "http://mcp-fetch.pharia-ai.svc.cluster.local:8000/mcp"
+]
 ```
