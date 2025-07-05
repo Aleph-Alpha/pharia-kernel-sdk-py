@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.18.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.17.0...v0.18.0) (2025-07-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* introduce chat_stream_with_tools method on csi that invokes tools
+
+### Features
+
+* change order of tools and params ([05308d3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/05308d32f605776420312f188327771df28e4efd))
+* chat stream takes tool input ([1a687eb](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1a687eb57bcc68e114eb31755b1f2f63c6b0fd53))
+* deprecate the llama3 module ([6f7fc07](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/6f7fc0757be64c9f38ff8eba2b22334ac47da726))
+* introduce chat_stream_step method ([0305e1d](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0305e1d6d72fcbc5944107fd0b906cba87d700d4))
+* introduce chat_stream_with_tools method on csi that invokes tools ([ca6e475](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ca6e475e4153338625ed9b63f154966c829ad341))
+* make Tool public in pharia-skill and csi module ([80b33f0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/80b33f08d9ec397cab3f8239815c0fbeffe31628))
+* reconstruct chat and completion from stream when tracing ([f9478cb](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f9478cb96f722d0611868de5ee1303790d84798d))
+* record message stream output on studio trace ([ddefe32](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/ddefe3247b0a986904df717a582071e8b762bfa7))
+
+
+### Documentation
+
+* add sphinx warning for llama module deprecation ([2c2c3d2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/2c2c3d2e3f88734ef0254833fd9925360dbf19d4))
+* remove llama3 tool calling example ([66b5860](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/66b5860fe312ff5e47b822e46c477bd93d81dc2d))
+* specify what tool parameter does on chat_stream ([a9cd3ae](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a9cd3ae38a3aea3a1897b9b9bf2348d9107f2b9a))
+
 ## [0.17.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.16.6...v0.17.0) (2025-07-02)
 
 
