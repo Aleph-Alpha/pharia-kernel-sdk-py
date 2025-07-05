@@ -155,7 +155,7 @@ Details on how tools can be made available via MCP can be found in the [Tool Cal
 
 The [csi.chat_stream](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.Csi.chat_stream) supports automatic tool calling.
 Tools are made available to the model by specifying their name as part of the request.
-They are automatically added to the system prompt. In case the a custom system prompt is provided, these are merged by the SDK.
+They are automatically added to the system prompt. If a custom system prompt is provided, these are merged by the SDK.
 
 ```python
 with csi.chat_stream(model, messages, tools=["search", "fetch"]) as response:
