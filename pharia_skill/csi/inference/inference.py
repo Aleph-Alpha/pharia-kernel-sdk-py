@@ -322,11 +322,12 @@ class ChatStreamResponse(ABC):
                     break
 
     def consume_message(self) -> Message:
-        """A helper method to get the content of the message.
+        """A helper method that extracts the contained message from a chat stream.
 
-        This method consumes the stream and can only be used as long as the stream is
-        not consumed. It can be useful for testing purposes, where you are interested
-        in the content of the message. If the stream has already been consumed, an empty
+        This method consumes the stream and only returns the entire messages as long as
+        the stream has not been consumed. It can be useful for testing purposes, where
+        you are interested in the content of the entire message and not in the
+        individual events. In case the stream has already been consumed, an empty
         message is returned.
 
         Example::
