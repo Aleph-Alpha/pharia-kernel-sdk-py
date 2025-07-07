@@ -321,7 +321,7 @@ class ChatStreamResponse(ABC):
                     self._usage = event
                     break
 
-    def message(self) -> Message:
+    def consume_message(self) -> Message:
         """A helper method to get the content of the message.
 
         This method consumes the stream and can only be used as long as the stream is
@@ -334,7 +334,7 @@ class ChatStreamResponse(ABC):
             def test_my_prompt():
                 user = Message.user("What is the meaning of life?")
                 with csi.chat_stream("llama-3.1-8b-instruct", [user]) as response:
-                    message = response.message()
+                    message = response.consume_message()
 
                 assert message.content == "42"
 
