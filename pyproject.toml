@@ -14,7 +14,7 @@ requires-python = "~=3.11"
 readme = "README.md"
 dependencies = [
     "pydantic-core==2.33.2",
-    "pydantic==2.11.4",
+    "pydantic==2.11.7",
     "requests>=2.32.3,<3",
     "python-dotenv>=1.0.1,<2",
     "componentize-py>=0.17.0,<0.18",
