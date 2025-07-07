@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.19.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.18.0...v0.19.0) (2025-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* make _peek and _peek_iterator methods on ChatStreamResponse private
+
+### Features
+
+* make _peek and _peek_iterator methods on ChatStreamResponse private ([e60c1b9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/e60c1b9dbea9605256fe3da138d143e594033a2c))
+
 ## [0.18.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.17.0...v0.18.0) (2025-07-05)
 
 
