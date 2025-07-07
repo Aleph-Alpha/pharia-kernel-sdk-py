@@ -134,7 +134,7 @@ def test_message_helper():
     response = MockChatStreamResponse(events)
 
     # When using the message helper
-    message = response.message()
+    message = response.consume_message()
 
     # Then it should return the message
     assert message.role == Role.Assistant
@@ -152,7 +152,7 @@ def test_message_helper_after_stream_is_consumed():
 
     # When consuming the stream and then using the message helper
     list(response.stream())
-    message = response.message()
+    message = response.consume_message()
 
     # Then no error is raised, but an empty message is returned
     assert message.role == Role.Assistant
