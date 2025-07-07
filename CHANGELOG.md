@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.19.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.0...v0.19.1) (2025-07-07)
+
+
+### Features
+
+* add message helper method to ChatStreamResponse ([0f2e904](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0f2e904d32617e87173c12a4bb47d2d06596a90c))
+* rename message to consume_message as it is consuming ([a6c1d06](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a6c1d06839e12d7278c845c8ab44ada924cd8173))
+
+
+### Documentation
+
+* improve consume_message doc string ([83125b5](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/83125b586f20fcd24d5bc1b7393f5f56e3e43bb9))
+
 ## [0.19.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.18.0...v0.19.0) (2025-07-07)
 
 
