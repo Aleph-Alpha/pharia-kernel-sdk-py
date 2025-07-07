@@ -24,6 +24,7 @@ from .types import (
     Message,
     MessageAppend,
     MessageBegin,
+    Role,
     TokenUsage,
 )
 
@@ -319,6 +320,31 @@ class ChatStreamResponse(ABC):
                 case TokenUsage():
                     self._usage = event
                     break
+
+    def message(self) -> Message:
+        """A helper method to get the content of the message.
+
+        This method consumes the stream and can only be used as long as the stream is
+        not consumed. It can be useful for testing purposes, where you are interested
+        in the content of the message. If the stream has already been consumed, an empty
+        message is returned.
+
+        Example::
+
+            def test_my_prompt():
+                user = Message.user("What is the meaning of life?")
+                with csi.chat_stream("llama-3.1-8b-instruct", [user]) as response:
+                    message = response.message()
+
+                assert message.content == "42"
+
+        Returns:
+            The message of the chat request.
+        """
+        content = ""
+        for event in self.stream():
+            content += event.content
+        return Message(role=Role(self.role), content=content)
 
 
 @dataclass

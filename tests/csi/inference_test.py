@@ -122,3 +122,38 @@ def test_peeking_at_event_does_not_alter_stream():
         MessageAppend(content="Hello, ", logprobs=[]),
         MessageAppend(content="world!", logprobs=[]),
     ]
+
+
+def test_message_helper():
+    # Given a chat stream response that returns multiple events
+    events: list[ChatEvent] = [
+        MessageBegin(role="assistant"),
+        MessageAppend(content="Hello, ", logprobs=[]),
+        MessageAppend(content="world!", logprobs=[]),
+    ]
+    response = MockChatStreamResponse(events)
+
+    # When using the message helper
+    message = response.message()
+
+    # Then it should return the message
+    assert message.role == Role.Assistant
+    assert message.content == "Hello, world!"
+
+
+def test_message_helper_after_stream_is_consumed():
+    # Given a chat stream response that returns multiple events
+    events: list[ChatEvent] = [
+        MessageBegin(role="assistant"),
+        MessageAppend(content="Hello, ", logprobs=[]),
+        MessageAppend(content="world!", logprobs=[]),
+    ]
+    response = MockChatStreamResponse(events)
+
+    # When consuming the stream and then using the message helper
+    list(response.stream())
+    message = response.message()
+
+    # Then no error is raised, but an empty message is returned
+    assert message.role == Role.Assistant
+    assert message.content == ""
