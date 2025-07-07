@@ -113,8 +113,8 @@ def test_peeking_at_event_does_not_alter_stream():
     response = MockChatStreamResponse(events)
 
     # When peeking at the next event
-    response.peek()
-    response.peek()
+    response._peek()
+    response._peek()
 
     # Then the stream should not have been altered
     assert response.role == Role.Assistant

@@ -235,16 +235,16 @@ class ChatStreamResponse(ABC):
         """Get the next chat event from the stream."""
         ...
 
-    def peek(self) -> ChatEvent | None:
+    def _peek(self) -> ChatEvent | None:
         """Peek at the next chat event without changing the stream."""
         event = self._next()
         if event is not None:
             self.buffer.append(event)
         return event
 
-    def peek_iterator(self) -> Generator[ChatEvent, None, None]:
+    def _peek_iterator(self) -> Generator[ChatEvent, None, None]:
         """An iterator over the chat events that does not alter the stream."""
-        while (event := self.peek()) is not None:
+        while (event := self._peek()) is not None:
             yield event
 
     def __init__(self) -> None:
@@ -276,7 +276,7 @@ class ChatStreamResponse(ABC):
                 writer.forward_response(response)
         """
         if self._tool_call is None:
-            self._tool_call = parse_tool_call(self.peek_iterator())
+            self._tool_call = parse_tool_call(self._peek_iterator())
 
         return self._tool_call
 
