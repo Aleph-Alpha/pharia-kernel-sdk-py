@@ -62,7 +62,7 @@ PhariaKernel offers native tools that are built-in and optionally configurable f
 
 Currently, the available tools are `add`, `subtract`, and `saboteur`, which are intended for testing during skill development:
 
-```json
+```toml
 native-tools = [ "add", "subtract", "saboteur" ]
 ```
 
@@ -72,7 +72,7 @@ PhariaKernel allows additional tools to be provided via the Model Context Protoc
 
 All MCP servers that use Streamable HTTP transport and do not require authentication can be configured for each namespace:
 
-```json
+```toml
 mcp-servers = [
     "https://gitmcp.io/Aleph-Alpha/pharia-kernel-sdk-py",
     "http://mcp-fetch.pharia-ai.svc.cluster.local:8000/mcp"
