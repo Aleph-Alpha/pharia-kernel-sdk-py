@@ -445,6 +445,10 @@ def test_tools_are_added_to_system_prompt():
     assert "fish-count" in system.content
 
 
+# Although this test does not talk to the Kernel, it relies on the two environment
+# variables `PHARIA_AI_TOKEN` and `PHARIA_KERNEL_ADDRESS` to be set to construct the
+# `Client` instance.
+@pytest.mark.kernel
 def test_listing_tools_without_namespace_raises_error():
     # Given a csi without a namespace
     csi = DevCsi()
