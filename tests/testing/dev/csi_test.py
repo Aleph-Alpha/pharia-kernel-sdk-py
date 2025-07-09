@@ -443,3 +443,15 @@ def test_tools_are_added_to_system_prompt():
     system = csi.messages[0]
     assert system.role == Role.System
     assert "fish-count" in system.content
+
+
+def test_listing_tools_without_namespace_raises_error():
+    # Given a csi without a namespace
+    csi = DevCsi()
+
+    # When listing the tools
+    with pytest.raises(ValueError) as e:
+        csi.list_tools()
+
+    # Then an error is raised
+    assert "Specifying a namespace when constructing" in str(e.value)
