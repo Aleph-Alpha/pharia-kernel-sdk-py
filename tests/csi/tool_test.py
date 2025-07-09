@@ -285,37 +285,33 @@ def test_one_tick_in_chunk_is_supported():
 def test_could_be_tool_call_returns_true_if_content_starts_with_sequence():
     # Given a content string that starts with a sequence
     content = "`"
-    sequences = ("```json\n{", "```{", "{")
 
     # When checking if the content could be a tool call
-    assert could_be_tool_call(content, sequences)
+    assert could_be_tool_call(content)
 
 
 def test_could_be_tool_call_returns_true_if_sequence_starts_with_content():
     # Given a content string that starts with a sequence
     content = "```json\n{'function'"
-    sequences = ("```json\n{", "```{", "{")
 
     # When checking if the content could be a tool call
-    assert could_be_tool_call(content, sequences)
+    assert could_be_tool_call(content)
 
 
 def test_exact_match_also_returns_true():
     # Given a content string that starts with a sequence
     content = "```json\n{"
-    sequences = ("```json\n{", "```{", "{")
 
     # When checking if the content could be a tool call
-    assert could_be_tool_call(content, sequences)
+    assert could_be_tool_call(content)
 
 
 def test_no_match_returns_false():
     # Given a content string that does not start with a sequence
     content = "``json\n{"
-    sequences = ("```json\n{", "```{", "{")
 
     # When checking if the content could be a tool call
-    assert not could_be_tool_call(content, sequences)
+    assert not could_be_tool_call(content)
 
 
 def test_removes_markdown_delimiters():

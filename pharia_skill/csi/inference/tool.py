@@ -177,20 +177,14 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
     a decision on whether a chunk is part of a normal message or part of a tool call
     needs to be taken on the fly. This is what this function does.
     """
-    # Possible start sequences for a tool call. The might be split over multiple chunks.
-    start_sequences = ("```json\n{", "```{", "{")
     maybe_tool_call: str = ""
 
     for event in stream:
         if not isinstance(event, MessageAppend):
             continue
 
-        # Empty chunk can occur before a tool call.
-        if event.content == "":
-            continue
-
         maybe_tool_call += event.content
-        if not could_be_tool_call(maybe_tool_call, start_sequences):
+        if not could_be_tool_call(maybe_tool_call):
             # We can return early here. There is no tool call.
             return None
 
@@ -200,13 +194,14 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
         return None
 
 
-def could_be_tool_call(content: str, start_sequences: tuple[str, ...]) -> bool:
+def could_be_tool_call(content: str) -> bool:
     """Check if the content string could start with any of the start sequences.
 
     Note that it does not need to fully start with the start sequence, but it is just
     about if it could still start with one of the start sequences if more chunks
     come in.
     """
+    start_sequences = ("```json\n{", "```{", "{")
     for sequence in start_sequences:
         # There are two possible cases:
         # 1. Content starts with sequence.
