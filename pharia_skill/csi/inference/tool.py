@@ -178,7 +178,7 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
     needs to be taken on the fly. This is what this function does.
     """
 
-    maybe_tool_call: list[MessageAppend] = []
+    maybe_tool_call: str = ""
     i = 0
     for event in stream:
         if not isinstance(event, MessageAppend):
@@ -190,7 +190,7 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
 
         tool_call_start = event.content.startswith("{") and i == 0
         if tool_call_start or maybe_tool_call:
-            maybe_tool_call.append(event)
+            maybe_tool_call += event.content
         else:
             # We can return early here. There is no tool call.
             return None
@@ -198,8 +198,7 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
 
     if maybe_tool_call:
         try:
-            content = "".join([e.content for e in maybe_tool_call])
-            return _deserialize_tool_call(content)
+            return _deserialize_tool_call(maybe_tool_call)
         except ValidationError:
             pass
 
