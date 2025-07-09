@@ -177,9 +177,10 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
     a decision on whether a chunk is part of a normal message or part of a tool call
     needs to be taken on the fly. This is what this function does.
     """
-
+    # Possible start sequences for a tool call. The might be split over multiple chunks.
+    start_sequences = ("```json\n{", "```{", "{")
     maybe_tool_call: str = ""
-    i = 0
+
     for event in stream:
         if not isinstance(event, MessageAppend):
             continue
@@ -188,13 +189,10 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
         if event.content == "":
             continue
 
-        tool_call_start = event.content.startswith("{") and i == 0
-        if tool_call_start or maybe_tool_call:
-            maybe_tool_call += event.content
-        else:
+        maybe_tool_call += event.content
+        if not could_be_tool_call(maybe_tool_call, start_sequences):
             # We can return early here. There is no tool call.
             return None
-        i += 1
 
     if maybe_tool_call:
         try:
@@ -203,6 +201,26 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
             pass
 
     return None
+
+
+def could_be_tool_call(content: str, start_sequences: tuple[str, ...]) -> bool:
+    """Check if the content string could start with any of the start sequences.
+
+    Note that it does not need to fully start with the start sequence, but it is just
+    about if it could still start with one of the start sequences if more chunks
+    come in.
+    """
+    for sequence in start_sequences:
+        # There are two possible cases:
+        # 1. Content starts with sequence.
+        #     content = "```json\n{"function"
+        #     sequence = "```json\n{"
+        # 2. Sequence starts with content:
+        #     content = "``"
+        #     sequence = "```json\n{"
+        if content.startswith(sequence) or sequence.startswith(content):
+            return True
+    return False
 
 
 def _deserialize_tool_call(content: str) -> ToolCallRequest:
@@ -227,6 +245,8 @@ def _deserialize_tool_call(content: str) -> ToolCallRequest:
 
     Deserializer = RootModel[StandardFormat | OtherFormat]
 
+    content = _remove_md_delimiters(content)
+
     match Deserializer.model_validate_json(content).root:
         case StandardFormat(function=function):
             return ToolCallRequest(name=function.name, parameters=function.parameters)
@@ -234,3 +254,27 @@ def _deserialize_tool_call(content: str) -> ToolCallRequest:
             return ToolCallRequest(name=name, parameters=parameters)
         case _:
             raise ValueError("This will never happen.")
+
+
+def _remove_md_delimiters(content: str) -> str:
+    """Remove the ```json\n or ``` if present."""
+    content = _remove_md_prefix(content)
+    content = _remove_md_suffix(content)
+    return content
+
+
+def _remove_md_prefix(content: str) -> str:
+    """Remove the ```json\n or ``` if present."""
+
+    # The order matters here. Start with the longer prefix.
+    to_remove = ("```json\n", "```")
+    for prefix in to_remove:
+        if content.startswith(prefix):
+            return content[len(prefix) :]
+    return content
+
+
+def _remove_md_suffix(content: str) -> str:
+    if content.endswith("```"):
+        return content[:-3]
+    return content
