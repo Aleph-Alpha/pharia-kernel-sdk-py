@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.2...v0.19.3) (2025-07-09)
+
+
+### Bug Fixes
+
+* good error msg when listing tools without namespace ([9bdfcef](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9bdfcefec31fbf178646550e356c19083b6c6489))
+
 ## [0.19.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.1...v0.19.2) (2025-07-09)
 
 
