@@ -124,9 +124,17 @@ class DevCsi(Csi):
         self, namespace: str | None = None, project: str | None = None
     ) -> None:
         self.client: CsiClient = Client()
-        self.namespace = namespace
+        self._namespace = namespace
         if project is not None:
             self._set_project(project)
+
+    def _namespace_or_raise(self) -> str:
+        """Raise an error if the namespace is not set."""
+        if self._namespace is None:
+            raise ValueError(
+                "Specifying a namespace when constructing the `DevCsi` is required when invoking or listing tools."
+            )
+        return self._namespace
 
     def _set_project(self, project: str) -> None:
         """Configure the `DevCsi` to export traces to Pharia Studio.
@@ -163,15 +171,14 @@ class DevCsi(Csi):
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
     ) -> list[ToolResult]:
-        assert self.namespace is not None, (
-            "Specifying a namespace when constructing a DevCsi is required when invoking tools"
+        body = serialize_tool_requests(
+            namespace=self._namespace_or_raise(), requests=requests
         )
-        body = serialize_tool_requests(namespace=self.namespace, requests=requests)
         output = self.run("invoke_tool", body)
         return deserialize_tool_output(output)
 
     def list_tools(self) -> list[Tool]:
-        body = {"namespace": self.namespace}
+        body = {"namespace": self._namespace_or_raise()}
         output = self.run("list_tools", body)
         return deserialize_tools(output)
 
