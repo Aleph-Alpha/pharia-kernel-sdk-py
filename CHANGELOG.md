@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.19.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.1...v0.19.2) (2025-07-09)
+
+
+### Features
+
+* support markdown tool calling ([016202e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/016202eef57e00def077e08f6ea6bf2542ae586e))
+
+
+### Documentation
+
+* fix syntax highlighting for TOML code blocks ([f4e2b19](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f4e2b19809733061406341da9dd5977854542dd1))
+
 ## [0.19.1](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.0...v0.19.1) (2025-07-07)
 
 
