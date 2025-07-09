@@ -194,13 +194,10 @@ def parse_tool_call(stream: Iterator[ChatEvent]) -> ToolCallRequest | None:
             # We can return early here. There is no tool call.
             return None
 
-    if maybe_tool_call:
-        try:
-            return _deserialize_tool_call(maybe_tool_call)
-        except ValidationError:
-            pass
-
-    return None
+    try:
+        return _deserialize_tool_call(maybe_tool_call)
+    except ValidationError:
+        return None
 
 
 def could_be_tool_call(content: str, start_sequences: tuple[str, ...]) -> bool:
