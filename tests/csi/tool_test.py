@@ -10,8 +10,11 @@ from pharia_skill.csi.inference.tool import (
     Tool,
     ToolCallRequest,
     _deserialize_tool_call,
+    _remove_md_delimiters,
+    _remove_md_prefix,
     _render_system,
     add_tools_to_system_prompt,
+    could_be_tool_call,
     parse_tool_call,
 )
 
@@ -237,3 +240,101 @@ def test_different_tool_format_is_supported():
 
     # Then
     assert deserialized.name == "search"
+
+
+def test_markdown_tool_call_is_supported():
+    events = [
+        MessageAppend(content="```json\n", logprobs=[]),
+        MessageAppend(
+            content='{"type": "function", "name": "query_knowledge_base", "parameters": {"query": "travel policy"}}',
+            logprobs=[],
+        ),
+        MessageAppend(content="```", logprobs=[]),
+    ]
+
+    # When deserializing the tool call
+    deserialized = parse_tool_call(iter(events))
+
+    # Then
+    assert deserialized is not None
+    assert deserialized.name == "query_knowledge_base"
+    assert deserialized.parameters == {"query": "travel policy"}
+
+
+def test_one_tick_in_chunk_is_supported():
+    events = [
+        MessageAppend(content="`", logprobs=[]),
+        MessageAppend(content="`", logprobs=[]),
+        MessageAppend(content="`", logprobs=[]),
+        MessageAppend(
+            content='{"type": "function", "name": "query_knowledge_base", "parameters": {"query": "travel policy"}}',
+            logprobs=[],
+        ),
+        MessageAppend(content="```", logprobs=[]),
+    ]
+
+    # When deserializing the tool call
+    deserialized = parse_tool_call(iter(events))
+
+    # Then
+    assert deserialized is not None
+    assert deserialized.name == "query_knowledge_base"
+    assert deserialized.parameters == {"query": "travel policy"}
+
+
+def test_could_be_tool_call_returns_true_if_content_starts_with_sequence():
+    # Given a content string that starts with a sequence
+    content = "`"
+    sequences = ("```json\n{", "```{", "{")
+
+    # When checking if the content could be a tool call
+    assert could_be_tool_call(content, sequences)
+
+
+def test_could_be_tool_call_returns_true_if_sequence_starts_with_content():
+    # Given a content string that starts with a sequence
+    content = "```json\n{'function'"
+    sequences = ("```json\n{", "```{", "{")
+
+    # When checking if the content could be a tool call
+    assert could_be_tool_call(content, sequences)
+
+
+def test_exact_match_also_returns_true():
+    # Given a content string that starts with a sequence
+    content = "```json\n{"
+    sequences = ("```json\n{", "```{", "{")
+
+    # When checking if the content could be a tool call
+    assert could_be_tool_call(content, sequences)
+
+
+def test_no_match_returns_false():
+    # Given a content string that does not start with a sequence
+    content = "``json\n{"
+    sequences = ("```json\n{", "```{", "{")
+
+    # When checking if the content could be a tool call
+    assert not could_be_tool_call(content, sequences)
+
+
+def test_removes_markdown_delimiters():
+    # Given a content string that starts with a sequence
+    content = "```json\n{"
+
+    # When removing the markdown delimiters
+    result = _remove_md_prefix(content)
+
+    # Then the result is the content without the delimiters
+    assert result == "{"
+
+
+def test_trailing_markdown_delimiters_are_removed():
+    # Given a content string that starts with a sequence
+    content = "```json\n{}```"
+
+    # When removing the markdown delimiters
+    result = _remove_md_delimiters(content)
+
+    # Then the result is the content without the delimiters
+    assert result == "{}"
