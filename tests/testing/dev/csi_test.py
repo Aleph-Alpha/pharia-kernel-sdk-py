@@ -192,7 +192,7 @@ def test_chat_stream_with_saboteur_tool(csi_with_test_namespace: Csi, model: str
 
     assert len(recorded_messages) == 1
     assert recorded_messages[0].role == "assistant"
-    assert "error" in recorded_messages[0].content
+    assert "failed" in recorded_messages[0].content
 
 
 @pytest.mark.kernel
