@@ -242,7 +242,6 @@ class Csi(Protocol):
 
         Examples::
 
-            input = "oat milk"
             system = Message.system("You are a helpful assistant.")
             msg = Message.user("What is the capital of France?")
             model = "llama-3.1-8b-instruct"
