@@ -10,7 +10,11 @@ authors = [
     { name = "Jia Ho Lee", email = "jiaho.lee@aleph-alpha.com" },
     { name = "Lars Rass", email = "lars.rass@aleph-alpha.com" },
 ]
-requires-python = "~=3.11"
+# We use componentize-py to build Skills. Componentize-py includes the Python 3.11 interpreter in the components.
+# While our SDK would allow newer Python versions, we believe the Python version when testing Skills
+# and when running them should be the same. Otherwise, users might run into syntax issues where some
+# features are not available in the component.
+requires-python = "~=3.11.0"
 readme = "README.md"
 dependencies = [
     "pydantic-core==2.33.2",
