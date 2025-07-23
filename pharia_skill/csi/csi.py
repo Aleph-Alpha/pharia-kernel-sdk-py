@@ -98,6 +98,9 @@ class Csi(Protocol):
 
         Parameters:
             requests (list[InvokeRequest], required): List of invoke requests.
+
+        Returns:
+            list[ToolResult]: List of tool results in the same order as the requests.
         """
         ...
 
@@ -161,6 +164,9 @@ class Csi(Protocol):
 
         Parameters:
             requests (list[CompletionRequest], required): List of completion requests.
+
+        Returns:
+            list[Completion]: List of completions in the same order as the requests.
         """
         ...
 
@@ -253,6 +259,9 @@ class Csi(Protocol):
 
         Parameters:
             requests (list[ChatRequest], required): List of chat requests.
+
+        Returns:
+            list[ChatResponse]: List of chat responses in the same order as the requests.
         """
         ...
 
@@ -370,6 +379,9 @@ class Csi(Protocol):
 
         Parameters:
             requests (list[ExplanationRequest], required): List of explanation requests.
+
+        Returns:
+            list[list[TextScore]]: List of explanation results in the same order as the requests.
         """
         ...
 
@@ -401,6 +413,9 @@ class Csi(Protocol):
         Parameters:
             requests (list[SelectLanguageRequest], required):
                 List of select language requests.
+
+        Returns:
+            list[Language | None]: List of detected languages in the same order as the requests.
         """
         ...
 
@@ -440,7 +455,14 @@ class Csi(Protocol):
     def search_concurrent(
         self, requests: Sequence[SearchRequest]
     ) -> list[list[SearchResult]]:
-        """Execute multiple search requests against the Document Index."""
+        """Execute multiple search requests against the Document Index.
+
+        Parameters:
+            requests (list[SearchRequest], required): List of search requests.
+
+        Returns:
+            list[list[SearchResult]]: List of search results in the same order as the requests.
+        """
         ...
 
     def document(self, document_path: DocumentPath) -> Document:
@@ -467,6 +489,9 @@ class Csi(Protocol):
         Parameters:
             document_paths (list[DocumentPath], required):
                 The document paths to get the documents from.
+
+        Returns:
+            list[Document]: List of documents in the same order as the provided document paths.
         """
         ...
 
@@ -490,5 +515,8 @@ class Csi(Protocol):
         Parameters:
             document_paths (list[DocumentPath], required):
                 The document paths to get metadata from.
+
+        Returns:
+            list[JsonSerializable]: List of metadata in the same order as the provided document paths.
         """
         ...
