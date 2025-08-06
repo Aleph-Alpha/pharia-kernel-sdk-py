@@ -1,25 +1,115 @@
-# Pharia Kernel Python SDK
+# Pharia Kernel SDK
 
-You build your skill in Python, which is then compiled into a Wasm module.
-Then, the skill is deployed to an [instance of Pharia Kernel](https://pharia-kernel.product.pharia.com),
-where it can be invoked on demand.
-To this end, this SDK provides the tooling and APIs for skill development.
+PhariaKernel is a serverless AI runtime that hosts AI code as isolated WebAssembly components called "Skills". With this SDK, you write Python functions (using simple decorators), compile them to WebAssembly, and push them to an OCI registry.
+The Kernel then runs your code serverless-style, providing access to inference and tools hosted by MCP servers.
 
-You can access the documentation on [Read the Docs](https://pharia-skill.readthedocs.io).
+## Documentation & Resources
 
-## Installing the SDK
+- **[Full Documentation](https://pharia-skill.readthedocs.io/en/latest/)** - Complete guides, tutorials, and concepts
+- **[API Documentation](https://pharia-kernel.product.pharia.com/api-docs)** - Kernel HTTP API reference for invoking Skills
+- **[Examples](examples/)** - Sample Skills demonstrating various use cases
 
-The SDK is published on [PyPI](https://pypi.org/project/pharia-skill/).
-We recommend using [uv](https://docs.astral.sh/uv/) to manage Python dependencies.
+## Why WebAssembly?
 
-To add the SDK as a dependency to an existing project managed by `uv`, run
+- **Simpler deployment**: No Dockerfiles, base images, or web servers
+- **Faster cold starts**: WebAssembly boots in milliseconds, not seconds
+- **Reduced complexity**: The runtime manages authentication, scaling, connection to MCP servers, etc.
+- **Isolation of concerns**: Skill code is focused on pure methodology
+- **Observability**: Because all interactions are mediated by the Kernel, it can provide tracing and metrics.
+
+The tradeoff is constraints - you can't install arbitrary (native) dependencies or make network calls directly.
+Everything goes through the interface offered by the Kernel - the Cognitive System Interface (CSI).
+
+## Installation
 
 ```sh
 uv add pharia-skill
 ```
 
-In case you want to use changes in the SDK that have not been released, use GitHub as source:
+In case you want to use changes in the SDK that have not been released yet, you can add the SDK as a git dependency:
 
 ```sh
 uv add git+https://github.com/aleph-alpha/pharia-kernel-sdk-py.git
+```
+
+## Basic Example
+
+```python
+from pydantic import BaseModel
+from pharia_skill import skill, Csi, Message, ChatParams
+
+class Input(BaseModel):
+    topic: str
+
+class Output(BaseModel):
+    response: str
+
+@skill
+def generate_summary(csi: Csi, input: Input) -> Output:
+    messages = [Message.user(f"Summarize this topic in 2 sentences: {input.topic}")]
+    response = csi.chat("llama-3.1-8b-instruct", messages, ChatParams(max_tokens=100))
+    return Output(response=response.message.content)
+```
+
+That's it. The Kernel will inject the `Csi` interface and will deserialize the input from the HTTP request.
+
+## Streaming Agent
+
+This example assumes that the Kernel is configured with MCP servers that provide the `search` and `fetch` tools.
+
+```python
+from pydantic import BaseModel
+from pharia_skill import Csi, Message, MessageWriter, message_stream
+
+class Input(BaseModel):
+    messages: list[Message]
+
+@message_stream
+def web_search(csi: Csi, writer: MessageWriter[None], input: Input) -> None:
+    model = "llama-3.3-70b-instruct"
+    with csi.chat_stream(model, input.messages, tools=["search", "fetch"]) as response:
+        writer.forward_response(response)
+```
+
+## Development Workflow
+
+### Testing
+
+If you have access to a PhariaKernel instance, you can test your Skill locally, as the CSI is also offered via HTTP via the `DevCsi`:
+
+```python
+from pharia_skill import DevCsi
+# Assuming you have a Skill called `my_skill` that takes an `Input` model
+from my_skill import my_skill, Input
+
+def test_my_skill():
+    csi = DevCsi()
+    test_input = Input(question="What is the capital of France?")
+    result = my_skill(csi, test_input)
+    assert result.answer == "Paris"
+```
+
+### Building and Publishing
+
+Once you are happy with your Skill, you can build it and publish it to an OCI registry.
+
+```sh
+# Build WebAssembly component
+pharia-skill build my_skill.py
+
+# Publish to an OCI registry
+pharia-skill publish my-skill.wasm
+```
+
+### Running
+
+This SDK builds a WebAssembly component targeting the `pharia:skill` [WIT](https://component-model.bytecodealliance.org/design/wit.html) world.
+That means a WebAssembly runtime offering this interface is required to run your Skill. The Kernel is such a runtime.
+To deploy your Skill, add your Skill to the configuration file of your namespace.
+Then, you can invoke it via the HTTP API of the Kernel. For example:
+
+```sh
+curl -X POST http://pharia-kernel.my-pharia-ai-cluster.com/v1/skills/{namespace}/my-skill/run \
+     -H "Content-Type: application/json" \
+     -d '{"question": "What is the capital of France?"}'
 ```
