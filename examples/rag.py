@@ -34,4 +34,5 @@ Question: {input.question}
     message = Message.user(content)
     params = ChatParams(max_tokens=512)
     response: ChatResponse = csi.chat("llama-3.1-8b-instruct", [message], params)
+    assert response.message.content is not None
     return Output(answer=response.message.content, number_of_documents=len(documents))

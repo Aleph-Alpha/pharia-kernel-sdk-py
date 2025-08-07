@@ -1,0 +1,40 @@
+interface message-stream {
+    use streaming-output.{stream-output};
+
+    /// The set of errors which may be raised by functions in this interface
+    variant error {
+        internal(string),
+        invalid-input(string)
+    }
+
+    /// Run the skill. Output is streamed out of the stream-output resource.
+    /// The skill is allowed to also terminate early with an error.
+    run: func(input: list<u8>, output: stream-output) -> result<_, error>;
+}
+
+/// Provided host types for supporting running streaming skills.
+interface streaming-output {
+    /// Payload for the beginning of a message.
+    record begin-attributes {
+        /// Optional role of the message. Currently unused. Setting it will have no effect. In case
+        /// we would need it soon, it allows us to introduce it though without breaking changes to
+        /// the wit world. Users consuming the SDK do not need to worry about this field.
+        role: option<string>
+    }
+
+    variant message-item {
+        /// Begin a new message. Cannot be sent before a previous message has ended.
+        message-begin(begin-attributes),
+        /// A chunk of the message text. If all appends are aggregated, it should produce the full message.
+        /// Should be sent after a message-begin.
+        message-append(string),
+        /// Indicate the end of the message, with an optional payload.
+        /// Needs to be preceded by at least a message-begin.
+        message-end(option<list<u8>>),
+    }
+
+    resource stream-output {
+        /// Puts part of a message into the output stream.
+        write: func(item: message-item);
+    }
+}

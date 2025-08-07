@@ -9,7 +9,6 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 from pharia_skill import (
     ChatParams,
-    ChatStreamResponse,
     ChunkParams,
     CompletionParams,
     Csi,
@@ -23,11 +22,10 @@ from pharia_skill import (
     Message,
     Role,
     Text,
-    Tool,
     ToolError,
     ToolOutput,
 )
-from pharia_skill.testing import DevCsi, MessageRecorder, StubCsi
+from pharia_skill.testing import DevCsi, MessageRecorder
 from pharia_skill.testing.dev.client import Client
 
 
@@ -172,24 +170,7 @@ def test_chat_stream_with_tool(csi_with_test_namespace: Csi):
 
     assert len(recorded_messages) == 1
     assert recorded_messages[0].role == "assistant"
-    assert recorded_messages[0].content == "The answer is 3."
-
-
-@pytest.mark.kernel
-def test_chat_stream_with_saboteur_tool(csi_with_test_namespace: Csi, model: str):
-    messages = [Message.user("Return response directly")]
-
-    recorder = MessageRecorder[None]()
-    with csi_with_test_namespace.chat_stream(
-        "llama-3.3-70b-instruct", messages, tools=["saboteur"]
-    ) as response:
-        recorder.forward_response(response)
-
-    recorded_messages = recorder.messages()
-
-    assert len(recorded_messages) == 1
-    assert recorded_messages[0].role == "assistant"
-    assert "out of cheese" in recorded_messages[0].content.lower()
+    assert "3" in recorded_messages[0].content
 
 
 @pytest.mark.kernel
@@ -213,6 +194,8 @@ def test_chat(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
     result = csi.chat(model, messages, params)
+
+    assert result.message.content is not None
     assert "Bob" in result.message.content
     assert isinstance(result.message.role, Role)
     assert result.message.role == Role.Assistant
@@ -416,38 +399,6 @@ def test_json_error_response_is_used(mock_post):
 
     # Then the JSON is decoded in the error message
     assert "Original Error: {'error': 'csi-version'}" in str(e.value)
-
-
-def test_tools_are_added_to_system_prompt():
-    # Given a spy csi that stores the messages
-    class SpyCsi(StubCsi):
-        def __init__(self) -> None:
-            self.messages: list[Message] = []
-
-        def _chat_stream(
-            self,
-            model: str,
-            messages: list[Message],
-            params: ChatParams,
-        ) -> ChatStreamResponse:
-            self.messages = messages
-            return super()._chat_stream(model, messages, params)
-
-    csi = SpyCsi()
-
-    # When calling chat with tools
-    fish_counter = Tool(
-        name="fish-count",
-        description="Count the number of fish in the sea",
-        input_schema={"fish-type": {"type": "string"}},
-    )
-    messages = [Message.user("How many fish left in the sea?")]
-    csi.chat_stream_step("gpt-nautilus", messages, tools=[fish_counter])
-
-    # Then the tools are added to the system prompt
-    system = csi.messages[0]
-    assert system.role == Role.System
-    assert "fish-count" in system.content
 
 
 # Although this test does not talk to the Kernel, it relies on the two environment

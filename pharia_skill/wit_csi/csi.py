@@ -51,7 +51,6 @@ from .inference import (
     chat_response_from_wit,
     completion_from_wit,
     completion_request_to_wit,
-    completion_request_to_wit_v2,
     explanation_request_to_wit,
     text_score_from_wit,
 )
@@ -125,8 +124,8 @@ class WitCsi(Csi):
     def complete_concurrent(
         self, requests: Sequence[CompletionRequest]
     ) -> list[Completion]:
-        wit_requests = [completion_request_to_wit_v2(r) for r in requests]
-        completions = wit_inference.complete_v2(wit_requests)
+        wit_requests = [completion_request_to_wit(r) for r in requests]
+        completions = wit_inference.complete(wit_requests)
         return [completion_from_wit(completion) for completion in completions]
 
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:

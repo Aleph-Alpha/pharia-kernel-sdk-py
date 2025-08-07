@@ -17,8 +17,6 @@ from typing import Any, Literal, Self
 # See the docstring of `csi` module for more information on the why.
 from pydantic.dataclasses import dataclass
 
-from pharia_skill.csi.inference.tool import ToolCallRequest, parse_tool_call
-
 from .types import (
     ChatEvent,
     Distribution,
@@ -28,6 +26,9 @@ from .types import (
     MessageBegin,
     Role,
     TokenUsage,
+    ToolCall,
+    ToolCallEvent,
+    merge_tool_call_chunks,
 )
 
 # We don't want to make opentelemetry a dependency of the wasm module
@@ -231,9 +232,9 @@ class ChatStreamResponse(ABC):
     role: str
     buffer: list[ChatEvent]
 
+    _tool_call_chunks: list[ToolCallEvent] | None = None
     _finish_reason: FinishReason | None = None
     _usage: TokenUsage | None = None
-    _tool_call: ToolCallRequest | None = None
 
     def __enter__(self) -> Self:
         """Enter the context manager."""
@@ -285,7 +286,7 @@ class ChatStreamResponse(ABC):
             raise ValueError(f"Invalid first stream event: {first_event}")
         self.role = first_event.role
 
-    def tool_call(self) -> ToolCallRequest | None:
+    def tool_calls(self) -> list[ToolCall] | None:
         """Inspect the stream to find out if the model is calling a tool.
 
         This method must be called before the stream is consumed. A typical usage
@@ -306,10 +307,21 @@ class ChatStreamResponse(ABC):
             else:
                 writer.forward_response(response)
         """
-        if self._tool_call is None:
-            self._tool_call = parse_tool_call(self._peek_iterator())
+        if self._tool_call_chunks is None:
+            while (event := self._peek()) is not None:
+                if isinstance(event, ToolCallEvent):
+                    if self._tool_call_chunks is None:
+                        self._tool_call_chunks = [event]
+                    else:
+                        self._tool_call_chunks.append(event)
+                else:
+                    # once we get a non-tool call event, we can stop accumulating
+                    break
 
-        return self._tool_call
+        if self._tool_call_chunks is None:
+            return None
+
+        return merge_tool_call_chunks(self._tool_call_chunks)
 
     def finish_reason(self) -> FinishReason:
         """The reason the model finished generating."""
@@ -335,7 +347,9 @@ class ChatStreamResponse(ABC):
     def stream(self) -> Generator[MessageAppend, None, None]:
         """Stream the content of the message.
 
-        This does not include the role, the finish reason and usage.
+        This does not include the role, any tool calls, or the finish reason and usage.
+        If you are using the tool calling abilties, you should check via `tool_calls()`
+        to see if the model is calling a tool.
         """
         if self._usage:
             raise RuntimeError("The stream has already been consumed")
@@ -417,6 +431,20 @@ class Completion:
         }
 
 
+class ReasoningEffort(str, Enum):
+    """Constrains effort on reasoning for reasoning models.
+
+    Currently supported values are `minimal`, `low`, `medium`, and `high`.
+    Reducing reasoning effort can result in faster responses and fewer tokens used on
+    reasoning in a response. Only available for reasoning models (o-series for OpenAI).
+    """
+
+    MINIMAL = "minimal"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
 @dataclass
 class CompletionRequest:
     """Request a completion from the model
@@ -447,24 +475,98 @@ class CompletionRequest:
 
 
 @dataclass
+class Function:
+    """A function that the model can call."""
+
+    name: str
+    """The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64."""
+
+    description: str | None = None
+    """A description of what the function does, used by the model to choose when and how to call the function."""
+
+    parameters: dict[str, Any] | None = None
+    """The parameters the functions accepts, described as a JSON Schema object.
+    See the [guide](https://platform.openai.com/docs/guides/function-calling?api-mode=responses) for examples,
+    and the [JSON Schema reference](https://json-schema.org/understanding-json-schema/reference) for documentation about the format.
+    Omitting parameters defines a function with an empty parameter list."""
+
+    strict: bool | None = None
+    """Whether to enable strict schema adherence when generating the function call."""
+
+
+@dataclass
+class NamedToolChoice:
+    """A tool choice that is a named function."""
+
+    name: str
+
+
+ToolChoice = Literal["none", "auto", "required"] | NamedToolChoice
+"""Controls which (if any) tool is called by the model.
+
+`none` means the model will not call any tool and instead generates a message.
+`auto` means the model can pick between generating a message or calling one or more tools.
+`required` means the model must call one or more tools.
+Specifying a particular tool via `NamedToolChoice` forces the model to call that tool.
+`none` is the default when no tools are present. `auto` is the default if tools are present.
+"""
+
+
+@dataclass
+class JsonSchema:
+    """A JSON Schema object."""
+
+    name: str
+    """The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64."""
+    description: str | None = None
+    """A description of what the response format is for, used by the model to determine how to respond in the format."""
+
+    schema: dict[str, Any] | None = None
+    """The schema for the response format, described as a JSON Schema object."""
+
+    strict: bool | None = None
+    """Whether to enable strict schema adherence when generating the output. If set to true, the model will always follow the exact schema defined in the `schema` field. Only a subset of JSON Schema is supported when `strict` is `true`. To learn more, read the [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs)."""
+
+
+ResponseFormat = Literal["text", "json_object"] | JsonSchema
+"""An object specifying the format that the model must output.
+
+Setting to `JsonSchema` enables Structured Outputs which ensures the model
+will match your supplied JSON schema. Learn more in the Structured Outputs guide.
+
+Setting to `"json_object"` enables the older JSON mode, which ensures the message the model generates
+is valid JSON. Using json_schema is preferred for models that support it."""
+
+
+@dataclass
 class ChatParams:
     """Chat request parameters.
 
     Attributes:
-        max-tokens (int, optional, default None):  The maximum tokens that should be inferred. Note, the backing implementation may return less tokens due to other stop reasons.
+        max-tokens (int, optional, default None): The maximum number of tokens that can be generated in the chat completion. This value can be used to control costs for text generated via API. This value is now deprecated by OpenAI in favor of max_completion_tokens, and is not compatible with OpenAI o-series models. Whether to set `max-tokens` or `max-completion-tokens` is an inference provider specific decision. While some inference providers like GitHub models and the Aleph Alpha inference expect the user to set `max-tokens`, OpenAI deprecated it in favor of `max-completion-tokens`. For OpenAI reasoning models, settings `max-tokens` raises an error.
+        max-completion-tokens (int, optional, default None): An upper bound for the number of tokens that can be generated for a completion, including visible output tokens and reasoning tokens. Only supported by distinct inference providers (e.g. OpenAI). Note that either `max-tokens` or `max-completion-tokens` can be set, but not both.
         temperature (float, optional, default None): The randomness with which the next token is selected.
         top-p (float, optional, default None): The probability total of next tokens the model will choose from.
         frequency-penalty (float, optional, default None): The presence penalty reduces the probability of generating tokens that are already present in the generated text respectively prompt. Presence penalty is independent of the number of occurrences. Increase the value to reduce the probability of repeating text.
         presence-penalty (float, optional, default None): The presence penalty reduces the probability of generating tokens that are already present in the generated text respectively prompt. Presence penalty is independent of the number of occurrences. Increase the value to reduce the probability of repeating text.
         logprobs (Logprobs, optional, default NoLogprobs()): Use this to control the logarithmic probabilities you want to have returned. This is useful to figure out how likely it had been that this specific token had been sampled.
+        tools (list[Function], optional, default None): A list of tools the model may call. Use this to provide a list of functions the model may generate JSON inputs for. A max of 128 functions are supported.
+        parallel-tool-calls (bool, optional, default None): Whether to allow the model to call multiple tools in parallel.
+        reasoning-effort (ReasoningEffort, optional, default None): Constrains effort on reasoning for reasoning models.
     """
 
     max_tokens: int | None = None
+    max_completion_tokens: int | None = None
     temperature: float | None = None
     top_p: float | None = None
     frequency_penalty: float | None = None
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
+    tools: list[Function] | None = None
+    tool_choice: ToolChoice | None = None
+    parallel_tool_calls: bool | None = None
+    response_format: ResponseFormat | None = None
+    reasoning_effort: ReasoningEffort | None = None
 
     def as_gen_ai_otel_attributes(self) -> dict[str, "AttributeValue"]:
         attributes: dict[str, "AttributeValue"] = {}

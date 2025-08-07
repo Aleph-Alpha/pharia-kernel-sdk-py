@@ -6,8 +6,11 @@ from pharia_skill.csi.inference import (
     ChatStreamResponse,
     MessageAppend,
     MessageBegin,
-    ToolCallRequest,
+    ToolCall,
+    ToolCallChunk,
+    ToolCallEvent,
 )
+from pharia_skill.csi.inference.types import merge_tool_call_chunks
 
 
 def test_serialized_roles_are_openai_compatible():
@@ -17,7 +20,7 @@ def test_serialized_roles_are_openai_compatible():
     message = Message.user("Hello, world!")
     input = ChatInterface(messages=[message])
     expected = '{"messages":[{"role":"user","content":"Hello, world!"}]}'
-    assert input.model_dump_json() == expected
+    assert input.model_dump_json(exclude_none=True) == expected
 
 
 def test_logbprob_try_as_utf8():
@@ -51,7 +54,7 @@ def test_chat_stream_response_no_tool_call():
     response = MockChatStreamResponse(events)
 
     # When checking for a tool call
-    tool_call = response.tool_call()
+    tool_call = response.tool_calls()
 
     # Then it should return None and the stream should yield all message append events
     assert tool_call is None
@@ -65,25 +68,31 @@ def test_chat_stream_response_gives_tool_call_if_present():
     # Given a chat stream response that returns multiple events
     events: list[ChatEvent] = [
         MessageBegin(role="assistant"),
-        MessageAppend(
-            content='{"type": "function", "function": {"name": "search',
-            logprobs=[],
-        ),
-        MessageAppend(
-            content='", "parameters": {"query": "2025 Giro de Italia last stage winning time"}}}',
-            logprobs=[],
+        ToolCallEvent(chunks=[ToolCallChunk(index=0, id="abc", name="sea")]),
+        ToolCallEvent(chunks=[ToolCallChunk(index=0, name="rch")]),
+        ToolCallEvent(chunks=[ToolCallChunk(index=0, arguments='{"quer')]),
+        ToolCallEvent(
+            chunks=[
+                ToolCallChunk(
+                    index=0,
+                    arguments='y": "2025 Giro de Italia last stage winning time"}',
+                )
+            ]
         ),
     ]
     response = MockChatStreamResponse(events)
 
     # When checking for a tool call
-    tool_call = response.tool_call()
+    tool_calls = response.tool_calls()
 
     # Then it should return the tool call
-    assert tool_call == ToolCallRequest(
-        name="search",
-        parameters={"query": "2025 Giro de Italia last stage winning time"},
-    )
+    assert tool_calls == [
+        ToolCall(
+            id="abc",
+            name="search",
+            arguments={"query": "2025 Giro de Italia last stage winning time"},
+        )
+    ]
 
 
 def test_empty_chat_stream_response_gives_none_for_tool_call():
@@ -97,7 +106,7 @@ def test_empty_chat_stream_response_gives_none_for_tool_call():
     list(response.stream())
 
     # When checking for a tool call
-    tool_call = response.tool_call()
+    tool_call = response.tool_calls()
 
     # Then it should return None
     assert tool_call is None
@@ -157,3 +166,90 @@ def test_message_helper_after_stream_is_consumed():
     # Then no error is raised, but an empty message is returned
     assert message.role == Role.Assistant
     assert message.content == ""
+
+
+def test_merge_tool_call_chunks():
+    # Given a list of tool call chunks
+    chunks = [
+        ToolCallEvent(
+            chunks=[
+                ToolCallChunk(index=0, id="abc", name="add", arguments=""),
+                ToolCallChunk(index=1, id="def", name="subtract", arguments=""),
+            ]
+        ),
+        ToolCallEvent(
+            chunks=[
+                ToolCallChunk(index=0, arguments='{"'),
+                ToolCallChunk(index=1, arguments='{"'),
+            ]
+        ),
+        ToolCallEvent(
+            chunks=[
+                ToolCallChunk(index=0, arguments="first_ar"),
+                ToolCallChunk(index=1, arguments="first_ar"),
+            ]
+        ),
+        ToolCallEvent(
+            chunks=[
+                ToolCallChunk(index=0, arguments='gument"'),
+                ToolCallChunk(index=1, arguments='gument"'),
+            ]
+        ),
+        ToolCallEvent(
+            chunks=[
+                ToolCallChunk(index=0, arguments=':"1"}'),
+                ToolCallChunk(index=1, arguments=':"2"}'),
+            ]
+        ),
+    ]
+
+    # When merging the tool call chunks
+    tool_calls = merge_tool_call_chunks(chunks)
+
+    # Then we get two tool calls
+    assert len(tool_calls) == 2
+    assert tool_calls[0].id == "abc"
+    assert tool_calls[0].name == "add"
+    assert tool_calls[0].arguments == {"first_argument": "1"}
+
+    assert tool_calls[1].id == "def"
+    assert tool_calls[1].name == "subtract"
+    assert tool_calls[1].arguments == {"first_argument": "2"}
+
+
+def test_can_merge_tool_call_chunks_with_no_chunks():
+    # When merging an empty list of tool call chunks
+    tool_calls = merge_tool_call_chunks([])
+
+    # Then we get an empty list
+    assert tool_calls == []
+
+
+def test_name_spread_across_chunks():
+    # Given a list of tool call chunks
+    chunks = [
+        ToolCallEvent(
+            chunks=[
+                ToolCallChunk(index=0, id="abc", name="a"),
+                ToolCallChunk(index=1, id="def", name="su"),
+            ]
+        ),
+        ToolCallEvent(
+            chunks=[
+                ToolCallChunk(index=0, name="dd", arguments="{}"),
+                ToolCallChunk(index=1, name="btract", arguments="{}"),
+            ]
+        ),
+    ]
+    # When merging the tool call chunks
+    tool_calls = merge_tool_call_chunks(chunks)
+
+    # Then we get the tool calls
+    assert len(tool_calls) == 2
+    assert tool_calls[0].id == "abc"
+    assert tool_calls[0].name == "add"
+    assert tool_calls[0].arguments == {}
+
+    assert tool_calls[1].id == "def"
+    assert tool_calls[1].name == "subtract"
+    assert tool_calls[1].arguments == {}

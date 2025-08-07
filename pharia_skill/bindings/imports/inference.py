@@ -45,6 +45,7 @@ class FinishReason(Enum):
     STOP = 0
     LENGTH = 1
     CONTENT_FILTER = 2
+    TOOL_CALLS = 3
 
 @dataclass
 class Logprob:
@@ -105,43 +106,16 @@ class CompletionParams:
     frequency_penalty: Optional[float]
     presence_penalty: Optional[float]
     logprobs: Logprobs
+    echo: bool
 
 @dataclass
 class CompletionRequest:
     """
     Completion request parameters
-    Outdated, consumers should use `completion-request-v2` instead.
-    Still supported for backwards compatibility.
     """
     model: str
     prompt: str
     params: CompletionParams
-
-@dataclass
-class CompletionParamsV2:
-    """
-    Completion request parameters
-    """
-    max_tokens: Optional[int]
-    temperature: Optional[float]
-    top_k: Optional[int]
-    top_p: Optional[float]
-    stop: List[str]
-    return_special_tokens: bool
-    frequency_penalty: Optional[float]
-    presence_penalty: Optional[float]
-    logprobs: Logprobs
-    echo: bool
-
-@dataclass
-class CompletionRequestV2:
-    """
-    Completion request parameters
-    Introduces support for `echo` without requiring a version bump.
-    """
-    model: str
-    prompt: str
-    params: CompletionParamsV2
 
 @dataclass
 class CompletionAppend:
@@ -202,18 +176,125 @@ class CompletionStream:
 
 
 @dataclass
-class Message:
+class ToolMessage:
+    content: str
+    tool_call_id: str
+
+@dataclass
+class OtherMessage:
     role: str
     content: str
 
 @dataclass
+class ToolCall:
+    """
+    A tool call as requested by the model.
+    """
+    id: str
+    name: str
+    arguments: str
+
+@dataclass
+class AssistantMessage:
+    content: Optional[str]
+    tool_calls: Optional[List[ToolCall]]
+
+
+@dataclass
+class Message_Assistant:
+    value: AssistantMessage
+
+
+@dataclass
+class Message_Tool:
+    value: ToolMessage
+
+
+@dataclass
+class Message_Other:
+    value: OtherMessage
+
+
+Message = Union[Message_Assistant, Message_Tool, Message_Other]
+
+
+@dataclass
+class Function:
+    name: str
+    description: Optional[str]
+    parameters: Optional[bytes]
+    strict: Optional[bool]
+
+
+@dataclass
+class ToolChoice_None_:
+    pass
+
+
+@dataclass
+class ToolChoice_Auto:
+    pass
+
+
+@dataclass
+class ToolChoice_Required:
+    pass
+
+
+@dataclass
+class ToolChoice_Named:
+    value: str
+
+
+ToolChoice = Union[ToolChoice_None_, ToolChoice_Auto, ToolChoice_Required, ToolChoice_Named]
+
+
+class ReasoningEffort(Enum):
+    MINIMAL = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+
+@dataclass
+class JsonSchema:
+    description: Optional[str]
+    name: str
+    schema: Optional[bytes]
+    strict: Optional[bool]
+
+
+@dataclass
+class ResponseFormat_Text:
+    pass
+
+
+@dataclass
+class ResponseFormat_JsonObject:
+    pass
+
+
+@dataclass
+class ResponseFormat_JsonSchema:
+    value: JsonSchema
+
+
+ResponseFormat = Union[ResponseFormat_Text, ResponseFormat_JsonObject, ResponseFormat_JsonSchema]
+
+
+@dataclass
 class ChatParams:
     max_tokens: Optional[int]
+    max_completion_tokens: Optional[int]
     temperature: Optional[float]
     top_p: Optional[float]
     frequency_penalty: Optional[float]
     presence_penalty: Optional[float]
     logprobs: Logprobs
+    tools: Optional[List[Function]]
+    tool_choice: Optional[ToolChoice]
+    parallel_tool_calls: Optional[bool]
+    response_format: Optional[ResponseFormat]
+    reasoning_effort: Optional[ReasoningEffort]
 
 @dataclass
 class ChatResponse:
@@ -221,7 +302,7 @@ class ChatResponse:
     The result of a chat response, including the message generated as well as
     why the model finished completing.
     """
-    message: Message
+    message: AssistantMessage
     finish_reason: FinishReason
     logprobs: List[Distribution]
     usage: TokenUsage
@@ -239,6 +320,13 @@ class MessageAppend:
     """
     content: str
     logprobs: List[Distribution]
+
+@dataclass
+class ToolCallChunk:
+    index: int
+    id: Optional[str]
+    name: Optional[str]
+    arguments: Optional[str]
 
 
 @dataclass
@@ -261,7 +349,12 @@ class ChatEvent_Usage:
     value: TokenUsage
 
 
-ChatEvent = Union[ChatEvent_MessageBegin, ChatEvent_MessageAppend, ChatEvent_MessageEnd, ChatEvent_Usage]
+@dataclass
+class ChatEvent_ToolCall:
+    value: List[ToolCallChunk]
+
+
+ChatEvent = Union[ChatEvent_MessageBegin, ChatEvent_MessageAppend, ChatEvent_MessageEnd, ChatEvent_Usage, ChatEvent_ToolCall]
 """
 An event emitted by the chat-stream resource.
 """
@@ -300,16 +393,6 @@ def explain(request: List[ExplanationRequest]) -> List[List[TextScore]]:
     raise NotImplementedError
 
 def complete(requests: List[CompletionRequest]) -> List[Completion]:
-    """
-    Outdated, consumers should use `complete-v2` instead.
-    Still supported for backwards compatibility.
-    """
-    raise NotImplementedError
-
-def complete_v2(requests: List[CompletionRequestV2]) -> List[Completion]:
-    """
-    Introduces support for `echo` without requiring a version bump.
-    """
     raise NotImplementedError
 
 def chat(requests: List[ChatRequest]) -> List[ChatResponse]:
