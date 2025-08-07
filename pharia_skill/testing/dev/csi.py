@@ -195,7 +195,11 @@ class DevCsi(Csi):
         return DevCompletionStreamResponse(events, span)
 
     def _chat_stream(
-        self, model: str, messages: list[Message], params: ChatParams
+        self,
+        model: str,
+        messages: list[Message],
+        params: ChatParams,
+        tools: list[Tool] | None = None,
     ) -> ChatStreamResponse:
         body = ChatRequestSerializer(
             model=model, messages=messages, params=params
