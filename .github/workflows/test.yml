@@ -107,13 +107,13 @@ jobs:
         run: uv sync --dev
       - name: Test skill building
         run: |
-          uv run pharia-skill build tests.skills.haiku --no-interactive
-          uv run pharia-skill build tests.skills.search --no-interactive
-          uv run pharia-skill build tests.skills.language --no-interactive
-          uv run pharia-skill build tests.skills.failing --no-interactive
-          uv run pharia-skill build tests.skills.bad_csi_input --no-interactive
-          uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive --skill-type message-stream-skill
-          uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive --skill-type message-stream-skill
+          uv run pharia-skill build tests.skills.haiku --no-interactive --unstable
+          uv run pharia-skill build tests.skills.search --no-interactive --unstable
+          uv run pharia-skill build tests.skills.language --no-interactive --unstable
+          uv run pharia-skill build tests.skills.failing --no-interactive --unstable
+          uv run pharia-skill build tests.skills.bad_csi_input --no-interactive --unstable
+          uv run pharia-skill build tests.skills.streaming_haiku_chat --no-interactive --skill-type message-stream-skill --unstable
+          uv run pharia-skill build tests.skills.streaming_haiku_completion --no-interactive --skill-type message-stream-skill --unstable
       - name: Create .env file for skill publishing
         run: |
           echo "SKILL_REGISTRY_USER=${{ github.actor }}" > .env

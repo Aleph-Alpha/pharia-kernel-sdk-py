@@ -157,14 +157,27 @@ def test_serialize_chat_request():
         [
             {
                 "model": "llama-3.1-8b-instruct",
-                "messages": [{"role": "user", "content": "Hello"}],
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Hello",
+                        "tool_calls": None,
+                        "tool_call_id": None,
+                    }
+                ],
                 "params": {
                     "max_tokens": 64,
+                    "max_completion_tokens": None,
                     "temperature": None,
                     "top_p": None,
                     "frequency_penalty": None,
                     "presence_penalty": None,
                     "logprobs": {"top": 10},
+                    "tools": None,
+                    "tool_choice": None,
+                    "parallel_tool_calls": None,
+                    "response_format": None,
+                    "reasoning_effort": None,
                 },
             }
         ]

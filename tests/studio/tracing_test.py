@@ -354,6 +354,8 @@ def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
         "message": {
             "role": "assistant",
             "content": "Hello, world!",
+            "tool_calls": None,
+            "tool_call_id": None,
         },
         "finish_reason": "stop",
         "usage": {"prompt": 1, "completion": 1},
