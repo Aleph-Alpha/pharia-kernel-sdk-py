@@ -46,4 +46,5 @@ def summarize(csi: Csi, input: Input) -> Output:
         {news}"""
     )
     answer = csi.chat("llama-3.3-70b-instruct", [system, user])
+    assert answer.message.content is not None
     return Output(summary=answer.message.content.strip())
