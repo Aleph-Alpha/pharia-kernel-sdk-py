@@ -33,6 +33,8 @@ def haiku(csi: Csi, input: Input) -> Output:
     chat_completion = csi.chat(
         "llama-3.1-8b-instruct", [msg], ChatParams(max_tokens=64)
     )
+    assert chat_completion.message.content is not None
+
     params = CompletionParams(max_tokens=64, return_special_tokens=True)
     completion_special_tokens = csi.complete("llama-3.1-8b-instruct", prompt, params)
     return Output(
