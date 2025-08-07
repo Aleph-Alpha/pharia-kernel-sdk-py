@@ -34,4 +34,5 @@ Question: {input.question}
     message = Message.user(content)
     params = ChatParams(max_tokens=512)
     response: ChatResponse = csi.chat("pharia-1-llm-7b-control", [message], params)
+    assert response.message.content is not None
     return Output(answer=response.message.content, number_of_documents=len(documents))
