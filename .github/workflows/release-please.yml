@@ -17,7 +17,7 @@ jobs:
         uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445
       - if: ${{ steps.release.outputs.release_created }}
         name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - if: ${{ steps.release.outputs.release_created }}
         name: Install uv
         uses: astral-sh/setup-uv@7edac99f961f18b581bbd960d59d049f04c0002f
