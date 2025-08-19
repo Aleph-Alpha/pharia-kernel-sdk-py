@@ -19,7 +19,6 @@ the Python interpreter makes sure the caller gets a good error message if they p
 `None` and we access the `name` attribute in our SDK.
 """
 
-import json
 from typing import Protocol, Sequence
 
 from pydantic.types import JsonValue
@@ -343,9 +342,9 @@ class Csi(Protocol):
         The tool call is added to the conversation and the tool response is added to the conversation.
         """
         message = Message(
-            role=Role.Tool,
-            content=json.dumps(tool_call.arguments),
-            tool_call_id=tool_call.id,
+            role=Role.Assistant,
+            content=None,
+            tool_calls=[tool_call],
         )
         messages.append(message)
         try:

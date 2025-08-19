@@ -20,7 +20,12 @@ from pharia_skill import (
     TokenUsage,
     TopLogprobs,
 )
-from pharia_skill.csi.inference import CompletionAppend, MessageAppend, MessageBegin
+from pharia_skill.csi.inference import (
+    CompletionAppend,
+    MessageAppend,
+    MessageBegin,
+    ToolCall,
+)
 from pharia_skill.testing.dev.client import Event
 from pharia_skill.testing.dev.inference import (
     ChatListDeserializer,
@@ -135,6 +140,63 @@ def test_deserialize_completion_with_logprob_nan():
 
     # Then the sampled logprob is parsed as NaN
     assert isnan(completion.logprobs[0].sampled.logprob)
+
+
+def test_tool_call_arguments_get_serialized_as_json():
+    # Given a tool call
+    tool_call = ToolCall(
+        id="tool_call_id",
+        name="tool_name",
+        arguments={"a": 1, "b": 2},
+    )
+    message = Message.assistant(
+        "Hello",
+        tool_calls=[tool_call],
+    )
+    request = ChatRequest(
+        "llama-3.1-8b-instruct",
+        [message],
+    )
+
+    # When serializing it
+    serialized = ChatRequestListSerializer([request]).model_dump_json()
+
+    # Then the tool call arguments are serialized as JSON
+    assert serialized == dumps(
+        [
+            {
+                "model": "llama-3.1-8b-instruct",
+                "messages": [
+                    {
+                        "role": "assistant",
+                        "content": "Hello",
+                        "tool_calls": [
+                            {
+                                "id": "tool_call_id",
+                                "name": "tool_name",
+                                "arguments": '{"a": 1, "b": 2}',
+                            }
+                        ],
+                        "tool_call_id": None,
+                    }
+                ],
+                "params": {
+                    "max_tokens": None,
+                    "max_completion_tokens": None,
+                    "temperature": None,
+                    "top_p": None,
+                    "frequency_penalty": None,
+                    "presence_penalty": None,
+                    "logprobs": "no",
+                    "tools": None,
+                    "tool_choice": None,
+                    "parallel_tool_calls": None,
+                    "response_format": None,
+                    "reasoning_effort": None,
+                },
+            }
+        ]
+    )
 
 
 def test_serialize_chat_request():
