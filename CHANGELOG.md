@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.19.3](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.2...v0.19.3) (2025-08-19)
+
+
+### Bug Fixes
+
+* expose ToolCallRequest top-level ([c73a809](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c73a8099474dce289aae33f673249f090b8cf5a2))
+* good error msg when listing tools without namespace ([9bdfcef](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9bdfcefec31fbf178646550e356c19083b6c6489))
+* specify that the sdk requires python &gt;=3.11.0,&lt;3.12 ([8ccee0a](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8ccee0a535490eb8764844d0bfa5257394899f75))
+
+
+### Documentation
+
+* give more context in README.md ([fc96070](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/fc96070f8d76134c3e05717f997ae6de0303cd9c))
+* improve quick start guide ([0c4209d](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0c4209dcee6db748d7bde17474efc683d9f88ef7))
+* remove unused input variable in example code snippet ([a222a48](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a222a482c28428ced07edaab4490a8f49f107058))
+* specify that concurrent csi methods preserve order ([3df182e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3df182ee73b11d0a38661afe71eab91c9365c6f7))
+
 ## [0.19.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.1...v0.19.2) (2025-07-09)
 
 
