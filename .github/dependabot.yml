@@ -7,6 +7,11 @@ updates:
     target-branch: "main"
     ignore:
       - dependency-name: "pydantic*"
+    groups:
+      minor:
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
