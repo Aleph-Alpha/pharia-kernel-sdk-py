@@ -4,7 +4,7 @@ import json
 from enum import Enum
 from typing import Annotated, Any, Self
 
-from pydantic import BeforeValidator, field_validator
+from pydantic import BeforeValidator, field_serializer, field_validator
 from pydantic.dataclasses import dataclass
 
 
@@ -147,12 +147,16 @@ class ToolCall:
     name: str
     arguments: dict[str, Any]
 
+    @field_serializer("arguments")
+    def serialize_arguments(self, arguments: dict[str, Any]) -> str:
+        return json.dumps(arguments)
+
 
 @dataclass
 class ToolCallEvent:
     """A list of tool call chunks."""
 
-    chunks: list[ToolCallChunk]
+    tool_calls: list[ToolCallChunk]
 
 
 def merge_tool_call_chunks(events: list[ToolCallEvent]) -> list[ToolCall]:
@@ -198,10 +202,11 @@ def merge_tool_call_chunks(events: list[ToolCallEvent]) -> list[ToolCall]:
         return []
 
     in_progress: dict[int, InProgressToolCall] = {
-        event.index: InProgressToolCall.from_chunk(event) for event in events[0].chunks
+        event.index: InProgressToolCall.from_chunk(event)
+        for event in events[0].tool_calls
     }
     for event in events[1:]:
-        for chunk in event.chunks:
+        for chunk in event.tool_calls:
             in_progress[chunk.index].extend(chunk)
 
     return list(map(InProgressToolCall.as_tool_call, in_progress.values()))
