@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@7edac99f961f18b581bbd960d59d049f04c0002f
+        uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -43,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@7edac99f961f18b581bbd960d59d049f04c0002f
+        uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@7edac99f961f18b581bbd960d59d049f04c0002f
+        uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -98,7 +98,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@7edac99f961f18b581bbd960d59d049f04c0002f
+        uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
