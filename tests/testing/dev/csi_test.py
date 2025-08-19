@@ -152,18 +152,15 @@ def test_chat_stream_after_consumed(csi: Csi, model: str):
 
 
 @pytest.mark.kernel
+@pytest.mark.openai
 def test_chat_stream_with_tool(csi_with_test_namespace: Csi):
-    model = "llama-3.3-70b-instruct"
-    system = Message.system(
-        'DO NOT use quotes (") for integer values when calling tools. i.e. `"parameters": {"a": 1}`'
+    model = "gpt-4o-mini"
+    user = Message.user(
+        "What is 1 + 2? Make use of the available tools to answer the question."
     )
-    user = Message.user("What is 1 + 2?")
-    messages = [system, user]
 
     recorder = MessageRecorder[None]()
-    with csi_with_test_namespace.chat_stream(
-        model, messages, tools=["add"]
-    ) as response:
+    with csi_with_test_namespace.chat_stream(model, [user], tools=["add"]) as response:
         recorder.forward_response(response)
 
     recorded_messages = recorder.messages()

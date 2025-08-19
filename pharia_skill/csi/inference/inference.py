@@ -274,11 +274,6 @@ class ChatStreamResponse(ABC):
             self.buffer.append(event)
         return event
 
-    def _peek_iterator(self) -> Generator[ChatEvent, None, None]:
-        """An iterator over the chat events that does not alter the stream."""
-        while (event := self._peek()) is not None:
-            yield event
-
     def __init__(self) -> None:
         self.buffer = []
         first_event = self._next()

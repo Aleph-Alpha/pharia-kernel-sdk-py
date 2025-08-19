@@ -40,11 +40,13 @@ class Client(CsiClient):
         load_dotenv()
         self.kernel_address = os.environ["PHARIA_KERNEL_ADDRESS"]
         self.url = f"{self.kernel_address}/csi/{self.HTTP_CSI_VERSION}"
-        token = os.environ["PHARIA_AI_TOKEN"]
         self.session = requests.Session()
-        self.session.headers = {
-            "Authorization": f"Bearer {token}",
-        }
+
+        # Authentication for PhariaKernel is optional.
+        if token := os.environ.get("PHARIA_AI_TOKEN"):
+            self.session.headers = {
+                "Authorization": f"Bearer {token}",
+            }
 
     def __del__(self) -> None:
         if hasattr(self, "session"):
@@ -56,14 +58,7 @@ class Client(CsiClient):
             url,
             json=data,
         )
-        # Always forward the error message from the kernel
-        if response.status_code >= 400:
-            try:
-                error = response.json()
-            except requests.JSONDecodeError:
-                error = response.text
-            raise Exception(self.format_error(response.status_code, error))
-
+        self._raise_for_status(response)
         return response.json()
 
     def stream(
@@ -72,15 +67,24 @@ class Client(CsiClient):
         url = f"{self.url}/{function}"
         headers = {"Accept": "text/event-stream", **self.session.headers}
         response = self.session.post(url, json=data, headers=headers, stream=True)
-        # Always forward the error message from the kernel
+        self._raise_for_status(response)
+        return KernelStreamDeserializer(response).events()
+
+    def _raise_for_status(self, response: requests.Response) -> None:
+        if response.status_code == 401:
+            raise Exception(
+                "Unauthenticated: Please set the `PHARIA_AI_TOKEN` environment variable."
+            )
+        if response.status_code == 403:
+            raise Exception(
+                "Unauthorized: Please check the `PHARIA_AI_TOKEN` environment variable."
+            )
         if response.status_code >= 400:
             try:
                 error = response.json()
             except requests.JSONDecodeError:
                 error = response.text
             raise Exception(self.format_error(response.status_code, error))
-
-        return KernelStreamDeserializer(response).events()
 
     def format_error(self, status_code: int, error: Any) -> str:
         return (

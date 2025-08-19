@@ -68,11 +68,11 @@ def test_chat_stream_response_gives_tool_call_if_present():
     # Given a chat stream response that returns multiple events
     events: list[ChatEvent] = [
         MessageBegin(role="assistant"),
-        ToolCallEvent(chunks=[ToolCallChunk(index=0, id="abc", name="sea")]),
-        ToolCallEvent(chunks=[ToolCallChunk(index=0, name="rch")]),
-        ToolCallEvent(chunks=[ToolCallChunk(index=0, arguments='{"quer')]),
+        ToolCallEvent(tool_calls=[ToolCallChunk(index=0, id="abc", name="sea")]),
+        ToolCallEvent(tool_calls=[ToolCallChunk(index=0, name="rch")]),
+        ToolCallEvent(tool_calls=[ToolCallChunk(index=0, arguments='{"quer')]),
         ToolCallEvent(
-            chunks=[
+            tool_calls=[
                 ToolCallChunk(
                     index=0,
                     arguments='y": "2025 Giro de Italia last stage winning time"}',
@@ -172,31 +172,31 @@ def test_merge_tool_call_chunks():
     # Given a list of tool call chunks
     chunks = [
         ToolCallEvent(
-            chunks=[
+            tool_calls=[
                 ToolCallChunk(index=0, id="abc", name="add", arguments=""),
                 ToolCallChunk(index=1, id="def", name="subtract", arguments=""),
             ]
         ),
         ToolCallEvent(
-            chunks=[
+            tool_calls=[
                 ToolCallChunk(index=0, arguments='{"'),
                 ToolCallChunk(index=1, arguments='{"'),
             ]
         ),
         ToolCallEvent(
-            chunks=[
+            tool_calls=[
                 ToolCallChunk(index=0, arguments="first_ar"),
                 ToolCallChunk(index=1, arguments="first_ar"),
             ]
         ),
         ToolCallEvent(
-            chunks=[
+            tool_calls=[
                 ToolCallChunk(index=0, arguments='gument"'),
                 ToolCallChunk(index=1, arguments='gument"'),
             ]
         ),
         ToolCallEvent(
-            chunks=[
+            tool_calls=[
                 ToolCallChunk(index=0, arguments=':"1"}'),
                 ToolCallChunk(index=1, arguments=':"2"}'),
             ]
@@ -229,13 +229,13 @@ def test_name_spread_across_chunks():
     # Given a list of tool call chunks
     chunks = [
         ToolCallEvent(
-            chunks=[
+            tool_calls=[
                 ToolCallChunk(index=0, id="abc", name="a"),
                 ToolCallChunk(index=1, id="def", name="su"),
             ]
         ),
         ToolCallEvent(
-            chunks=[
+            tool_calls=[
                 ToolCallChunk(index=0, name="dd", arguments="{}"),
                 ToolCallChunk(index=1, name="btract", arguments="{}"),
             ]
