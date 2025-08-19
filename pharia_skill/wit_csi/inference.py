@@ -109,7 +109,7 @@ class WitChatStreamResponse(ChatStreamResponse):
                 return token_usage_from_wit(value)
             case wit.ChatEvent_ToolCall(value):
                 return ToolCallEvent(
-                    chunks=[tool_call_chunk_from_wit(t) for t in value]
+                    tool_calls=[tool_call_chunk_from_wit(t) for t in value]
                 )
             case _:
                 return None

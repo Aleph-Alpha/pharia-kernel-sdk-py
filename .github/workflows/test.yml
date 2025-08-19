@@ -51,7 +51,35 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
       - name: Test
-        run: uv run pytest -m 'not kernel and not studio'
+        run: uv run pytest -m 'not kernel and not studio and not openai'
+
+  kernel-openai-inference-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+      models: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@7edac99f961f18b581bbd960d59d049f04c0002f
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Run Pharia Kernel against the GitHub models inference backend
+        run: |
+          podman login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+          podman pull ghcr.io/aleph-alpha/pharia-kernel/pharia-kernel:latest
+          podman tag ghcr.io/aleph-alpha/pharia-kernel/pharia-kernel:latest pharia-kernel
+          (podman run -p 8081:8081 -e OPENAI_INFERENCE__URL=https://models.github.ai/inference -e OPENAI_INFERENCE__TOKEN=${{ secrets.GITHUB_TOKEN }} pharia-kernel | cat) &
+      - name: Test
+        run: uv run pytest -m openai
+        env:
+          PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
 
   kernel-and-studio-test:
     runs-on: ubuntu-latest
@@ -74,7 +102,7 @@ jobs:
       - name: Run Pharia Kernel
         run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }}
       - name: Run kernel and studio tests
-        run: uv run pytest -m 'kernel or studio'
+        run: uv run pytest -m '(kernel or studio) and not openai'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
           PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
