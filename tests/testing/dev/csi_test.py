@@ -7,30 +7,23 @@ import requests
 
 from pharia_skill import (
     ChatParams,
-    ChatStreamResponse,
     ChunkParams,
     CompletionParams,
     Csi,
     Document,
     DocumentPath,
     FinishReason,
-    Granularity,
     IndexPath,
     InvokeRequest,
     Language,
     Message,
     Role,
     Text,
-    Tool,
     ToolError,
     ToolOutput,
 )
-from pharia_skill.studio import (
-    SpanClient,
-    StudioExporter,
-    StudioSpan,
-)
-from pharia_skill.testing import DevCsi, MessageRecorder, StubCsi
+from pharia_skill.studio import SpanClient, StudioExporter, StudioSpan
+from pharia_skill.testing import DevCsi, MessageRecorder
 from pharia_skill.testing.dev.client import Client
 
 
@@ -157,42 +150,22 @@ def test_chat_stream_after_consumed(csi: Csi, model: str):
 
 
 @pytest.mark.kernel
+@pytest.mark.openai
 def test_chat_stream_with_tool(csi_with_test_namespace: Csi):
-    model = "llama-3.3-70b-instruct"
-    system = Message.system(
-        'DO NOT use quotes (") for integer values when calling tools. i.e. `"parameters": {"a": 1}`'
+    model = "gpt-4o-mini"
+    user = Message.user(
+        "What is 1 + 2? Make use of the available tools to answer the question."
     )
-    user = Message.user("What is 1 + 2?")
-    messages = [system, user]
 
     recorder = MessageRecorder[None]()
-    with csi_with_test_namespace.chat_stream(
-        model, messages, tools=["add"]
-    ) as response:
+    with csi_with_test_namespace.chat_stream(model, [user], tools=["add"]) as response:
         recorder.forward_response(response)
 
     recorded_messages = recorder.messages()
 
     assert len(recorded_messages) == 1
     assert recorded_messages[0].role == "assistant"
-    assert recorded_messages[0].content == "The answer is 3."
-
-
-@pytest.mark.kernel
-def test_chat_stream_with_saboteur_tool(csi_with_test_namespace: Csi, model: str):
-    messages = [Message.user("Return response directly")]
-
-    recorder = MessageRecorder[None]()
-    with csi_with_test_namespace.chat_stream(
-        model, messages, tools=["saboteur"]
-    ) as response:
-        recorder.forward_response(response)
-
-    recorded_messages = recorder.messages()
-
-    assert len(recorded_messages) == 1
-    assert recorded_messages[0].role == "assistant"
-    assert "out of cheese" in recorded_messages[0].content.lower()
+    assert "3" in recorded_messages[0].content
 
 
 @pytest.mark.kernel
@@ -216,32 +189,11 @@ def test_chat(csi: Csi, model: str):
     params = ChatParams(max_tokens=64)
     messages = [Message.user("Say hello to Bob")]
     result = csi.chat(model, messages, params)
+
+    assert result.message.content is not None
     assert "Bob" in result.message.content
     assert isinstance(result.message.role, Role)
     assert result.message.role == Role.Assistant
-
-
-@pytest.mark.kernel
-def test_explain(csi: Csi, model: str):
-    scores = csi.explain(
-        prompt="An apple a day",
-        target=" keeps the doctor away",
-        granularity=Granularity.WORD,
-        model=model,
-    )
-
-    assert len(scores) == 4
-    assert scores[0].start == 0
-    assert scores[0].length == 2
-
-    assert scores[1].start == 3
-    assert scores[1].length == 5
-
-    assert scores[2].start == 9
-    assert scores[2].length == 1
-
-    assert scores[3].start == 11
-    assert scores[3].length == 3
 
 
 @pytest.mark.kernel
@@ -411,38 +363,6 @@ def test_json_error_response_is_used(mock_post):
 
     # Then the JSON is decoded in the error message
     assert "Original Error: {'error': 'csi-version'}" in str(e.value)
-
-
-def test_tools_are_added_to_system_prompt():
-    # Given a spy csi that stores the messages
-    class SpyCsi(StubCsi):
-        def __init__(self) -> None:
-            self.messages: list[Message] = []
-
-        def _chat_stream(
-            self,
-            model: str,
-            messages: list[Message],
-            params: ChatParams,
-        ) -> ChatStreamResponse:
-            self.messages = messages
-            return super()._chat_stream(model, messages, params)
-
-    csi = SpyCsi()
-
-    # When calling chat with tools
-    fish_counter = Tool(
-        name="fish-count",
-        description="Count the number of fish in the sea",
-        input_schema={"fish-type": {"type": "string"}},
-    )
-    messages = [Message.user("How many fish left in the sea?")]
-    csi.chat_stream_step("gpt-nautilus", messages, tools=[fish_counter])
-
-    # Then the tools are added to the system prompt
-    system = csi.messages[0]
-    assert system.role == Role.System
-    assert "fish-count" in system.content
 
 
 # Although this test does not talk to the Kernel, it relies on the two environment

@@ -18,7 +18,6 @@ from pharia_skill import (
     Cursor,
     Document,
     DocumentPath,
-    ExplanationRequest,
     FinishReason,
     JsonSerializable,
     Language,
@@ -27,7 +26,6 @@ from pharia_skill import (
     SearchResult,
     SelectLanguageRequest,
     Text,
-    TextScore,
     TokenUsage,
     ToolResult,
 )
@@ -117,6 +115,9 @@ class StubCsi(Csi):
             total_usage = 0
             yield MessageBegin("assistant")
             for message in messages:
+                assert message.content is not None, (
+                    "stub Csi only supports messages with content"
+                )
                 content = message.content
                 total_usage += len(content)
                 yield MessageAppend(content, [])
@@ -144,23 +145,22 @@ class StubCsi(Csi):
         return [[Chunk(text=request.text, character_offset=0)] for request in requests]
 
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
+        last_message = requests[-1].messages[-1]
+        assert last_message.content is not None, (
+            "stub Csi only supports messages with content"
+        )
         return [
             ChatResponse(
-                message=Message.assistant(request.messages[-1].content),
+                message=Message.assistant(last_message.content),
                 finish_reason=FinishReason.STOP,
                 logprobs=[],
                 usage=TokenUsage(
-                    prompt=len(request.messages[-1].content),
-                    completion=len(request.messages[-1].content),
+                    prompt=len(last_message.content),
+                    completion=len(last_message.content),
                 ),
             )
             for request in requests
         ]
-
-    def explain_concurrent(
-        self, requests: Sequence[ExplanationRequest]
-    ) -> list[list[TextScore]]:
-        return [[] for _ in requests]
 
     def select_language_concurrent(
         self, requests: Sequence[SelectLanguageRequest]

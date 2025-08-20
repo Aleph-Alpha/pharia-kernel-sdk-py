@@ -10,25 +10,25 @@ from pharia_skill import (
     CompletionParams,
     CompletionRequest,
     Distribution,
-    ExplanationRequest,
     FinishReason,
-    Granularity,
     Logprob,
     Message,
     Role,
-    TextScore,
     TokenUsage,
     TopLogprobs,
 )
-from pharia_skill.csi.inference import CompletionAppend, MessageAppend, MessageBegin
+from pharia_skill.csi.inference import (
+    CompletionAppend,
+    MessageAppend,
+    MessageBegin,
+    ToolCall,
+)
 from pharia_skill.testing.dev.client import Event
 from pharia_skill.testing.dev.inference import (
     ChatListDeserializer,
     ChatRequestListSerializer,
     CompletionListDeserializer,
     CompletionRequestListSerializer,
-    ExplanationListDeserializer,
-    ExplanationRequestListSerializer,
     chat_event_from_sse,
     completion_event_from_sse,
 )
@@ -137,6 +137,63 @@ def test_deserialize_completion_with_logprob_nan():
     assert isnan(completion.logprobs[0].sampled.logprob)
 
 
+def test_tool_call_arguments_get_serialized_as_json():
+    # Given a tool call
+    tool_call = ToolCall(
+        id="tool_call_id",
+        name="tool_name",
+        arguments={"a": 1, "b": 2},
+    )
+    message = Message.assistant(
+        "Hello",
+        tool_calls=[tool_call],
+    )
+    request = ChatRequest(
+        "llama-3.1-8b-instruct",
+        [message],
+    )
+
+    # When serializing it
+    serialized = ChatRequestListSerializer([request]).model_dump_json()
+
+    # Then the tool call arguments are serialized as JSON
+    assert serialized == dumps(
+        [
+            {
+                "model": "llama-3.1-8b-instruct",
+                "messages": [
+                    {
+                        "role": "assistant",
+                        "content": "Hello",
+                        "tool_calls": [
+                            {
+                                "id": "tool_call_id",
+                                "name": "tool_name",
+                                "arguments": '{"a": 1, "b": 2}',
+                            }
+                        ],
+                        "tool_call_id": None,
+                    }
+                ],
+                "params": {
+                    "max_tokens": None,
+                    "max_completion_tokens": None,
+                    "temperature": None,
+                    "top_p": None,
+                    "frequency_penalty": None,
+                    "presence_penalty": None,
+                    "logprobs": "no",
+                    "tools": None,
+                    "tool_choice": None,
+                    "parallel_tool_calls": None,
+                    "response_format": None,
+                    "reasoning_effort": None,
+                },
+            }
+        ]
+    )
+
+
 def test_serialize_chat_request():
     # Given a list of chat requests
     request = ChatRequestListSerializer(
@@ -157,14 +214,27 @@ def test_serialize_chat_request():
         [
             {
                 "model": "llama-3.1-8b-instruct",
-                "messages": [{"role": "user", "content": "Hello"}],
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Hello",
+                        "tool_calls": None,
+                        "tool_call_id": None,
+                    }
+                ],
                 "params": {
                     "max_tokens": 64,
+                    "max_completion_tokens": None,
                     "temperature": None,
                     "top_p": None,
                     "frequency_penalty": None,
                     "presence_penalty": None,
                     "logprobs": {"top": 10},
+                    "tools": None,
+                    "tool_choice": None,
+                    "parallel_tool_calls": None,
+                    "response_format": None,
+                    "reasoning_effort": None,
                 },
             }
         ]
@@ -213,47 +283,6 @@ def test_deserialize_chat():
             )
         ],
     )
-
-
-def test_serialize_explanation_request():
-    # Given a list of Explanation requests
-    request = ExplanationRequestListSerializer(
-        [
-            ExplanationRequest(
-                prompt="my prompt",
-                target="my target",
-                model="my-model",
-                granularity=Granularity.AUTO,
-            )
-        ]
-    )
-
-    # When serializing it
-    serialized = request.model_dump_json()
-
-    # Then it matches
-    assert serialized == dumps(
-        [
-            {
-                "prompt": "my prompt",
-                "target": "my target",
-                "model": "my-model",
-                "granularity": "auto",
-            }
-        ]
-    )
-
-
-def test_deserialize_explanation():
-    # Given a serialized explanation response
-    serialized = dumps([[{"start": 0, "length": 5, "score": 0.5}]])
-
-    # When deserializing it
-    deserialized = ExplanationListDeserializer.model_validate_json(serialized)
-    explanation = deserialized.root
-
-    # Then the explanation is loaded
-    assert explanation == [[TextScore(start=0, length=5, score=0.5)]]
 
 
 def test_deserialize_completion_append_from_sse():

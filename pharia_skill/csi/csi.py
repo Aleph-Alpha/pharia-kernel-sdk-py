@@ -42,17 +42,14 @@ from .inference import (
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
-    ExplanationRequest,
-    Granularity,
     InvokeRequest,
     Message,
-    TextScore,
     Tool,
+    ToolCall,
     ToolError,
     ToolOutput,
     ToolResult,
 )
-from .inference.tool import ToolCallRequest, add_tools_to_system_prompt
 from .language import Language, SelectLanguageRequest
 
 
@@ -288,13 +285,15 @@ class Csi(Protocol):
             tools (list[str], optional, Default None):
                 List of tool names that are available to the model.
         """
-        tool_schemas = self._list_tool_schemas(tools) if tools else None
-        response = self.chat_stream_step(model, messages, params, tool_schemas)
+        params = params or ChatParams()
+        if tools:
+            params.tools = self._list_tool_schemas(tools)
+        response = self.chat_stream_step(model, messages, params)
 
         if tools:
-            while (tool_call := response.tool_call()) is not None:
-                self._handle_tool_call(tool_call, messages)
-                response = self.chat_stream_step(model, messages, params, tool_schemas)
+            while (tool_calls := response.tool_calls()) is not None:
+                self._handle_tool_calls(tool_calls, messages)
+                response = self.chat_stream_step(model, messages, params)
 
         return response
 
@@ -303,7 +302,6 @@ class Csi(Protocol):
         model: str,
         messages: list[Message],
         params: ChatParams | None = None,
-        tools: list[Tool] | None = None,
     ) -> ChatStreamResponse:
         """Generate a model response from a list of messages comprising a conversation.
 
@@ -319,70 +317,37 @@ class Csi(Protocol):
                 List of messages, alternating between messages from user and assistant.
 
             params (ChatParams, optional, Default None): Parameters used for the chat.
-
-            tools (list[Tool], optional, Default None):
-                List of tool schemas that are available to the model. These tools are
-                added to the system prompt and the responsibility for invoking the
-                tool is left to the caller. If the response is a tool call, it can be
-                checked via :meth:`~pharia_skill.ChatStreamResponse.tool_call`.
         """
         params = params or ChatParams()
-        if tools:
-            messages = add_tools_to_system_prompt(messages, tools)
-
         return self._chat_stream(model, messages, params)
 
-    def _handle_tool_call(
-        self, tool_call: ToolCallRequest, messages: list[Message]
+    def _handle_tool_calls(
+        self, tool_calls: list[ToolCall], messages: list[Message]
     ) -> None:
-        """Handle a tool call from the model.
+        """Handle a list of tool calls from the model.
 
-        The tool call is added to the conversation and the tool response is added to the conversation.
+        The assistant message requesting the tool calls is added to the conversation
+        and the tool responses are added to the conversation.
         """
-        messages.append(tool_call.as_message())
-        try:
-            tool_response = self.invoke_tool(tool_call.name, **tool_call.parameters)
-            messages.append(tool_response.as_message())
-        except ToolError as e:
-            messages.append(
-                Message.tool(f'failed[stderr]:{{"error": {e.message}}}[/stderr]')
-            )
+        messages.append(Message.assistant(content=None, tool_calls=tool_calls))
+        for tool_call in tool_calls:
+            try:
+                tool_response = self.invoke_tool(tool_call.name, **tool_call.arguments)
+                messages.append(tool_response.as_message(tool_call.id))
+            except ToolError as e:
+                messages.append(
+                    Message.tool(
+                        f'failed[stderr]:{{"error": {e.message}}}[/stderr]',
+                        tool_call_id=tool_call.id,
+                    )
+                )
 
     def _chat_stream(
-        self, model: str, messages: list[Message], params: ChatParams
-    ) -> ChatStreamResponse: ...
-
-    def explain(
         self,
-        prompt: str,
-        target: str,
         model: str,
-        granularity: Granularity = Granularity.AUTO,
-    ) -> list[TextScore]:
-        """Request an explanation for the completion.
-
-        Parameters:
-            prompt (str, required): The prompt used for the completion.
-            target (str, required): The completion text.
-            model (str, required): The model used for the completion.
-            granularity (Granularity, optional, Default Granularity.AUTO):
-                Controls the length of the ranges which are explained.
-        """
-        request = ExplanationRequest(prompt, target, model, granularity)
-        return self.explain_concurrent([request])[0]
-
-    def explain_concurrent(
-        self, requests: Sequence[ExplanationRequest]
-    ) -> list[list[TextScore]]:
-        """Request an explanation for the completion concurrently.
-
-        Parameters:
-            requests (list[ExplanationRequest], required): List of explanation requests.
-
-        Returns:
-            list[list[TextScore]]: List of explanation results in the same order as the requests.
-        """
-        ...
+        messages: list[Message],
+        params: ChatParams,
+    ) -> ChatStreamResponse: ...
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         """Select the detected language for the provided input based on the list of

@@ -1,0 +1,40 @@
+// The tool interface allows Skills to interact with the outside world.
+interface tool {
+    record invoke-request {
+        tool-name: string,
+        arguments: list<argument>,
+    }
+
+    record argument {
+        name: string,
+        value: list<u8>
+    }
+
+    // A tool result is an arbitrary sized list of modalities.
+    // See <https://modelcontextprotocol.io/specification/2025-03-26/server/tools#tool-result>.
+    // At the moment, we only support text modalities from the Kernel.
+    type tool-output = list<modality>;
+
+    variant modality {
+        text(string),
+    }
+
+    // See <https://github.com/bytecodealliance/wasm-tools/issues/2210> why a type alias is needed
+    // as long as tool-output is not stable.
+    type tool-result = result<tool-output, string>;
+
+    invoke-tool: func(request: list<invoke-request>) -> list<tool-result>;
+
+    record tool {
+        name: string,
+        description: string,
+        input-schema: list<u8>,
+    }
+
+    // As long as we do not support tool calling in the inference, the prompt synthesis happens in the Skill code.
+    // It could also happen in the Kernel, but we already have the logic in the SDK, and it seems like this will
+    // move to inference soon anyway. Therefore, the Skill needs to know about the schema of the different tools.
+    // While this could be achieved by querying for a list of tool names, and then getting a list of options in
+    // the same order, simply listing all tools seems to be the simpler solution.
+    list-tools: func() -> list<tool>;
+}
