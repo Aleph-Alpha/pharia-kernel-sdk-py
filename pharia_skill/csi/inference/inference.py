@@ -416,8 +416,8 @@ class CompletionRequest:
 
 
 @dataclass
-class Function:
-    """A function that the model can call."""
+class Tool:
+    """A tool that the model can call."""
 
     name: str
     """The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64."""
@@ -503,7 +503,7 @@ class ChatParams:
     frequency_penalty: float | None = None
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
-    tools: list[Function] | None = None
+    tools: list[Tool] | None = None
     tool_choice: ToolChoice | None = None
     parallel_tool_calls: bool | None = None
     response_format: ResponseFormat | None = None

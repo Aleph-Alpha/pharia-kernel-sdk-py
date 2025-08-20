@@ -3,6 +3,7 @@ from typing import Any, Literal, Sequence, Union
 from pydantic import BaseModel, Field, RootModel
 from pydantic.types import JsonValue
 
+from pharia_skill.csi import inference
 from pharia_skill.csi.inference import tool
 
 
@@ -80,8 +81,10 @@ class ToolDeserializer(BaseModel):
 ToolListDeserializer = RootModel[list[ToolDeserializer]]
 
 
-def deserialize_tools(output: Any) -> list[tool.Tool]:
+def deserialize_tools(output: Any) -> list[inference.Tool]:
     return [
-        tool.Tool(name=t.name, description=t.description, input_schema=t.input_schema)
+        inference.Tool(
+            name=t.name, description=t.description, parameters=t.input_schema
+        )
         for t in ToolListDeserializer(root=output).root
     ]

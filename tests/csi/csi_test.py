@@ -1,7 +1,6 @@
 import pytest
 
-from pharia_skill.csi import ChatParams, ChatStreamResponse, Message
-from pharia_skill.csi.inference.tool import Tool
+from pharia_skill.csi import ChatParams, ChatStreamResponse, Message, Tool
 from pharia_skill.testing.stub import StubCsi
 
 
@@ -17,8 +16,8 @@ class SpyCsi(StubCsi):
 
     def list_tools(self) -> list[Tool]:
         return [
-            Tool(name="dummy", description="my dummy", input_schema={}),
-            Tool(name="dummy2", description="my dummy2", input_schema={}),
+            Tool(name="dummy", description="my dummy", parameters={}),
+            Tool(name="dummy2", description="my dummy2", parameters={}),
         ]
 
 
@@ -30,7 +29,7 @@ def test_chat_stream_adds_tools_to_system_prompt():
     schemas = csi._list_tool_schemas(tools=["dummy"])
 
     # then only the tool schema is returned
-    assert schemas == [Tool(name="dummy", description="my dummy", input_schema={})]
+    assert schemas == [Tool(name="dummy", description="my dummy", parameters={})]
 
 
 def test_chat_stream_raises_error_if_tool_not_available():

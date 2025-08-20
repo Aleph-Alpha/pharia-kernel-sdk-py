@@ -36,13 +36,13 @@ from pharia_skill import (
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
+    Tool,
     ToolResult,
 )
 from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
 )
-from pharia_skill.csi.inference.tool import Tool
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,
@@ -195,7 +195,6 @@ class DevCsi(Csi):
         model: str,
         messages: list[Message],
         params: ChatParams,
-        tools: list[Tool] | None = None,
     ) -> ChatStreamResponse:
         body = ChatRequestSerializer(
             model=model, messages=messages, params=params
