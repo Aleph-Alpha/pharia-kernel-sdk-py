@@ -56,16 +56,22 @@ from .csi import (
     Without,
 )
 from .message_stream import (
+    AgentInput,
+    AgentMessage,
     MessageAppend,
     MessageBegin,
     MessageEnd,
     MessageItem,
     MessageWriter,
+    agent,
     message_stream,
 )
 from .skill import skill
 
 __all__ = [
+    "agent",
+    "AgentInput",
+    "AgentMessage",
     "After",
     "AtOrAfter",
     "AtOrBefore",
