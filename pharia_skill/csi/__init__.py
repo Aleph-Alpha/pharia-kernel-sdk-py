@@ -87,6 +87,7 @@ __all__ = [
     "DocumentPath",
     "EqualTo",
     "FinishReason",
+    "Tool",
     "GreaterThan",
     "GreaterThanOrEqualTo",
     "Image",
