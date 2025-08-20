@@ -28,6 +28,7 @@ from pharia_skill.csi.inference import (
     TokenUsage,
     ToolCallEvent,
 )
+from pharia_skill.csi.inference.types import _merge_tool_call_chunks
 from pharia_skill.testing.dev.client import Event
 
 
@@ -187,6 +188,9 @@ class DevChatStreamResponse(ChatStreamResponse):
             case MessageAppend():
                 attributes = unnest_attributes(asdict(event))
                 self.span.add_event("message_append", attributes=attributes)
+            case ToolCallEvent():
+                attributes = unnest_attributes(asdict(event))
+                self.span.add_event("tool_call", attributes=attributes)
             case TokenUsage():
                 attributes = unnest_attributes(asdict(event))
                 self.span.add_event("token_usage", attributes=attributes)
@@ -209,11 +213,28 @@ class DevChatStreamResponse(ChatStreamResponse):
                     if isinstance(event, MessageAppend)
                 ]
             )
+            try:
+                tool_calls = _merge_tool_call_chunks(
+                    [
+                        event
+                        for event in self.tracing_buffer
+                        if isinstance(event, ToolCallEvent)
+                    ]
+                )
+            except json.JSONDecodeError:
+                # We continuously try to merge the tool calls. If we do not have all
+                # chunks yet, we will not report it to the span.
+                tool_calls = None
+
             message = Message(
                 role=Role(self.role),
-                content=content,
+                content=content or None,
+                tool_calls=tool_calls or None,
             )
-            output: dict[str, Any] = {"message": asdict(message)}
+
+            output: dict[str, Any] = {
+                "message": TypeAdapter(Message).dump_python(message, exclude_none=True)
+            }
             if finish_reason := self._finish_reason_event():
                 output["finish_reason"] = finish_reason.value
             if usage := self._usage_event():
