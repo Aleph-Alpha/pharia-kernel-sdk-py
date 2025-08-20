@@ -34,6 +34,7 @@ def test_otlp_trace_export_to_studio(temp_project_client: StudioClient):
     @skill
     def haiku(csi: Csi, input: Input) -> Output:
         result = csi.chat(model="llama-3.1-8b-instruct", messages=input.messages)
+        assert result.message.content is not None
         return Output(text=result.message.content)
 
     # And given a csi configured with the studio exporter
