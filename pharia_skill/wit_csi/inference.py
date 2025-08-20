@@ -39,14 +39,11 @@ from ..csi import (
     CompletionParams,
     CompletionRequest,
     Distribution,
-    ExplanationRequest,
     FinishReason,
-    Granularity,
     Logprob,
     Logprobs,
     Message,
     Role,
-    TextScore,
     TokenUsage,
     TopLogprobs,
 )
@@ -362,30 +359,3 @@ def chat_response_from_wit(response: wit.ChatResponse) -> ChatResponse:
         ],
         usage=token_usage_from_wit(response.usage),
     )
-
-
-def granularity_to_wit(granularity: Granularity) -> wit.Granularity:
-    match granularity:
-        case Granularity.AUTO:
-            return wit.Granularity.AUTO
-        case Granularity.SENTENCE:
-            return wit.Granularity.SENTENCE
-        case Granularity.WORD:
-            return wit.Granularity.WORD
-        case Granularity.PARAGRAPH:
-            return wit.Granularity.PARAGRAPH
-
-
-def explanation_request_to_wit(
-    explanation_request: ExplanationRequest,
-) -> wit.ExplanationRequest:
-    return wit.ExplanationRequest(
-        prompt=explanation_request.prompt,
-        target=explanation_request.target,
-        model=explanation_request.model,
-        granularity=granularity_to_wit(explanation_request.granularity),
-    )
-
-
-def text_score_from_wit(score: wit.TextScore) -> TextScore:
-    return TextScore(start=score.start, length=score.length, score=score.score)
