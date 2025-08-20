@@ -28,7 +28,7 @@ from .types import (
     TokenUsage,
     ToolCall,
     ToolCallEvent,
-    merge_tool_call_chunks,
+    _merge_tool_call_chunks,
 )
 
 # We don't want to make opentelemetry a dependency of the wasm module
@@ -316,7 +316,11 @@ class ChatStreamResponse(ABC):
         if self._tool_call_chunks is None:
             return None
 
-        return merge_tool_call_chunks(self._tool_call_chunks)
+        tool_calls = _merge_tool_call_chunks(self._tool_call_chunks)
+
+        # If we have found the tool calls, we may exit, allowing the span to be closed.
+        self.__exit__(None, None, None)
+        return tool_calls
 
     def finish_reason(self) -> FinishReason:
         """The reason the model finished generating."""
