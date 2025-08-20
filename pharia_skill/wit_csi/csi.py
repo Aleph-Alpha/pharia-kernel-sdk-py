@@ -4,8 +4,8 @@ from typing import Sequence
 from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
+    Tool,
 )
-from pharia_skill.csi.inference.tool import Tool
 
 from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index
@@ -98,7 +98,7 @@ class WitCsi(Csi):
             Tool(
                 name=tool.name,
                 description=tool.description,
-                input_schema=json.loads(tool.input_schema),
+                parameters=json.loads(tool.input_schema),
             )
             for tool in wit_tool.list_tools()
         ]
