@@ -10,7 +10,7 @@ from pharia_skill.csi.inference import (
     ToolCallChunk,
     ToolCallEvent,
 )
-from pharia_skill.csi.inference.types import merge_tool_call_chunks
+from pharia_skill.csi.inference.types import _merge_tool_call_chunks
 
 
 def test_serialized_roles_are_openai_compatible():
@@ -204,7 +204,7 @@ def test_merge_tool_call_chunks():
     ]
 
     # When merging the tool call chunks
-    tool_calls = merge_tool_call_chunks(chunks)
+    tool_calls = _merge_tool_call_chunks(chunks)
 
     # Then we get two tool calls
     assert len(tool_calls) == 2
@@ -217,9 +217,36 @@ def test_merge_tool_call_chunks():
     assert tool_calls[1].arguments == {"first_argument": "2"}
 
 
+def test_tool_calls_spread_across_chunks():
+    # Given a list of tool call chunks
+    chunks = [
+        ToolCallEvent(
+            tool_calls=[ToolCallChunk(index=0, id="tool_call__1002", name="add")]
+        ),
+        ToolCallEvent(
+            tool_calls=[ToolCallChunk(index=0, arguments='{"first_argument": "1"}')]
+        ),
+        ToolCallEvent(
+            tool_calls=[ToolCallChunk(index=1, id="tool_call__1003", name="subtract")]
+        ),
+        ToolCallEvent(
+            tool_calls=[ToolCallChunk(index=1, arguments='{"second_argument": "2"}')]
+        ),
+    ]
+    tool_calls = _merge_tool_call_chunks(chunks)
+    assert len(tool_calls) == 2
+    assert tool_calls[0].id == "tool_call__1002"
+    assert tool_calls[0].name == "add"
+    assert tool_calls[0].arguments == {"first_argument": "1"}
+
+    assert tool_calls[1].id == "tool_call__1003"
+    assert tool_calls[1].name == "subtract"
+    assert tool_calls[1].arguments == {"second_argument": "2"}
+
+
 def test_can_merge_tool_call_chunks_with_no_chunks():
     # When merging an empty list of tool call chunks
-    tool_calls = merge_tool_call_chunks([])
+    tool_calls = _merge_tool_call_chunks([])
 
     # Then we get an empty list
     assert tool_calls == []
@@ -242,7 +269,7 @@ def test_name_spread_across_chunks():
         ),
     ]
     # When merging the tool call chunks
-    tool_calls = merge_tool_call_chunks(chunks)
+    tool_calls = _merge_tool_call_chunks(chunks)
 
     # Then we get the tool calls
     assert len(tool_calls) == 2

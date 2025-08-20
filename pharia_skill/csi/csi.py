@@ -291,9 +291,8 @@ class Csi(Protocol):
         response = self.chat_stream_step(model, messages, params)
 
         if tools:
-            while (tool_call := response.tool_calls()) is not None:
-                assert len(tool_call) == 1, "no support for parallel tool calls yet"
-                self._handle_tool_call(tool_call[0], messages)
+            while (tool_calls := response.tool_calls()) is not None:
+                self._handle_tool_calls(tool_calls, messages)
                 response = self.chat_stream_step(model, messages, params)
 
         return response
@@ -322,22 +321,26 @@ class Csi(Protocol):
         params = params or ChatParams()
         return self._chat_stream(model, messages, params)
 
-    def _handle_tool_call(self, tool_call: ToolCall, messages: list[Message]) -> None:
-        """Handle a tool call from the model.
+    def _handle_tool_calls(
+        self, tool_calls: list[ToolCall], messages: list[Message]
+    ) -> None:
+        """Handle a list of tool calls from the model.
 
-        The tool call is added to the conversation and the tool response is added to the conversation.
+        The assistant message requesting the tool calls is added to the conversation
+        and the tool responses are added to the conversation.
         """
-        messages.append(tool_call.as_message())
-        try:
-            tool_response = self.invoke_tool(tool_call.name, **tool_call.arguments)
-            messages.append(tool_response.as_message(tool_call.id))
-        except ToolError as e:
-            messages.append(
-                Message.tool(
-                    f'failed[stderr]:{{"error": {e.message}}}[/stderr]',
-                    tool_call_id=tool_call.id,
+        messages.append(Message.assistant(content=None, tool_calls=tool_calls))
+        for tool_call in tool_calls:
+            try:
+                tool_response = self.invoke_tool(tool_call.name, **tool_call.arguments)
+                messages.append(tool_response.as_message(tool_call.id))
+            except ToolError as e:
+                messages.append(
+                    Message.tool(
+                        f'failed[stderr]:{{"error": {e.message}}}[/stderr]',
+                        tool_call_id=tool_call.id,
+                    )
                 )
-            )
 
     def _chat_stream(
         self,
