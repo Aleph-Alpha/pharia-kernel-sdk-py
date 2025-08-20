@@ -42,13 +42,10 @@ from .inference import (
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
-    ExplanationRequest,
     Function,
-    Granularity,
     InvokeRequest,
     Message,
     Role,
-    TextScore,
     Tool,
     ToolCall,
     ToolError,
@@ -364,38 +361,6 @@ class Csi(Protocol):
         messages: list[Message],
         params: ChatParams,
     ) -> ChatStreamResponse: ...
-
-    def explain(
-        self,
-        prompt: str,
-        target: str,
-        model: str,
-        granularity: Granularity = Granularity.AUTO,
-    ) -> list[TextScore]:
-        """Request an explanation for the completion.
-
-        Parameters:
-            prompt (str, required): The prompt used for the completion.
-            target (str, required): The completion text.
-            model (str, required): The model used for the completion.
-            granularity (Granularity, optional, Default Granularity.AUTO):
-                Controls the length of the ranges which are explained.
-        """
-        request = ExplanationRequest(prompt, target, model, granularity)
-        return self.explain_concurrent([request])[0]
-
-    def explain_concurrent(
-        self, requests: Sequence[ExplanationRequest]
-    ) -> list[list[TextScore]]:
-        """Request an explanation for the completion concurrently.
-
-        Parameters:
-            requests (list[ExplanationRequest], required): List of explanation requests.
-
-        Returns:
-            list[list[TextScore]]: List of explanation results in the same order as the requests.
-        """
-        ...
 
     def select_language(self, text: str, languages: list[Language]) -> Language | None:
         """Select the detected language for the provided input based on the list of
