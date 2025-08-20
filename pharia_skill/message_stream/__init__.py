@@ -1,3 +1,4 @@
+from .agent import AgentInput, AgentMessage, agent
 from .decorator import message_stream
 from .writer import (
     MessageAppend,
@@ -8,6 +9,9 @@ from .writer import (
 )
 
 __all__ = [
+    "agent",
+    "AgentInput",
+    "AgentMessage",
     "message_stream",
     "MessageAppend",
     "MessageBegin",
