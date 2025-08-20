@@ -1,18 +1,18 @@
 import pytest
 
-from pharia_skill import Message
+from pharia_skill import AgentInput, AgentMessage
 from pharia_skill.testing import DevCsi, MessageRecorder
 
-from .web_search import Input, web_search
+from .web_search import web_search
 
 
-@pytest.mark.skip("Search and fetch tools are not always configured.")
+@pytest.mark.skip(reason="No Kernel set up with MCP tools in CI")
 def test_skill_searches_the_web():
     csi = DevCsi(namespace="playground", project="kernel-test")
 
     # Given a question that can only be answered by searching the web
-    query = "What was the winning time of the 21st stage of the 2025 Giro de Italia?"
-    input = Input(messages=[Message.user(query)])
+    query = "Who won the 2025 Giro de Italia?"
+    input = AgentInput(messages=[AgentMessage(role="user", content=query)])
 
     # When the skill is called
     recorder: MessageRecorder[None] = MessageRecorder()
@@ -23,4 +23,4 @@ def test_skill_searches_the_web():
 
     assert len(messages) == 1
     answer = messages[0].content
-    assert "3:12:19" in answer.lower()
+    assert "simon yates" in answer.lower(), answer
