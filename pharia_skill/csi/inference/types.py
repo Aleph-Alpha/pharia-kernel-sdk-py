@@ -5,6 +5,7 @@ from typing import Annotated, Any, Self
 
 from pydantic import BeforeValidator, field_serializer, field_validator
 from pydantic.dataclasses import dataclass
+from pydantic.types import JsonValue
 
 # We don't want to make opentelemetry a dependency of the wasm module
 if typing.TYPE_CHECKING:
@@ -169,18 +170,11 @@ class ToolCallChunk:
 class ToolCall:
     id: str
     name: str
-    arguments: dict[str, Any]
+    arguments: dict[str, JsonValue]
 
     @field_serializer("arguments")
     def serialize_arguments(self, arguments: dict[str, Any]) -> str:
         return json.dumps(arguments)
-
-    def as_message(self) -> "Message":
-        """Render the tool call request from the model to a message."""
-        return Message.assistant(
-            content=None,
-            tool_calls=[self],
-        )
 
 
 @dataclass
@@ -190,7 +184,7 @@ class ToolCallEvent:
     tool_calls: list[ToolCallChunk]
 
 
-def merge_tool_call_chunks(events: list[ToolCallEvent]) -> list[ToolCall]:
+def _merge_tool_call_chunks(events: list[ToolCallEvent]) -> list[ToolCall]:
     """Merge a list of tool call chunks to a list of tool calls.
 
     Each `ToolCallChunks` contains parts of of one multiple tool calls. If the models
@@ -232,13 +226,14 @@ def merge_tool_call_chunks(events: list[ToolCallEvent]) -> list[ToolCall]:
     if not events:
         return []
 
-    in_progress: dict[int, InProgressToolCall] = {
-        event.index: InProgressToolCall.from_chunk(event)
-        for event in events[0].tool_calls
-    }
-    for event in events[1:]:
+    in_progress: dict[int, InProgressToolCall] = {}
+    for event in events:
         for chunk in event.tool_calls:
-            in_progress[chunk.index].extend(chunk)
+            is_first_chunk = chunk.id is not None and chunk.name is not None
+            if is_first_chunk:
+                in_progress[chunk.index] = InProgressToolCall.from_chunk(chunk)
+            else:
+                in_progress[chunk.index].extend(chunk)
 
     return list(map(InProgressToolCall.as_tool_call, in_progress.values()))
 
@@ -274,6 +269,14 @@ class Message:
         }
 
     @classmethod
+    def system(cls, content: str) -> Self:
+        return cls(role=Role.System, content=content)
+
+    @classmethod
+    def developer(cls, content: str) -> Self:
+        return cls(role=Role.Developer, content=content)
+
+    @classmethod
     def user(cls, content: str) -> Self:
         return cls(role=Role.User, content=content)
 
@@ -285,10 +288,6 @@ class Message:
             "either content or tool_calls must be provided"
         )
         return cls(role=Role.Assistant, content=content, tool_calls=tool_calls)
-
-    @classmethod
-    def system(cls, content: str) -> Self:
-        return cls(role=Role.System, content=content)
 
     @classmethod
     def tool(cls, content: str, tool_call_id: str) -> Self:
