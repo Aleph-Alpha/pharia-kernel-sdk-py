@@ -21,12 +21,10 @@ from pharia_skill.csi.inference import (
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
-    ExplanationRequest,
     FinishReason,
     Message,
     MessageAppend,
     MessageBegin,
-    TextScore,
     TokenUsage,
     ToolCallEvent,
 )
@@ -286,9 +284,3 @@ ChatRequestListSerializer = RootModel[Sequence[ChatRequest]]
 
 
 ChatListDeserializer = RootModel[list[ChatResponse]]
-
-
-ExplanationRequestListSerializer = RootModel[Sequence[ExplanationRequest]]
-
-
-ExplanationListDeserializer = RootModel[list[list[TextScore]]]

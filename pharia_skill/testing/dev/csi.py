@@ -29,7 +29,6 @@ from pharia_skill import (
     Csi,
     Document,
     DocumentPath,
-    ExplanationRequest,
     InvokeRequest,
     JsonSerializable,
     Language,
@@ -37,7 +36,6 @@ from pharia_skill import (
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
-    TextScore,
     ToolResult,
 )
 from pharia_skill.csi.inference import (
@@ -70,8 +68,6 @@ from .inference import (
     CompletionRequestSerializer,
     DevChatStreamResponse,
     DevCompletionStreamResponse,
-    ExplanationListDeserializer,
-    ExplanationRequestListSerializer,
 )
 from .language import (
     SelectLanguageDeserializer,
@@ -221,13 +217,6 @@ class DevCsi(Csi):
         body = ChatRequestListSerializer(root=requests).model_dump()
         output = self.run("chat", body)
         return ChatListDeserializer(root=output).root
-
-    def explain_concurrent(
-        self, requests: Sequence[ExplanationRequest]
-    ) -> list[list[TextScore]]:
-        body = ExplanationRequestListSerializer(root=requests).model_dump()
-        output = self.run("explain", body)
-        return ExplanationListDeserializer(root=output).root
 
     def chunk_concurrent(self, requests: Sequence[ChunkRequest]) -> list[list[Chunk]]:
         body = ChunkRequestSerializer(root=requests).model_dump()

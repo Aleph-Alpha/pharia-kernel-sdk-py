@@ -18,7 +18,6 @@ from pharia_skill import (
     Cursor,
     Document,
     DocumentPath,
-    ExplanationRequest,
     FinishReason,
     JsonSerializable,
     Language,
@@ -27,7 +26,6 @@ from pharia_skill import (
     SearchResult,
     SelectLanguageRequest,
     Text,
-    TextScore,
     TokenUsage,
     ToolResult,
 )
@@ -163,11 +161,6 @@ class StubCsi(Csi):
             )
             for request in requests
         ]
-
-    def explain_concurrent(
-        self, requests: Sequence[ExplanationRequest]
-    ) -> list[list[TextScore]]:
-        return [[] for _ in requests]
 
     def select_language_concurrent(
         self, requests: Sequence[SelectLanguageRequest]
