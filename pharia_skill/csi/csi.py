@@ -42,10 +42,8 @@ from .inference import (
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
-    Function,
     InvokeRequest,
     Message,
-    Role,
     Tool,
     ToolCall,
     ToolError,
@@ -288,17 +286,8 @@ class Csi(Protocol):
                 List of tool names that are available to the model.
         """
         params = params or ChatParams()
-        tool_schemas = self._list_tool_schemas(tools) if tools else None
-        if tool_schemas:
-            # The type returned by `list_tools` should be the same type as the one
-            # required by `ChatParams.tools`.
-            functions = [
-                Function(
-                    name=t.name, description=t.description, parameters=t.input_schema
-                )
-                for t in tool_schemas
-            ]
-            params.tools = functions
+        if tools:
+            params.tools = self._list_tool_schemas(tools)
         response = self.chat_stream_step(model, messages, params)
 
         if tools:
@@ -338,12 +327,7 @@ class Csi(Protocol):
 
         The tool call is added to the conversation and the tool response is added to the conversation.
         """
-        message = Message(
-            role=Role.Assistant,
-            content=None,
-            tool_calls=[tool_call],
-        )
-        messages.append(message)
+        messages.append(tool_call.as_message())
         try:
             tool_response = self.invoke_tool(tool_call.name, **tool_call.arguments)
             messages.append(tool_response.as_message(tool_call.id))

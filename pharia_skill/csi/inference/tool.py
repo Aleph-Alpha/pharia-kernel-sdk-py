@@ -11,13 +11,6 @@ class InvokeRequest:
 
 
 @dataclass
-class Tool:
-    name: str
-    description: str
-    input_schema: dict[str, JsonValue]
-
-
-@dataclass
 class ToolOutput:
     """The output of a tool invocation.
 

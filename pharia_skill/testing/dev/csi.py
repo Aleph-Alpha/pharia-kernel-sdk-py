@@ -39,13 +39,10 @@ from pharia_skill import (
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
+    Tool,
     ToolResult,
 )
-from pharia_skill.csi.inference import (
-    ChatStreamResponse,
-    CompletionStreamResponse,
-    Tool,
-)
+from pharia_skill.csi.inference import ChatStreamResponse, CompletionStreamResponse
 from pharia_skill.studio import StudioClient
 from pharia_skill.testing.dev.logfire import set_logfire_attributes
 
@@ -188,7 +185,6 @@ class DevCsi(Csi):
         model: str,
         messages: list[Message],
         params: ChatParams,
-        tools: list[Tool] | None = None,
     ) -> ChatStreamResponse:
         request = ChatRequest(model=model, messages=messages, params=params)
         body = ChatRequestSerializer(

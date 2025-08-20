@@ -17,13 +17,13 @@ from pharia_skill.csi.inference import (
     CompletionAppend,
     CompletionEvent,
     CompletionStreamResponse,
-    Function,
     JsonSchema,
     MessageAppend,
     MessageBegin,
     NamedToolChoice,
     ReasoningEffort,
     ResponseFormat,
+    Tool,
     ToolCall,
     ToolCallChunk,
     ToolCallEvent,
@@ -164,7 +164,7 @@ def reasoning_effort_to_wit(reasoning_effort: ReasoningEffort) -> wit.ReasoningE
             return wit.ReasoningEffort.MINIMAL
 
 
-def tools_to_wit(tools: list[Function]) -> list[wit.Function]:
+def tools_to_wit(tools: list[Tool]) -> list[wit.Function]:
     return [
         wit.Function(
             name=tool.name,

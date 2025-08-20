@@ -175,6 +175,13 @@ class ToolCall:
     def serialize_arguments(self, arguments: dict[str, Any]) -> str:
         return json.dumps(arguments)
 
+    def as_message(self) -> "Message":
+        """Render the tool call request from the model to a message."""
+        return Message.assistant(
+            content=None,
+            tool_calls=[self],
+        )
+
 
 @dataclass
 class ToolCallEvent:
@@ -271,7 +278,12 @@ class Message:
         return cls(role=Role.User, content=content)
 
     @classmethod
-    def assistant(cls, content: str, tool_calls: list[ToolCall] | None = None) -> Self:
+    def assistant(
+        cls, content: str | None, tool_calls: list[ToolCall] | None = None
+    ) -> Self:
+        assert content is not None or tool_calls is not None, (
+            "either content or tool_calls must be provided"
+        )
         return cls(role=Role.Assistant, content=content, tool_calls=tool_calls)
 
     @classmethod
