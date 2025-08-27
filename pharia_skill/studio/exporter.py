@@ -1,14 +1,14 @@
+import os
 from collections.abc import Sequence
-from typing import Protocol
+from typing import Optional, Protocol
 
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanExporter,
     SpanExportResult,
 )
-
-from pharia_skill.studio.span import StudioSpan
 
 
 class SpanClient(Protocol):
@@ -18,7 +18,7 @@ class SpanClient(Protocol):
     for better modularity and testability.
     """
 
-    def submit_spans(self, spans: Sequence[StudioSpan]) -> None: ...
+    def submit_spans(self, spans: Sequence[ReadableSpan]) -> None: ...
 
 
 class StudioExporter(SpanExporter):
@@ -62,8 +62,9 @@ class StudioExporter(SpanExporter):
 
     def _flush_trace(self, trace_id: int) -> None:
         spans = self.spans.pop(trace_id)
-        studio_spans = [StudioSpan.from_otel(span) for span in spans]
-        self.client.submit_spans(studio_spans)
+        # studio_spans = [StudioSpan.from_otel(span) for span in spans]
+        # self.client.submit_spans(studio_spans)
+        self.client.submit_spans(spans)
 
     def shutdown(self) -> None:
         """Will be called at the end of a session.
@@ -79,3 +80,112 @@ class StudioSpanProcessor(SimpleSpanProcessor):
     """Signal that a processor has been registered by the SDK."""
 
     pass
+
+
+class OTLPStudioExporter(SpanExporter):
+    """OTLP exporter configured for Studio backend.
+
+    This exporter uses OpenTelemetry's OTLP HTTP/PROTOBUF exporter to send
+    traces directly to Studio's traces_v2 endpoint.
+    """
+
+    def __init__(
+        self,
+        project_id: str,
+        token: Optional[str] = None,
+        endpoint: Optional[str] = None,
+    ):
+        """Initialize the OTLP Studio exporter.
+
+        Args:
+            project_id: The Studio project ID
+            token: Authentication token (defaults to PHARIA_AI_TOKEN or AA_TOKEN env var)
+            endpoint: Studio endpoint (defaults to PHARIA_STUDIO_ADDRESS env var)
+        """
+        # Get token from env if not provided
+        if token is None:
+            token = os.getenv("PHARIA_AI_TOKEN") or os.getenv("AA_TOKEN")
+            if not token:
+                raise ValueError(
+                    "No authentication token provided. Set PHARIA_AI_TOKEN or AA_TOKEN environment variable."
+                )
+
+        # Get endpoint from env if not provided
+        if endpoint is None:
+            endpoint = os.getenv("PHARIA_STUDIO_ADDRESS", "http://localhost:8000")
+
+        # Construct the full traces endpoint
+        traces_endpoint = f"{endpoint}/api/projects/{project_id}/traces_v2"
+
+        # Create the internal OTLP exporter
+        self._otlp_exporter = OTLPSpanExporter(
+            endpoint=traces_endpoint,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        """Export spans to Studio backend via OTLP.
+
+        Args:
+            spans: The spans to export
+
+        Returns:
+            The result of the export
+        """
+        return self._otlp_exporter.export(spans)
+
+    def shutdown(self) -> None:
+        """Shutdown the exporter."""
+        return self._otlp_exporter.shutdown()
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Force flush any pending spans.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for spans to flush
+
+        Returns:
+            True if successful, False otherwise
+        """
+        # OTLPSpanExporter implements force_flush
+        return self._otlp_exporter.force_flush(timeout_millis)
+
+
+class LoggingOTLPExporter(SpanExporter):
+    """A wrapper exporter that logs export operations for debugging."""
+
+    def __init__(self, wrapped_exporter: SpanExporter, verbose: bool = True):
+        """Initialize the logging wrapper.
+
+        Args:
+            wrapped_exporter: The actual exporter to wrap
+            verbose: Whether to log verbose information
+        """
+        self.wrapped_exporter = wrapped_exporter
+        self.verbose = verbose
+        if self.verbose:
+            print(f"Logging wrapper initialized for {type(wrapped_exporter).__name__}")
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        """Export spans and log the operation."""
+        if self.verbose:
+            trace_ids = {str(span.context.trace_id) for span in spans if span.context}
+            print(
+                f"🚀 Exporting batch of {len(spans)} spans with trace IDs: {', '.join(trace_ids)}"
+            )
+
+        result = self.wrapped_exporter.export(spans)
+
+        if self.verbose:
+            if result == SpanExportResult.SUCCESS:
+                print("✅ Batch export successful")
+            else:
+                print(f"❌ Batch export failed: {result}")
+
+        return result
+
+    def shutdown(self) -> None:
+        """Shutdown the wrapped exporter."""
+        if self.verbose:
+            print("Shutting down wrapped exporter")
+        return self.wrapped_exporter.shutdown()

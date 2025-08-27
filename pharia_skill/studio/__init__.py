@@ -1,5 +1,11 @@
 from .client import StudioClient
-from .exporter import SpanClient, StudioExporter, StudioSpanProcessor
+from .exporter import (
+    LoggingOTLPExporter,
+    OTLPStudioExporter,
+    SpanClient,
+    StudioExporter,
+    StudioSpanProcessor,
+)
 from .span import StudioSpan
 
 __all__ = [
@@ -8,4 +14,6 @@ __all__ = [
     "StudioSpan",
     "SpanClient",
     "StudioSpanProcessor",
+    "OTLPStudioExporter",
+    "LoggingOTLPExporter",
 ]

@@ -50,6 +50,7 @@ from pharia_skill.studio import (
     StudioExporter,
     StudioSpanProcessor,
 )
+from pharia_skill.studio.exporter import OTLPStudioExporter
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -146,7 +147,7 @@ class DevCsi(Csi):
             project: The name of the studio project to export traces to. Will be created if it does not exist.
         """
         client = StudioClient.with_project(project)
-        exporter = StudioExporter(client)
+        exporter = OTLPStudioExporter(project_id=client.project_id)
         self.set_span_exporter(exporter)
 
     @classmethod
