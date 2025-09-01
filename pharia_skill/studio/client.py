@@ -1,16 +1,11 @@
-import json
 import os
-from collections.abc import Sequence
 from typing import Optional
 from urllib.parse import urljoin
 
 import requests
 from dotenv import load_dotenv
-from opentelemetry.sdk.trace import ReadableSpan
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, MissingSchema
-
-from pharia_skill.studio.exporter import SpanClient
 
 
 class StudioProject(BaseModel):
@@ -18,7 +13,7 @@ class StudioProject(BaseModel):
     description: Optional[str]
 
 
-class StudioClient(SpanClient):
+class StudioClient:
     """Client for communicating with Pharia Studio.
 
     The Studio instance is determined by the environment variable `PHARIA_STUDIO_ADDRESS`.
@@ -141,35 +136,3 @@ class StudioClient(SpanClient):
             case _:
                 response.raise_for_status()
         return response.text
-
-    def submit_spans(self, spans: Sequence[ReadableSpan]) -> None:
-        """Sends the provided spans to Studio as a singular trace.
-
-        The method fails if the span list is empty, has already been created or if
-        spans belong to multiple traces.
-
-        Args:
-            spans (Sequence[StudioSpan], required): Spans to create the trace from. Created by exporting from a :class:`Tracer`.
-        """
-        if len(spans) == 0:
-            raise ValueError("Tried to upload an empty trace")
-        self._upload_trace(spans)
-
-    def _upload_trace(self, trace: Sequence[ReadableSpan]) -> None:
-        url = urljoin(self.url, f"/api/projects/{self.project_id}/traces_v2")
-        response = requests.post(
-            url,
-            data=json.dumps(trace),
-            headers=self._headers,
-        )
-        match response.status_code:
-            case 409:
-                raise ValueError(
-                    f"Trace with id {trace.root[0].context.trace_id} already exists."
-                )
-            case 422:
-                raise ValueError(
-                    f"Uploading the trace failed with 422. Response: {response.json()}"
-                )
-            case _:
-                response.raise_for_status()

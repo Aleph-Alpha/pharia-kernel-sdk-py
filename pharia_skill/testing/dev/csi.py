@@ -46,11 +46,9 @@ from pharia_skill.csi.inference import (
 )
 from pharia_skill.csi.inference.tool import Tool
 from pharia_skill.studio import (
-    StudioClient,
-    StudioExporter,
-    StudioSpanProcessor,
+    StudioOTLPSpanExporter,
+    StudioOTLPSpanProcessor,
 )
-from pharia_skill.studio.exporter import OTLPStudioExporter
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -146,8 +144,7 @@ class DevCsi(Csi):
         Args:
             project: The name of the studio project to export traces to. Will be created if it does not exist.
         """
-        client = StudioClient.with_project(project)
-        exporter = OTLPStudioExporter(project_id=client.project_id)
+        exporter = StudioOTLPSpanExporter.with_project(project)
         self.set_span_exporter(exporter)
 
     @classmethod
@@ -258,7 +255,7 @@ class DevCsi(Csi):
         return DocumentDeserializer(root=output).root
 
     @classmethod
-    def set_span_exporter(cls, exporter: StudioExporter) -> None:
+    def set_span_exporter(cls, exporter: StudioOTLPSpanExporter) -> None:
         """Set a span exporter for Studio if it has not been set yet.
 
         This method overwrites any existing exporters, thereby ensuring that there
@@ -266,20 +263,20 @@ class DevCsi(Csi):
         """
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, StudioSpanProcessor):
+            if isinstance(processor, StudioOTLPSpanProcessor):
                 processor.span_exporter = exporter
                 return
 
-        span_processor = StudioSpanProcessor(exporter)
+        span_processor = StudioOTLPSpanProcessor(exporter)
         provider.add_span_processor(span_processor)
 
     @classmethod
-    def existing_exporter(cls) -> StudioExporter | None:
+    def existing_exporter(cls) -> StudioOTLPSpanExporter | None:
         """Return the first studio exporter attached to the provider, if any."""
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, StudioSpanProcessor):
-                if isinstance(processor.span_exporter, StudioExporter):
+            if isinstance(processor, StudioOTLPSpanProcessor):
+                if isinstance(processor.span_exporter, StudioOTLPSpanExporter):
                     return processor.span_exporter
         return None
 
