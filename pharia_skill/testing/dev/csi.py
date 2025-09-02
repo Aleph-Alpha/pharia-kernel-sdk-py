@@ -48,6 +48,7 @@ from pharia_skill.csi.inference.tool import Tool
 from pharia_skill.studio import (
     StudioClient,
     StudioExporter,
+    StudioOTLPSpanExporter,
     StudioSpanProcessor,
 )
 
@@ -149,6 +150,15 @@ class DevCsi(Csi):
         exporter = StudioExporter(client)
         self.set_span_exporter(exporter)
 
+    def _set_project_with_otlp(self, project: str) -> None:
+        """Configure the `DevCsi` to export traces to Pharia Studio.
+
+        This function creates a `StudioOTLPSpanExporter` and registers it with the tracer provider.
+        The exporter uploads spans once the root span ends.
+        """
+        exporter = StudioOTLPSpanExporter.with_project(project)
+        self.set_span_exporter(exporter)
+
     @classmethod
     def with_studio(cls, project: str) -> "DevCsi":
         """Create a `DevCsi` that exports traces to Pharia Studio.
@@ -166,6 +176,17 @@ class DevCsi(Csi):
         )
         csi = cls()
         csi._set_project(project)
+        return csi
+
+    @classmethod
+    def with_studio_otlp(cls, project: str) -> "DevCsi":
+        """Create a `DevCsi` that exports traces to Pharia Studio via OTLP.
+
+        This function creates a `StudioOTLPSpanExporter` and registers it with the tracer provider.
+        The exporter uploads spans once the root span ends.
+        """
+        csi = cls()
+        csi._set_project_with_otlp(project)
         return csi
 
     def invoke_tool_concurrent(
@@ -278,7 +299,9 @@ class DevCsi(Csi):
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
             if isinstance(processor, StudioSpanProcessor):
-                if isinstance(processor.span_exporter, StudioExporter):
+                if isinstance(processor.span_exporter, StudioExporter) or isinstance(
+                    processor.span_exporter, StudioOTLPSpanExporter
+                ):
                     return processor.span_exporter
         return None
 
