@@ -26,6 +26,7 @@ dependencies = [
     "typer>=0.15.4,<0.16",
     "rich>=13.7.0,<15",
     "pharia-skill-cli>=0.4.9",
+    "opentelemetry-exporter-otlp>=1.28.1,<2",
 ]
 
 [project.urls]
