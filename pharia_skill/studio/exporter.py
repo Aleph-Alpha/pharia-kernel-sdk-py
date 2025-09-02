@@ -3,7 +3,6 @@ from typing import Protocol
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import (
-    SimpleSpanProcessor,
     SpanExporter,
     SpanExportResult,
 )
@@ -73,9 +72,3 @@ class StudioExporter(SpanExporter):
         """
         assert len(self.spans) == 0, "No spans should be left in the exporter"
         self.spans.clear()
-
-
-class StudioSpanProcessor(SimpleSpanProcessor):
-    """Signal that a processor has been registered by the SDK."""
-
-    pass
