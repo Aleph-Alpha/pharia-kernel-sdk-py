@@ -51,6 +51,7 @@ from pharia_skill.studio import (
     StudioOTLPSpanExporter,
     StudioSpanProcessor,
 )
+from pharia_skill.studio.otlp_exporter import StudioOTLPSpanProcessor
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -278,7 +279,9 @@ class DevCsi(Csi):
         return DocumentDeserializer(root=output).root
 
     @classmethod
-    def set_span_exporter(cls, exporter: StudioExporter) -> None:
+    def set_span_exporter(
+        cls, exporter: StudioExporter | StudioOTLPSpanExporter
+    ) -> None:
         """Set a span exporter for Studio if it has not been set yet.
 
         This method overwrites any existing exporters, thereby ensuring that there
@@ -286,7 +289,9 @@ class DevCsi(Csi):
         """
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, StudioSpanProcessor):
+            if isinstance(processor, StudioSpanProcessor) or isinstance(
+                processor, StudioOTLPSpanProcessor
+            ):
                 processor.span_exporter = exporter
                 return
 
