@@ -51,9 +51,3 @@ class StudioOTLPSpanExporter(OTLPSpanExporter):
         """
         client = StudioClient.with_project(project_name)
         return cls(project_id=client.project_id)
-
-
-class StudioOTLPSpanProcessor(SimpleSpanProcessor):
-    """Signal that a processor has been registered by the SDK."""
-
-    pass
