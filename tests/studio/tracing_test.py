@@ -1,4 +1,6 @@
+import os
 from typing import Any, Generator
+from unittest.mock import patch, MagicMock
 
 import pytest
 from opentelemetry.sdk.trace import ReadableSpan
@@ -15,6 +17,8 @@ from pharia_skill import (
 from pharia_skill.csi import ChatParams, Message
 from pharia_skill.message_stream.writer import MessageWriter
 from pharia_skill.studio import StudioExporter
+
+# OTLP imports removed since OTLP tests are now in separate files
 from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi, MessageRecorder
 from pharia_skill.testing.dev.client import CsiClient, Event
@@ -390,3 +394,9 @@ def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):
         "finish_reason": "stop",
         "usage": {"prompt": 1, "completion": 1},
     }
+
+
+# NOTE: OTLP integration tests are in otlp_simple_integration_test.py
+# Complex mocking of OTLP exporters was challenging due to the real HTTP calls
+# made by the underlying OpenTelemetry OTLP exporter. The simple integration tests
+# focus on configuration, setup, and basic functionality verification.
