@@ -51,7 +51,6 @@ from pharia_skill.studio import (
     StudioOTLPSpanExporter,
     StudioSpanProcessor,
 )
-from pharia_skill.studio.otlp_exporter import StudioOTLPSpanProcessor
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -289,9 +288,7 @@ class DevCsi(Csi):
         """
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, StudioSpanProcessor) or isinstance(
-                processor, StudioOTLPSpanProcessor
-            ):
+            if isinstance(processor, StudioSpanProcessor):
                 processor.span_exporter = exporter
                 return
 
@@ -299,7 +296,7 @@ class DevCsi(Csi):
         provider.add_span_processor(span_processor)
 
     @classmethod
-    def existing_exporter(cls) -> StudioExporter | None:
+    def existing_exporter(cls) -> StudioExporter | StudioOTLPSpanExporter | None:
         """Return the first studio exporter attached to the provider, if any."""
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
