@@ -1,9 +1,6 @@
 import os
 
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.trace.export import (
-    SimpleSpanProcessor,
-)
 
 from pharia_skill.studio.client import StudioClient
 
