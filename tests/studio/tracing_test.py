@@ -1,6 +1,4 @@
-import os
 from typing import Any, Generator
-from unittest.mock import patch, MagicMock
 
 import pytest
 from opentelemetry.sdk.trace import ReadableSpan
