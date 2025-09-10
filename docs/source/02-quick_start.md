@@ -66,7 +66,7 @@ The `testing` module provides two implementations of CSI for testing:
 - The [StubCsi](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.StubCsi) can be used as a base class for mock implementation.
 
 See [core concepts](03-core_concepts.md#testing) for more information on differences between running Skills in the Kernel and locally.
-To test against the `DevCsi`, we require two more environment variables:
+To test against the `DevCsi`, we require two more environment variables (optionally one more for tracing):
 
 ```sh
 # .env
@@ -76,6 +76,9 @@ PHARIA_KERNEL_ADDRESS=
 
 # A token to authenticate against PhariaAI, can be retrieved from the PhariaStudio frontend (https://pharia-studio.your-pharia.domain)
 PHARIA_AI_TOKEN=
+
+# The address of the PhariaStudio instance you are using, e.g. https://pharia-studio.your-pharia.domain (replace the `your-pharia.domain` part in all examples)
+PHARIA_STUDIO_ADDRESS=
 ```
 
 Now, create a `test_haiku.py` file and add the following code:
@@ -88,6 +91,8 @@ from pharia_skill.testing import DevCsi
 
 def test_haiku():
    csi = DevCsi()
+   # optionally with trace export to Studio (creates the project if it does not exist)
+   csi = DevCsi.with_studio("my-project")
    result = generate_haiku(csi, Input(topic="Oat milk"))
    assert "creamy" in result.haiku or "white" in result.haiku
 ```
