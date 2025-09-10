@@ -92,7 +92,7 @@ from pharia_skill.testing import DevCsi
 def test_haiku():
    csi = DevCsi()
    # optionally with trace export to Studio (creates the project if it does not exist)
-   csi = DevCsi.with_studio("my-project")
+   # csi = DevCsi.with_studio("my-project")
    result = generate_haiku(csi, Input(topic="Oat milk"))
    assert "creamy" in result.haiku or "white" in result.haiku
 ```
