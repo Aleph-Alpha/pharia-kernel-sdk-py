@@ -159,6 +159,7 @@ Today Date: 27 June 2025
 
 Answer the user's question by making use of the following functions if needed.
 Only use functions if they are relevant to the user's question.
+For function calls, you MUST return the function only without additional message.
 Here is a list of functions in JSON format:
 {\n    \"type\": \"function\",\n    \"function\": {\n        \"name\": \"add\",\n        \"description\": \"Add two numbers\",\n        \"parameters\": {\n            \"properties\": {\n                \"a\": {\n                    \"title\": \"A\",\n                    \"type\": \"integer\"\n                },\n                \"b\": {\n                    \"title\": \"B\",\n                    \"type\": \"integer\"\n                }\n            },\n            \"required\": [\n                \"a\",\n                \"b\"\n            ],\n            \"title\": \"addArguments\",\n            \"type\": \"object\"\n        }\n    }\n}
 
