@@ -61,6 +61,7 @@ Today Date: {today}
 
 Answer the user's question by making use of the following functions if needed.
 Only use functions if they are relevant to the user's question.
+For function calls, you MUST return the function only without additional message.
 Here is a list of functions in JSON format:
 {json_schema}
 
