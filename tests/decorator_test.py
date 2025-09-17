@@ -74,7 +74,7 @@ def test_skill_without_output_type_raises_error():
     expected = "The function must have a return type annotation"
     with pytest.raises(AssertionError, match=expected):
 
-        @skill  # type: ignore
+        @skill  # pyright: ignore[reportArgumentType]
         def foo(csi: Csi, input: Input):
             pass
 
