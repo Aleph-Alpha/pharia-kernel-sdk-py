@@ -172,3 +172,20 @@ class StudioClient(SpanClient):
                 )
             case _:
                 response.raise_for_status()
+
+    def list_traces(self) -> list[str]:
+        url = urljoin(self.url, f"/api/projects/{self.project_id}/traces_v2")
+        response = requests.get(
+            url,
+            headers=self._headers,
+        )
+        response.raise_for_status()
+        return cast(list[str], response.json()["traces"])
+
+    def delete_project(self) -> None:
+        url = urljoin(self.url, f"/api/projects/{self.project_id}")
+        response = requests.delete(
+            url,
+            headers=self._headers,
+        )
+        response.raise_for_status()
