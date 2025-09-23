@@ -15,6 +15,7 @@ from typing import Any, Sequence
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.trace import StatusCode
 
 from pharia_skill import (
@@ -278,9 +279,7 @@ class DevCsi(Csi):
         return DocumentDeserializer(root=output).root
 
     @classmethod
-    def set_span_exporter(
-        cls, exporter: StudioExporter | StudioOTLPSpanExporter
-    ) -> None:
+    def set_span_exporter(cls, exporter: SpanExporter) -> None:
         """Set a span exporter for Studio if it has not been set yet.
 
         This method overwrites any existing exporters, thereby ensuring that there
@@ -296,7 +295,7 @@ class DevCsi(Csi):
         provider.add_span_processor(span_processor)
 
     @classmethod
-    def existing_exporter(cls) -> StudioExporter | StudioOTLPSpanExporter | None:
+    def existing_exporter(cls) -> SpanExporter | None:
         """Return the first studio exporter attached to the provider, if any."""
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
