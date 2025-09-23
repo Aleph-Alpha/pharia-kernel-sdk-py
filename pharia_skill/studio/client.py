@@ -71,10 +71,7 @@ class StudioClient:
     def _check_connection(self) -> None:
         url = urljoin(self.url, "/health")
         try:
-            response = requests.get(
-                url,
-                headers=self._headers,
-            )
+            response = requests.get(url, headers=self._headers)
         except MissingSchema:
             raise ValueError(
                 "The given url of the studio client is invalid. Make sure to include http:// in your url."
@@ -103,10 +100,7 @@ class StudioClient:
 
     def _get_project(self, project: str) -> str | None:
         url = urljoin(self.url, "/api/projects")
-        response = requests.get(
-            url,
-            headers=self._headers,
-        )
+        response = requests.get(url, headers=self._headers)
         response.raise_for_status()
         all_projects = response.json()
         try:
@@ -153,17 +147,11 @@ class StudioClient:
 
     def list_traces(self) -> list[str]:
         url = urljoin(self.url, f"/api/projects/{self.project_id}/traces_v2")
-        response = requests.get(
-            url,
-            headers=self._headers,
-        )
+        response = requests.get(url, headers=self._headers)
         response.raise_for_status()
         return cast(list[str], response.json()["traces"])
 
     def delete_project(self) -> None:
         url = urljoin(self.url, f"/api/projects/{self.project_id}")
-        response = requests.delete(
-            url,
-            headers=self._headers,
-        )
+        response = requests.delete(url, headers=self._headers)
         response.raise_for_status()
