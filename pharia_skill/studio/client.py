@@ -1,6 +1,6 @@
 import os
 from collections.abc import Sequence
-from typing import Optional
+from typing import Optional, cast
 from urllib.parse import urljoin
 
 import requests
@@ -139,7 +139,7 @@ class StudioClient(SpanClient):
                 raise ValueError("Project already exists")
             case _:
                 response.raise_for_status()
-        return response.text
+        return cast(str, response.json())
 
     def submit_spans(self, spans: Sequence[StudioSpan]) -> None:
         """Sends the provided spans to Studio as a singular trace.
