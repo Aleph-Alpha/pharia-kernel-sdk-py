@@ -61,7 +61,7 @@ def rechunk(csi: Csi, input: Input) -> Output:
     assert isinstance(content, Text)
 
     # expand
-    params = ChunkParams(model="pharia-1-llm-7b-control", max_tokens=20, overlap=0)
+    params = ChunkParams(model="llama-3.1-8b-instruct", max_tokens=20, overlap=0)
     chunks = csi.chunk(content.text, params)
 
     # filter
