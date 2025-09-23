@@ -1,7 +1,5 @@
 import datetime as dt
-import os
 from typing import Any, Generator, Sequence
-from unittest.mock import patch
 
 import pytest
 from opentelemetry.sdk.trace import Event as OtelEvent
@@ -10,7 +8,6 @@ from opentelemetry.trace.span import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 
 from pharia_skill.studio import SpanClient, StudioSpan
-from pharia_skill.studio.otlp_exporter import StudioOTLPSpanExporter
 from pharia_skill.testing import DevCsi
 from pharia_skill.testing.dev.client import CsiClient, Event
 
@@ -260,38 +257,3 @@ class MockOTLPExporter:
         """Mock force_flush method."""
         self.force_flush_called = True
         return True
-
-
-@pytest.fixture
-def mock_otlp_exporter() -> MockOTLPExporter:
-    """Create a mock OTLP exporter for testing."""
-    return MockOTLPExporter()
-
-
-@pytest.fixture
-def otlp_env_vars() -> dict[str, str]:
-    """Provide environment variables needed for OTLP exporter testing."""
-    return {
-        "PHARIA_AI_TOKEN": "test-token-123",
-        "PHARIA_STUDIO_ADDRESS": "https://studio.test.example.com",
-    }
-
-
-@pytest.fixture
-def stub_dev_csi_with_otlp(
-    mock_otlp_exporter: MockOTLPExporter, otlp_env_vars: dict[str, str]
-) -> tuple[DevCsi, MockOTLPExporter]:
-    """Create a DevCsi with OTLP exporter configured for testing."""
-    with patch(
-        "pharia_skill.studio.otlp_exporter.OTLPSpanExporter",
-        return_value=mock_otlp_exporter,
-    ):
-        with patch.dict(os.environ, otlp_env_vars):
-            csi = DevCsi.__new__(DevCsi)
-            csi.client = StubCsiClient()
-
-            # Set up OTLP exporter
-            exporter = StudioOTLPSpanExporter(project_id="test-project")
-            csi.set_span_exporter(exporter)
-
-            return csi, mock_otlp_exporter
