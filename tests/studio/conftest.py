@@ -8,17 +8,8 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.span import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 
-from pharia_skill.studio import SpanClient, StudioSpan
 from pharia_skill.testing import DevCsi
 from pharia_skill.testing.dev.client import CsiClient, Event
-
-
-class SpyClient(SpanClient):
-    def __init__(self) -> None:
-        self.spans: list[Sequence[StudioSpan]] = []
-
-    def submit_spans(self, spans: Sequence[StudioSpan]):
-        self.spans.append(spans)
 
 
 class StubCsiClient(CsiClient):
