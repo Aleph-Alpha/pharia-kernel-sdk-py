@@ -4,6 +4,7 @@ from typing import Any, Generator, Sequence
 import pytest
 from opentelemetry.sdk.trace import Event as OtelEvent
 from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace.span import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 
@@ -232,28 +233,18 @@ def timestamp_from_iso(iso_str: str) -> int:
     return int(dt.datetime.fromisoformat(iso_str).timestamp())
 
 
-class MockOTLPExporter:
-    """Mock OTLP exporter for testing."""
+class SpyExporter:
+    """Spy span exporter for testing."""
 
     def __init__(self) -> None:
-        self.exported_spans: list[Any] = []
-        self.export_calls: int = 0
-        self.shutdown_called: bool = False
-        self.force_flush_called: bool = False
+        self.spans: list[ReadableSpan] = []
 
-    def export(self, spans: Any) -> Any:
-        """Mock export method that captures spans."""
-        self.exported_spans.extend(spans)
-        self.export_calls += 1
-        from opentelemetry.sdk.trace.export import SpanExportResult
-
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        self.spans.extend(spans)
         return SpanExportResult.SUCCESS
 
     def shutdown(self) -> None:
-        """Mock shutdown method."""
-        self.shutdown_called = True
+        pass
 
     def force_flush(self, timeout_millis: int | None = None) -> bool:
-        """Mock force_flush method."""
-        self.force_flush_called = True
         return True
