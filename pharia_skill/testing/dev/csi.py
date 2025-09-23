@@ -9,7 +9,6 @@ uncoupling these interfaces brings two advantages:
 """
 
 import json
-import warnings
 from collections.abc import Generator
 from typing import Any, Sequence
 
@@ -44,14 +43,9 @@ from pharia_skill import (
 from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
+    Tool,
 )
-from pharia_skill.csi.inference.tool import Tool
-from pharia_skill.studio import (
-    StudioClient,
-    StudioExporter,
-    StudioOTLPSpanExporter,
-    StudioSpanProcessor,
-)
+from pharia_skill.studio import StudioOTLPSpanExporter, StudioSpanProcessor
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -75,15 +69,8 @@ from .inference import (
     ExplanationListDeserializer,
     ExplanationRequestListSerializer,
 )
-from .language import (
-    SelectLanguageDeserializer,
-    SelectLanguageRequestSerializer,
-)
-from .tool import (
-    deserialize_tool_output,
-    deserialize_tools,
-    serialize_tool_requests,
-)
+from .language import SelectLanguageDeserializer, SelectLanguageRequestSerializer
+from .tool import deserialize_tool_output, deserialize_tools, serialize_tool_requests
 
 
 class DevCsi(Csi):
@@ -104,7 +91,7 @@ class DevCsi(Csi):
         from haiku import run
 
         # create a `CSI` instance, optionally with trace export to Studio
-        csi = DevCsi().with_studio("my-project")
+        csi = DevCsi(project="my-project")
 
         # Run your skill
         input = Input(topic="The meaning of life")
@@ -128,7 +115,8 @@ class DevCsi(Csi):
         self.client: CsiClient = Client()
         self._namespace = namespace
         if project is not None:
-            self._set_project(project)
+            exporter = StudioOTLPSpanExporter.with_project(project)
+            self.set_span_exporter(exporter)
 
     def _namespace_or_raise(self) -> str:
         """Raise an error if the namespace is not set."""
@@ -137,58 +125,6 @@ class DevCsi(Csi):
                 "Specifying a namespace when constructing the `DevCsi` is required when invoking or listing tools."
             )
         return self._namespace
-
-    def _set_project(self, project: str) -> None:
-        """Configure the `DevCsi` to export traces to Pharia Studio.
-
-        This function creates a `StudioExporter` and registers it with the tracer provider.
-        The exporter uploads spans once the root span ends.
-
-        Args:
-            project: The name of the studio project to export traces to. Will be created if it does not exist.
-        """
-        client = StudioClient.with_project(project)
-        exporter = StudioExporter(client)
-        self.set_span_exporter(exporter)
-
-    def _set_project_with_otlp(self, project: str) -> None:
-        """Configure the `DevCsi` to export traces to Pharia Studio.
-
-        This function creates a `StudioOTLPSpanExporter` and registers it with the tracer provider.
-        The exporter uploads spans once the root span ends.
-        """
-        exporter = StudioOTLPSpanExporter.with_project(project)
-        self.set_span_exporter(exporter)
-
-    @classmethod
-    def with_studio(cls, project: str) -> "DevCsi":
-        """Create a `DevCsi` that exports traces to Pharia Studio.
-
-        This function creates a `StudioExporter` and registers it with the tracer provider.
-        The exporter uploads spans once the root span ends.
-
-        Args:
-            project: The name of the studio project to export traces to. Will be created if it does not exist.
-        """
-        warnings.warn(
-            "`DevCsi.with_studio` is deprecated. Use `DevCsi(project=...)` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        csi = cls()
-        csi._set_project(project)
-        return csi
-
-    @classmethod
-    def with_studio_otlp(cls, project: str) -> "DevCsi":
-        """Create a `DevCsi` that exports traces to Pharia Studio via OTLP.
-
-        This function creates a `StudioOTLPSpanExporter` and registers it with the tracer provider.
-        The exporter uploads spans once the root span ends.
-        """
-        csi = cls()
-        csi._set_project_with_otlp(project)
-        return csi
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
@@ -300,9 +236,7 @@ class DevCsi(Csi):
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
             if isinstance(processor, StudioSpanProcessor):
-                if isinstance(processor.span_exporter, StudioExporter) or isinstance(
-                    processor.span_exporter, StudioOTLPSpanExporter
-                ):
+                if isinstance(processor.span_exporter, StudioOTLPSpanExporter):
                     return processor.span_exporter
         return None
 
