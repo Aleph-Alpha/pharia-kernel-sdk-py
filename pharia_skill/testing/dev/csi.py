@@ -232,12 +232,11 @@ class DevCsi(Csi):
 
     @classmethod
     def existing_exporter(cls) -> SpanExporter | None:
-        """Return the first studio exporter attached to the provider, if any."""
+        """Return the first exporter that has been set on the DevCsi."""
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
             if isinstance(processor, StudioSpanProcessor):
-                if isinstance(processor.span_exporter, StudioOTLPSpanExporter):
-                    return processor.span_exporter
+                return processor.span_exporter
         return None
 
     @staticmethod
