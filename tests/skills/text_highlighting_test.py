@@ -266,7 +266,7 @@ Answer:
     input = Input(
         prompt=prompt,
         raw_completion="The ecosystem is adapted to extreme conditions.",
-        model="pharia-1-llm-7b-control",
+        model="llama-3.1-8b-instruct",
         source_ranges=[(54, 624), (635, 1100)],
     )
     csi = DevCsi()
