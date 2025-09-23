@@ -115,8 +115,7 @@ class DevCsi(Csi):
         self.client: CsiClient = Client()
         self._namespace = namespace
         if project is not None:
-            exporter = StudioExporter.with_project(project)
-            self.set_span_exporter(exporter)
+            self.set_span_exporter(StudioExporter(project))
 
     def _namespace_or_raise(self) -> str:
         """Raise an error if the namespace is not set."""

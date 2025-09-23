@@ -12,7 +12,7 @@ class StudioExporter(OTLPSpanExporter):
     directly to Studio's traces_v2 endpoint.
     """
 
-    def __init__(self, project_id: str):
+    def __init__(self, project_name: str):
         if (token := os.getenv("PHARIA_AI_TOKEN")) is None:
             raise ValueError(
                 "No authentication token provided. Set PHARIA_AI_TOKEN environment variable."
@@ -23,12 +23,8 @@ class StudioExporter(OTLPSpanExporter):
                 "No Studio endpoint provided. Set PHARIA_STUDIO_ADDRESS environment variable."
             )
 
-        traces_endpoint = f"{endpoint}/api/projects/{project_id}/traces_v2"
+        client = StudioClient.with_project(project_name)
+        client.assert_new_trace_endpoint_is_available()
+        traces_endpoint = f"{endpoint}/api/projects/{client.project_id}/traces_v2"
         headers = {"Authorization": f"Bearer {token}"}
         super().__init__(endpoint=traces_endpoint, headers=headers)
-
-    @classmethod
-    def with_project(cls, project_name: str) -> "StudioExporter":
-        """Create an exporter that sends traces to a particular project."""
-        client = StudioClient.with_project(project_name)
-        return cls(project_id=client.project_id)

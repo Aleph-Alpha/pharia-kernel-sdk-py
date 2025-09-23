@@ -5,7 +5,16 @@ from urllib.parse import urljoin
 import requests
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from requests.exceptions import ConnectionError, MissingSchema
+from requests.exceptions import ConnectionError, HTTPError, MissingSchema
+
+
+class OutdatedPhariaAI(Exception):
+    def __str__(self) -> str:
+        return (
+            "This version of the SDK requires requires your PhariaAI instance to be at "
+            "least on feature set 251000. Please ask your operator to upgrade. If this "
+            "is not a possibility, please downgrade to version `0.19.x` of the SDK."
+        )
 
 
 class StudioProject(BaseModel):
@@ -133,6 +142,14 @@ class StudioClient:
             case _:
                 response.raise_for_status()
         return cast(str, response.json())
+
+    def assert_new_trace_endpoint_is_available(self) -> None:
+        try:
+            self.list_traces()
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise OutdatedPhariaAI from None
+            raise
 
     def list_traces(self) -> list[str]:
         url = urljoin(self.url, f"/api/projects/{self.project_id}/traces_v2")
