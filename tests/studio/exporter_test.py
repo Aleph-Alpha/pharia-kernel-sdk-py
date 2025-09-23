@@ -1,52 +1,46 @@
+import random
+import string
+
 import pytest
 from pydantic import BaseModel
 
-from pharia_skill import CompletionParams, CompletionRequest, Csi, IndexPath, skill
-from pharia_skill.studio import StudioClient, StudioExporter
+from pharia_skill import Csi, Message, skill
+from pharia_skill.studio.client import StudioClient
 from pharia_skill.testing import DevCsi
 
-from .conftest import SpyClient
+
+@pytest.fixture
+def temp_project_client():
+    """A Studio client configured with a temporary project."""
+    random_string = "".join(random.choices(string.ascii_letters + string.digits, k=10))
+    name = "Tracing Test: " + random_string
+    client = StudioClient.with_project(name)
+    try:
+        yield client
+    finally:
+        client.delete_project()
 
 
-# Given a skill
-class Input(BaseModel):
-    topic: str
-
-
-class Output(BaseModel):
-    haiku: str
-
-
-@skill
-def haiku(csi: Csi, input: Input) -> Output:
-    """Skill with two csi calls for tracing."""
-    index = IndexPath("f13", "wikipedia-de", "luminous-base-asymmetric-64")
-    csi.search(index, input.topic, 1, 0.5)
-
-    request = CompletionRequest(
-        model="llama-3.1-8b-instruct",
-        prompt=input.topic,
-        params=CompletionParams(max_tokens=64),
-    )
-    result = csi.complete_concurrent([request, request])
-    return Output(haiku=result[0].text)
-
-
-@pytest.mark.kernel
 @pytest.mark.studio
-def test_trace_upload_studio_does_not_raise(stub_dev_csi: DevCsi):
-    """Errors from uploading traces are handled by ErrorHandles.
-    The default handling is silently ignoring the exceptions.
+def test_otlp_trace_export_to_studio(temp_project_client: StudioClient):
+    # Given a skill that does a chat request
+    class Input(BaseModel):
+        messages: list[Message]
 
-    Therefore, we explicitly collect the spans and upload them manually.
-    """
-    # Given a csi setup with the studio exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    stub_dev_csi.set_span_exporter(exporter)
+    class Output(BaseModel):
+        text: str
 
-    # When running a skill and collecting spans
-    haiku(stub_dev_csi, Input(topic="oat milk"))
+    @skill
+    def haiku(csi: Csi, input: Input) -> Output:
+        result = csi.chat(model="llama-3.1-8b-instruct", messages=input.messages)
+        result = csi.chat(model="llama-3.1-8b-instruct", messages=input.messages)
+        return Output(text=result.message.content)
 
-    # Then no error is raised when running the skill
-    StudioClient("kernel-test").submit_spans(client.spans[0])
+    # And given a csi configured with the studio exporter
+    csi = DevCsi(project=temp_project_client._project_name)
+
+    # When running the skill against the csi
+    haiku(csi, Input(messages=[Message.user("Hi")]))
+
+    # # Then the spans are exported to studio
+    assert len(temp_project_client.list_traces()) == 1

@@ -45,7 +45,7 @@ from pharia_skill.csi.inference import (
     CompletionStreamResponse,
     Tool,
 )
-from pharia_skill.studio import StudioOTLPSpanExporter, StudioSpanProcessor
+from pharia_skill.studio import StudioExporter, StudioSpanProcessor
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -115,7 +115,7 @@ class DevCsi(Csi):
         self.client: CsiClient = Client()
         self._namespace = namespace
         if project is not None:
-            exporter = StudioOTLPSpanExporter.with_project(project)
+            exporter = StudioExporter.with_project(project)
             self.set_span_exporter(exporter)
 
     def _namespace_or_raise(self) -> str:
