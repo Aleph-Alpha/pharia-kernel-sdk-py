@@ -4,6 +4,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 import requests
+from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 from pharia_skill import (
     ChatParams,
@@ -24,11 +26,6 @@ from pharia_skill import (
     Tool,
     ToolError,
     ToolOutput,
-)
-from pharia_skill.studio import (
-    SpanClient,
-    StudioExporter,
-    StudioSpan,
 )
 from pharia_skill.testing import DevCsi, MessageRecorder, StubCsi
 from pharia_skill.testing.dev.client import Client
@@ -273,9 +270,17 @@ def test_search(csi: Csi, given_index: IndexPath):
     assert "kernel" in result[0].document_path.name
 
 
-class StubStudioClient(SpanClient):
-    def submit_spans(self, spans: Sequence[StudioSpan]):
+class StubExporter(SpanExporter):
+    """Spy span exporter for testing."""
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        return SpanExportResult.SUCCESS
+
+    def shutdown(self) -> None:
         pass
+
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
+        return True
 
 
 @pytest.mark.kernel
@@ -284,7 +289,7 @@ def test_set_trace_exporter():
     csi = DevCsi()
 
     # When setting an exporter
-    exporter = StudioExporter(StubStudioClient())
+    exporter = StubExporter()
     csi.set_span_exporter(exporter)
 
     # Then the exporter is set
@@ -295,7 +300,7 @@ def test_set_trace_exporter():
 def test_set_same_trace_exporter_twice_does_not_raise():
     # Given a csi with one exporter set
     csi = DevCsi()
-    exporter = StudioExporter(StubStudioClient())
+    exporter = StubExporter()
     csi.set_span_exporter(exporter)
 
     # When setting the same exporter again
@@ -309,11 +314,11 @@ def test_set_same_trace_exporter_twice_does_not_raise():
 def test_set_different_trace_exporter_raises():
     # Given a csi with one exporter set
     csi = DevCsi()
-    exporter_1 = StudioExporter(StubStudioClient())
+    exporter_1 = StubExporter()
     csi.set_span_exporter(exporter_1)
 
     # Then setting a different exporter overwrites the existing one
-    exporter_2 = StudioExporter(StubStudioClient())
+    exporter_2 = StubExporter()
     csi.set_span_exporter(exporter_2)
 
     # And the new exporter is the one that is set
