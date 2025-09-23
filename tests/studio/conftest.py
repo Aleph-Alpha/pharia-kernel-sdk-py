@@ -4,7 +4,7 @@ from typing import Any, Generator, Sequence
 import pytest
 from opentelemetry.sdk.trace import Event as OtelEvent
 from opentelemetry.sdk.trace import ReadableSpan
-from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.span import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 
@@ -233,7 +233,7 @@ def timestamp_from_iso(iso_str: str) -> int:
     return int(dt.datetime.fromisoformat(iso_str).timestamp())
 
 
-class SpyExporter:
+class SpyExporter(SpanExporter):
     """Spy span exporter for testing."""
 
     def __init__(self) -> None:
