@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 
 import requests
 from dotenv import load_dotenv
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, HTTPError, MissingSchema
 
@@ -42,17 +43,33 @@ class StudioClient:
         """
         load_dotenv()
         self._token = os.environ["PHARIA_AI_TOKEN"]
-        self._headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {self._token}",
-        }
-
         self.url = os.environ["PHARIA_STUDIO_ADDRESS"]
 
+        self._auth_headers = {"Authorization": f"Bearer {self._token}"}
+        self._headers = {
+            "Accept": "application/json",
+            **self._auth_headers,
+        }
         self._check_connection()
 
         self._project_name = project_name
         self._project_id: str | None = None
+
+    def exporter(self) -> OTLPSpanExporter:
+        """Create an OTLP exporter for Studio.
+
+        This exporter uses OpenTelemetry's OTLP HTTP/PROTOBUF exporter to send traces
+        directly to Studio's traces_v2 endpoint.
+        """
+        self.assert_new_trace_endpoint_is_available()
+        return OTLPSpanExporter(
+            endpoint=self.trace_endpoint, headers=self._auth_headers
+        )
+
+    @property
+    def trace_endpoint(self) -> str:
+        """The OTEL compatible grpc endpoint Studio offers to export traces to."""
+        return urljoin(self.url, f"/api/projects/{self.project_id}/traces_v2")
 
     @classmethod
     def with_project(cls, project_name: str) -> "StudioClient":
@@ -138,6 +155,13 @@ class StudioClient:
         return cast(str, response.json())
 
     def assert_new_trace_endpoint_is_available(self) -> None:
+        """Assert that the trace v2 endpoint accepting traces as protobuf is available.
+
+        Historically, Studio supported trace ingestion via a custom format and endpoint.
+        Starting with feature set 251000, Studio offers an OTEL compatible endpoint,
+        that we are now using in the SDK. Since the SDK is shipped independently of
+        PhariaAI, we need to check if the new endpoint is available.
+        """
         try:
             self.list_traces()
         except HTTPError as e:
@@ -146,12 +170,14 @@ class StudioClient:
             raise
 
     def list_traces(self) -> list[str]:
+        """Helper method for tests to assert on the traces that have been ingested."""
         url = urljoin(self.url, f"/api/projects/{self.project_id}/traces_v2")
         response = requests.get(url, headers=self._headers)
         response.raise_for_status()
         return cast(list[str], response.json()["traces"])
 
     def delete_project(self) -> None:
+        """Helper method for tests to delete a project."""
         url = urljoin(self.url, f"/api/projects/{self.project_id}")
         response = requests.delete(url, headers=self._headers)
         response.raise_for_status()

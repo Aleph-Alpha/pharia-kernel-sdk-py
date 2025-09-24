@@ -13,8 +13,9 @@ from collections.abc import Generator
 from typing import Any, Sequence
 
 from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SpanExporter
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from opentelemetry.trace import StatusCode
 
 from pharia_skill import (
@@ -45,7 +46,7 @@ from pharia_skill.csi.inference import (
     CompletionStreamResponse,
     Tool,
 )
-from pharia_skill.studio import StudioExporter, StudioSpanProcessor
+from pharia_skill.studio import StudioClient
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -74,11 +75,15 @@ from .tool import deserialize_tool_output, deserialize_tools, serialize_tool_req
 
 
 class DevCsi(Csi):
-    """
-    The `DevCsi` can be used for testing Skill code locally against a running Pharia Kernel.
+    """The `DevCsi` can be used for testing Skill code locally against a PhariaKernel.
 
-    This implementation of Cognitive System Interface (CSI) is backed by a running instance of Pharia Kernel via HTTP.
-    This enables skill developers to run and test Skills against the same services that are used by the Pharia Kernel.
+    This implementation of Cognitive System Interface (CSI) is backed by a running
+    instance of PhariaKernel via HTTP. This enables Skill developers to run and test
+    Skills against the same services that are used by the PhariaKernel.
+
+    The `DevCsi` supports trace exports to different collectors. If you want to support
+    traces to PhariaStudio, simply provide a project name on construction. If not set,
+    a default exporter will be loaded from the corresponding environment variables.
 
     Args:
         namespace: The namespace to use for tool invocations.
@@ -104,9 +109,17 @@ class DevCsi(Csi):
     * `PHARIA_AI_TOKEN` (Pharia AI token)
     * `PHARIA_KERNEL_ADDRESS` (Pharia Kernel endpoint; example: "https://pharia-kernel.product.pharia.com")
 
-    If you want to export traces to Pharia Studio, also set:
+    If you want to export traces to PhariaStudio, set:
 
     * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.product.pharia.com")
+
+    If you want to export traces to Langfuse, set:
+
+    * `OTEL_EXPORTER_OTLP_ENDPOINT=https://cloud.langfuse.com/api/public/otel/v1/traces`
+    * `OTEL_EXPORTER_OTLP_HEADERS` (Langfuse basic auth string; example: "Authorization=Basic ${AUTH_STRING}")
+
+    See <https://langfuse.com/integrations/native/opentelemetry> on how to generate the
+    basic auth string.
     """
 
     def __init__(
@@ -114,8 +127,12 @@ class DevCsi(Csi):
     ) -> None:
         self.client: CsiClient = Client()
         self._namespace = namespace
+
         if project is not None:
-            self.set_span_exporter(StudioExporter(project))
+            studio_client = StudioClient.with_project(project)
+            self.set_span_exporter(studio_client.exporter())
+        else:
+            self.set_span_exporter(OTLPSpanExporter())
 
     def _namespace_or_raise(self) -> str:
         """Raise an error if the namespace is not set."""
@@ -220,13 +237,14 @@ class DevCsi(Csi):
         This method overwrites any existing exporters, thereby ensuring that there
         are never two exporters to Studio attached at the same time.
         """
+
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, StudioSpanProcessor):
+            if isinstance(processor, PhariaSkillProcessor):
                 processor.span_exporter = exporter
                 return
 
-        span_processor = StudioSpanProcessor(exporter)
+        span_processor = PhariaSkillProcessor(exporter)
         provider.add_span_processor(span_processor)
 
     @classmethod
@@ -234,7 +252,7 @@ class DevCsi(Csi):
         """Return the first exporter that has been set on the DevCsi."""
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, StudioSpanProcessor):
+            if isinstance(processor, PhariaSkillProcessor):
                 return processor.span_exporter
         return None
 
@@ -286,3 +304,9 @@ class DevCsi(Csi):
             if event.event == "error":
                 raise ValueError(event.data["message"])
             yield event
+
+
+class PhariaSkillProcessor(SimpleSpanProcessor):
+    """Signal that a processor has been registered by the SDK."""
+
+    pass
