@@ -1,16 +1,17 @@
 import random
 import string
+from collections.abc import Iterator
 
 import pytest
 from pydantic import BaseModel
 
 from pharia_skill import Csi, Message, skill
-from pharia_skill.studio.client import StudioClient
+from pharia_skill.studio import StudioClient
 from pharia_skill.testing import DevCsi
 
 
 @pytest.fixture
-def temp_project_client():
+def temp_project_client() -> Iterator[StudioClient]:
     """A Studio client configured with a temporary project."""
     random_string = "".join(random.choices(string.ascii_letters + string.digits, k=10))
     name = "Tracing Test: " + random_string
@@ -33,7 +34,6 @@ def test_otlp_trace_export_to_studio(temp_project_client: StudioClient):
     @skill
     def haiku(csi: Csi, input: Input) -> Output:
         result = csi.chat(model="llama-3.1-8b-instruct", messages=input.messages)
-        result = csi.chat(model="llama-3.1-8b-instruct", messages=input.messages)
         return Output(text=result.message.content)
 
     # And given a csi configured with the studio exporter
@@ -42,5 +42,5 @@ def test_otlp_trace_export_to_studio(temp_project_client: StudioClient):
     # When running the skill against the csi
     haiku(csi, Input(messages=[Message.user("Hi")]))
 
-    # # Then the spans are exported to studio
+    # Then the spans are exported to studio
     assert len(temp_project_client.list_traces()) == 1
