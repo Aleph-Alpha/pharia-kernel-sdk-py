@@ -171,14 +171,43 @@ class DevCsi(Csi):
     def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
+        request = ChatRequest(model=model, messages=messages, params=params)
         body = ChatRequestSerializer(
             model=model, messages=messages, params=params
         ).model_dump()
         function = "chat_stream"
         span = trace.get_tracer(__name__).start_span(function)
-        span.set_attribute("input", json.dumps(body))
+        span.set_attributes(request.as_gen_ai_otel_attributes())
         events = self.stream(function, body, span)
         return DevChatStreamResponse(events, span)
+
+    def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
+        """Generate model responses for a list of chat requests concurrently.
+
+        This method adds GenAI specific tracing attributes to the span. Until we need
+        to figure out how to do tracing for multiple requests, we can at least provide
+        some GenAI specific attributes for the single request case.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        body = ChatRequestListSerializer(root=requests).model_dump()
+        with trace.get_tracer(__name__).start_as_current_span("chat") as span:
+            if len(requests) == 1:
+                span.set_attributes(requests[0].as_gen_ai_otel_attributes())
+            else:
+                span.set_attribute("input", json.dumps(body))
+            try:
+                output = self.client.run("chat", body)
+                response = ChatListDeserializer(root=output).root
+            except Exception as e:
+                span.set_status(StatusCode.ERROR, str(e))
+                raise e
+            if len(response) == 1:
+                span.set_attributes(response[0].as_gen_ai_otel_attributes())
+            else:
+                span.set_attribute("output", json.dumps(output))
+            return response
 
     def complete_concurrent(
         self, requests: Sequence[CompletionRequest]
@@ -186,11 +215,6 @@ class DevCsi(Csi):
         body = CompletionRequestListSerializer(root=requests).model_dump()
         output = self.run("complete", body)
         return CompletionListDeserializer(root=output).root
-
-    def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
-        body = ChatRequestListSerializer(root=requests).model_dump()
-        output = self.run("chat", body)
-        return ChatListDeserializer(root=output).root
 
     def explain_concurrent(
         self, requests: Sequence[ExplanationRequest]
