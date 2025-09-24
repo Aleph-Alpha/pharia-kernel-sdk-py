@@ -304,16 +304,16 @@ def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
     assert chat_span.status.is_ok
 
     assert chat_span.attributes is not None
-    output = chat_span.attributes["output"]
+    output = chat_span.attributes["gen_ai.output.messages"]
     assert isinstance(output, str)
-    assert json.loads(output) == {
-        "message": {
+    assert json.loads(output) == [
+        {
             "role": "assistant",
             "content": "Hello, world!",
+            "parts": [{"type": "text", "content": "Hello, world!"}],
+            "finish_reason": "stop",
         },
-        "finish_reason": "stop",
-        "usage": {"prompt": 1, "completion": 1},
-    }
+    ]
 
 
 def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):

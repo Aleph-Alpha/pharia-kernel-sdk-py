@@ -129,6 +129,21 @@ class Message:
     role: Role
     content: str
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, Any]:
+        """Format as specified by OpenTelemetry GenAI semantic conventions.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        return {
+            "role": self.role.value,
+            # While `parts` is required by the specification, Langfuse only renders
+            # text content properly if passed as `content`. Including both does not
+            # appear to have any downside (apart from Langfuse also showing the parts.)
+            "content": self.content,
+            "parts": [{"type": "text", "content": self.content}],
+        }
+
     @classmethod
     def user(cls, content: str) -> Self:
         return cls(role=Role.User, content=content)

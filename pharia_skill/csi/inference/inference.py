@@ -3,6 +3,7 @@ This module exposes the interfaces for skills to interact with the Pharia Kernel
 via the Cognitive System Interface (CSI).
 """
 
+import json
 from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Generator
@@ -10,6 +11,8 @@ from dataclasses import field
 from enum import Enum
 from types import TracebackType
 from typing import Any, Literal, Self
+
+from opentelemetry.util.types import AttributeValue
 
 # We use pydantic.dataclasses to get type validation.
 # See the docstring of `csi` module for more information on the why.
@@ -433,6 +436,29 @@ class ChatRequest:
     messages: list[Message]
     params: ChatParams = field(default_factory=ChatParams)
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+
+        Note that the list of attributes specified here is currently not complete, as we
+        are still in exploring the conventions.
+        """
+        attributes: dict[str, AttributeValue] = {
+            "gen_ai.operation.name": "chat",
+            "gen_ai.request.model": self.model,
+            "gen_ai.input.messages": json.dumps(
+                [m.as_gen_ai_otel_attributes() for m in self.messages]
+            ),
+        }
+
+        # According to the OTel specification, the behavior of `None` value attributes
+        # is undefined, and hence strongly discouraged.
+        if self.params.max_tokens is not None:
+            attributes["gen_ai.request.max_tokens"] = self.params.max_tokens
+        return attributes
+
 
 @dataclass
 class ChatResponse:
@@ -457,6 +483,22 @@ class ChatResponse:
         logprobs = [Distribution.from_dict(logprob) for logprob in body["logprobs"]]
         usage = TokenUsage(body["usage"]["prompt"], body["usage"]["completion"])
         return ChatResponse(message, finish_reason, logprobs, usage)
+
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        message = {
+            "finish_reason": self.finish_reason.value,
+            **self.message.as_gen_ai_otel_attributes(),
+        }
+        return {
+            "gen_ai.output.messages": json.dumps([message]),
+            "gen_ai.usage.input_tokens": self.usage.prompt,
+            "gen_ai.usage.output_tokens": self.usage.completion,
+        }
 
 
 @dataclass

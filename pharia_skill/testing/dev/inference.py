@@ -165,17 +165,17 @@ class DevChatStreamResponse(ChatStreamResponse):
         return super().__exit__(exc_type, exc_value, traceback)
 
     def _next(self) -> ChatEvent | None:
-        """We can not rely on the user to consume the entire stream. Therefore,
-        we need to update the span output on each iteration."""
-        if event := next(self._stream, None):
+        """Development implementation of the `next` method.
+
+        We can not rely on the user to consume the entire stream. Therefore, we need to
+        update the span output on each iteration.
+        """
+        if (event := next(self._stream, None)) is not None:
             chat_event = chat_event_from_sse(event)
             self._record_span_event(chat_event)
             self._update_span_output()
             return chat_event
 
-        # The last usage event is not part of the iterator, but sets the `_usage`
-        # attribute, so we need to update the span output here.
-        self._update_span_output()
         return None
 
     def _record_span_event(self, event: ChatEvent) -> None:
@@ -196,12 +196,10 @@ class DevChatStreamResponse(ChatStreamResponse):
                 self.span.add_event("finish_reason", attributes=attributes)
 
     def _update_span_output(self) -> None:
-        """Construct a `ChatResponse` that can be stored for tracing.
+        """Construct the entire `ChatResponse` from chunks and store it on the span.
 
-        While a developer might be interested in the individual events of a stream,
-        we also want to
+        This only work if the entire stream is consumed.
         """
-        # We can not do a lot without the first role event
         if getattr(self, "role", None) is not None:
             content = "".join(
                 [
@@ -210,16 +208,15 @@ class DevChatStreamResponse(ChatStreamResponse):
                     if isinstance(event, MessageAppend)
                 ]
             )
-            message = Message(
-                role=Role(self.role),
-                content=content,
-            )
-            output: dict[str, Any] = {"message": asdict(message)}
-            if finish_reason := self._finish_reason_event():
-                output["finish_reason"] = finish_reason.value
-            if usage := self._usage_event():
-                output["usage"] = asdict(usage)
-            self.span.set_attribute("output", json.dumps(output))
+            message = Message(Role(self.role), content)
+            finish_reason = self._finish_reason_event()
+            usage = self._usage_event()
+            if finish_reason and usage is not None:
+                response = ChatResponse(
+                    message, finish_reason, logprobs=[], usage=usage
+                )
+                self.span.set_attributes(response.as_gen_ai_otel_attributes())
+                self.span.end()
 
     def _finish_reason_event(self) -> FinishReason | None:
         return next(
