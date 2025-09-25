@@ -164,7 +164,8 @@ class DevCsi(Csi):
         ).model_dump()
         function = "completion_stream"
         span = trace.get_tracer(__name__).start_span(function)
-        span.set_attribute("input", json.dumps(body))
+        request = CompletionRequest(model, prompt, params)
+        span.set_attributes(request.as_gen_ai_otel_attributes())
         events = self.stream(function, body, span)
         return DevCompletionStreamResponse(events, span)
 
@@ -184,9 +185,9 @@ class DevCsi(Csi):
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
         """Generate model responses for a list of chat requests concurrently.
 
-        This method adds GenAI specific tracing attributes to the span. Until we need
-        to figure out how to do tracing for multiple requests, we can at least provide
-        some GenAI specific attributes for the single request case.
+        This method adds GenAI specific tracing attributes to the span. Until we figure
+        out how to do tracing for multiple requests, we can at least provide some GenAI
+        specific attributes for the single request case.
 
         See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
         for more details.
@@ -212,9 +213,29 @@ class DevCsi(Csi):
     def complete_concurrent(
         self, requests: Sequence[CompletionRequest]
     ) -> list[Completion]:
+        """Generate model responses for a list of completion requests concurrently.
+
+        This method adds GenAI specific tracing attributes to the span. Until we figure
+        out how to do tracing for multiple requests, we can at least provide some GenAI
+        specific attributes for the single request case.
+        """
         body = CompletionRequestListSerializer(root=requests).model_dump()
-        output = self.run("complete", body)
-        return CompletionListDeserializer(root=output).root
+        with trace.get_tracer(__name__).start_as_current_span("complete") as span:
+            if len(requests) == 1:
+                span.set_attributes(requests[0].as_gen_ai_otel_attributes())
+            else:
+                span.set_attribute("input", json.dumps(body))
+            try:
+                output = self.client.run("complete", body)
+                response = CompletionListDeserializer(root=output).root
+            except Exception as e:
+                span.set_status(StatusCode.ERROR, str(e))
+                raise e
+            if len(response) == 1:
+                span.set_attributes(response[0].as_gen_ai_otel_attributes())
+            else:
+                span.set_attribute("output", json.dumps(output))
+            return response
 
     def explain_concurrent(
         self, requests: Sequence[ExplanationRequest]

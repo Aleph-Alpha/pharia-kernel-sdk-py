@@ -97,6 +97,17 @@ class TokenUsage:
     prompt: int
     completion: int
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, int]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        return {
+            "gen_ai.usage.input_tokens": self.prompt,
+            "gen_ai.usage.output_tokens": self.completion,
+        }
+
 
 class FinishReason(str, Enum):
     """The reason the model finished generating.
