@@ -83,6 +83,30 @@ class CompletionParams:
     logprobs: Logprobs = "no"
     echo: bool = False
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        attributes: dict[str, AttributeValue] = {}
+
+        # According to the OTel specification, the behavior of `None` value attributes
+        # is undefined, and hence strongly discouraged.
+        if self.max_tokens is not None:
+            attributes["gen_ai.request.max_tokens"] = self.max_tokens
+        if self.temperature is not None:
+            attributes["gen_ai.request.temperature"] = self.temperature
+        if self.top_p is not None:
+            attributes["gen_ai.request.top_p"] = self.top_p
+        if self.frequency_penalty is not None:
+            attributes["gen_ai.request.frequency_penalty"] = self.frequency_penalty
+        if self.presence_penalty is not None:
+            attributes["gen_ai.request.presence_penalty"] = self.presence_penalty
+        if self.stop:
+            attributes["gen_ai.request.stop_sequences"] = self.stop
+        return attributes
+
 
 @dataclass
 class CompletionAppend:
@@ -378,6 +402,18 @@ class Completion:
             usage=body["usage"],
         )
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        return {
+            "gen_ai.content.completion": self.text,
+            "gen_ai.response.finish_reason": self.finish_reason.value,
+            **self.usage.as_gen_ai_otel_attributes(),
+        }
+
 
 @dataclass
 class CompletionRequest:
@@ -393,6 +429,19 @@ class CompletionRequest:
     model: str
     prompt: str
     params: CompletionParams = field(default_factory=CompletionParams)
+
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        return {
+            "gen_ai.operation.name": "text_completion",
+            "gen_ai.request.model": self.model,
+            "gen_ai.content.prompt": self.prompt,
+            **self.params.as_gen_ai_otel_attributes(),
+        }
 
 
 @dataclass
@@ -414,6 +463,23 @@ class ChatParams:
     frequency_penalty: float | None = None
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
+
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        attributes: dict[str, AttributeValue] = {}
+
+        # According to the OTel specification, the behavior of `None` value attributes
+        # is undefined, and hence strongly discouraged.
+        if self.max_tokens is not None:
+            attributes["gen_ai.request.max_tokens"] = self.max_tokens
+        if self.temperature is not None:
+            attributes["gen_ai.request.temperature"] = self.temperature
+        if self.top_p is not None:
+            attributes["gen_ai.request.top_p"] = self.top_p
+        if self.frequency_penalty is not None:
+            attributes["gen_ai.request.frequency_penalty"] = self.frequency_penalty
+        if self.presence_penalty is not None:
+            attributes["gen_ai.request.presence_penalty"] = self.presence_penalty
+        return attributes
 
 
 @dataclass
@@ -445,19 +511,14 @@ class ChatRequest:
         Note that the list of attributes specified here is currently not complete, as we
         are still in exploring the conventions.
         """
-        attributes: dict[str, AttributeValue] = {
+        return {
             "gen_ai.operation.name": "chat",
             "gen_ai.request.model": self.model,
             "gen_ai.input.messages": json.dumps(
                 [m.as_gen_ai_otel_attributes() for m in self.messages]
             ),
+            **self.params.as_gen_ai_otel_attributes(),
         }
-
-        # According to the OTel specification, the behavior of `None` value attributes
-        # is undefined, and hence strongly discouraged.
-        if self.params.max_tokens is not None:
-            attributes["gen_ai.request.max_tokens"] = self.params.max_tokens
-        return attributes
 
 
 @dataclass
@@ -496,8 +557,7 @@ class ChatResponse:
         }
         return {
             "gen_ai.output.messages": json.dumps([message]),
-            "gen_ai.usage.input_tokens": self.usage.prompt,
-            "gen_ai.usage.output_tokens": self.usage.completion,
+            **self.usage.as_gen_ai_otel_attributes(),
         }
 
 
