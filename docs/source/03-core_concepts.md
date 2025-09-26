@@ -35,7 +35,7 @@ Developers can write tests, step through their Python code and inspect the state
 ### Tracing
 
 The Kernel automatically traces Skills and all interactions with the CSI (logs are currently not available). When developing Skills, the developer does not need to worry about setting up tracing.
-The Kernel can be configured to export traces to an OpenTelemetry compatible backend. At development time, the [DevCSI](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) can be configured to export traces to Pharia Studio, where they can be visualized.
+The Kernel can be configured to export traces to an OpenTelemetry compatible backend. At development time, the [DevCSI](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) can be configured to export traces to any OpenTelemetry compatible backend like PhariaStudio or Langfuse.
 
 ## Namespaces
 
