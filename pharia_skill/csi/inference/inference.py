@@ -346,7 +346,6 @@ class ChatStreamResponse(ABC):
                     self._finish_reason = event
                 case TokenUsage():
                     self._usage = event
-                    break
 
     def consume_message(self) -> Message:
         """A helper method that extracts the contained message from a chat stream.
@@ -410,7 +409,7 @@ class Completion:
         """
         return {
             "gen_ai.content.completion": self.text,
-            "gen_ai.response.finish_reason": self.finish_reason.value,
+            **self.finish_reason.as_gen_ai_otel_attributes(),
             **self.usage.as_gen_ai_otel_attributes(),
         }
 
@@ -551,12 +550,10 @@ class ChatResponse:
         See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
         for more details.
         """
-        message = {
-            "finish_reason": self.finish_reason.value,
-            **self.message.as_gen_ai_otel_attributes(),
-        }
+        messages = json.dumps([self.message.as_gen_ai_otel_attributes()])
         return {
-            "gen_ai.output.messages": json.dumps([message]),
+            "gen_ai.output.messages": messages,
+            **self.finish_reason.as_gen_ai_otel_attributes(),
             **self.usage.as_gen_ai_otel_attributes(),
         }
 
