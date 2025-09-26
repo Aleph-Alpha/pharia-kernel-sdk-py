@@ -1,14 +1,12 @@
 import json
 from collections.abc import Generator
-from dataclasses import asdict
 from types import TracebackType
-from typing import Any, Sequence
+from typing import Sequence
 
 from opentelemetry import trace
 from opentelemetry.trace import StatusCode
 from pydantic import BaseModel, RootModel, TypeAdapter
 
-from pharia_skill import Role
 from pharia_skill.csi.inference import (
     ChatEvent,
     ChatParams,
@@ -29,6 +27,7 @@ from pharia_skill.csi.inference import (
     TextScore,
     TokenUsage,
 )
+from pharia_skill.csi.inference.types import Role
 from pharia_skill.testing.dev.client import Event
 
 
@@ -36,7 +35,7 @@ class DevCompletionStreamResponse(CompletionStreamResponse):
     def __init__(self, stream: Generator[Event, None, None], span: trace.Span):
         self._stream = stream
         self.span = span
-        self.tracing_buffer: list[CompletionEvent] = []
+        self.text: str = ""
         super().__init__()
 
     def __exit__(
@@ -51,58 +50,30 @@ class DevCompletionStreamResponse(CompletionStreamResponse):
         return super().__exit__(exc_type, exc_value, traceback)
 
     def next(self) -> CompletionEvent | None:
-        """We can not rely on the user to consume the entire stream. Therefore,
-        we need to update the span output on each iteration."""
-        if event := next(self._stream, None):
-            completion_event = completion_event_from_sse(event)
-            self._record_span_event(completion_event)
-            self._update_span_output()
-            return completion_event
+        """Development implementation of the `next` method.
 
-        self._update_span_output()
-        return None
+        We can not rely on the user to consume the entire stream. Therefore, the span
+        output is updated on iteration.
+        """
+        if (event := next(self._stream, None)) is None:
+            # Ending the span here potentially conflicts with ending the span in the
+            # `__exit__` method. However, not all users use this class as a context
+            # manager, and we also want to end the span for them, and most span
+            # implementations are forgiving about ending the span multiple times.
+            self.span.end()
+            return None
 
-    def _record_span_event(self, event: CompletionEvent) -> None:
-        self.tracing_buffer.append(event)
-
-        match event:
-            case CompletionAppend():
-                attributes = unnest_attributes(asdict(event))
-                self.span.add_event("completion_append", attributes=attributes)
+        completion_event = completion_event_from_sse(event)
+        match completion_event:
+            case CompletionAppend(text, _logprobs):
+                self.text += text
             case TokenUsage():
-                attributes = unnest_attributes(asdict(event))
-                self.span.add_event("token_usage", attributes=attributes)
+                self.span.set_attributes(completion_event.as_gen_ai_otel_attributes())
             case FinishReason():
-                attributes = {"finish_reason": event.value}
-                self.span.add_event("finish_reason", attributes=attributes)
+                self.span.set_attributes(completion_event.as_gen_ai_otel_attributes())
 
-    def _update_span_output(self) -> None:
-        """Construct a `Completion` that can be stored for tracing."""
-        text = "".join(
-            [
-                event.text
-                for event in self.tracing_buffer
-                if isinstance(event, CompletionAppend)
-            ]
-        )
-        data: dict[str, Any] = {"text": text}
-        if finish_reason := self._finish_reason_event():
-            data["finish_reason"] = finish_reason.value
-        if usage := self._token_usage_event():
-            data["usage"] = asdict(usage)
-        self.span.set_attribute("output", json.dumps(data))
-
-    def _token_usage_event(self) -> TokenUsage | None:
-        return next(
-            (event for event in self.tracing_buffer if isinstance(event, TokenUsage)),
-            None,
-        )
-
-    def _finish_reason_event(self) -> FinishReason | None:
-        return next(
-            (event for event in self.tracing_buffer if isinstance(event, FinishReason)),
-            None,
-        )
+        self.span.set_attribute("gen_ai.content.completion", self.text)
+        return completion_event
 
 
 def completion_event_from_sse(event: Event) -> CompletionEvent:
@@ -117,40 +88,32 @@ def completion_event_from_sse(event: Event) -> CompletionEvent:
             raise ValueError(f"Unexpected event type: {event.event}")
 
 
-def unnest_attributes(data: dict[str, Any]) -> dict[str, str]:
-    """
-    OpenTelemetry only allows for one level of nesting in attributes, hence we flatten
-    nested dicts to json strings.
-    Studio itself would support arbitrary nesting (see `StudioSpan.events`), but as we use
-    OpenTelemetry for tracing and only convert to Studio spans when exporting, we need to
-    respect that limitation here.
-    Another option would be to load these json strings into Python dicts in `StudioSpan.from_otel`.
-    """
-    return {k: json.dumps(v) if isinstance(v, dict) else v for k, v in data.items()}
-
-
 class DevChatStreamResponse(ChatStreamResponse):
     """Development implementation of a chat stream response.
 
-    This class takes care of tracing the chat stream events. A user might be interested
-    in not only seeing the individual items, but also the entire response. Therefore, if
-    the stream is consumed, this class records the items and tries to reconstruct the
-    entire response, so it is available on the span.
+    This class takes care of ensuring that individual stream items are mapped to the
+    corresponding OTel GenAI conventions.
 
-    It can not create the trace object itself, as it does not know about the chat
-    request, which we also want to trace. However, it takes over ownership and therefore
-    also is responsible for ending the span and registering errors.
+    Platforms like `Langfuse` render conversation messages nicely in the UI. A naive guess
+    would be that, for streaming cases, they accumulate the assistant messages from
+    individual events stored on teh span. However, that is not the case, so it is left
+    up to the SDK to do this accumulation (similar logic can be found in the
+    `_accumulate_stream_item` function in the `openllmetry` package).
 
-    For non-streaming request, the responsibility of tracing lies with the `DevCsi`.
-    However, for constructing the response from individual items, knowledge about the
-    event structure is needed, so the responsibility of tracing can not be taken over
-    by the `DevCsi`.
+    For non-streaming requests, the responsibility of tracing lies entirely within the
+    `DevCsi`. However, to construct the response from individual items, knowledge
+    about the event structure is needed, so some tracing responsibility needs to move
+    into this class.
+
+    However, the `DevChatStreamResponse` can not create the trace object itself, as it
+    does not know about the chat request. As it takes over ownership of the span, it is
+    also responsible for ending the span and registering errors.
     """
 
     def __init__(self, stream: Generator[Event, None, None], span: trace.Span):
         self._stream = stream
         self.span = span
-        self.tracing_buffer: list[ChatEvent] = []
+        self.content_buffer: list[MessageAppend] = []
         super().__init__()
 
     def __exit__(
@@ -170,65 +133,41 @@ class DevChatStreamResponse(ChatStreamResponse):
         We can not rely on the user to consume the entire stream. Therefore, we need to
         update the span output on each iteration.
         """
-        if (event := next(self._stream, None)) is not None:
-            chat_event = chat_event_from_sse(event)
-            self._record_span_event(chat_event)
-            self._update_span_output()
-            return chat_event
+        if (event := next(self._stream, None)) is None:
+            # Ending the span here potentially conflicts with ending the span in the
+            # `__exit__` method. However, not all users use this class as a context
+            # manager, and we also want to end the span for them, and most span
+            # implementations are forgiving about ending the span multiple times.
+            self.span.end()
+            return None
 
-        return None
-
-    def _record_span_event(self, event: ChatEvent) -> None:
-        self.tracing_buffer.append(event)
-
-        match event:
+        chat_event = chat_event_from_sse(event)
+        match chat_event:
             case MessageBegin():
-                attributes = unnest_attributes(asdict(event))
-                self.span.add_event("message_begin", attributes=attributes)
+                self.role = chat_event.role
             case MessageAppend():
-                attributes = unnest_attributes(asdict(event))
-                self.span.add_event("message_append", attributes=attributes)
-            case TokenUsage():
-                attributes = unnest_attributes(asdict(event))
-                self.span.add_event("token_usage", attributes=attributes)
+                # accumulate the content so we can store the entire response on the span
+                self.content_buffer.append(chat_event)
             case FinishReason():
-                attributes = {"finish_reason": event.value}
-                self.span.add_event("finish_reason", attributes=attributes)
+                self.span.set_attributes(chat_event.as_gen_ai_otel_attributes())
+            case TokenUsage():
+                self.span.set_attributes(chat_event.as_gen_ai_otel_attributes())
+
+        self._update_span_output()
+        return chat_event
 
     def _update_span_output(self) -> None:
-        """Construct the entire `ChatResponse` from chunks and store it on the span.
-
-        This only work if the entire stream is consumed.
-        """
+        """Construct the already received chat message and store it on the span."""
         if getattr(self, "role", None) is not None:
-            content = "".join(
-                [
-                    event.content
-                    for event in self.tracing_buffer
-                    if isinstance(event, MessageAppend)
-                ]
+            message = Message(Role(self.role), self._received_content())
+            self.span.set_attribute(
+                "gen_ai.output.messages",
+                json.dumps([message.as_gen_ai_otel_attributes()]),
             )
-            message = Message(Role(self.role), content)
-            finish_reason = self._finish_reason_event()
-            usage = self._usage_event()
-            if finish_reason and usage is not None:
-                response = ChatResponse(
-                    message, finish_reason, logprobs=[], usage=usage
-                )
-                self.span.set_attributes(response.as_gen_ai_otel_attributes())
-                self.span.end()
 
-    def _finish_reason_event(self) -> FinishReason | None:
-        return next(
-            (event for event in self.tracing_buffer if isinstance(event, FinishReason)),
-            None,
-        )
-
-    def _usage_event(self) -> TokenUsage | None:
-        return next(
-            (event for event in self.tracing_buffer if isinstance(event, TokenUsage)),
-            None,
-        )
+    def _received_content(self) -> str:
+        """Accumulated content we have received so far."""
+        return "".join([event.content for event in self.content_buffer])
 
 
 def chat_event_from_sse(event: Event) -> ChatEvent:
