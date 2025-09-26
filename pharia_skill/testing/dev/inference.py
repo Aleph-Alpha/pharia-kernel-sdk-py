@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 from collections.abc import Generator
 from types import TracebackType
@@ -29,6 +30,15 @@ from pharia_skill.csi.inference import (
 )
 from pharia_skill.csi.inference.types import Role
 from pharia_skill.testing.dev.client import Event
+
+LANGFUSE_COMPLETION_START_TIME = "langfuse.observation.completion_start_time"
+"""Setting this attribute allows Langfuse to show the time to first token.
+
+While it would be nice to have a more generic attribute name, this is not part of the
+GenAI OTel conventions. Looking at the Langfuse codebase, they also check for the
+`ai.response.msToFirstChunk` and `ai.stream.msToFirstChunk` attributes, which are
+set by the Vercel SDK.
+"""
 
 
 class DevCompletionStreamResponse(CompletionStreamResponse):
@@ -66,6 +76,11 @@ class DevCompletionStreamResponse(CompletionStreamResponse):
         completion_event = completion_event_from_sse(event)
         match completion_event:
             case CompletionAppend(text, _logprobs):
+                if not self.text:
+                    self.span.set_attribute(
+                        LANGFUSE_COMPLETION_START_TIME,
+                        json.dumps(dt.datetime.now(dt.UTC).isoformat()),
+                    )
                 self.text += text
             case TokenUsage():
                 self.span.set_attributes(completion_event.as_gen_ai_otel_attributes())
@@ -146,6 +161,11 @@ class DevChatStreamResponse(ChatStreamResponse):
             case MessageBegin():
                 self.role = chat_event.role
             case MessageAppend():
+                if not self.content_buffer:
+                    self.span.set_attribute(
+                        LANGFUSE_COMPLETION_START_TIME,
+                        json.dumps(dt.datetime.now(dt.UTC).isoformat()),
+                    )
                 # accumulate the content so we can store the entire response on the span
                 self.content_buffer.append(chat_event)
             case FinishReason():
