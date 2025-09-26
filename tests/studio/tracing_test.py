@@ -1,7 +1,12 @@
+"""
+This module does not test the actual exporting of traces to Studio, but rather the
+tracing functionality itself and the traces that are created.
+"""
+
+import json
 from typing import Any, Generator
 
 import pytest
-from opentelemetry.sdk.trace import ReadableSpan
 from pydantic import BaseModel
 
 from pharia_skill import (
@@ -14,15 +19,12 @@ from pharia_skill import (
 )
 from pharia_skill.csi import ChatParams, Message
 from pharia_skill.message_stream.writer import MessageWriter
-from pharia_skill.studio import StudioExporter
-from pharia_skill.studio.span import SpanStatus
 from pharia_skill.testing import DevCsi, MessageRecorder
 from pharia_skill.testing.dev.client import CsiClient, Event
 
-from .conftest import SpyClient
+from .conftest import SpyExporter
 
 
-# Given a skill
 class Input(BaseModel):
     topic: str
 
@@ -66,32 +68,28 @@ def test_message_stream_is_traced(stub_dev_csi: DevCsi):
     ]
     stub_dev_csi.client.events = events  # type: ignore
 
-    # And given a spy client on the Studio exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    stub_dev_csi.set_span_exporter(exporter)
+    # And given a spy exporter
+    spy = SpyExporter()
+    stub_dev_csi.set_span_exporter(spy)
 
     # When running a message stream Skill
     haiku_stream(stub_dev_csi, MessageRecorder(), Input(topic="oat milk"))
 
-    # Then we have received one trace with two spans
-    assert len(client.spans) == 1
-    assert len(client.spans[0]) == 2
+    # Then we have received two spans
+    assert len(spy.spans) == 2
 
     # And the chat spans are written to the chat span
-    chat_span = client.spans[0][0]
+    chat_span = spy.spans[0]
     assert chat_span.name == "chat_stream"
-    assert chat_span.status == SpanStatus.OK
-    assert len(chat_span.events) == 3
-    assert chat_span.events[1].body == {"content": "Hello, world!", "logprobs": []}
+    assert chat_span.status.is_ok
 
     # And the output is written to the haiku span
-    haiku_span = client.spans[0][1]
+    haiku_span = spy.spans[1]
     assert haiku_span.name == "haiku_stream"
-    assert haiku_span.status == SpanStatus.OK
-    assert len(haiku_span.events) == 3
+    assert haiku_span.status.is_ok
 
-    assert chat_span.parent_id == haiku_span.context.span_id
+    assert chat_span.parent is not None
+    assert chat_span.parent.span_id == haiku_span.context.span_id
 
 
 def test_message_stream_result_is_traced(stub_dev_csi: DevCsi):
@@ -104,21 +102,21 @@ def test_message_stream_result_is_traced(stub_dev_csi: DevCsi):
     ]
     stub_dev_csi.client.events = events  # type: ignore
 
-    # And given a spy client on the Studio exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    stub_dev_csi.set_span_exporter(exporter)
+    # And given a spy exporter
+    spy = SpyExporter()
+    stub_dev_csi.set_span_exporter(spy)
 
     # When running a message stream Skilla
     haiku_stream(stub_dev_csi, MessageRecorder(), Input(topic="oat milk"))
 
     # Then we have the skill output on the outer most span
-    skill_span = client.spans[0][1]
+    skill_span = spy.spans[1]
     assert skill_span.name == "haiku_stream"
-    assert skill_span.attributes.output == {
-        "role": "assistant",
-        "content": "Hello, world!",
-    }
+    assert skill_span.attributes is not None
+    assert (
+        skill_span.attributes["output"]
+        == '{"role":"assistant","content":"Hello, world!"}'
+    )
 
 
 class SaboteurCsiClient(CsiClient):
@@ -140,32 +138,30 @@ class SaboteurCsiClient(CsiClient):
 @pytest.fixture
 def saboteur_dev_csi() -> DevCsi:
     """Create a `DevCsi` that raises an exception on every call."""
-    csi = DevCsi.__new__(DevCsi)
+    csi = DevCsi()
     csi.client = SaboteurCsiClient()
     return csi
 
 
 def test_failing_csi_stream_usage_leads_to_error_span(saboteur_dev_csi: DevCsi):
     # Given a csi that raises an exception on every call
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    saboteur_dev_csi.set_span_exporter(exporter)
+    spy = SpyExporter()
+    saboteur_dev_csi.set_span_exporter(spy)
 
     # When running a skill
     with pytest.raises(RuntimeError, match="Out of cheese"):
         haiku_stream(saboteur_dev_csi, MessageRecorder(), Input(topic="oat milk"))
 
     # Then both, the csi and the skill span are marked as an error
-    assert len(client.spans) == 1
-    assert client.spans[0][0].status == SpanStatus.ERROR
-    assert client.spans[0][1].status == SpanStatus.ERROR
+    assert len(spy.spans) == 2
+    assert not spy.spans[0].status.is_ok
+    assert not spy.spans[1].status.is_ok
 
 
-def test_csi_call_is_traced(stub_dev_csi: DevCsi):
+def test_csi_completion_call_is_traced(stub_dev_csi: DevCsi):
     # Given a csi setup with an in-memory exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    stub_dev_csi.set_span_exporter(exporter)
+    spy = SpyExporter()
+    stub_dev_csi.set_span_exporter(spy)
 
     # When running a completion request
     stub_dev_csi.complete(
@@ -175,110 +171,57 @@ def test_csi_call_is_traced(stub_dev_csi: DevCsi):
     )
 
     # Then the exporter has received a successful span
-    assert len(client.spans) == 1
-    assert client.spans[0][0].status == SpanStatus.OK
+    assert len(spy.spans) == 1
+    first_span = spy.spans[0]
+    assert first_span.status.is_ok
 
-    # And the input and output are set as attributes
-    assert "Say hello to Bob" in client.spans[0][0].attributes.input[0]["prompt"]
-    output = client.spans[0][0].attributes.output
-    assert output is not None
-    assert output[0]["text"] == "Hello, world!"
+    # And the  prompt and completion are set as gen_ai attributes
+    assert first_span.attributes is not None
+    assert first_span.attributes["gen_ai.content.prompt"] == "Say hello to Bob"
+    assert first_span.attributes["gen_ai.content.completion"] == "Hello, world!"
 
 
 def test_skill_is_traced(stub_dev_csi: DevCsi):
     # When running the skill with the dev csi
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    stub_dev_csi.set_span_exporter(exporter)
+    spy = SpyExporter()
+    stub_dev_csi.set_span_exporter(spy)
     haiku(stub_dev_csi, Input(topic="oat milk"))
 
     # Then the skill and the completion are traced
-    assert len(client.spans) == 1
-    assert client.spans[0][0].name == "search"
-    assert client.spans[0][1].name == "complete"
-    assert client.spans[0][2].name == "haiku"
+    assert len(spy.spans) == 3
+    assert spy.spans[0].name == "search"
+    assert spy.spans[1].name == "complete"
+    assert spy.spans[2].name == "haiku"
 
     # And the traces are nested
-    assert client.spans[0][0].parent_id == client.spans[0][2].context.span_id
+    assert spy.spans[0].parent is not None
+    assert spy.spans[0].parent.span_id == spy.spans[2].context.span_id
 
 
 def test_csi_exception_is_traced(saboteur_dev_csi: DevCsi):
     # Given a csi with a failing complete
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    saboteur_dev_csi.set_span_exporter(exporter)
+    spy = SpyExporter()
+    saboteur_dev_csi.set_span_exporter(spy)
 
     # When the skill is invoked
     with pytest.raises(RuntimeError, match="Out of cheese"):
         haiku(saboteur_dev_csi, Input(topic="oat milk"))
 
     # Then the spans are collected by the studio collector
-    assert len(client.spans) == 1
-    first, second, third = client.spans[0]
+    assert len(spy.spans) == 3
+    first, second, third = spy.spans
     assert first.name == "search"
-    assert first.status == SpanStatus.OK
+    assert first.status.is_ok
     assert second.name == "complete"
-    assert second.status == SpanStatus.ERROR
+    assert not second.status.is_ok
     assert third.name == "haiku"
-    assert third.status == SpanStatus.ERROR
-
-
-def test_traces_are_exported_together(
-    inner_span: ReadableSpan, outer_span: ReadableSpan
-):
-    # Given a csi with the studio exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-
-    # When we export the inner span
-    exporter.export([inner_span])
-
-    # And then the outer span
-    exporter.export([outer_span])
-
-    # Then the spans are submitted to the client
-    assert len(client.spans) == 1
-    assert len(client.spans[0]) == 2
-
-
-def test_no_traces_exported_without_root_span(inner_span: ReadableSpan):
-    # Given a csi with the studio exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-
-    # When we export a span without a root span
-    exporter.export([inner_span])
-    exporter.export([inner_span])
-
-    # Then no traces are submitted
-    assert len(client.spans) == 0
-
-
-def test_inner_trace_is_matched_with_correct_parent(
-    inner_span: ReadableSpan, error_span: ReadableSpan
-):
-    # Given a csi with the studio exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-
-    assert error_span.context is not None
-    assert inner_span.context is not None
-    assert error_span.context.trace_id != inner_span.context.trace_id
-
-    # When we export two spans with different trace ids
-    exporter.export([inner_span])
-    exporter.export([error_span])
-
-    # Then only the outer span is submitted
-    assert len(client.spans) == 1
-    assert len(client.spans[0]) == 1
+    assert not third.status.is_ok
 
 
 def test_stream_creation_exception_is_traced(saboteur_dev_csi: DevCsi):
     # Given a csi that raises an exception when a stream is created
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    saboteur_dev_csi.set_span_exporter(exporter)
+    spy = SpyExporter()
+    saboteur_dev_csi.set_span_exporter(spy)
 
     # When running a stream request
     with pytest.raises(RuntimeError, match="Out of cheese"):
@@ -287,8 +230,8 @@ def test_stream_creation_exception_is_traced(saboteur_dev_csi: DevCsi):
         )
 
     # Then the spans are collected by the studio collector
-    assert len(client.spans) == 1
-    assert client.spans[0][0].status == SpanStatus.ERROR
+    assert len(spy.spans) == 1
+    assert not spy.spans[0].status.is_ok
 
 
 def test_exception_in_stream_item_is_traced():
@@ -305,11 +248,10 @@ def test_exception_in_stream_item_is_traced():
             yield Event(event="message_begin", data={"role": "assistant"})
             raise RuntimeError("Out of cheese")
 
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    csi = DevCsi.__new__(DevCsi)
+    csi = DevCsi()
     csi.client = SaboteurStreamClient()
-    csi.set_span_exporter(exporter)
+    spy = SpyExporter()
+    csi.set_span_exporter(spy)
 
     # When running a chat stream request
     with pytest.raises(RuntimeError, match="Out of cheese"):
@@ -319,8 +261,8 @@ def test_exception_in_stream_item_is_traced():
             list(response.stream())
 
     # Then the spans are collected by the studio collector
-    assert len(client.spans) == 1
-    assert client.spans[0][0].status == SpanStatus.ERROR
+    assert len(spy.spans) == 1
+    assert not spy.spans[0].status.is_ok
 
 
 def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
@@ -331,14 +273,12 @@ def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
         Event(event="message_append", data={"content": "world!", "logprobs": []}),
         Event(event="message_end", data={"finish_reason": "stop"}),
         Event(event="usage", data={"usage": {"prompt": 1, "completion": 1}}),
-        Event(event="finish_reason", data={"finish_reason": "stop"}),
     ]
     stub_dev_csi.client.events = events  # type: ignore
 
     # And given a spy client on the Studio exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    stub_dev_csi.set_span_exporter(exporter)
+    spy = SpyExporter()
+    stub_dev_csi.set_span_exporter(spy)
 
     # When doing a chat stream request
     with stub_dev_csi.chat_stream_step(
@@ -347,17 +287,22 @@ def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
         list(response.stream())
 
     # Then the chat completion output is recorded on the span
-    chat_span = client.spans[0][0]
+    chat_span = spy.spans[0]
     assert chat_span.name == "chat_stream"
-    assert chat_span.status == SpanStatus.OK
-    assert chat_span.attributes.output == {
-        "message": {
+    assert chat_span.status.is_ok
+
+    assert chat_span.attributes is not None
+    output = chat_span.attributes["gen_ai.output.messages"]
+    assert isinstance(output, str)
+    assert json.loads(output) == [
+        {
             "role": "assistant",
             "content": "Hello, world!",
         },
-        "finish_reason": "stop",
-        "usage": {"prompt": 1, "completion": 1},
-    }
+    ]
+
+    # And the finish reason is recorded
+    assert chat_span.attributes["gen_ai.response.finish_reasons"] == ("stop",)
 
 
 def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):
@@ -371,9 +316,8 @@ def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):
     stub_dev_csi.client.events = events  # type: ignore
 
     # And given a spy client on the Studio exporter
-    client = SpyClient()
-    exporter = StudioExporter(client)
-    stub_dev_csi.set_span_exporter(exporter)
+    spy = SpyExporter()
+    stub_dev_csi.set_span_exporter(spy)
 
     # When doing a completion stream request
     with stub_dev_csi.completion_stream(
@@ -382,11 +326,12 @@ def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):
         list(response.stream())
 
     # Then the completion output is recorded on the span
-    completion_span = client.spans[0][0]
+    completion_span = spy.spans[0]
     assert completion_span.name == "completion_stream"
-    assert completion_span.status == SpanStatus.OK
-    assert completion_span.attributes.output == {
-        "text": "Hello, world!",
-        "finish_reason": "stop",
-        "usage": {"prompt": 1, "completion": 1},
-    }
+    assert completion_span.status.is_ok
+
+    assert completion_span.attributes is not None
+    assert completion_span.attributes["gen_ai.content.completion"] == "Hello, world!"
+    assert completion_span.attributes["gen_ai.response.finish_reasons"] == ("stop",)
+    assert completion_span.attributes["gen_ai.usage.input_tokens"] == 1
+    assert completion_span.attributes["gen_ai.usage.output_tokens"] == 1

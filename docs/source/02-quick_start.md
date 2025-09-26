@@ -109,6 +109,15 @@ And run the test:
 uv run pytest test_haiku.py
 ```
 
+The `DevCsi` can export traces to any OpenTelemetry compatible backend like Langfuse.
+Simply set the corresponding environment variables:
+
+```sh
+# .env
+OTEL_EXPORTER_OTLP_ENDPOINT=https://cloud.langfuse.com/api/public/otel/v1/traces
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic ${AUTH_STRING}"
+```
+
 ## 4. Building
 
 You now build your Skill, which produces a `haiku.wasm` file:

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Annotated, Any, Self
 
+from opentelemetry.util.types import AttributeValue
 from pydantic import BeforeValidator, field_validator
 
 
@@ -97,6 +98,17 @@ class TokenUsage:
     prompt: int
     completion: int
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, int]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        return {
+            "gen_ai.usage.input_tokens": self.prompt,
+            "gen_ai.usage.output_tokens": self.completion,
+        }
+
 
 class FinishReason(str, Enum):
     """The reason the model finished generating.
@@ -113,6 +125,16 @@ class FinishReason(str, Enum):
     LENGTH = "length"
     CONTENT_FILTER = "content_filter"
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """How to format the finish reason as a GenAI attribute.
+
+        The OTel spec specifies two possibilities: Either including it in the message
+        (`gen_ai.output.messages.0.finish_reason`) or as a separate field on the
+        response (`gen_ai.response.finish_reason`). Langfuse get's a bit confused by
+        the first option, so we use the second.
+        """
+        return {"gen_ai.response.finish_reasons": [self.value]}
+
 
 ChatEvent = MessageBegin | MessageAppend | FinishReason | TokenUsage
 
@@ -128,6 +150,19 @@ class Message:
 
     role: Role
     content: str
+
+    def as_gen_ai_otel_attributes(self) -> dict[str, Any]:
+        """Format as specified by OpenTelemetry GenAI semantic conventions.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        return {
+            "role": self.role.value,
+            # While `parts` is required by the OTel specification, Langfuse only renders
+            # text content properly if passed as `content`.
+            "content": self.content,
+        }
 
     @classmethod
     def user(cls, content: str) -> Self:

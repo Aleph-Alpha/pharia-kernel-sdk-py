@@ -4,20 +4,12 @@ from typing import Any, Generator, Sequence
 import pytest
 from opentelemetry.sdk.trace import Event as OtelEvent
 from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.span import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 
-from pharia_skill.studio import SpanClient, StudioSpan
 from pharia_skill.testing import DevCsi
 from pharia_skill.testing.dev.client import CsiClient, Event
-
-
-class SpyClient(SpanClient):
-    def __init__(self) -> None:
-        self.spans: list[Sequence[StudioSpan]] = []
-
-    def submit_spans(self, spans: Sequence[StudioSpan]):
-        self.spans.append(spans)
 
 
 class StubCsiClient(CsiClient):
@@ -230,3 +222,20 @@ def status_str_to_status(status_str: str) -> StatusCode:
 
 def timestamp_from_iso(iso_str: str) -> int:
     return int(dt.datetime.fromisoformat(iso_str).timestamp())
+
+
+class SpyExporter(SpanExporter):
+    """Spy span exporter for testing."""
+
+    def __init__(self) -> None:
+        self.spans: list[ReadableSpan] = []
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        self.spans.extend(spans)
+        return SpanExportResult.SUCCESS
+
+    def shutdown(self) -> None:
+        pass
+
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
+        return True

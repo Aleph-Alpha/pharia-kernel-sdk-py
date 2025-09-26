@@ -3,6 +3,7 @@ This module exposes the interfaces for skills to interact with the Pharia Kernel
 via the Cognitive System Interface (CSI).
 """
 
+import json
 from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Generator
@@ -10,6 +11,8 @@ from dataclasses import field
 from enum import Enum
 from types import TracebackType
 from typing import Any, Literal, Self
+
+from opentelemetry.util.types import AttributeValue
 
 # We use pydantic.dataclasses to get type validation.
 # See the docstring of `csi` module for more information on the why.
@@ -79,6 +82,30 @@ class CompletionParams:
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
     echo: bool = False
+
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        attributes: dict[str, AttributeValue] = {}
+
+        # According to the OTel specification, the behavior of `None` value attributes
+        # is undefined, and hence strongly discouraged.
+        if self.max_tokens is not None:
+            attributes["gen_ai.request.max_tokens"] = self.max_tokens
+        if self.temperature is not None:
+            attributes["gen_ai.request.temperature"] = self.temperature
+        if self.top_p is not None:
+            attributes["gen_ai.request.top_p"] = self.top_p
+        if self.frequency_penalty is not None:
+            attributes["gen_ai.request.frequency_penalty"] = self.frequency_penalty
+        if self.presence_penalty is not None:
+            attributes["gen_ai.request.presence_penalty"] = self.presence_penalty
+        if self.stop:
+            attributes["gen_ai.request.stop_sequences"] = self.stop
+        return attributes
 
 
 @dataclass
@@ -319,7 +346,6 @@ class ChatStreamResponse(ABC):
                     self._finish_reason = event
                 case TokenUsage():
                     self._usage = event
-                    break
 
     def consume_message(self) -> Message:
         """A helper method that extracts the contained message from a chat stream.
@@ -375,6 +401,18 @@ class Completion:
             usage=body["usage"],
         )
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        return {
+            "gen_ai.content.completion": self.text,
+            **self.finish_reason.as_gen_ai_otel_attributes(),
+            **self.usage.as_gen_ai_otel_attributes(),
+        }
+
 
 @dataclass
 class CompletionRequest:
@@ -390,6 +428,19 @@ class CompletionRequest:
     model: str
     prompt: str
     params: CompletionParams = field(default_factory=CompletionParams)
+
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        return {
+            "gen_ai.operation.name": "text_completion",
+            "gen_ai.request.model": self.model,
+            "gen_ai.content.prompt": self.prompt,
+            **self.params.as_gen_ai_otel_attributes(),
+        }
 
 
 @dataclass
@@ -412,6 +463,23 @@ class ChatParams:
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
 
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        attributes: dict[str, AttributeValue] = {}
+
+        # According to the OTel specification, the behavior of `None` value attributes
+        # is undefined, and hence strongly discouraged.
+        if self.max_tokens is not None:
+            attributes["gen_ai.request.max_tokens"] = self.max_tokens
+        if self.temperature is not None:
+            attributes["gen_ai.request.temperature"] = self.temperature
+        if self.top_p is not None:
+            attributes["gen_ai.request.top_p"] = self.top_p
+        if self.frequency_penalty is not None:
+            attributes["gen_ai.request.frequency_penalty"] = self.frequency_penalty
+        if self.presence_penalty is not None:
+            attributes["gen_ai.request.presence_penalty"] = self.presence_penalty
+        return attributes
+
 
 @dataclass
 class ChatRequest:
@@ -432,6 +500,24 @@ class ChatRequest:
     model: str
     messages: list[Message]
     params: ChatParams = field(default_factory=ChatParams)
+
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+
+        Note that the list of attributes specified here is currently not complete, as we
+        are still in exploring the conventions.
+        """
+        return {
+            "gen_ai.operation.name": "chat",
+            "gen_ai.request.model": self.model,
+            "gen_ai.input.messages": json.dumps(
+                [m.as_gen_ai_otel_attributes() for m in self.messages]
+            ),
+            **self.params.as_gen_ai_otel_attributes(),
+        }
 
 
 @dataclass
@@ -457,6 +543,19 @@ class ChatResponse:
         logprobs = [Distribution.from_dict(logprob) for logprob in body["logprobs"]]
         usage = TokenUsage(body["usage"]["prompt"], body["usage"]["completion"])
         return ChatResponse(message, finish_reason, logprobs, usage)
+
+    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+        """The attributes specified by the GenAI Otel Semantic convention.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        messages = json.dumps([self.message.as_gen_ai_otel_attributes()])
+        return {
+            "gen_ai.output.messages": messages,
+            **self.finish_reason.as_gen_ai_otel_attributes(),
+            **self.usage.as_gen_ai_otel_attributes(),
+        }
 
 
 @dataclass

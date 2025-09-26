@@ -1,15 +1,21 @@
 import os
-from collections.abc import Sequence
-from typing import Optional
+from typing import Optional, cast
 from urllib.parse import urljoin
 
 import requests
 from dotenv import load_dotenv
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from pydantic import BaseModel
-from requests.exceptions import ConnectionError, MissingSchema
+from requests.exceptions import ConnectionError, HTTPError, MissingSchema
 
-from pharia_skill.studio.exporter import SpanClient
-from pharia_skill.studio.span import StudioSpan, StudioSpanList
+
+class OutdatedPhariaAI(Exception):
+    def __str__(self) -> str:
+        return (
+            "This version of the SDK requires requires your PhariaAI instance to be at "
+            "least on feature set 251000. Please ask your operator to upgrade. If this "
+            "is not a possibility, please downgrade to version `0.19.x` of the SDK."
+        )
 
 
 class StudioProject(BaseModel):
@@ -17,7 +23,7 @@ class StudioProject(BaseModel):
     description: Optional[str]
 
 
-class StudioClient(SpanClient):
+class StudioClient:
     """Client for communicating with Pharia Studio.
 
     The Studio instance is determined by the environment variable `PHARIA_STUDIO_ADDRESS`.
@@ -26,10 +32,7 @@ class StudioClient(SpanClient):
       project_id (int, required): The unique identifier of the project currently in use.
     """
 
-    def __init__(
-        self,
-        project_name: str,
-    ) -> None:
+    def __init__(self, project_name: str) -> None:
         """Initializes the client.
 
         Runs a health check to check for a valid url of the Studio connection.
@@ -40,17 +43,33 @@ class StudioClient(SpanClient):
         """
         load_dotenv()
         self._token = os.environ["PHARIA_AI_TOKEN"]
-        self._headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {self._token}",
-        }
-
         self.url = os.environ["PHARIA_STUDIO_ADDRESS"]
 
+        self._auth_headers = {"Authorization": f"Bearer {self._token}"}
+        self._headers = {
+            "Accept": "application/json",
+            **self._auth_headers,
+        }
         self._check_connection()
 
         self._project_name = project_name
         self._project_id: str | None = None
+
+    def exporter(self) -> OTLPSpanExporter:
+        """Create an OTLP exporter for Studio.
+
+        This exporter uses OpenTelemetry's OTLP HTTP/PROTOBUF exporter to send traces
+        directly to Studio's traces_v2 endpoint.
+        """
+        self.assert_new_trace_endpoint_is_available()
+        return OTLPSpanExporter(
+            endpoint=self.trace_endpoint, headers=self._auth_headers
+        )
+
+    @property
+    def trace_endpoint(self) -> str:
+        """The OTEL compatible grpc endpoint Studio offers to export traces to."""
+        return urljoin(self.url, f"/api/projects/{self.project_id}/traces_v2")
 
     @classmethod
     def with_project(cls, project_name: str) -> "StudioClient":
@@ -69,10 +88,7 @@ class StudioClient(SpanClient):
     def _check_connection(self) -> None:
         url = urljoin(self.url, "/health")
         try:
-            response = requests.get(
-                url,
-                headers=self._headers,
-            )
+            response = requests.get(url, headers=self._headers)
         except MissingSchema:
             raise ValueError(
                 "The given url of the studio client is invalid. Make sure to include http:// in your url."
@@ -101,10 +117,7 @@ class StudioClient(SpanClient):
 
     def _get_project(self, project: str) -> str | None:
         url = urljoin(self.url, "/api/projects")
-        response = requests.get(
-            url,
-            headers=self._headers,
-        )
+        response = requests.get(url, headers=self._headers)
         response.raise_for_status()
         all_projects = response.json()
         try:
@@ -139,36 +152,32 @@ class StudioClient(SpanClient):
                 raise ValueError("Project already exists")
             case _:
                 response.raise_for_status()
-        return response.text
+        return cast(str, response.json())
 
-    def submit_spans(self, spans: Sequence[StudioSpan]) -> None:
-        """Sends the provided spans to Studio as a singular trace.
+    def assert_new_trace_endpoint_is_available(self) -> None:
+        """Assert that the trace v2 endpoint accepting traces as protobuf is available.
 
-        The method fails if the span list is empty, has already been created or if
-        spans belong to multiple traces.
-
-        Args:
-            spans (Sequence[StudioSpan], required): Spans to create the trace from. Created by exporting from a :class:`Tracer`.
+        Historically, Studio supported trace ingestion via a custom format and endpoint.
+        Starting with feature set 251000, Studio offers an OTEL compatible endpoint,
+        that we are now using in the SDK. Since the SDK is shipped independently of
+        PhariaAI, we need to check if the new endpoint is available.
         """
-        if len(spans) == 0:
-            raise ValueError("Tried to upload an empty trace")
-        self._upload_trace(StudioSpanList(spans))
+        try:
+            self.list_traces()
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise OutdatedPhariaAI from None
+            raise
 
-    def _upload_trace(self, trace: StudioSpanList) -> None:
-        url = urljoin(self.url, f"/api/projects/{self.project_id}/traces")
-        response = requests.post(
-            url,
-            data=trace.model_dump_json(),
-            headers=self._headers,
-        )
-        match response.status_code:
-            case 409:
-                raise ValueError(
-                    f"Trace with id {trace.root[0].context.trace_id} already exists."
-                )
-            case 422:
-                raise ValueError(
-                    f"Uploading the trace failed with 422. Response: {response.json()}"
-                )
-            case _:
-                response.raise_for_status()
+    def list_traces(self) -> list[str]:
+        """Helper method for tests to assert on the traces that have been ingested."""
+        url = urljoin(self.url, f"/api/projects/{self.project_id}/traces_v2")
+        response = requests.get(url, headers=self._headers)
+        response.raise_for_status()
+        return cast(list[str], response.json()["traces"])
+
+    def delete_project(self) -> None:
+        """Helper method for tests to delete a project."""
+        url = urljoin(self.url, f"/api/projects/{self.project_id}")
+        response = requests.delete(url, headers=self._headers)
+        response.raise_for_status()

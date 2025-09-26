@@ -9,12 +9,13 @@ uncoupling these interfaces brings two advantages:
 """
 
 import json
-import warnings
 from collections.abc import Generator
 from typing import Any, Sequence
 
 from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from opentelemetry.trace import StatusCode
 
 from pharia_skill import (
@@ -43,13 +44,9 @@ from pharia_skill import (
 from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
+    Tool,
 )
-from pharia_skill.csi.inference.tool import Tool
-from pharia_skill.studio import (
-    StudioClient,
-    StudioExporter,
-    StudioSpanProcessor,
-)
+from pharia_skill.studio import StudioClient
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -73,23 +70,20 @@ from .inference import (
     ExplanationListDeserializer,
     ExplanationRequestListSerializer,
 )
-from .language import (
-    SelectLanguageDeserializer,
-    SelectLanguageRequestSerializer,
-)
-from .tool import (
-    deserialize_tool_output,
-    deserialize_tools,
-    serialize_tool_requests,
-)
+from .language import SelectLanguageDeserializer, SelectLanguageRequestSerializer
+from .tool import deserialize_tool_output, deserialize_tools, serialize_tool_requests
 
 
 class DevCsi(Csi):
-    """
-    The `DevCsi` can be used for testing Skill code locally against a running Pharia Kernel.
+    """The `DevCsi` can be used for testing Skill code locally against a PhariaKernel.
 
-    This implementation of Cognitive System Interface (CSI) is backed by a running instance of Pharia Kernel via HTTP.
-    This enables skill developers to run and test Skills against the same services that are used by the Pharia Kernel.
+    This implementation of Cognitive System Interface (CSI) is backed by a running
+    instance of PhariaKernel via HTTP. This enables Skill developers to run and test
+    Skills against the same services that are used by the PhariaKernel.
+
+    The `DevCsi` supports trace exports to different collectors. If you want to support
+    traces to PhariaStudio, simply provide a project name on construction. If not set,
+    a default exporter will be loaded from the corresponding environment variables.
 
     Args:
         namespace: The namespace to use for tool invocations.
@@ -102,7 +96,7 @@ class DevCsi(Csi):
         from haiku import run
 
         # create a `CSI` instance, optionally with trace export to Studio
-        csi = DevCsi().with_studio("my-project")
+        csi = DevCsi(project="my-project")
 
         # Run your skill
         input = Input(topic="The meaning of life")
@@ -115,9 +109,17 @@ class DevCsi(Csi):
     * `PHARIA_AI_TOKEN` (Pharia AI token)
     * `PHARIA_KERNEL_ADDRESS` (Pharia Kernel endpoint; example: "https://pharia-kernel.product.pharia.com")
 
-    If you want to export traces to Pharia Studio, also set:
+    If you want to export traces to PhariaStudio, set:
 
     * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.product.pharia.com")
+
+    If you want to export traces to Langfuse, set:
+
+    * `OTEL_EXPORTER_OTLP_ENDPOINT=https://cloud.langfuse.com/api/public/otel/v1/traces`
+    * `OTEL_EXPORTER_OTLP_HEADERS` (Langfuse basic auth string; example: "Authorization=Basic ${AUTH_STRING}")
+
+    See <https://langfuse.com/integrations/native/opentelemetry> on how to generate the
+    basic auth string.
     """
 
     def __init__(
@@ -125,8 +127,12 @@ class DevCsi(Csi):
     ) -> None:
         self.client: CsiClient = Client()
         self._namespace = namespace
+
         if project is not None:
-            self._set_project(project)
+            studio_client = StudioClient.with_project(project)
+            self.set_span_exporter(studio_client.exporter())
+        else:
+            self.set_span_exporter(OTLPSpanExporter())
 
     def _namespace_or_raise(self) -> str:
         """Raise an error if the namespace is not set."""
@@ -135,38 +141,6 @@ class DevCsi(Csi):
                 "Specifying a namespace when constructing the `DevCsi` is required when invoking or listing tools."
             )
         return self._namespace
-
-    def _set_project(self, project: str) -> None:
-        """Configure the `DevCsi` to export traces to Pharia Studio.
-
-        This function creates a `StudioExporter` and registers it with the tracer provider.
-        The exporter uploads spans once the root span ends.
-
-        Args:
-            project: The name of the studio project to export traces to. Will be created if it does not exist.
-        """
-        client = StudioClient.with_project(project)
-        exporter = StudioExporter(client)
-        self.set_span_exporter(exporter)
-
-    @classmethod
-    def with_studio(cls, project: str) -> "DevCsi":
-        """Create a `DevCsi` that exports traces to Pharia Studio.
-
-        This function creates a `StudioExporter` and registers it with the tracer provider.
-        The exporter uploads spans once the root span ends.
-
-        Args:
-            project: The name of the studio project to export traces to. Will be created if it does not exist.
-        """
-        warnings.warn(
-            "`DevCsi.with_studio` is deprecated. Use `DevCsi(project=...)` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        csi = cls()
-        csi._set_project(project)
-        return csi
 
     def invoke_tool_concurrent(
         self, requests: Sequence[InvokeRequest]
@@ -190,33 +164,78 @@ class DevCsi(Csi):
         ).model_dump()
         function = "completion_stream"
         span = trace.get_tracer(__name__).start_span(function)
-        span.set_attribute("input", json.dumps(body))
+        request = CompletionRequest(model, prompt, params)
+        span.set_attributes(request.as_gen_ai_otel_attributes())
         events = self.stream(function, body, span)
         return DevCompletionStreamResponse(events, span)
 
     def _chat_stream(
         self, model: str, messages: list[Message], params: ChatParams
     ) -> ChatStreamResponse:
+        request = ChatRequest(model=model, messages=messages, params=params)
         body = ChatRequestSerializer(
             model=model, messages=messages, params=params
         ).model_dump()
         function = "chat_stream"
         span = trace.get_tracer(__name__).start_span(function)
-        span.set_attribute("input", json.dumps(body))
+        span.set_attributes(request.as_gen_ai_otel_attributes())
         events = self.stream(function, body, span)
         return DevChatStreamResponse(events, span)
+
+    def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
+        """Generate model responses for a list of chat requests concurrently.
+
+        This method adds GenAI specific tracing attributes to the span. Until we figure
+        out how to do tracing for multiple requests, we can at least provide some GenAI
+        specific attributes for the single request case.
+
+        See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
+        for more details.
+        """
+        body = ChatRequestListSerializer(root=requests).model_dump()
+        with trace.get_tracer(__name__).start_as_current_span("chat") as span:
+            if len(requests) == 1:
+                span.set_attributes(requests[0].as_gen_ai_otel_attributes())
+            else:
+                span.set_attribute("input", json.dumps(body))
+            try:
+                output = self.client.run("chat", body)
+                response = ChatListDeserializer(root=output).root
+            except Exception as e:
+                span.set_status(StatusCode.ERROR, str(e))
+                raise e
+            if len(response) == 1:
+                span.set_attributes(response[0].as_gen_ai_otel_attributes())
+            else:
+                span.set_attribute("output", json.dumps(output))
+            return response
 
     def complete_concurrent(
         self, requests: Sequence[CompletionRequest]
     ) -> list[Completion]:
-        body = CompletionRequestListSerializer(root=requests).model_dump()
-        output = self.run("complete", body)
-        return CompletionListDeserializer(root=output).root
+        """Generate model responses for a list of completion requests concurrently.
 
-    def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
-        body = ChatRequestListSerializer(root=requests).model_dump()
-        output = self.run("chat", body)
-        return ChatListDeserializer(root=output).root
+        This method adds GenAI specific tracing attributes to the span. Until we figure
+        out how to do tracing for multiple requests, we can at least provide some GenAI
+        specific attributes for the single request case.
+        """
+        body = CompletionRequestListSerializer(root=requests).model_dump()
+        with trace.get_tracer(__name__).start_as_current_span("complete") as span:
+            if len(requests) == 1:
+                span.set_attributes(requests[0].as_gen_ai_otel_attributes())
+            else:
+                span.set_attribute("input", json.dumps(body))
+            try:
+                output = self.client.run("complete", body)
+                response = CompletionListDeserializer(root=output).root
+            except Exception as e:
+                span.set_status(StatusCode.ERROR, str(e))
+                raise e
+            if len(response) == 1:
+                span.set_attributes(response[0].as_gen_ai_otel_attributes())
+            else:
+                span.set_attribute("output", json.dumps(output))
+            return response
 
     def explain_concurrent(
         self, requests: Sequence[ExplanationRequest]
@@ -257,29 +276,29 @@ class DevCsi(Csi):
         return DocumentDeserializer(root=output).root
 
     @classmethod
-    def set_span_exporter(cls, exporter: StudioExporter) -> None:
+    def set_span_exporter(cls, exporter: SpanExporter) -> None:
         """Set a span exporter for Studio if it has not been set yet.
 
         This method overwrites any existing exporters, thereby ensuring that there
         are never two exporters to Studio attached at the same time.
         """
+
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, StudioSpanProcessor):
+            if isinstance(processor, PhariaSkillProcessor):
                 processor.span_exporter = exporter
                 return
 
-        span_processor = StudioSpanProcessor(exporter)
+        span_processor = PhariaSkillProcessor(exporter)
         provider.add_span_processor(span_processor)
 
     @classmethod
-    def existing_exporter(cls) -> StudioExporter | None:
-        """Return the first studio exporter attached to the provider, if any."""
+    def existing_exporter(cls) -> SpanExporter | None:
+        """Return the first exporter that has been set on the DevCsi."""
         provider = cls.provider()
         for processor in provider._active_span_processor._span_processors:
-            if isinstance(processor, StudioSpanProcessor):
-                if isinstance(processor.span_exporter, StudioExporter):
-                    return processor.span_exporter
+            if isinstance(processor, PhariaSkillProcessor):
+                return processor.span_exporter
         return None
 
     @staticmethod
@@ -330,3 +349,9 @@ class DevCsi(Csi):
             if event.event == "error":
                 raise ValueError(event.data["message"])
             yield event
+
+
+class PhariaSkillProcessor(SimpleSpanProcessor):
+    """Signal that a processor has been registered by the SDK."""
+
+    pass
