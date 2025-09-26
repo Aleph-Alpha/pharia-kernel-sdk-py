@@ -82,17 +82,11 @@ def test_message_stream_is_traced(stub_dev_csi: DevCsi):
     chat_span = spy.spans[0]
     assert chat_span.name == "chat_stream"
     assert chat_span.status.is_ok
-    assert len(chat_span.events) == 3
-    assert chat_span.events[1].attributes == {
-        "content": "Hello, world!",
-        "logprobs": (),
-    }
 
     # And the output is written to the haiku span
     haiku_span = spy.spans[1]
     assert haiku_span.name == "haiku_stream"
     assert haiku_span.status.is_ok
-    assert len(haiku_span.events) == 3
 
     assert chat_span.parent is not None
     assert chat_span.parent.span_id == haiku_span.context.span_id
@@ -164,7 +158,7 @@ def test_failing_csi_stream_usage_leads_to_error_span(saboteur_dev_csi: DevCsi):
     assert not spy.spans[1].status.is_ok
 
 
-def test_csi_call_is_traced(stub_dev_csi: DevCsi):
+def test_csi_completion_call_is_traced(stub_dev_csi: DevCsi):
     # Given a csi setup with an in-memory exporter
     spy = SpyExporter()
     stub_dev_csi.set_span_exporter(spy)
@@ -181,15 +175,10 @@ def test_csi_call_is_traced(stub_dev_csi: DevCsi):
     first_span = spy.spans[0]
     assert first_span.status.is_ok
 
-    # And the input and output are set as json attributes
+    # And the  prompt and completion are set as gen_ai attributes
     assert first_span.attributes is not None
-    input = first_span.attributes["input"]
-    assert isinstance(input, str)
-    assert "Say hello to Bob" in json.loads(input)[0]["prompt"]
-
-    output = first_span.attributes["output"]
-    assert isinstance(output, str)
-    assert json.loads(output)[0]["text"] == "Hello, world!"
+    assert first_span.attributes["gen_ai.content.prompt"] == "Say hello to Bob"
+    assert first_span.attributes["gen_ai.content.completion"] == "Hello, world!"
 
 
 def test_skill_is_traced(stub_dev_csi: DevCsi):
@@ -284,7 +273,6 @@ def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
         Event(event="message_append", data={"content": "world!", "logprobs": []}),
         Event(event="message_end", data={"finish_reason": "stop"}),
         Event(event="usage", data={"usage": {"prompt": 1, "completion": 1}}),
-        Event(event="finish_reason", data={"finish_reason": "stop"}),
     ]
     stub_dev_csi.client.events = events  # type: ignore
 
@@ -310,10 +298,11 @@ def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
         {
             "role": "assistant",
             "content": "Hello, world!",
-            "parts": [{"type": "text", "content": "Hello, world!"}],
-            "finish_reason": "stop",
         },
     ]
+
+    # And the finish reason is recorded
+    assert chat_span.attributes["gen_ai.response.finish_reasons"] == ("stop",)
 
 
 def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):
@@ -342,10 +331,7 @@ def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):
     assert completion_span.status.is_ok
 
     assert completion_span.attributes is not None
-    output = completion_span.attributes["output"]
-    assert isinstance(output, str)
-    assert json.loads(output) == {
-        "text": "Hello, world!",
-        "finish_reason": "stop",
-        "usage": {"prompt": 1, "completion": 1},
-    }
+    assert completion_span.attributes["gen_ai.content.completion"] == "Hello, world!"
+    assert completion_span.attributes["gen_ai.response.finish_reasons"] == ("stop",)
+    assert completion_span.attributes["gen_ai.usage.input_tokens"] == 1
+    assert completion_span.attributes["gen_ai.usage.output_tokens"] == 1
