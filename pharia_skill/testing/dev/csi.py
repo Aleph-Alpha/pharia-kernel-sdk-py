@@ -47,6 +47,7 @@ from pharia_skill.csi.inference import (
     Tool,
 )
 from pharia_skill.studio import StudioClient
+from pharia_skill.testing.dev.logfire import set_logfire_attributes
 
 from .chunking import ChunkDeserializer, ChunkRequestSerializer
 from .client import Client, CsiClient, Event
@@ -184,7 +185,7 @@ class DevCsi(Csi):
         span = trace.get_tracer(__name__).start_span(span_name)
         span.set_attributes(request.as_gen_ai_otel_attributes())
         events = self.stream("chat_stream", body, span)
-        return DevChatStreamResponse(events, span)
+        return DevChatStreamResponse(events, span, request)
 
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
         """Generate model responses for a list of chat requests concurrently.
@@ -213,6 +214,7 @@ class DevCsi(Csi):
                 span.set_status(StatusCode.ERROR, str(e))
                 raise e
             if len(response) == 1:
+                set_logfire_attributes(span, requests[0].messages, response[0].message)
                 span.set_attributes(response[0].as_gen_ai_otel_attributes())
             else:
                 span.set_attribute("output", json.dumps(output))

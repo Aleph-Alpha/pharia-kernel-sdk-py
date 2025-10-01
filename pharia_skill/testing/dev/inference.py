@@ -30,6 +30,7 @@ from pharia_skill.csi.inference import (
 )
 from pharia_skill.csi.inference.types import Role
 from pharia_skill.testing.dev.client import Event
+from pharia_skill.testing.dev.logfire import set_logfire_attributes
 
 LANGFUSE_COMPLETION_START_TIME = "langfuse.observation.completion_start_time"
 """Setting this attribute allows Langfuse to show the time to first token.
@@ -125,9 +126,15 @@ class DevChatStreamResponse(ChatStreamResponse):
     also responsible for ending the span and registering errors.
     """
 
-    def __init__(self, stream: Generator[Event, None, None], span: trace.Span):
+    def __init__(
+        self,
+        stream: Generator[Event, None, None],
+        span: trace.Span,
+        request: ChatRequest,
+    ):
         self._stream = stream
         self.span = span
+        self.request = request
         self.content_buffer: list[MessageAppend] = []
         super().__init__()
 
@@ -184,6 +191,7 @@ class DevChatStreamResponse(ChatStreamResponse):
                 "gen_ai.output.messages",
                 json.dumps([message.as_gen_ai_otel_attributes()]),
             )
+            set_logfire_attributes(self.span, self.request.messages, message)
 
     def _received_content(self) -> str:
         """Accumulated content we have received so far."""
