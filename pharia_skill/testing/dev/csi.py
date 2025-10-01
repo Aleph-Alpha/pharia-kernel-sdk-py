@@ -162,11 +162,13 @@ class DevCsi(Csi):
         body = CompletionRequestSerializer(
             model=model, prompt=prompt, params=params
         ).model_dump()
-        function = "completion_stream"
-        span = trace.get_tracer(__name__).start_span(function)
+        # See https://github.com/open-telemetry/semantic-conventions/blob/v1.37.0/docs/gen-ai/gen-ai-spans.md
+        # for conventions around span names.
+        span_name = f"text_completion {model}"
+        span = trace.get_tracer(__name__).start_span(span_name)
         request = CompletionRequest(model, prompt, params)
         span.set_attributes(request.as_gen_ai_otel_attributes())
-        events = self.stream(function, body, span)
+        events = self.stream("completion_stream", body, span)
         return DevCompletionStreamResponse(events, span)
 
     def _chat_stream(
@@ -176,10 +178,12 @@ class DevCsi(Csi):
         body = ChatRequestSerializer(
             model=model, messages=messages, params=params
         ).model_dump()
-        function = "chat_stream"
-        span = trace.get_tracer(__name__).start_span(function)
+        # See https://github.com/open-telemetry/semantic-conventions/blob/v1.37.0/docs/gen-ai/gen-ai-spans.md
+        # for conventions around span names.
+        span_name = f"chat {model}"
+        span = trace.get_tracer(__name__).start_span(span_name)
         span.set_attributes(request.as_gen_ai_otel_attributes())
-        events = self.stream(function, body, span)
+        events = self.stream("chat_stream", body, span)
         return DevChatStreamResponse(events, span)
 
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
@@ -193,7 +197,11 @@ class DevCsi(Csi):
         for more details.
         """
         body = ChatRequestListSerializer(root=requests).model_dump()
-        with trace.get_tracer(__name__).start_as_current_span("chat") as span:
+
+        # See https://github.com/open-telemetry/semantic-conventions/blob/v1.37.0/docs/gen-ai/gen-ai-spans.md
+        # for conventions around span names.
+        span_name = f"chat {requests[0].model}" if len(requests) == 1 else "chat"
+        with trace.get_tracer(__name__).start_as_current_span(span_name) as span:
             if len(requests) == 1:
                 span.set_attributes(requests[0].as_gen_ai_otel_attributes())
             else:
@@ -220,7 +228,14 @@ class DevCsi(Csi):
         specific attributes for the single request case.
         """
         body = CompletionRequestListSerializer(root=requests).model_dump()
-        with trace.get_tracer(__name__).start_as_current_span("complete") as span:
+        # See https://github.com/open-telemetry/semantic-conventions/blob/v1.37.0/docs/gen-ai/gen-ai-spans.md
+        # for conventions around span names.
+        span_name = (
+            f"text_completion {requests[0].model}"
+            if len(requests) == 1
+            else "text_completion"
+        )
+        with trace.get_tracer(__name__).start_as_current_span(span_name) as span:
             if len(requests) == 1:
                 span.set_attributes(requests[0].as_gen_ai_otel_attributes())
             else:
