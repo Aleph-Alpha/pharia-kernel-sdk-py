@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.20.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.2...v0.20.0) (2025-10-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove original otlp studio custom format exporter
+
+### Features
+
+* add attributes required for pydantic logfire rendering ([f9b8690](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f9b8690c3c9388c323f0b23b449fa2a6ca7bc42f))
+* add gen ai otel attributes for completion request ([965c3a7](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/965c3a76d7571b614263508ed44a334a47a8c517))
+* add gen_ai otel attributes to chat methods ([1f62845](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/1f6284551099f9ef3d22ae06d72960674002cac0))
+* add otel gen_ai attributes for completion requests ([8591483](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8591483012aef62b4031c0c980f330f3c6a5ebb0))
+* add StudioOTLPSpanExporter and StudioSpanProcessor ([5c6d9fe](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5c6d9fe5ea1000137479818a7a7e9768fd4fd2d5))
+* assert if pharia ai is outdated ([60f023f](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/60f023f7ceff7e1a7c1053583ce27de35664e50c))
+* enhance DevCsi to support multiple span exporters ([3bff06d](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3bff06dce05392c1b88d81910ce7d220f0f186e4))
+* improve system prompt for tool calling ([7801933](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/7801933ddad6833160d01fdbf13e299b57be8ce0))
+* remove deprecated with_studio method, use DevCsi(project='...') instead ([4fa1405](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/4fa14058cb28107c3556af2ee00bd86117aacabd))
+* remove original otlp studio custom format exporter ([a8eb5e9](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a8eb5e99a06ce5d268280bf36ec9718f09b97941))
+* respect genai conventions around span names ([f332311](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/f3323119e714e0f9fbadf889cbb11a9bb7eb7ff5))
+* set langfuse completion start time to support ttft calculations ([bb69e87](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/bb69e872a6368854b6a8eafb78e834c27442ac4d))
+
+
+### Bug Fixes
+
+* also install opentelemetry exporter in pre-commit mypy env ([c8713ec](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c8713ec6ad5b05f29644e91d2a440c420483c30a))
+* do not make opentelemetry a dependency of the wasm component ([5f12a63](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/5f12a63ff00084d19c6abe3f6188edb030100b3f))
+* expose ToolCallRequest top-level ([c73a809](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/c73a8099474dce289aae33f673249f090b8cf5a2))
+* extract project id from json response ([342ccf4](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/342ccf40224ad0cead49e14769ec5a7eabb46b98))
+* good error msg when listing tools without namespace ([9bdfcef](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/9bdfcefec31fbf178646550e356c19083b6c6489))
+* specify that the sdk requires python &gt;=3.11.0,&lt;3.12 ([8ccee0a](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/8ccee0a535490eb8764844d0bfa5257394899f75))
+* typo ([825a5ca](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/825a5ca308867864a52313ac65f6b22a132a0572))
+
+
+### Documentation
+
+* give more context in README.md ([fc96070](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/fc96070f8d76134c3e05717f997ae6de0303cd9c))
+* improve quick start guide ([0c4209d](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/0c4209dcee6db748d7bde17474efc683d9f88ef7))
+* remove unused input variable in example code snippet ([a222a48](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/a222a482c28428ced07edaab4490a8f49f107058))
+* specify option to export traces to langfuse ([42842cf](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/42842cf12f3769086b3a716d4f3a296af7ace13b))
+* specify that concurrent csi methods preserve order ([3df182e](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/3df182ee73b11d0a38661afe71eab91c9365c6f7))
+* update quick start guide to include optional environment variable for PhariaStudio address and tracing in DevCsi ([53244c0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/commit/53244c09d2f77848c1695f674a3008c25c58f973))
+
 ## [0.19.2](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.1...v0.19.2) (2025-07-09)
 
 
