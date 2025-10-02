@@ -80,7 +80,7 @@ def test_message_stream_is_traced(stub_dev_csi: DevCsi):
 
     # And the chat spans are written to the chat span
     chat_span = spy.spans[0]
-    assert chat_span.name == "chat_stream"
+    assert chat_span.name == "chat llama-3.1-8b-instruct"
     assert chat_span.status.is_ok
 
     # And the output is written to the haiku span
@@ -89,6 +89,7 @@ def test_message_stream_is_traced(stub_dev_csi: DevCsi):
     assert haiku_span.status.is_ok
 
     assert chat_span.parent is not None
+    assert haiku_span.context is not None
     assert chat_span.parent.span_id == haiku_span.context.span_id
 
 
@@ -190,11 +191,12 @@ def test_skill_is_traced(stub_dev_csi: DevCsi):
     # Then the skill and the completion are traced
     assert len(spy.spans) == 3
     assert spy.spans[0].name == "search"
-    assert spy.spans[1].name == "complete"
+    assert spy.spans[1].name == "text_completion"
     assert spy.spans[2].name == "haiku"
 
     # And the traces are nested
     assert spy.spans[0].parent is not None
+    assert spy.spans[2].context is not None
     assert spy.spans[0].parent.span_id == spy.spans[2].context.span_id
 
 
@@ -212,7 +214,7 @@ def test_csi_exception_is_traced(saboteur_dev_csi: DevCsi):
     first, second, third = spy.spans
     assert first.name == "search"
     assert first.status.is_ok
-    assert second.name == "complete"
+    assert second.name == "text_completion"
     assert not second.status.is_ok
     assert third.name == "haiku"
     assert not third.status.is_ok
@@ -288,7 +290,7 @@ def test_chat_stream_output_is_recorded(stub_dev_csi: DevCsi):
 
     # Then the chat completion output is recorded on the span
     chat_span = spy.spans[0]
-    assert chat_span.name == "chat_stream"
+    assert chat_span.name == "chat llama-3.1-8b-instruct"
     assert chat_span.status.is_ok
 
     assert chat_span.attributes is not None
@@ -327,7 +329,7 @@ def test_completion_stream_output_is_recorded(stub_dev_csi: DevCsi):
 
     # Then the completion output is recorded on the span
     completion_span = spy.spans[0]
-    assert completion_span.name == "completion_stream"
+    assert completion_span.name == "text_completion llama-3.1-8b-instruct"
     assert completion_span.status.is_ok
 
     assert completion_span.attributes is not None
