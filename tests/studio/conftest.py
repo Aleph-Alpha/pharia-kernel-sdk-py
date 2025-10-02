@@ -42,9 +42,7 @@ class StubCsiClient(CsiClient):
 @pytest.fixture
 def stub_dev_csi() -> DevCsi:
     """Create a `DevCsi` without requiring any env variables or setting up a session."""
-    csi = DevCsi.__new__(DevCsi)
-    csi.client = StubCsiClient()
-    return csi
+    return DevCsi._with_client(StubCsiClient())
 
 
 @pytest.fixture

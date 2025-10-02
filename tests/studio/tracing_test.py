@@ -139,9 +139,7 @@ class SaboteurCsiClient(CsiClient):
 @pytest.fixture
 def saboteur_dev_csi() -> DevCsi:
     """Create a `DevCsi` that raises an exception on every call."""
-    csi = DevCsi()
-    csi.client = SaboteurCsiClient()
-    return csi
+    return DevCsi._with_client(SaboteurCsiClient())
 
 
 def test_failing_csi_stream_usage_leads_to_error_span(saboteur_dev_csi: DevCsi):
@@ -250,8 +248,7 @@ def test_exception_in_stream_item_is_traced():
             yield Event(event="message_begin", data={"role": "assistant"})
             raise RuntimeError("Out of cheese")
 
-    csi = DevCsi()
-    csi.client = SaboteurStreamClient()
+    csi = DevCsi._with_client(SaboteurStreamClient())
     spy = SpyExporter()
     csi.set_span_exporter(spy)
 

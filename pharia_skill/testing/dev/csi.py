@@ -135,6 +135,18 @@ class DevCsi(Csi):
         else:
             self.set_span_exporter(OTLPSpanExporter())
 
+    @classmethod
+    def _with_client(cls, client: CsiClient) -> "DevCsi":
+        """Create a `DevCsi` with a custom client, bypassing environment variable requirements.
+
+        This is primarily useful for testing, where you can inject a mock client
+        without needing to set up environment variables.
+        """
+        # Create instance without calling __init__ to avoid Client() construction
+        instance = cls.__new__(cls)
+        instance.client = client
+        return instance
+
     def _namespace_or_raise(self) -> str:
         """Raise an error if the namespace is not set."""
         if self._namespace is None:
