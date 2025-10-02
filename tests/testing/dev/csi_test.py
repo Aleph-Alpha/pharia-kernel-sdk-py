@@ -459,3 +459,18 @@ def test_listing_tools_without_namespace_raises_error():
 
     # Then an error is raised
     assert "Specifying a namespace when constructing" in str(e.value)
+
+
+@pytest.mark.kernel
+def test_complete_stream_utf8_characters():
+    # Given a csi
+    csi = DevCsi()
+
+    # When completing a stream with utf8 characters
+    response = csi._completion_stream(
+        "llama-3.1-8b-instruct",
+        "Brücke Brücke Brücke",
+        CompletionParams(max_tokens=10),
+    )
+    stream = response.stream()
+    assert next(stream).text.startswith(" Brücke")
