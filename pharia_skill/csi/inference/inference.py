@@ -4,6 +4,7 @@ via the Cognitive System Interface (CSI).
 """
 
 import json
+import typing
 from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Generator
@@ -11,8 +12,6 @@ from dataclasses import field
 from enum import Enum
 from types import TracebackType
 from typing import Any, Literal, Self
-
-from opentelemetry.util.types import AttributeValue
 
 # We use pydantic.dataclasses to get type validation.
 # See the docstring of `csi` module for more information on the why.
@@ -30,6 +29,10 @@ from .types import (
     Role,
     TokenUsage,
 )
+
+# We don't want to make opentelemetry a dependency of the wasm module
+if typing.TYPE_CHECKING:
+    from opentelemetry.util.types import AttributeValue
 
 
 @dataclass
@@ -83,13 +86,13 @@ class CompletionParams:
     logprobs: Logprobs = "no"
     echo: bool = False
 
-    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+    def as_gen_ai_otel_attributes(self) -> dict[str, "AttributeValue"]:
         """The attributes specified by the GenAI Otel Semantic convention.
 
         See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
         for more details.
         """
-        attributes: dict[str, AttributeValue] = {}
+        attributes: dict[str, "AttributeValue"] = {}
 
         # According to the OTel specification, the behavior of `None` value attributes
         # is undefined, and hence strongly discouraged.
@@ -401,7 +404,7 @@ class Completion:
             usage=body["usage"],
         )
 
-    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+    def as_gen_ai_otel_attributes(self) -> dict[str, "AttributeValue"]:
         """The attributes specified by the GenAI Otel Semantic convention.
 
         See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
@@ -429,7 +432,7 @@ class CompletionRequest:
     prompt: str
     params: CompletionParams = field(default_factory=CompletionParams)
 
-    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+    def as_gen_ai_otel_attributes(self) -> dict[str, "AttributeValue"]:
         """The attributes specified by the GenAI Otel Semantic convention.
 
         See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
@@ -463,8 +466,8 @@ class ChatParams:
     presence_penalty: float | None = None
     logprobs: Logprobs = "no"
 
-    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
-        attributes: dict[str, AttributeValue] = {}
+    def as_gen_ai_otel_attributes(self) -> dict[str, "AttributeValue"]:
+        attributes: dict[str, "AttributeValue"] = {}
 
         # According to the OTel specification, the behavior of `None` value attributes
         # is undefined, and hence strongly discouraged.
@@ -501,7 +504,7 @@ class ChatRequest:
     messages: list[Message]
     params: ChatParams = field(default_factory=ChatParams)
 
-    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+    def as_gen_ai_otel_attributes(self) -> dict[str, "AttributeValue"]:
         """The attributes specified by the GenAI Otel Semantic convention.
 
         See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>
@@ -544,7 +547,7 @@ class ChatResponse:
         usage = TokenUsage(body["usage"]["prompt"], body["usage"]["completion"])
         return ChatResponse(message, finish_reason, logprobs, usage)
 
-    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+    def as_gen_ai_otel_attributes(self) -> dict[str, "AttributeValue"]:
         """The attributes specified by the GenAI Otel Semantic convention.
 
         See <https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#genai-attributes>

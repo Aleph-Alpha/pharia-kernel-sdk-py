@@ -3,8 +3,6 @@ import json
 import traceback
 from typing import Callable, Type, TypeVar
 
-# from opentelemetry import trace
-# from opentelemetry.trace import Status, StatusCode
 from pydantic import (
     BaseModel,
     # For generation of JSON schemas, Pydantic imports the `root_model` module at runtime: https://github.com/pydantic/pydantic/blob/main/pydantic/json_schema.py#L1500

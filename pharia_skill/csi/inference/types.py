@@ -1,9 +1,13 @@
+import typing
 from dataclasses import dataclass
 from enum import Enum
 from typing import Annotated, Any, Self
 
-from opentelemetry.util.types import AttributeValue
 from pydantic import BeforeValidator, field_validator
+
+# We don't want to make opentelemetry a dependency of the wasm module
+if typing.TYPE_CHECKING:
+    from opentelemetry.util.types import AttributeValue
 
 
 def none_to_nan(v: float | None) -> float:
@@ -125,7 +129,7 @@ class FinishReason(str, Enum):
     LENGTH = "length"
     CONTENT_FILTER = "content_filter"
 
-    def as_gen_ai_otel_attributes(self) -> dict[str, AttributeValue]:
+    def as_gen_ai_otel_attributes(self) -> dict[str, "AttributeValue"]:
         """How to format the finish reason as a GenAI attribute.
 
         The OTel spec specifies two possibilities: Either including it in the message
