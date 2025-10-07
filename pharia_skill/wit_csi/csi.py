@@ -4,8 +4,8 @@ from typing import Sequence
 from pharia_skill.csi.inference import (
     ChatStreamResponse,
     CompletionStreamResponse,
+    Tool,
 )
-from pharia_skill.csi.inference.tool import Tool
 
 from ..bindings.imports import chunking as wit_chunking
 from ..bindings.imports import document_index as wit_document_index
@@ -24,7 +24,6 @@ from ..csi import (
     Csi,
     Document,
     DocumentPath,
-    ExplanationRequest,
     InvokeRequest,
     JsonSerializable,
     Language,
@@ -32,7 +31,6 @@ from ..csi import (
     SearchRequest,
     SearchResult,
     SelectLanguageRequest,
-    TextScore,
     ToolError,
     ToolOutput,
     ToolResult,
@@ -51,9 +49,6 @@ from .inference import (
     chat_response_from_wit,
     completion_from_wit,
     completion_request_to_wit,
-    completion_request_to_wit_v2,
-    explanation_request_to_wit,
-    text_score_from_wit,
 )
 from .language import language_from_wit, language_request_to_wit
 
@@ -103,7 +98,7 @@ class WitCsi(Csi):
             Tool(
                 name=tool.name,
                 description=tool.description,
-                input_schema=json.loads(tool.input_schema),
+                parameters=json.loads(tool.input_schema),
             )
             for tool in wit_tool.list_tools()
         ]
@@ -125,23 +120,14 @@ class WitCsi(Csi):
     def complete_concurrent(
         self, requests: Sequence[CompletionRequest]
     ) -> list[Completion]:
-        wit_requests = [completion_request_to_wit_v2(r) for r in requests]
-        completions = wit_inference.complete_v2(wit_requests)
+        wit_requests = [completion_request_to_wit(r) for r in requests]
+        completions = wit_inference.complete(wit_requests)
         return [completion_from_wit(completion) for completion in completions]
 
     def chat_concurrent(self, requests: Sequence[ChatRequest]) -> list[ChatResponse]:
         wit_requests = [chat_request_to_wit(r) for r in requests]
         responses = wit_inference.chat(wit_requests)
         return [chat_response_from_wit(response) for response in responses]
-
-    def explain_concurrent(
-        self, requests: Sequence[ExplanationRequest]
-    ) -> list[list[TextScore]]:
-        wit_requests = [explanation_request_to_wit(r) for r in requests]
-        responses = wit_inference.explain(wit_requests)
-        return [
-            [text_score_from_wit(score) for score in scores] for scores in responses
-        ]
 
     def chunk_concurrent(self, requests: Sequence[ChunkRequest]) -> list[list[Chunk]]:
         wit_requests = [chunk_request_to_wit(r) for r in requests]

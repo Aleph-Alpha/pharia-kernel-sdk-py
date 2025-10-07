@@ -20,7 +20,7 @@ def test_building_message_stream_skill_with_wrong_skill_type_raises():
         run_componentize_py(
             "tests.skills.streaming_haiku_chat",
             "haiku_stream.wasm",
-            False,
+            True,
             SkillType.SKILL,
             [],
         )
@@ -31,7 +31,7 @@ def test_building_skill_with_wrong_skill_type_raises():
         run_componentize_py(
             "tests.skills.haiku",
             "haiku.wasm",
-            False,
+            True,
             SkillType.MESSAGE_STREAM_SKILL,
             [],
         )
@@ -42,7 +42,7 @@ def test_building_skill_which_imports_requests_raises():
         run_componentize_py(
             "tests.skills.http_haiku",
             "http_haiku.wasm",
-            False,
+            True,
             SkillType.SKILL,
             [],
         )

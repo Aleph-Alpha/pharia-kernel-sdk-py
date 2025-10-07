@@ -20,13 +20,12 @@ from pharia_skill.csi.inference import (
     CompletionParams,
     CompletionRequest,
     CompletionStreamResponse,
-    ExplanationRequest,
     FinishReason,
     Message,
     MessageAppend,
     MessageBegin,
-    TextScore,
     TokenUsage,
+    ToolCallEvent,
 )
 from pharia_skill.csi.inference.types import Role
 from pharia_skill.testing.dev.client import Event
@@ -209,6 +208,8 @@ def chat_event_from_sse(event: Event) -> ChatEvent:
             return FinishReasonDeserializer.model_validate(event.data).finish_reason
         case "usage":
             return TokenUsageDeserializer.model_validate(event.data).usage
+        case "tool_call":
+            return TypeAdapter(ToolCallEvent).validate_python(event.data)
         case _:
             raise ValueError(f"Unexpected event: {event}")
 
@@ -247,9 +248,3 @@ ChatRequestListSerializer = RootModel[Sequence[ChatRequest]]
 
 
 ChatListDeserializer = RootModel[list[ChatResponse]]
-
-
-ExplanationRequestListSerializer = RootModel[Sequence[ExplanationRequest]]
-
-
-ExplanationListDeserializer = RootModel[list[list[TextScore]]]

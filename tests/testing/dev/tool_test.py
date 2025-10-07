@@ -1,4 +1,5 @@
-from pharia_skill.csi.inference.tool import InvokeRequest, Tool, ToolError, ToolOutput
+from pharia_skill import Tool
+from pharia_skill.csi.inference.tool import InvokeRequest, ToolError, ToolOutput
 from pharia_skill.testing.dev.tool import (
     deserialize_tool_output,
     deserialize_tools,
@@ -79,11 +80,11 @@ def test_deserialize_tools():
         Tool(
             name="add",
             description="Add two numbers",
-            input_schema={"a": {"type": "number"}, "b": {"type": "number"}},
+            parameters={"a": {"type": "number"}, "b": {"type": "number"}},
         ),
         Tool(
             name="subtract",
             description="Subtract two numbers",
-            input_schema={"a": {"type": "number"}, "b": {"type": "number"}},
+            parameters={"a": {"type": "number"}, "b": {"type": "number"}},
         ),
     ]

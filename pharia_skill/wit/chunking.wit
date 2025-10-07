@@ -1,0 +1,38 @@
+interface chunking {
+    /// Chunking parameters
+    record chunk-params {
+        /// The name of the model the chunk is intended to be used for.
+        /// This must be a known model.
+        model: string,
+        /// The maximum number of tokens that should be returned per chunk.
+        max-tokens: u32,
+        /// The amount of allowed overlap between chunks.
+        /// overlap must be less than max-tokens.
+        overlap: u32,
+    }
+
+    record chunk-request {
+        text: string,
+        params: chunk-params,
+    }
+
+    chunk: func(request: list<chunk-request>) -> list<list<string>>;
+
+    record chunk-with-offset-request {
+        text: string,
+        params: chunk-params,
+        /// Byte offsets will always be emitted, but if you work in a language that uses
+        /// characters rather than bytes to index strings, you can ask for character
+        /// offsets. If you do not need them, you should set this to `false` though,
+        /// because it is extra work computing them.
+        character-offsets: bool,
+    }
+
+    record chunk-with-offset {
+        text: string,
+        byte-offset: u64,
+        character-offset: option<u64>,
+    }
+
+    chunk-with-offsets: func(request: list<chunk-with-offset-request>) -> list<list<chunk-with-offset>>;
+} 
