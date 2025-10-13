@@ -27,7 +27,7 @@ class Modality_Text:
     value: str
 
 
-Modality = Union[Modality_Text]  # pyright: ignore[reportInvalidTypeArguments]
+Modality = Union[Modality_Text]
 
 
 @dataclass

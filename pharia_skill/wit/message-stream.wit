@@ -25,6 +25,8 @@ interface streaming-output {
     variant message-item {
         /// Begin a new message. Cannot be sent before a previous message has ended.
         message-begin(begin-attributes),
+        /// A chunk of reasoning content generated for the request.
+        reasoning(string),
         /// A chunk of the message text. If all appends are aggregated, it should produce the full message.
         /// Should be sent after a message-begin.
         message-append(string),
