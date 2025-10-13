@@ -209,6 +209,7 @@ def message_to_wit(message: Message) -> wit.Message:
         case Role.Assistant:
             return wit.Message_Assistant(
                 value=wit.AssistantMessage(
+                    reasoning_content=None,
                     content=message.content,
                     tool_calls=[tool_call_to_wit(t) for t in message.tool_calls]
                     if message.tool_calls is not None

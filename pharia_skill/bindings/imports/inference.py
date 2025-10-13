@@ -167,6 +167,7 @@ class ToolCall:
 @dataclass
 class AssistantMessage:
     content: Optional[str]
+    reasoning_content: Optional[str]
     tool_calls: Optional[List[ToolCall]]
 
 
@@ -305,6 +306,11 @@ class ChatEvent_MessageBegin:
 
 
 @dataclass
+class ChatEvent_Reasoning:
+    value: str
+
+
+@dataclass
 class ChatEvent_MessageAppend:
     value: MessageAppend
 
@@ -324,7 +330,7 @@ class ChatEvent_ToolCall:
     value: List[ToolCallChunk]
 
 
-ChatEvent = Union[ChatEvent_MessageBegin, ChatEvent_MessageAppend, ChatEvent_MessageEnd, ChatEvent_Usage, ChatEvent_ToolCall]
+ChatEvent = Union[ChatEvent_MessageBegin, ChatEvent_Reasoning, ChatEvent_MessageAppend, ChatEvent_MessageEnd, ChatEvent_Usage, ChatEvent_ToolCall]
 """
 An event emitted by the chat-stream resource.
 """

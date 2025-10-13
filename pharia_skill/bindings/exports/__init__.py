@@ -6,8 +6,8 @@ from abc import abstractmethod
 import weakref
 
 from ..types import Result, Ok, Err, Some
-from ..imports import streaming_output
 from ..exports import skill_handler
+from ..imports import streaming_output
 
 class MessageStream(Protocol):
 

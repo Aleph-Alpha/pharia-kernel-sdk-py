@@ -25,6 +25,11 @@ class MessageItem_MessageBegin:
 
 
 @dataclass
+class MessageItem_Reasoning:
+    value: str
+
+
+@dataclass
 class MessageItem_MessageAppend:
     value: str
 
@@ -34,7 +39,7 @@ class MessageItem_MessageEnd:
     value: Optional[bytes]
 
 
-MessageItem = Union[MessageItem_MessageBegin, MessageItem_MessageAppend, MessageItem_MessageEnd]
+MessageItem = Union[MessageItem_MessageBegin, MessageItem_Reasoning, MessageItem_MessageAppend, MessageItem_MessageEnd]
 
 
 class StreamOutput:
