@@ -73,6 +73,8 @@ markers = [
     "studio: marks tests that requires PhariaStudio",
 ]
 testpaths = ["tests"]
+# By default, we don't run openai tests to make local testing easier
+addopts = '-m "not openai"'
 
 [tool.ruff]
 exclude = ["pharia_skill/bindings"]
