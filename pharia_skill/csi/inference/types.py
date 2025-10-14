@@ -248,10 +248,16 @@ class Message:
     Parameters:
         role (Role, required): The role of the message.
         content (str, required): The content of the message.
+        reasoning_content (str, optional): Reasoning trace the model emitted.
+            This is only returned for reasoning-capable models. Even if provided
+            as part of the message history for consecutive requests, the reasoning
+            trace of previous responses is not rendered as part of the prompt for
+            multi-turn conversations.
     """
 
     role: Role
     content: str | None
+    reasoning_content: str | None = None
     tool_calls: list[ToolCall] | None = None
     tool_call_id: str | None = None
 
@@ -282,12 +288,32 @@ class Message:
 
     @classmethod
     def assistant(
-        cls, content: str | None, tool_calls: list[ToolCall] | None = None
+        cls,
+        content: str | None,
+        tool_calls: list[ToolCall] | None = None,
+        reasoning_content: str | None = None,
     ) -> Self:
-        assert content is not None or tool_calls is not None, (
-            "either content or tool_calls must be provided"
+        assert (
+            reasoning_content is not None
+            or content is not None
+            or tool_calls is not None
+        ), "either content, reasoning_content or tool_calls must be provided"
+        return cls(
+            role=Role.Assistant,
+            content=content,
+            reasoning_content=reasoning_content,
+            tool_calls=tool_calls,
         )
-        return cls(role=Role.Assistant, content=content, tool_calls=tool_calls)
+
+    @classmethod
+    def _from_tool_calls(cls, tool_calls: list[ToolCall]) -> Self:
+        """Construct an assistant message based on tool calls the assistant requested."""
+        return cls(
+            role=Role.Assistant,
+            tool_calls=tool_calls,
+            reasoning_content=None,
+            content=None,
+        )
 
     @classmethod
     def tool(cls, content: str, tool_call_id: str) -> Self:

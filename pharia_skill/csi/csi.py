@@ -329,7 +329,7 @@ class Csi(Protocol):
         The assistant message requesting the tool calls is added to the conversation
         and the tool responses are added to the conversation.
         """
-        messages.append(Message.assistant(content=None, tool_calls=tool_calls))
+        messages.append(Message._from_tool_calls(tool_calls))
         for tool_call in tool_calls:
             try:
                 tool_response = self.invoke_tool(tool_call.name, **tool_call.arguments)

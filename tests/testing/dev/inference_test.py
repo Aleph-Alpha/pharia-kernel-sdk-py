@@ -140,18 +140,10 @@ def test_deserialize_completion_with_logprob_nan():
 def test_tool_call_arguments_get_serialized_as_json():
     # Given a tool call
     tool_call = ToolCall(
-        id="tool_call_id",
-        name="tool_name",
-        arguments={"a": 1, "b": 2},
+        id="tool_call_id", name="tool_name", arguments={"a": 1, "b": 2}
     )
-    message = Message.assistant(
-        "Hello",
-        tool_calls=[tool_call],
-    )
-    request = ChatRequest(
-        "llama-3.1-8b-instruct",
-        [message],
-    )
+    message = Message.assistant("Hello", tool_calls=[tool_call])
+    request = ChatRequest("llama-3.1-8b-instruct", [message])
 
     # When serializing it
     serialized = ChatRequestListSerializer([request]).model_dump_json()
@@ -165,6 +157,7 @@ def test_tool_call_arguments_get_serialized_as_json():
                     {
                         "role": "assistant",
                         "content": "Hello",
+                        "reasoning_content": None,
                         "tool_calls": [
                             {
                                 "id": "tool_call_id",
@@ -218,6 +211,7 @@ def test_serialize_chat_request():
                     {
                         "role": "user",
                         "content": "Hello",
+                        "reasoning_content": None,
                         "tool_calls": None,
                         "tool_call_id": None,
                     }
@@ -261,7 +255,11 @@ def test_deserialize_chat():
                         ],
                     }
                 ],
-                "message": {"content": "Hello", "role": "assistant"},
+                "message": {
+                    "content": "Hello",
+                    "reasoning_content": "I'm thinking...",
+                    "role": "assistant",
+                },
                 "usage": {"completion": 1, "prompt": 11},
             }
         ]
@@ -274,7 +272,9 @@ def test_deserialize_chat():
     # Then the chat is loaded recursively
     assert chat == ChatResponse(
         finish_reason=FinishReason.LENGTH,
-        message=Message(content="Hello", role=Role.Assistant),
+        message=Message(
+            content="Hello", role=Role.Assistant, reasoning_content="I'm thinking..."
+        ),
         usage=TokenUsage(completion=1, prompt=11),
         logprobs=[
             Distribution(
