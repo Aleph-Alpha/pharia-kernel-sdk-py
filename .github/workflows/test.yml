@@ -123,7 +123,7 @@ jobs:
       id-token: write
       packages: write
     env:
-      PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
+      PHARIA_AI_TOKEN_P_STAGE: ${{ secrets.PHARIA_AI_TOKEN_P_STAGE }}
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
