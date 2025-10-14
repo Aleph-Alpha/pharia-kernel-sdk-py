@@ -29,7 +29,7 @@ def test_haiku_stream_reasoning():
     input = Input(topic="oat milk")
 
     # When executing the skill against a message recorder and a stub csi
-    writer = MessageRecorder[None]()
+    writer = MessageRecorder[SkillOutput]()
     haiku_stream(StubCsi(), writer, input)
 
     # Then the message recorded will be about oat milk
