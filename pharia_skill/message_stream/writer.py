@@ -4,6 +4,7 @@ from typing import Generic, Protocol, TypeVar
 
 from pydantic import BaseModel
 
+from pharia_skill.csi import inference
 from pharia_skill.csi.inference import ChatStreamResponse, CompletionStreamResponse
 
 Payload = TypeVar("Payload", bound=BaseModel | None)
@@ -24,7 +25,12 @@ class MessageEnd(Generic[Payload]):
     payload: Payload | None
 
 
-MessageItem = MessageBegin | MessageAppend | MessageEnd[Payload]
+@dataclass
+class Reasoning:
+    content: str
+
+
+MessageItem = MessageBegin | Reasoning | MessageAppend | MessageEnd[Payload]
 
 
 class MessageWriter(Protocol, Generic[Payload]):
@@ -36,7 +42,12 @@ class MessageWriter(Protocol, Generic[Payload]):
         self.write(MessageBegin(role))
 
     def append_to_message(self, text: str) -> None:
+        """Write some text chunks to the output stream."""
         self.write(MessageAppend(text))
+
+    def append_to_reasoning(self, text: str) -> None:
+        """Write some reasoning chunks to the output stream."""
+        self.write(Reasoning(text))
 
     def end_message(self, payload: Payload | None = None) -> None:
         self.write(MessageEnd(payload))
@@ -46,6 +57,12 @@ class MessageWriter(Protocol, Generic[Payload]):
         response: CompletionStreamResponse | ChatStreamResponse,
         payload: Callable[..., Payload] | Payload | None = None,
     ) -> None:
+        """Forward the response of a chat completion to the output stream.
+
+        For chat requests, this forwards both the reasoning and message chunks.
+        If you need more fine-grained control over what is being exposed, use
+        the `append_to_message and `append_to_reasoning` methods directly.
+        """
         match response:
             case CompletionStreamResponse():
                 self._forward_completion(response, payload)
@@ -69,5 +86,9 @@ class MessageWriter(Protocol, Generic[Payload]):
     ) -> None:
         self.begin_message(response.role)
         for append in response.stream():
-            self.append_to_message(append.content)
+            match append:
+                case inference.types.Reasoning():
+                    self.append_to_reasoning(append.content)
+                case inference.types.MessageAppend():
+                    self.append_to_message(append.content)
         self.end_message(payload(response) if callable(payload) else payload)

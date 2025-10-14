@@ -16,6 +16,7 @@ from .writer import (
     MessageItem,
     MessageWriter,
     Payload,
+    Reasoning,
 )
 
 
@@ -24,6 +25,8 @@ def message_item_to_wit(item: MessageItem[Payload]) -> wit.MessageItem:
         case MessageBegin(role):
             attributes = wit.BeginAttributes(role=role)
             return wit.MessageItem_MessageBegin(value=attributes)
+        case Reasoning(content):
+            return wit.MessageItem_Reasoning(value=content)
         case MessageAppend(text):
             return wit.MessageItem_MessageAppend(value=text)
         case MessageEnd(payload):

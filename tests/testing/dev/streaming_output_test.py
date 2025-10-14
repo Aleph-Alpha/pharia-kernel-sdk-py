@@ -8,6 +8,7 @@ from pharia_skill.message_stream.writer import (
     MessageBegin,
     MessageEnd,
     MessageWriter,
+    Reasoning,
 )
 from pharia_skill.testing import StubCsi
 from pharia_skill.testing.dev.streaming_output import MessageRecorder, RecordedMessage
@@ -120,7 +121,10 @@ def test_message_recorder_json_output():
     output = recorder.skill_output()
 
     # Then the output is a list of json strings
-    assert output == '{"role":"assistant","content":"The meaning of life"}'
+    assert (
+        output
+        == '{"role":"assistant","content":"The meaning of life","reasoning_content":""}'
+    )
 
 
 def test_message_recorder_with_custom_payload_is_included_in_json():
@@ -135,14 +139,30 @@ def test_message_recorder_with_custom_payload_is_included_in_json():
 
     assert (
         recorder.skill_output()
-        == '{"role":"assistant","content":"The meaning of life","payload":{"answer":42}}'
+        == '{"role":"assistant","content":"The meaning of life","reasoning_content":"","payload":{"answer":42}}'
     )
+
+
+def test_reasoning_content_is_accumulated():
+    recorder = MessageRecorder[None]()
+    recorder.write(MessageBegin(role="assistant"))
+    recorder.write(Reasoning(content="Thinking..."))
+    recorder.write(Reasoning(content="More thinking..."))
+    recorder.write(MessageEnd(payload=None))
+    assert recorder.messages() == [
+        RecordedMessage(
+            role="assistant",
+            content="",
+            reasoning_content="Thinking...More thinking...",
+        )
+    ]
 
 
 def test_message_recorder_json_output_with_multiple_messages():
     # Given a message recorder
     recorder = MessageRecorder[None]()
     recorder.write(MessageBegin(role="assistant"))
+    recorder.write(Reasoning(content="Thinking..."))
     recorder.write(MessageAppend(text="Hello!"))
     recorder.write(MessageEnd(payload=None))
 
@@ -156,5 +176,5 @@ def test_message_recorder_json_output_with_multiple_messages():
     # Then the output is a list of json strings
     assert (
         output
-        == '[{"role":"assistant","content":"Hello!"},{"role":"assistant","content":"Hi!"}]'
+        == '[{"role":"assistant","content":"Hello!","reasoning_content":"Thinking..."},{"role":"assistant","content":"Hi!","reasoning_content":""}]'
     )
