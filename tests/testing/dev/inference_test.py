@@ -21,6 +21,7 @@ from pharia_skill.csi.inference import (
     CompletionAppend,
     MessageAppend,
     MessageBegin,
+    Reasoning,
     ToolCall,
 )
 from pharia_skill.testing.dev.client import Event
@@ -319,6 +320,18 @@ def test_deserialize_completion_usage_from_sse():
 
     # Then the completion event is loaded
     assert deserialized == TokenUsage(prompt=1, completion=1)
+
+
+def test_deserialize_chat_reasoning_from_sse():
+    # Given a chat event reasoning
+    payload = {"content": "I'm thinking..."}
+    event = Event(event="reasoning", data=payload)
+
+    # When deserializing it
+    deserialized = chat_event_from_sse(event)
+
+    # Then the reasoning event is deserialized
+    assert deserialized == Reasoning(content="I'm thinking...")
 
 
 def test_deserialize_chat_message_begin_from_sse():

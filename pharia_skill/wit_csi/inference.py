@@ -21,6 +21,7 @@ from pharia_skill.csi.inference import (
     MessageAppend,
     MessageBegin,
     NamedToolChoice,
+    Reasoning,
     ReasoningEffort,
     ResponseFormat,
     Tool,
@@ -98,6 +99,8 @@ class WitChatStreamResponse(ChatStreamResponse):
         match self._stream.next():
             case wit.ChatEvent_MessageBegin(value):
                 return MessageBegin(value)
+            case wit.ChatEvent_Reasoning(value):
+                return Reasoning(value)
             case wit.ChatEvent_MessageAppend(value):
                 return message_append_from_wit(value)
             case wit.ChatEvent_MessageEnd(value):

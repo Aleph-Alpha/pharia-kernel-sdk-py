@@ -24,6 +24,7 @@ from pharia_skill.csi.inference import (
     Message,
     MessageAppend,
     MessageBegin,
+    Reasoning,
     TokenUsage,
     ToolCallEvent,
 )
@@ -202,6 +203,8 @@ def chat_event_from_sse(event: Event) -> ChatEvent:
         case "message_begin":
             role = RoleDeserializer.model_validate(event.data).role
             return MessageBegin(role)
+        case "reasoning":
+            return TypeAdapter(Reasoning).validate_python(event.data)
         case "message_append":
             return TypeAdapter(MessageAppend).validate_python(event.data)
         case "message_end":
