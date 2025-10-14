@@ -24,6 +24,7 @@ from pharia_skill import (
     ToolError,
     ToolOutput,
 )
+from pharia_skill.csi.inference import MessageAppend
 from pharia_skill.testing import DevCsi, MessageRecorder
 from pharia_skill.testing.dev.client import Client
 
@@ -116,6 +117,7 @@ def test_chat_stream(csi: Csi, model: str):
     content = ""
     logprobs = []
     for m in message.stream():
+        assert isinstance(m, MessageAppend)
         content += m.content
         logprobs += m.logprobs
     assert content == "Hello Bob! How are you today?"

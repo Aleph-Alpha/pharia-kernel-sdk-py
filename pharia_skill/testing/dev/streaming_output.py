@@ -11,12 +11,14 @@ from pharia_skill.message_stream.writer import (
     MessageItem,
     MessageWriter,
     Payload,
+    Reasoning,
 )
 
 
 class RecordedMessage(BaseModel, Generic[Payload]):
     role: str | None
     content: str = ""
+    reasoning_content: str = ""
     payload: Payload | None = None
 
 
@@ -64,6 +66,8 @@ class MessageRecorder(MessageWriter[Payload]):
             match item:
                 case MessageBegin():
                     self.span.add_event("message_begin", asdict(item))
+                case Reasoning():
+                    self.span.add_event("reasoning", asdict(item))
                 case MessageAppend():
                     self.span.add_event("message_append", asdict(item))
                 case MessageEnd(payload=payload):
@@ -115,6 +119,8 @@ class MessageRecorder(MessageWriter[Payload]):
             match item:
                 case MessageBegin(role=role):
                     messages.append(RecordedMessage(role=role))
+                case Reasoning(content=content):
+                    messages[-1].reasoning_content += content
                 case MessageAppend(text=text):
                     messages[-1].content += text
                 case MessageEnd(payload=payload):

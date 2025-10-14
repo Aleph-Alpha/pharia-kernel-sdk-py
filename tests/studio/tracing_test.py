@@ -116,7 +116,7 @@ def test_message_stream_result_is_traced(stub_dev_csi: DevCsi):
     assert skill_span.attributes is not None
     assert (
         skill_span.attributes["output"]
-        == '{"role":"assistant","content":"Hello, world!"}'
+        == '{"role":"assistant","content":"Hello, world!","reasoning_content":""}'
     )
 
 
