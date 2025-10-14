@@ -186,7 +186,12 @@ class ToolCall:
 
 @dataclass
 class ToolCallEvent:
-    """A list of tool call chunks."""
+    """A list of tool call chunks.
+
+    A `ToolCallEvent` may contain one more multiple `ToolCallChunk`s belonging to one or multiple
+    distinct tool calls requested in sequence, e.g., in the case that a response chunk contains the
+    end of a previous tool call as well as the beginning of a new tool call.
+    """
 
     tool_calls: list[ToolCallChunk]
 
@@ -194,7 +199,7 @@ class ToolCallEvent:
 def _merge_tool_call_chunks(events: list[ToolCallEvent]) -> list[ToolCall]:
     """Merge a list of tool call chunks to a list of tool calls.
 
-    Each `ToolCallChunks` contains parts of of one multiple tool calls. If the models
+    Each `ToolCallChunks` contains parts of one or multiple tool calls. If the models
     response contains multiple tool calls, the first `ToolCallChunks` could e.g. contain
     the name of the first and second tool call, while the second `ToolCallChunks` could
     contain the arguments of the first and second tool call.
