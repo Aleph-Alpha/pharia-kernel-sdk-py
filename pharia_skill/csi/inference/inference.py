@@ -24,6 +24,7 @@ from .types import (
     Message,
     MessageAppend,
     MessageBegin,
+    Reasoning,
     Role,
     TokenUsage,
     ToolCall,
@@ -343,7 +344,7 @@ class ChatStreamResponse(ABC):
         if self._finish_reason is None or self._usage is None:
             raise ValueError("Invalid event stream")
 
-    def stream(self) -> Generator[MessageAppend, None, None]:
+    def stream(self) -> Generator[MessageAppend | Reasoning, None, None]:
         """Stream the content of the message.
 
         This does not include the role, any tool calls, or the finish reason and usage.
@@ -356,7 +357,7 @@ class ChatStreamResponse(ABC):
             match event:
                 case MessageBegin():
                     raise ValueError("Invalid event stream")
-                case MessageAppend():
+                case Reasoning() | MessageAppend():
                     yield event
                 case FinishReason():
                     self._finish_reason = event
@@ -384,10 +385,17 @@ class ChatStreamResponse(ABC):
         Returns:
             The message of the chat request.
         """
+        reasoning_content = ""
         content = ""
         for event in self.stream():
-            content += event.content
-        return Message(role=Role(self.role), content=content)
+            match event:
+                case Reasoning():
+                    reasoning_content += event.content
+                case MessageAppend():
+                    content += event.content
+        return Message(
+            role=Role(self.role), content=content, reasoning_content=reasoning_content
+        )
 
 
 @dataclass
