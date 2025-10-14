@@ -41,6 +41,7 @@ from pharia_skill.csi.inference import (
     Tool,
     ToolOutput,
 )
+from pharia_skill.csi.inference.types import Reasoning
 
 
 class StubCsi(Csi):
@@ -114,6 +115,7 @@ class StubCsi(Csi):
         def generator() -> Generator[ChatEvent, None, None]:
             total_usage = 0
             yield MessageBegin("assistant")
+            yield Reasoning("I am thinking...")
             for message in messages:
                 assert message.content is not None, (
                     "stub Csi only supports messages with content"

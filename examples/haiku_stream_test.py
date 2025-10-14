@@ -22,3 +22,17 @@ def test_haiku_stream():
     assert "oat milk" in first_message.content
     assert first_message.payload is not None
     assert first_message.payload.finish_reason == FinishReason.STOP
+
+
+def test_haiku_stream_reasoning():
+    # Given a haiku skill and a request about oat milk
+    input = Input(topic="oat milk")
+
+    # When executing the skill against a message recorder and a stub csi
+    writer = MessageRecorder[None]()
+    haiku_stream(StubCsi(), writer, input)
+
+    # Then the message recorded will be about oat milk
+    first_message = writer.messages()[0]
+    assert first_message.role == "assistant"
+    assert first_message.reasoning_content == "I am thinking..."
