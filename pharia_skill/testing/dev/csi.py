@@ -9,11 +9,13 @@ uncoupling these interfaces brings two advantages:
 """
 
 import json
+import os
 from collections.abc import Generator
 from typing import Any, Sequence
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.environment_variables import OTEL_EXPORTER_OTLP_ENDPOINT
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from opentelemetry.trace import StatusCode
@@ -132,7 +134,8 @@ class DevCsi(Csi):
         if project is not None:
             studio_client = StudioClient.with_project(project)
             self.set_span_exporter(studio_client.exporter())
-        else:
+
+        elif os.getenv(OTEL_EXPORTER_OTLP_ENDPOINT):
             self.set_span_exporter(OTLPSpanExporter())
 
     @classmethod
