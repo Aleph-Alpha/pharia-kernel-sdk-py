@@ -88,7 +88,7 @@ jobs:
       id-token: write
       packages: read
     env:
-      PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN_P_STAGE }}
+      PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
@@ -123,7 +123,7 @@ jobs:
       id-token: write
       packages: write
     env:
-      PHARIA_AI_TOKEN_P_STAGE: ${{ secrets.PHARIA_AI_TOKEN_P_STAGE }}
+      PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
@@ -156,15 +156,15 @@ jobs:
         if: ${{ matrix.os == 'cpu-runner-8c-32gb-01' }}
         run: |
           sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} stage.product.pharia.com
-          uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN_P_STAGE
-          uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN_P_STAGE
-          uv run sh -x -e ./scripts/run_skill.sh language $PHARIA_AI_TOKEN_P_STAGE
-          uv run sh -x -e ./scripts/run_streaming_skill.sh streaming_haiku_chat $PHARIA_AI_TOKEN_P_STAGE
-          uv run sh -x -e ./scripts/run_streaming_skill.sh streaming_haiku_completion $PHARIA_AI_TOKEN_P_STAGE
-          uv run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN_P_STAGE
-          uv run sh -x -e ./scripts/run_bad_csi_input_skill.sh $PHARIA_AI_TOKEN_P_STAGE
-          uv run sh -x -e ./scripts/run_streaming_skill_reasoning.sh streaming_reasoning $PHARIA_AI_TOKEN_P_STAGE
+          uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_skill.sh language $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_streaming_skill.sh streaming_haiku_chat $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_streaming_skill.sh streaming_haiku_completion $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_bad_csi_input_skill.sh $PHARIA_AI_TOKEN
+          uv run sh -x -e ./scripts/run_streaming_skill_reasoning.sh streaming_reasoning $PHARIA_AI_TOKEN
       - name: Test skill metadata on p-stage
         if: ${{ matrix.os == 'cpu-runner-8c-32gb-01' }}
         run: |
-          uv run sh -x -e ./scripts/metadata_skill.sh haiku $PHARIA_AI_TOKEN_P_STAGE
+          uv run sh -x -e ./scripts/metadata_skill.sh haiku $PHARIA_AI_TOKEN
