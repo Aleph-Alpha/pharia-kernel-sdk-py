@@ -21,7 +21,7 @@ class Output(BaseModel):
 @skill
 def answer_about_kernel(csi: Csi, input: Input) -> Output:
     """Answer questions about Pharia Kernel from the docs"""
-    documents = csi.search(index, "Kernel", 3, 0.5)
+    documents = csi.search(index, "Kernel", 3, 0.1)
     if not documents:
         return Output(answer="no relevant documents found", number_of_documents=0)
     context = "\n".join([doc.content for doc in documents])
