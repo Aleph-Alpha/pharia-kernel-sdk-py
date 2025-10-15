@@ -88,7 +88,7 @@ jobs:
       id-token: write
       packages: read
     env:
-      PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN }}
+      PHARIA_AI_TOKEN: ${{ secrets.PHARIA_AI_TOKEN_P_STAGE }}
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
@@ -100,17 +100,17 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
       - name: Run Pharia Kernel
-        run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }}
+        run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} stage.product.pharia.com
       - name: Run kernel and studio tests
         run: uv run pytest -m '(kernel or studio) and not openai'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
-          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
+          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.stage.product.pharia.com
       - name: Run example tests
         run: uv run pytest examples
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
-          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
+          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.stage.product.pharia.com
 
   integration-test:
     runs-on: ${{ matrix.os }}
