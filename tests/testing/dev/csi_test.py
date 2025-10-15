@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Sequence
 from unittest.mock import Mock, patch
 
@@ -43,12 +44,70 @@ def csi_with_test_namespace() -> Csi:
 @pytest.fixture
 def given_document() -> DocumentPath:
     """The tests suite expects a document `kernel-docs` in the `test` collection of the `Kernel` index."""
+    token = os.environ["PHARIA_AI_TOKEN"]
+    kernel_url = os.environ["PHARIA_KERNEL_ADDRESS"]
+    document_index_url = kernel_url.replace("pharia-kernel", "document-index")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # upload the document
+    document_url = document_index_url + "/collections/Kernel/test/docs/kernel-docs"
+    body = {
+        "schema_version": "V1",
+        "contents": [
+            {
+                "modality": "text",
+                "text": "You might be wondering what the Kernel is. It's a product primarly aimed at fishermen, and provides the needed AI capabilities for them to optimize their fishing operations.",
+            }
+        ],
+        "metadata": {
+            "created": "2025-01-01T00:00:00Z",
+            "url": "https://pharia-kernel.product.pharia.com/",
+        },
+    }
+    response = requests.put(document_url, headers=headers, json=body)
+    assert response.status_code == 200
+
     return DocumentPath("Kernel", "test", "kernel-docs")
 
 
 @pytest.fixture
 def given_index() -> IndexPath:
     """The tests suite expects an index `asym-64` in the `test` collection of the `Kernel` index."""
+    token = os.environ["PHARIA_AI_TOKEN"]
+    kernel_url = os.environ["PHARIA_KERNEL_ADDRESS"]
+    document_index_url = kernel_url.replace("pharia-kernel", "document-index")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Create the namespace
+    namespace_url = document_index_url + "/namespaces/Kernel"
+    response = requests.put(namespace_url, headers=headers)
+    assert response.status_code == 200
+
+    # Create the collection
+    collection_url = document_index_url + "/collections/Kernel/test"
+    response = requests.put(collection_url, headers=headers)
+    assert response.status_code == 200
+
+    # Create the index
+    index_url = document_index_url + "/indexes/Kernel/asym-64"
+    body = {
+        "chunk_size": 512,
+        "chunk_overlap": 0,
+        "hybrid_index": "bm25",
+        "embedding": {
+            "strategy": "instructable_embed",
+            "model_name": "pharia-1-embedding-256-control",
+            "representation": "asymmetric",
+        },
+    }
+    response = requests.put(index_url, headers=headers, json=body)
+    assert response.status_code == 200
+
+    # Assign the index to the collection
+    assign_url = document_index_url + "/collections/Kernel/test/indexes/asym-64"
+    response = requests.put(assign_url, headers=headers)
+    assert response.status_code == 200
+
     return IndexPath("Kernel", "test", "asym-64")
 
 
@@ -216,11 +275,11 @@ def test_select_language(csi: Csi):
 
 
 @pytest.mark.kernel
-def test_search(csi: Csi, given_index: IndexPath):
+def test_search(csi: Csi, given_index: IndexPath, given_document: DocumentPath):
     query = "What is the Kernel?"
 
     # When searching
-    result = csi.search(given_index, query)
+    result = csi.search(given_index, query, min_score=0.1)
 
     # Then we get a result
     assert len(result) == 1
