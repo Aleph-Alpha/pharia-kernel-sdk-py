@@ -9,7 +9,7 @@ mkdir -p skills
 cp $SKILL_NAME.wasm skills/$SKILL_NAME.wasm
 
 echo "Waiting for Skill to be available..."
-sleep 1
+sleep 2
 
 echo "Getting Skill metadata..."
 RESPONSE_CODE=$(curl -w '%{http_code}' -s -o output.result \
