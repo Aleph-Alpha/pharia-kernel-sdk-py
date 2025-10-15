@@ -167,4 +167,4 @@ jobs:
       - name: Test skill metadata on p-stage
         if: ${{ matrix.os == 'cpu-runner-8c-32gb-01' }}
         run: |
-          uv run sh -x -e ./scripts/metadata_skill.sh haiku $PHARIA_AI_TOKEN_DEV_0001
+          uv run sh -x -e ./scripts/metadata_skill.sh haiku $PHARIA_AI_TOKEN_P_STAGE
