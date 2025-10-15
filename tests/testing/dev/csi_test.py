@@ -41,74 +41,93 @@ def csi_with_test_namespace() -> Csi:
     return DevCsi(namespace="test-beta")
 
 
+class DocumentIndexClient:
+    """The client helps ensure the DI is in the state that we'd like to test against."""
+
+    def __init__(self) -> None:
+        token = os.environ["PHARIA_AI_TOKEN"]
+        kernel_url = os.environ["PHARIA_KERNEL_ADDRESS"]
+        self.url = kernel_url.replace("pharia-kernel", "document-index")
+        self.session = requests.Session()
+        self.session.headers = {"Authorization": f"Bearer {token}"}
+
+    def create_namespace(self, namespace: str):
+        url = f"{self.url}/namespaces/{namespace}"
+        response = self.session.put(url)
+        assert response.status_code == 200
+
+    def create_collection(self, namespace: str, collection: str):
+        url = f"{self.url}/collections/{namespace}/{collection}"
+        response = self.session.put(url)
+        assert response.status_code == 200
+
+    def create_index(self, index: IndexPath):
+        url = f"{self.url}/indexes/{index.namespace}/{index.index}"
+        body = {
+            "chunk_size": 512,
+            "chunk_overlap": 0,
+            "hybrid_index": "bm25",
+            "embedding": {
+                "strategy": "instructable_embed",
+                "model_name": "pharia-1-embedding-256-control",
+                "representation": "asymmetric",
+            },
+        }
+        response = self.session.put(url, json=body)
+        assert response.status_code == 200
+
+    def assign_index(self, index: IndexPath):
+        url = f"{self.url}/collections/{index.namespace}/{index.collection}/indexes/{index.index}"
+        response = self.session.put(url)
+        assert response.status_code == 200
+
+    def upload_document(
+        self, path: DocumentPath, content: str, metadata: dict[str, str]
+    ):
+        url = f"{self.url}/collections/{path.namespace}/{path.collection}/docs/{path.name}"
+        body = {
+            "schema_version": "V1",
+            "contents": [
+                {
+                    "modality": "text",
+                    "text": content,
+                }
+            ],
+            "metadata": metadata,
+        }
+        response = self.session.put(url, json=body)
+        assert response.status_code == 200
+
+
+@pytest.fixture(scope="module")
+def client() -> DocumentIndexClient:
+    """Fixture with module scope will mean the requests session is only created once."""
+    return DocumentIndexClient()
+
+
 @pytest.fixture
-def given_document() -> DocumentPath:
-    """The tests suite expects a document `kernel-docs` in the `test` collection of the `Kernel` index."""
-    token = os.environ["PHARIA_AI_TOKEN"]
-    kernel_url = os.environ["PHARIA_KERNEL_ADDRESS"]
-    document_index_url = kernel_url.replace("pharia-kernel", "document-index")
-    headers = {"Authorization": f"Bearer {token}"}
-
-    # upload the document
-    document_url = document_index_url + "/collections/Kernel/test/docs/kernel-docs"
-    body = {
-        "schema_version": "V1",
-        "contents": [
-            {
-                "modality": "text",
-                "text": "You might be wondering what the Kernel is. It's a product primarly aimed at fishermen, and provides the needed AI capabilities for them to optimize their fishing operations.",
-            }
-        ],
-        "metadata": {
-            "created": "2025-01-01T00:00:00Z",
-            "url": "https://pharia-kernel.product.pharia.com/",
-        },
-    }
-    response = requests.put(document_url, headers=headers, json=body)
-    assert response.status_code == 200
-
-    return DocumentPath("Kernel", "test", "kernel-docs")
-
-
-@pytest.fixture
-def given_index() -> IndexPath:
+def given_index(client: DocumentIndexClient) -> IndexPath:
     """The tests suite expects an index `asym-64` in the `test` collection of the `Kernel` index."""
-    token = os.environ["PHARIA_AI_TOKEN"]
-    kernel_url = os.environ["PHARIA_KERNEL_ADDRESS"]
-    document_index_url = kernel_url.replace("pharia-kernel", "document-index")
-    headers = {"Authorization": f"Bearer {token}"}
+    index = IndexPath("Kernel", "test", "asym-64")
+    client.create_namespace(index.namespace)
+    client.create_collection(index.namespace, index.collection)
+    client.create_index(index)
+    client.assign_index(index)
+    return index
 
-    # Create the namespace
-    namespace_url = document_index_url + "/namespaces/Kernel"
-    response = requests.put(namespace_url, headers=headers)
-    assert response.status_code == 200
 
-    # Create the collection
-    collection_url = document_index_url + "/collections/Kernel/test"
-    response = requests.put(collection_url, headers=headers)
-    assert response.status_code == 200
-
-    # Create the index
-    index_url = document_index_url + "/indexes/Kernel/asym-64"
-    body = {
-        "chunk_size": 512,
-        "chunk_overlap": 0,
-        "hybrid_index": "bm25",
-        "embedding": {
-            "strategy": "instructable_embed",
-            "model_name": "pharia-1-embedding-256-control",
-            "representation": "asymmetric",
-        },
+@pytest.fixture
+def given_document(given_index: IndexPath, client: DocumentIndexClient) -> DocumentPath:
+    """The tests suite expects a document `kernel-docs` in the `test` collection of the `Kernel` index."""
+    path = DocumentPath(given_index.namespace, given_index.collection, "kernel-docs")
+    text = "You might be wondering what the Kernel is. It's a product primarly aimed at fishermen, and provides the needed AI capabilities for them to optimize their fishing operations."
+    metadata = {
+        "created": "2025-01-01T00:00:00Z",
+        "url": "https://pharia-kernel.product.pharia.com/",
     }
-    response = requests.put(index_url, headers=headers, json=body)
-    assert response.status_code == 200
 
-    # Assign the index to the collection
-    assign_url = document_index_url + "/collections/Kernel/test/indexes/asym-64"
-    response = requests.put(assign_url, headers=headers)
-    assert response.status_code == 200
-
-    return IndexPath("Kernel", "test", "asym-64")
+    client.upload_document(path, text, metadata)
+    return path
 
 
 @pytest.mark.kernel
@@ -284,7 +303,7 @@ def test_search(csi: Csi, given_index: IndexPath, given_document: DocumentPath):
     # Then we get a result
     assert len(result) == 1
     assert "Kernel" in result[0].content
-    assert "kernel" in result[0].document_path.name
+    assert result[0].document_path == given_document
 
 
 class StubExporter(SpanExporter):
