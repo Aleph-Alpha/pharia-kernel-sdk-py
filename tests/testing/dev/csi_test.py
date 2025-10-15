@@ -46,8 +46,7 @@ class DocumentIndexClient:
 
     def __init__(self) -> None:
         token = os.environ["PHARIA_AI_TOKEN"]
-        kernel_url = os.environ["PHARIA_KERNEL_ADDRESS"]
-        self.url = kernel_url.replace("pharia-kernel", "document-index")
+        self.url = os.environ["DOCUMENT_INDEX_ADDRESS"]
         self.session = requests.Session()
         self.session.headers = {"Authorization": f"Bearer {token}"}
 

@@ -106,6 +106,7 @@ jobs:
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
           PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.stage.product.pharia.com
+          DOCUMENT_INDEX_ADDRESS: https://document-index.stage.product.pharia.com
       - name: Run example tests
         run: uv run pytest examples
         env:
