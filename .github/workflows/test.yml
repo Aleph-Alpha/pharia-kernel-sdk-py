@@ -82,7 +82,7 @@ jobs:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
 
   kernel-and-studio-test:
-    runs-on: cpu-runner-8c-32gb-01
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
@@ -100,25 +100,24 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
       - name: Run Pharia Kernel
-        run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} stage.product.pharia.com
+        run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} product.pharia.com
       - name: Run kernel and studio tests
         run: uv run pytest -m '(kernel or studio) and not openai'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
-          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.stage.product.pharia.com
-          DOCUMENT_INDEX_ADDRESS: https://document-index.stage.product.pharia.com
+          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
+          DOCUMENT_INDEX_ADDRESS: https://document-index.product.pharia.com
       - name: Run example tests
         run: uv run pytest examples
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
-          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.stage.product.pharia.com
+          PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
 
   integration-test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # Using cpu-runner-8c-32gb-01 to run integration tests against p-stage
-        os: [ubuntu-latest, windows-latest, macos-latest, cpu-runner-8c-32gb-01]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     permissions:
       contents: read
       id-token: write
@@ -154,9 +153,9 @@ jobs:
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
       - name: Test skill execution on p-stage
-        if: ${{ matrix.os == 'cpu-runner-8c-32gb-01' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} stage.product.pharia.com
+          sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} product.pharia.com
           uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh language $PHARIA_AI_TOKEN
@@ -166,6 +165,6 @@ jobs:
           uv run sh -x -e ./scripts/run_bad_csi_input_skill.sh $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_streaming_skill_reasoning.sh streaming_reasoning $PHARIA_AI_TOKEN
       - name: Test skill metadata on p-stage
-        if: ${{ matrix.os == 'cpu-runner-8c-32gb-01' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           uv run sh -x -e ./scripts/metadata_skill.sh haiku $PHARIA_AI_TOKEN
