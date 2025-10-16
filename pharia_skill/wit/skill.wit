@@ -1,12 +1,10 @@
 package pharia:skill@0.4.0;
 
-@unstable(feature = alpha)
 world message-stream-skill {
     include csi;
     export message-stream;
 }
 
-@unstable(feature = alpha)
 world skill {
     include csi;
     export skill-handler;
