@@ -122,7 +122,7 @@ class StubCsi(Csi):
                 )
                 content = message.content
                 total_usage += len(content)
-                yield MessageAppend(content, [])
+                yield MessageAppend(content)
             yield FinishReason.STOP
             yield TokenUsage(total_usage, total_usage)
 

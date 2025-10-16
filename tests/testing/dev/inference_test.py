@@ -355,7 +355,7 @@ def test_deserialize_chat_message_append_from_sse():
     deserialized = chat_event_from_sse(event)
 
     # Then the chat event is loaded
-    assert deserialized == MessageAppend(content="Hello", logprobs=[])
+    assert deserialized == MessageAppend(content="Hello")
 
 
 def test_deserialize_chat_message_end_from_sse():

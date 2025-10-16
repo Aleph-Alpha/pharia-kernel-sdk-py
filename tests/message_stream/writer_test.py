@@ -44,7 +44,7 @@ def test_forward_response():
     # and given a stub chat stream response loaded with events
     events: list[inference.ChatEvent] = [
         inference.MessageBegin(role="assistant"),
-        inference.MessageAppend(content="Hello, world!", logprobs=[]),
+        inference.MessageAppend(content="Hello, world!"),
         inference.FinishReason.STOP,
         inference.TokenUsage(completion=1, prompt=0),
     ]

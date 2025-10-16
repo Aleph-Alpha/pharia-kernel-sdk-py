@@ -276,12 +276,7 @@ def completion_append_from_wit(append: wit.CompletionAppend) -> CompletionAppend
 
 
 def message_append_from_wit(append: wit.MessageAppend) -> MessageAppend:
-    return MessageAppend(
-        content=append.content,
-        logprobs=[
-            distribution_from_wit(distribution) for distribution in append.logprobs
-        ],
-    )
+    return MessageAppend(content=append.content)
 
 
 def completion_from_wit(completion: wit.Completion) -> Completion:
