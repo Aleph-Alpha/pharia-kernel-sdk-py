@@ -192,13 +192,10 @@ def test_chat_stream(csi: Csi, model: str):
     assert message.role == "assistant"
 
     content = ""
-    logprobs = []
     for m in message.stream():
         assert isinstance(m, MessageAppend)
         content += m.content
-        logprobs += m.logprobs
     assert content == "Hello Bob! How are you today?"
-    assert len(logprobs) == 9
     assert message.finish_reason() == FinishReason.STOP
     usage = message.usage()
     assert usage.prompt == 14

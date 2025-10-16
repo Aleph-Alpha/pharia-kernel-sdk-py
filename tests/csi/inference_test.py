@@ -48,8 +48,8 @@ def test_chat_stream_response_no_tool_call():
     # Given a chat stream response that returns multiple events
     events: list[ChatEvent] = [
         MessageBegin(role="assistant"),
-        MessageAppend(content="Hello, ", logprobs=[]),
-        MessageAppend(content="world!", logprobs=[]),
+        MessageAppend(content="Hello, "),
+        MessageAppend(content="world!"),
     ]
     response = MockChatStreamResponse(events)
 
@@ -59,8 +59,8 @@ def test_chat_stream_response_no_tool_call():
     # Then it should return None and the stream should yield all message append events
     assert tool_call is None
     assert list(response.stream()) == [
-        MessageAppend(content="Hello, ", logprobs=[]),
-        MessageAppend(content="world!", logprobs=[]),
+        MessageAppend(content="Hello, "),
+        MessageAppend(content="world!"),
     ]
 
 
@@ -99,8 +99,8 @@ def test_empty_chat_stream_response_gives_none_for_tool_call():
     # Given a chat stream response that has already been streamed
     events: list[ChatEvent] = [
         MessageBegin(role="assistant"),
-        MessageAppend(content="Hello, ", logprobs=[]),
-        MessageAppend(content="world!", logprobs=[]),
+        MessageAppend(content="Hello, "),
+        MessageAppend(content="world!"),
     ]
     response = MockChatStreamResponse(events)
     list(response.stream())
@@ -116,8 +116,8 @@ def test_peeking_at_event_does_not_alter_stream():
     # Given a chat stream response that returns multiple events
     events: list[ChatEvent] = [
         MessageBegin(role="assistant"),
-        MessageAppend(content="Hello, ", logprobs=[]),
-        MessageAppend(content="world!", logprobs=[]),
+        MessageAppend(content="Hello, "),
+        MessageAppend(content="world!"),
     ]
     response = MockChatStreamResponse(events)
 
@@ -128,8 +128,8 @@ def test_peeking_at_event_does_not_alter_stream():
     # Then the stream should not have been altered
     assert response.role == Role.Assistant
     assert list(response.stream()) == [
-        MessageAppend(content="Hello, ", logprobs=[]),
-        MessageAppend(content="world!", logprobs=[]),
+        MessageAppend(content="Hello, "),
+        MessageAppend(content="world!"),
     ]
 
 
@@ -137,8 +137,8 @@ def test_message_helper():
     # Given a chat stream response that returns multiple events
     events: list[ChatEvent] = [
         MessageBegin(role="assistant"),
-        MessageAppend(content="Hello, ", logprobs=[]),
-        MessageAppend(content="world!", logprobs=[]),
+        MessageAppend(content="Hello, "),
+        MessageAppend(content="world!"),
     ]
     response = MockChatStreamResponse(events)
 
@@ -154,8 +154,8 @@ def test_message_helper_after_stream_is_consumed():
     # Given a chat stream response that returns multiple events
     events: list[ChatEvent] = [
         MessageBegin(role="assistant"),
-        MessageAppend(content="Hello, ", logprobs=[]),
-        MessageAppend(content="world!", logprobs=[]),
+        MessageAppend(content="Hello, "),
+        MessageAppend(content="world!"),
     ]
     response = MockChatStreamResponse(events)
 

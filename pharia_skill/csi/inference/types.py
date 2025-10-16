@@ -69,18 +69,9 @@ class MessageAppend:
 
     Attributes:
         content (str, required): A chunk of the message content.
-        logprobs (list[Distribution], required): Corresponding log probabilities for each token in the message content.
     """
 
     content: str
-    logprobs: list[Distribution]
-
-    @classmethod
-    def from_dict(cls, body: dict[str, Any]) -> Self:
-        return cls(
-            content=body["content"],
-            logprobs=body["logprobs"],
-        )
 
 
 @dataclass

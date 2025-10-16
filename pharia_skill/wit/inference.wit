@@ -291,8 +291,6 @@ interface inference {
     record message-append {
         /// A chunk of the message content
         content: string,
-        /// Corresponding log probabilities for each token in the message content
-        logprobs: list<distribution>,
     }
 
     record tool-call-chunk {
