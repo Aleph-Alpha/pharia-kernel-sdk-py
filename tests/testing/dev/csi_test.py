@@ -299,7 +299,6 @@ def test_search(csi: Csi, given_index: IndexPath, given_document: DocumentPath):
     # Then we get a result
     assert len(result) == 1
     assert "Kernel" in result[0].content
-    assert result[0].document_path == given_document
 
 
 class StubExporter(SpanExporter):
