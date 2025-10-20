@@ -152,7 +152,7 @@ jobs:
           echo "SKILL_REPOSITORY=aleph-alpha/pharia-kernel-sdk-py/skills" >> .env
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
-      - name: Test skill execution on p-stage
+      - name: Test skill execution
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} product.pharia.com
@@ -164,7 +164,7 @@ jobs:
           uv run sh -x -e ./scripts/run_failing_skill.sh $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_bad_csi_input_skill.sh $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_streaming_skill_reasoning.sh streaming_reasoning $PHARIA_AI_TOKEN
-      - name: Test skill metadata on p-stage
+      - name: Test skill metadata
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           uv run sh -x -e ./scripts/metadata_skill.sh haiku $PHARIA_AI_TOKEN
