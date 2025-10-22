@@ -16,7 +16,7 @@ class ToolOutput:
 
     A tool result is a list of modalities.
     See <https://modelcontextprotocol.io/specification/2025-03-26/server/tools#tool-result>.
-    At the moment, the Kernel only supports text modalities.
+    At the moment, the Engine only supports text modalities.
 
     Most tools will return a content list of size 1.
     """
@@ -53,7 +53,7 @@ class ToolError(Exception):
 ToolResult = ToolOutput | ToolError
 """The result of a tool invocation.
 
-For almost all functionality offered by the CSI, errors are handled by the Kernel
+For almost all functionality offered by the CSI, errors are handled by the Engine
 runtime. If the error seems non-recoverable, Skill execution is suspended and the error
 never makes it to user code.
 

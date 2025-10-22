@@ -11,11 +11,11 @@ Build it locally, publish it to a registry and then configure it in a [namespace
 
 **How is my Skill executed?**
 
-The Kernel offers a Wasm runtime in which your skill runs.
+The Engine offers a Wasm runtime in which your skill runs.
 Multiple invocations of your Skill can run in parallel.
 Skill Execution will be suspended after ten minutes.
 
 **How are inference errors exposed?**
 
-It depends. If the Kernel thinks that the error might be resolved by a retry, it will do that.
-In the other case, the Kernel will stop the Skill Execution and return an internal server error.
+It depends. If the Engine thinks that the error might be resolved by a retry, it will do that.
+In the other case, the Engine will stop the Skill Execution and return an internal server error.

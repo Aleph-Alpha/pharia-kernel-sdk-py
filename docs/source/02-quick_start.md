@@ -62,16 +62,16 @@ The first argument [Csi](03-core_concepts.md#csi) provides the interface for int
 The `@skill` annotation does not modify the annotated function, which allows the test code to inject different variants of CSI.
 The `testing` module provides two implementations of CSI for testing:
 
-- The [DevCsi](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) can be used for testing Skill code locally against a running PhariaKernel. See the docstring for how to set it up. It also supports exporting traces to PhariaStudio.
+- The [DevCsi](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.DevCsi) can be used for testing Skill code locally against a running PhariaEngine. See the docstring for how to set it up. It also supports exporting traces to PhariaStudio.
 - The [StubCsi](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.testing.StubCsi) can be used as a base class for mock implementation.
 
-See [core concepts](03-core_concepts.md#testing) for more information on differences between running Skills in the Kernel and locally.
+See [core concepts](03-core_concepts.md#testing) for more information on differences between running Skills in the Engine and locally.
 To test against the `DevCsi`, we require two more environment variables (optionally one more for tracing):
 
 ```sh
 # .env
 
-# The address of the PhariaKernel instance you are using, e.g. https://pharia-kernel.your-pharia.domain (replace the `your-pharia.domain` part in all examples)
+# The address of the PhariaEngine instance you are using, e.g. https://pharia-kernel.your-pharia.domain (replace the `your-pharia.domain` part in all examples)
 PHARIA_KERNEL_ADDRESS=
 
 # A token to authenticate against PhariaAI, can be retrieved from the PhariaStudio frontend (https://pharia-studio.your-pharia.domain)
@@ -131,16 +131,16 @@ Note that without the `--no-interactive` flag, you will get prompted to optional
 ## 5. Publishing
 
 We are ready to publish the Skill to a registry.
-Make sure you understand which namespaces are configured in the PhariaKernel instance you have access to and which registries they are linked with.
+Make sure you understand which namespaces are configured in the PhariaEngine instance you have access to and which registries they are linked with.
 For the `p-prod` instance, we have setup a [playground](https://gitlab.aleph-alpha.de/engineering/pharia-kernel-playground) to deploy to.
 Make sure to set the required environment variables:
 
 ```sh
 # .env
 
-# The PhariaKernel supports arbiratry OCI registries to deploy Skills to. See https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#namespaces for more details.
-# If you are unsure what value to set here, check with the operator of your PhariaAI instance what registries your PhariaKernel is configured with.
-# e.g. registry.gitlab.{your-domain} for a gitlab registry, but could also be a GitHub or any other registry that is configured for your PhariaKernel.
+# The PhariaEngine supports arbiratry OCI registries to deploy Skills to. See https://pharia-skill.readthedocs.io/en/stable/03-core_concepts.html#namespaces for more details.
+# If you are unsure what value to set here, check with the operator of your PhariaAI instance what registries your PhariaEngine is configured with.
+# e.g. registry.gitlab.{your-domain} for a gitlab registry, but could also be a GitHub or any other registry that is configured for your PhariaEngine.
 SKILL_REGISTRY=
 
 # The repository you want to deploy your Skill to.
@@ -162,7 +162,7 @@ uv run pharia-skill publish haiku.wasm --name custom_name
 
 ## 6. Deploying
 
-To know which Skills to serve, the PhariaKernel watches a list of configured namespaces. These can be `toml` files hosted on a server.
+To know which Skills to serve, the PhariaEngine watches a list of configured namespaces. These can be `toml` files hosted on a server.
 Check with your operator where this configuration file for the namespace that you deployed to in the previous step is hosted.
 Then, update the configuration file and add your Skill:
 
@@ -176,7 +176,7 @@ skills = [
 
 ## 7. Invoking via API
 
-Once your Skill is deployed, you can test it by making an API call to the PhariaKernel. You can reference the OpenAPI documentation at `https://pharia-kernel.yourpharia.domain/api-docs` to construct your request. You need to provide the name of the `namespace` that you have previously deployed your Skill to. If unsure, check with your operator. Here's an example using curl:
+Once your Skill is deployed, you can test it by making an API call to the PhariaEngine. You can reference the OpenAPI documentation at `https://pharia-kernel.yourpharia.domain/api-docs` to construct your request. You need to provide the name of the `namespace` that you have previously deployed your Skill to. If unsure, check with your operator. Here's an example using curl:
 
 ```sh
 curl 'https://pharia-kernel.yourpharia.domain/v1/skills/{namespace}/{name}/run' \

@@ -12,7 +12,7 @@ from .summarize import Input, SummaryLength, summarize
 
 @pytest.fixture
 def csi() -> Csi:
-    # you have to make sure that a Pharia Kernel instance is available
+    # you have to make sure that a PhariaEngine instance is available
     return DevCsi()
 
 

@@ -42,7 +42,7 @@ class Client(CsiClient):
         self.url = f"{self.kernel_address}/csi/{self.HTTP_CSI_VERSION}"
         self.session = requests.Session()
 
-        # Authentication for PhariaKernel is optional.
+        # Authentication for PhariaEngine is optional.
         if token := os.environ.get("PHARIA_AI_TOKEN"):
             self.session.headers = {
                 "Authorization": f"Bearer {token}",

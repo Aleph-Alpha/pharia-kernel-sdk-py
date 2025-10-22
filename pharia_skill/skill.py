@@ -22,7 +22,7 @@ UserOutput = TypeVar("UserOutput", bound=BaseModel)
 def skill(
     func: Callable[[Csi, UserInput], UserOutput],
 ) -> Callable[[Csi, UserInput], UserOutput]:
-    """Turn a function with a specific signature into a skill that can be deployed on Pharia Kernel.
+    """Turn a function with a specific signature into a skill that can be deployed on PhariaEngine.
 
     The decorated function must be typed. It must have exactly two input arguments. The first argument
     must be of type `Csi`. The second argument must be a Pydantic model. The type of the return value

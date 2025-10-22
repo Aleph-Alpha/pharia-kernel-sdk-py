@@ -1,6 +1,6 @@
 """
 This module exposes the Python version of the Cognitive System Interface (CSI) and all related types,
-which Skills use to interact with the Pharia Kernel.
+which Skills use to interact with the PhariaEngine.
 
 While developers only interact with these types and the CSI protocol, the SDK injects the `wit_csi.WitCsi`
 implementation at runtime, which does a translation step from the Python types we offer in the SDK

@@ -1,5 +1,5 @@
 """
-StubCsi can be used for testing without a backing Pharia Kernel instance.
+StubCsi can be used for testing without a backing PhariaEngine instance.
 """
 
 from collections.abc import Generator

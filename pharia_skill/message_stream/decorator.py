@@ -13,7 +13,7 @@ UserInput = TypeVar("UserInput", bound=BaseModel)
 def message_stream(
     func: Callable[[Csi, MessageWriter[Payload], UserInput], None],
 ) -> Callable[[Csi, MessageWriter[Payload], UserInput], None]:
-    """Turn a function with a specific signature into a (streaming) skill that can be deployed on Pharia Kernel.
+    """Turn a function with a specific signature into a (streaming) skill that can be deployed on PhariaEngine.
 
     By using the response object, a Skill decorated with `@message_stream` can return intermediate results
     that are streamed to the caller.

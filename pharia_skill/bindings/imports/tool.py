@@ -43,7 +43,7 @@ def invoke_tool(request: List[InvokeRequest]) -> List[Result[List[Modality], str
 def list_tools() -> List[Tool]:
     """
     As long as we do not support tool calling in the inference, the prompt synthesis happens in the Skill code.
-    It could also happen in the Kernel, but we already have the logic in the SDK, and it seems like this will
+    It could also happen in the Engine, but we already have the logic in the SDK, and it seems like this will
     move to inference soon anyway. Therefore, the Skill needs to know about the schema of the different tools.
     While this could be achieved by querying for a list of tool names, and then getting a list of options in
     the same order, simply listing all tools seems to be the simpler solution.

@@ -71,11 +71,11 @@ from .tool import deserialize_tool_output, deserialize_tools, serialize_tool_req
 
 
 class DevCsi(Csi):
-    """The `DevCsi` can be used for testing Skill code locally against a PhariaKernel.
+    """The `DevCsi` can be used for testing Skill code locally against a PhariaEngine.
 
     This implementation of Cognitive System Interface (CSI) is backed by a running
-    instance of PhariaKernel via HTTP. This enables Skill developers to run and test
-    Skills against the same services that are used by the PhariaKernel.
+    instance of PhariaEngine via HTTP. This enables Skill developers to run and test
+    Skills against the same services that are used by the PhariaEngine.
 
     The `DevCsi` supports trace exports to different collectors. If you want to support
     traces to PhariaStudio, simply provide a project name on construction. If not set,

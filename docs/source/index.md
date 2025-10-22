@@ -1,23 +1,23 @@
-# Pharia Kernel
+# PhariaEngine
 
 ```{image} _static/sloth.png
-:alt: Kernel Sloth
+:alt: Engine Sloth
 :width: 200px
 ```
 
-Welcome to the Kernel 👋
+Welcome to the Engine 👋
 
-The Kernel provides a focused environment for AI engineers to develop and deploy AI methodology, or Skills.
+The Engine provides a focused environment for AI engineers to develop and deploy AI methodology, or Skills.
 
 ## Quick Links
 
-- New to the Kernel? Start with the [Introduction](introduction) to understand our motivation and vision.
+- New to the Engine? Start with the [Introduction](introduction) to understand our motivation and vision.
 
 - Ready to build? Check out the [Quick Start](quick_start) to get started.
 
-- Looking for some inspiration? Look at the examples in our [Python SDK](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/).
+- Looking for some inspiration? Look at the examples in our [Python SDK](https://github.com/Aleph-Alpha/pharia-skill/).
 
-- Want to explore the API of the Kernel? Here are our [API Docs](https://pharia-kernel.product.pharia.com/api-docs).
+- Want to explore the API of the Engine? Here are our [API Docs](https://pharia-kernel.product.pharia.com/api-docs).
 
 - Have any questions? Try the [FAQ](faq).
 
