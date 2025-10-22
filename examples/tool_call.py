@@ -15,9 +15,9 @@ class Output(RootModel[int]):
 def compute(csi: Csi, input: Input) -> Output:
     """A skill that computes the answer based on the provided number.
 
-    The Kernel service offers two native tools (`add` and `subtract`) for developers to
+    The Engine service offers two native tools (`add` and `subtract`) for developers to
     test tool calling, without setting up MCP servers.
-    The native tools need to be enabled for each namespace, but the Kernel service
+    The native tools need to be enabled for each namespace, but the Engine service
     offers the `test-beta` namespace with the tools enabled.
     This skill demonstrates how to invoke the tools.
     """

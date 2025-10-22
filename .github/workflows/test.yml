@@ -53,7 +53,7 @@ jobs:
       - name: Test
         run: uv run pytest -m 'not kernel and not studio and not openai'
 
-  kernel-openai-inference-test:
+  engine-openai-inference-test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -70,7 +70,7 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: uv sync --dev
-      - name: Run Pharia Kernel against the GitHub models inference backend
+      - name: Run PhariaEngine against the GitHub models inference backend
         run: |
           podman login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
           podman pull ghcr.io/aleph-alpha/pharia-kernel/pharia-kernel:latest
@@ -81,7 +81,7 @@ jobs:
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
 
-  kernel-and-studio-test:
+  engine-and-studio-test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -99,9 +99,9 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: uv sync --dev
-      - name: Run Pharia Kernel
+      - name: Run PhariaEngine
         run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} product.pharia.com
-      - name: Run kernel and studio tests
+      - name: Run engine and studio tests
         run: uv run pytest -m '(kernel or studio) and not openai'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
@@ -149,7 +149,7 @@ jobs:
           echo "SKILL_REGISTRY_USER=${{ github.actor }}" > .env
           echo "SKILL_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
           echo "SKILL_REGISTRY=ghcr.io" >> .env
-          echo "SKILL_REPOSITORY=aleph-alpha/pharia-kernel-sdk-py/skills" >> .env
+          echo "SKILL_REPOSITORY=aleph-alpha/pharia-skill/skills" >> .env
       - name: Test skill publishing
         run: uv run pharia-skill publish haiku
       - name: Test skill execution
@@ -170,7 +170,7 @@ jobs:
           uv run sh -x -e ./scripts/metadata_skill.sh haiku $PHARIA_AI_TOKEN
 
   dependabot-auto-merge:
-    needs: [lint, unit-test, kernel-openai-inference-test, kernel-and-studio-test, integration-test]
+    needs: [lint, unit-test, engine-openai-inference-test, engine-and-studio-test, integration-test]
     permissions:
       pull-requests: write
       contents: write

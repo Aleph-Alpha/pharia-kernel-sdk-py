@@ -6,7 +6,7 @@ from pharia_skill.testing import DevCsi, MessageRecorder
 from .web_search import web_search
 
 
-@pytest.mark.skip(reason="No Kernel set up with MCP tools in CI")
+@pytest.mark.skip(reason="No Engine set up with MCP tools in CI")
 def test_skill_searches_the_web():
     csi = DevCsi(namespace="playground", project="kernel-test")
 

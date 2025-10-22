@@ -1,7 +1,7 @@
 [project]
 name = "pharia-skill"
 version = "0.20.0"
-description = "SDK for building Python skills for Pharia Kernel"
+description = "SDK for building Python skills for PhariaEngine"
 license = "Apache-2.0"
 authors = [
     { name = "Markus Klein", email = "markus.klein@aleph-alpha.com" },
@@ -30,10 +30,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Aleph-Alpha/pharia-kernel-sdk-py"
+Homepage = "https://github.com/Aleph-Alpha/pharia-skill"
 Documentation = "https://pharia-skill.readthedocs.io"
-Repository = "https://github.com/Aleph-Alpha/pharia-kernel-sdk-py"
-Changelog = "https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/blob/main/CHANGELOG.md"
+Repository = "https://github.com/Aleph-Alpha/pharia-skill"
+Changelog = "https://github.com/Aleph-Alpha/pharia-skill/blob/main/CHANGELOG.md"
 
 [project.scripts]
 pharia-skill = "pharia_skill.cli:app"
@@ -68,8 +68,8 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 markers = [
-    "kernel: marks tests that requires PhariaKernel",
-    "openai: marks tests that require PhariaKernel to be connected to OpenAI compatibleinference provider",
+    "kernel: marks tests that require PhariaEngine",
+    "openai: marks tests that require PhariaEngine to be connected to OpenAI compatible inference provider",
     "studio: marks tests that requires PhariaStudio",
 ]
 testpaths = ["tests"]

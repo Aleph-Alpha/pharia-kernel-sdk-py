@@ -149,7 +149,7 @@ class MetadataFilter:
     """Matches sections whose metadata fields match the given condition. You must specify the field, and can only specify a single condition.
 
     While the Document Index also offers a `Modality` filter, we do not expose this to the developer.
-    The reasoning is that we only allow for text modalities in the Kernel. So for each search request,
+    The reasoning is that we only allow for text modalities in the Engine. So for each search request,
     we append a `Modality` filter that only allows for text modalities.
 
     Attributes:

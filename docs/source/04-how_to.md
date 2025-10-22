@@ -1,6 +1,6 @@
 # How-To
 
-The Kernel SDK provides all the building blocks needed to create sophisticated AI applications.
+The Engine SDK provides all the building blocks needed to create sophisticated AI applications.
 If you want to include any dependencies in your Skill, have a look [here](03-core_concepts.md#wasm-component)
 
 ## Completion
@@ -56,7 +56,7 @@ This allows building Skills that stream their output in small chunks, in contras
 A message stream tries to model a conversation as a sequence of messages.
 In a stream there is only one active message at a time.
 You can write text to the message stream using a writer, which is passed into the Skill.
-The Kernel takes care of translating the interactions with the writer into Server-Sent-Events.
+The Engine takes care of translating the interactions with the writer into Server-Sent-Events.
 Each message has a begin and an end, which can be indicated by [writer.begin_message](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.MessageWriter.begin_message) and [writer.end_message](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.MessageWriter.begin_message) respectively.
 Between these, you can iteratively append text with [writer.append_to_message](https://pharia-skill.readthedocs.io/en/latest/references.html#pharia_skill.MessageWriter.append_to_message)
 When ending the message, you can provide an optional, arbitrary payload.
@@ -123,7 +123,7 @@ Conversational search is the idea to have a chat conversation with an LLM which 
 To implement this, we first need a Skill that exposes a chat interface.
 
 The [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) is emerging as a standard to expose conversational interface of LLMs.
-This API is also offered in the `Csi` with the `chat` method. Leveraging this, you can easily expose your own custom flavoured chat API as a Kernel Skill.
+This API is also offered in the `Csi` with the `chat` method. Leveraging this, you can easily expose your own custom flavoured chat API as a Engine Skill.
 Note that you can return expose internal datatypes in the interface of you Skill as long as they are wrapped in a `Pydantic` model:
 
 ```python
@@ -148,7 +148,7 @@ You only need to define the `do_search_lookup` function and augment the incoming
 
 ## Tools
 
-The Kernel and SDK offer support for function calling and tool invocations.
+The Engine and SDK offer support for function calling and tool invocations.
 Details on how tools can be made available via MCP can be found in the [Tool Calling](03-core_concepts.md#tool-calling) section of the core concepts.
 
 ### Automatic Tool Calling
@@ -228,5 +228,5 @@ It does not consume the stream for normal responses, so the last response to the
 
 ### Stream Events
 
-For message stream skills, the Kernel reports tool call events via the SSE stream to the caller.
+For message stream skills, the Engine reports tool call events via the SSE stream to the caller.
 The caller will receive an event when a tool call starts and when a tool call finishes.

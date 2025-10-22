@@ -54,7 +54,7 @@ from .language import Language, SelectLanguageRequest
 
 
 class Csi(Protocol):
-    """The Cognitive System Interface (CSI) is a protocol that allows skills to interact with the Pharia Kernel.
+    """The Cognitive System Interface (CSI) is a protocol that allows skills to interact with the PhariaEngine.
 
     Most functionality in the CSI is offered in two forms: As a single request, and as multiple
     concurrent requests. For all concurrent requests, it is guaranteed that the responses are
@@ -63,11 +63,11 @@ class Csi(Protocol):
     """
 
     def invoke_tool(self, name: str, **kwargs: JsonValue) -> ToolOutput:
-        """Invoke a tool that is configured with the Kernel.
+        """Invoke a tool that is configured with the Engine.
 
         Tools can be configured for each namespace by listing MCP servers in the namespace config.
-        The Kernel then exposes the tools of these MCP servers to Skills.
-        The list of available tools per namespace can be queried from the Kernel API.
+        The Engine then exposes the tools of these MCP servers to Skills.
+        The list of available tools per namespace can be queried from the Engine API.
 
         Parameters:
             name (str, required): Name of the tool to invoke.

@@ -33,7 +33,7 @@ def cli_publish(skill: str, name: str | None, tag: str, registry: Registry) -> N
 
     Takes a path to a Wasm component, wrap it in an OCI image and publish it to an OCI
     registry under the `latest` tag. This does not fully deploy the skill, as an older
-    version might still be cached in the Kernel.
+    version might still be cached in the Engine.
     """
     # add file extension
     if not skill.endswith(".wasm"):
