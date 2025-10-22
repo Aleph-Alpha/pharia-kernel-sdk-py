@@ -6,7 +6,7 @@ from pharia_skill import CompletionParams
 from pharia_skill.testing.dev.client import Client
 
 
-@pytest.mark.kernel
+@pytest.mark.engine
 def test_http_client_run(model: str):
     client = Client()
     params = CompletionParams(max_tokens=1)
@@ -25,7 +25,7 @@ def test_http_client_run(model: str):
     assert result[0].get("text") is not None
 
 
-@pytest.mark.kernel
+@pytest.mark.engine
 def test_http_client_sse(model: str):
     client = Client()
     params = CompletionParams(max_tokens=1)

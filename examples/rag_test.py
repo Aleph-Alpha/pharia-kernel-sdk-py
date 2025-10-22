@@ -1,5 +1,5 @@
 """
-An example of how to test skill code using a remote kernel
+An example of how to test skill code using a remote engine
 """
 
 from pharia_skill.testing import DevCsi

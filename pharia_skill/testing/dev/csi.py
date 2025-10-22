@@ -1,5 +1,5 @@
 """
-Translation between SDK types and the serialized format expected by the Pharia Kernel csi-shell endpoint.
+Translation between SDK types and the serialized format expected by the PhariaEngine csi-shell endpoint.
 
 While we could use the SDK types that we expose as part of the SDK for serialization/deserialization,
 uncoupling these interfaces brings two advantages:
@@ -103,11 +103,11 @@ class DevCsi(Csi):
     The following environment variables are required:
 
     * `PHARIA_AI_TOKEN` (Pharia AI token)
-    * `PHARIA_KERNEL_ADDRESS` (Pharia Kernel endpoint; example: "https://pharia-kernel.product.pharia.com")
+    * `PHARIA_KERNEL_ADDRESS` (PhariaEngine endpoint; example: "https://pharia-kernel.product.pharia.com")
 
     If you want to export traces to PhariaStudio, set:
 
-    * `PHARIA_STUDIO_ADDRESS` (Pharia Studio endpoint; example: "https://pharia-studio.product.pharia.com")
+    * `PHARIA_STUDIO_ADDRESS` (PhariaStudio endpoint; example: "https://pharia-studio.product.pharia.com")
 
     If you want to export traces to Langfuse, set:
 

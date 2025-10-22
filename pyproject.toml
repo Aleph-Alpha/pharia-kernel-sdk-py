@@ -68,8 +68,8 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 markers = [
-    "kernel: marks tests that require PhariaEngine",
-    "openai: marks tests that require PhariaEngine to be connected to OpenAI compatible inference provider",
+    "engine: marks tests that require PhariaEngine",
+    "openai: marks tests that require PhariaEngine to be connected to an OpenAI compatible inference provider",
     "studio: marks tests that requires PhariaStudio",
 ]
 testpaths = ["tests"]

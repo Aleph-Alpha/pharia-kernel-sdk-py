@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
       - name: Test
-        run: uv run pytest -m 'not kernel and not studio and not openai'
+        run: uv run pytest -m 'not engine and not studio and not openai'
 
   engine-openai-inference-test:
     runs-on: ubuntu-latest
@@ -100,9 +100,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
       - name: Run PhariaEngine
-        run: sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} product.pharia.com
+        run: sh -x -e ./scripts/run_engine.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} product.pharia.com
       - name: Run engine and studio tests
-        run: uv run pytest -m '(kernel or studio) and not openai'
+        run: uv run pytest -m '(engine or studio) and not openai'
         env:
           PHARIA_KERNEL_ADDRESS: http://127.0.0.1:8081
           PHARIA_STUDIO_ADDRESS: https://pharia-studio-api.product.pharia.com
@@ -155,7 +155,7 @@ jobs:
       - name: Test skill execution
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          sh -x -e ./scripts/run_kernel.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} product.pharia.com
+          sh -x -e ./scripts/run_engine.sh ${{ github.actor }} ${{ secrets.GITHUB_TOKEN }} product.pharia.com
           uv run sh -x -e ./scripts/run_skill.sh haiku $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh search $PHARIA_AI_TOKEN
           uv run sh -x -e ./scripts/run_skill.sh language $PHARIA_AI_TOKEN

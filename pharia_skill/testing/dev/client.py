@@ -1,5 +1,5 @@
 """
-Make HTTP requests against a running Pharia Kernel.
+Make HTTP requests against a running PhariaEngine.
 
 By separating the client from the `DevCsi`, we can better test the serialization/deserialization
 and other functionality of the `DevCsi` without making HTTP requests.
@@ -28,7 +28,7 @@ class CsiClient(Protocol):
 
 
 class Client(CsiClient):
-    """Make requests with a given payload against a running Pharia Kernel."""
+    """Make requests with a given payload against a running PhariaEngine."""
 
     HTTP_CSI_VERSION = "v1"
 
@@ -38,8 +38,8 @@ class Client(CsiClient):
         The session is stored to allow for re-use of the same connection between tests.
         """
         load_dotenv()
-        self.kernel_address = os.environ["PHARIA_KERNEL_ADDRESS"]
-        self.url = f"{self.kernel_address}/csi/{self.HTTP_CSI_VERSION}"
+        self.engine_address = os.environ["PHARIA_KERNEL_ADDRESS"]
+        self.url = f"{self.engine_address}/csi/{self.HTTP_CSI_VERSION}"
         self.session = requests.Session()
 
         # Authentication for PhariaEngine is optional.
@@ -68,7 +68,7 @@ class Client(CsiClient):
         headers = {"Accept": "text/event-stream", **self.session.headers}
         response = self.session.post(url, json=data, headers=headers, stream=True)
         self._raise_for_status(response)
-        return KernelStreamDeserializer(response).events()
+        return EngineStreamDeserializer(response).events()
 
     def _raise_for_status(self, response: requests.Response) -> None:
         if response.status_code == 401:
@@ -88,16 +88,16 @@ class Client(CsiClient):
 
     def format_error(self, status_code: int, error: Any) -> str:
         return (
-            "Error resolving the Csi request against the Kernel.\n"
+            "Error resolving the Csi request against the Engine.\n"
             "This could mean that some environment variables are not set correctly.\n"
             "Please check the values set for `PHARIA_KERNEL_ADDRESS` and `PHARIA_AI_TOKEN`.\n"
-            f"PHARIA_KERNEL_ADDRESS: {self.kernel_address}\n"
+            f"PHARIA_KERNEL_ADDRESS: {self.engine_address}\n"
             f"Status Code: {status_code} {HTTPStatus(status_code).phrase}\n"
             f"Original Error: {error}"
         )
 
 
-class KernelStreamDeserializer:
+class EngineStreamDeserializer:
     def __init__(self, response: requests.Response) -> None:
         self.response = response
 
@@ -119,7 +119,7 @@ class KernelStreamDeserializer:
             yield data
 
     def events(self) -> Generator[Event, None, None]:
-        """Yield events from the kernel stream.
+        """Yield events from the engine stream.
 
         This method does not raise on error events, but rather deserializes them and
         leaves it to the caller to raise an exception.
@@ -129,7 +129,7 @@ class KernelStreamDeserializer:
             if not text:
                 continue
 
-            # Kernel events always have this format:
+            # Engine events always have this format:
             # event: <event>
             # data: <data>
             if "\n" not in text:

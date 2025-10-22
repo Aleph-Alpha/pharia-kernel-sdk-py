@@ -1,5 +1,5 @@
 """
-This module exposes the interfaces for skills to interact with the Pharia Kernel
+This module exposes the interfaces for skills to interact with the PhariaEngine
 via the Cognitive System Interface (CSI).
 """
 
