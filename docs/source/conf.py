@@ -8,7 +8,7 @@ from types import FunctionType, MethodType
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "pharia-kernel"
+project = "pharia-skill"
 copyright = "2025, Aleph Alpha"
 author = "Aleph Alpha"
 version = importlib.metadata.version("pharia-skill")
