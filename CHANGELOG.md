@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.21.0](https://github.com/Aleph-Alpha/pharia-skill/compare/v0.20.0...v0.21.0) (2025-10-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* chat event get's reasoning variant
+* unify function and tool concepts
+* remove explain functionality in 0.4 wit world
+* introduce 0.4 wit world
+* remove llama3 submodule in favour of inference provided tool calling
+
+### Features
+
+* add reasoning trace to Message class ([7f0b763](https://github.com/Aleph-Alpha/pharia-skill/commit/7f0b763704a106a9d27f6d3d35a90cb1b4ae34d9))
+* allow multiple tool calls ([d60d81c](https://github.com/Aleph-Alpha/pharia-skill/commit/d60d81c64ef3d033944afee6a6cc455c5a340821))
+* chat event get's reasoning variant ([59aaff0](https://github.com/Aleph-Alpha/pharia-skill/commit/59aaff01fb706f136797151f4cfcce612e73868a))
+* introduce 0.4 wit world ([be3c855](https://github.com/Aleph-Alpha/pharia-skill/commit/be3c855f4efa2619058f5aea1a75ee2a857fd176))
+* message writer accepts reasoning events ([ebe88e4](https://github.com/Aleph-Alpha/pharia-skill/commit/ebe88e43917ab9f25527dd9bc26a2871e627b72a))
+* prototype agent decorator ([28ec298](https://github.com/Aleph-Alpha/pharia-skill/commit/28ec298e54bb74175c99f88e348745a0c0c234c5))
+* remove explain functionality in 0.4 wit world ([ae125c7](https://github.com/Aleph-Alpha/pharia-skill/commit/ae125c76c15679133c286cedd231e1dae27e02f1))
+* remove llama3 submodule in favour of inference provided tool calling ([f29dec0](https://github.com/Aleph-Alpha/pharia-skill/commit/f29dec0fe2382329ff15115f211836016289854c))
+* remove logprobs from 0.4 chat event ([d0f7ea2](https://github.com/Aleph-Alpha/pharia-skill/commit/d0f7ea2fb3e2c9495b964fda6692f1791fc1d3c7))
+* unify function and tool concepts ([bd48ed5](https://github.com/Aleph-Alpha/pharia-skill/commit/bd48ed5af66e3356c0f82f2a49032b8e15ef63d7))
+* wit 0.4 is stable ([6d5008f](https://github.com/Aleph-Alpha/pharia-skill/commit/6d5008f388d0aca308d73a8485c1a37ca2c992ae))
+
+
+### Bug Fixes
+
+* only construct span exporter if corresponding env variable is set ([79b1ac4](https://github.com/Aleph-Alpha/pharia-skill/commit/79b1ac4fa2d18dcebe36c08ad7aa4156b66baca3))
+* serialization of chat request ([bee58ca](https://github.com/Aleph-Alpha/pharia-skill/commit/bee58ca10101cc49e40688994524981e09fc32cd))
+
+
+### Documentation
+
+* add hans as author ([f916d00](https://github.com/Aleph-Alpha/pharia-skill/commit/f916d003faf89dccaffd7b75712b034ddf56c6b6))
+* rename kernel to engine ([f7a5434](https://github.com/Aleph-Alpha/pharia-skill/commit/f7a54348e4d50d12a638eb824d55859f0426a63e))
+* rename project in rtd to pharia-skill ([e2cf060](https://github.com/Aleph-Alpha/pharia-skill/commit/e2cf0600785ac611357f7cf5f99b116b1ad947c8))
+* update readme with right command to run componentize-py ([59a6e9f](https://github.com/Aleph-Alpha/pharia-skill/commit/59a6e9f5f1c2d2097eb934286386295f7ca8d1a3))
+
 ## [0.20.0](https://github.com/Aleph-Alpha/pharia-kernel-sdk-py/compare/v0.19.2...v0.20.0) (2025-10-02)
 
 
