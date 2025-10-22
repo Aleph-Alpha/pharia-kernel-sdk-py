@@ -9,6 +9,7 @@ authors = [
     { name = "Moritz Althaus", email = "moritz.althaus@aleph-alpha.com" },
     { name = "Jia Ho Lee", email = "jiaho.lee@aleph-alpha.com" },
     { name = "Lars Rass", email = "lars.rass@aleph-alpha.com" },
+    { name = "Hans Sperker", email = "hans-christian.sperker@aleph-alpha.com" },
 ]
 # We use componentize-py to build Skills. Componentize-py includes the Python 3.11 interpreter in the components.
 # While our SDK would allow newer Python versions, we believe the Python version when testing Skills
